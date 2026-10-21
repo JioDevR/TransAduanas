@@ -1,0 +1,70 @@
+
+# Operating System Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# IDEs and Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+*.bak
+*.orig
+*.sublime-project
+*.sublime-workspace
+.project
+.classpath
+.settings/
+
+# Reports and temporary scratch documentation
+informes/
+*.log
+
+# -----------------------------------------------------------------------------
+# Backend 
+# -----------------------------------------------------------------------------
+backend/target/
+backend/*.class
+backend/*.jar
+backend/*.war
+backend/*.ear
+backend/logs/
+backend/*.log
+backend/.flattened-pom.xml
+backend/build/
+*application-local.properties
+*.local.properties
+backend/src/main/resources/application-local.properties
+.env
+.env.local
+backend/.env
+
+
+# -----------------------------------------------------------------------------
+# Frontend 
+# -----------------------------------------------------------------------------
+frontend/node_modules/
+frontend/dist/
+frontend/dist-ssr/
+frontend/*.local
+frontend/.eslintcache
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+frontend/pnpm-debug.log*
+frontend/.vscode/
+
+# -----------------------------------------------------------------------------
+# Database local dumps or temporary files
+# -----------------------------------------------------------------------------
+database/*.tmp
+database/*.bak
+backup*.sql
+*.sql.bak

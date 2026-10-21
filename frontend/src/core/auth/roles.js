@@ -1,0 +1,57 @@
+/**
+ * Constantes institucionales centralizadas de Roles del SGA
+ */
+export const ROLES = {
+  ADMINISTRADOR_TI: 'ADMINISTRADOR_TI',
+  GERENTE_GENERAL: 'GERENTE_GENERAL',
+  AGENTE_COMERCIAL: 'AGENTE_COMERCIAL',
+  SUPERVISOR_ADUANERO: 'SUPERVISOR_ADUANERO',
+  AGENTE_ADUANERO: 'AGENTE_ADUANERO',
+  SUPERVISOR_TRANSPORTE: 'SUPERVISOR_TRANSPORTE',
+  CONTADOR: 'CONTADOR',
+  ASESOR_LEGAL: 'ASESOR_LEGAL'
+}
+
+export const ROLE_LABELS = {
+  [ROLES.ADMINISTRADOR_TI]: 'Administrador de TI',
+  [ROLES.GERENTE_GENERAL]: 'Gerente General',
+  [ROLES.AGENTE_COMERCIAL]: 'Agente Comercial',
+  [ROLES.SUPERVISOR_ADUANERO]: 'Supervisor Aduanero',
+  [ROLES.AGENTE_ADUANERO]: 'Agente Aduanero',
+  [ROLES.SUPERVISOR_TRANSPORTE]: 'Supervisor de Transporte',
+  [ROLES.CONTADOR]: 'Contador',
+  [ROLES.ASESOR_LEGAL]: 'Asesor Legal'
+}
+
+export const ROLE_MODULE_MAP = {
+  [ROLES.ADMINISTRADOR_TI]: 'administracion-ti',
+  [ROLES.GERENTE_GENERAL]: 'gerencia-general',
+  [ROLES.AGENTE_COMERCIAL]: 'comercial',
+  [ROLES.SUPERVISOR_ADUANERO]: 'gestion-aduanera',
+  [ROLES.AGENTE_ADUANERO]: 'agente-aduanero',
+  [ROLES.SUPERVISOR_TRANSPORTE]: 'transporte-flota',
+  [ROLES.CONTADOR]: 'finanzas',
+  [ROLES.ASESOR_LEGAL]: 'legal-auditoria'
+}
+
+export const ROLE_HOME_PATH = {
+  [ROLES.ADMINISTRADOR_TI]: '/administracion-ti/usuarios',
+  [ROLES.GERENTE_GENERAL]: '/gerencia-general/sedes',
+  [ROLES.AGENTE_COMERCIAL]: '/recepcion-comercial',
+  [ROLES.SUPERVISOR_ADUANERO]: '/gestion-aduanera',
+  [ROLES.AGENTE_ADUANERO]: '/agente-aduanero',
+  [ROLES.SUPERVISOR_TRANSPORTE]: '/transporte-flota',
+  [ROLES.CONTADOR]: '/finanzas',
+  [ROLES.ASESOR_LEGAL]: '/legal-auditoria'
+}
+
+export const ROLE_OPTIONS = [
+  { value: ROLES.ADMINISTRADOR_TI, label: ROLE_LABELS[ROLES.ADMINISTRADOR_TI] },
+  { value: ROLES.GERENTE_GENERAL, label: ROLE_LABELS[ROLES.GERENTE_GENERAL] },
+  { value: ROLES.AGENTE_COMERCIAL, label: ROLE_LABELS[ROLES.AGENTE_COMERCIAL] },
+  { value: ROLES.SUPERVISOR_ADUANERO, label: ROLE_LABELS[ROLES.SUPERVISOR_ADUANERO] },
+  { value: ROLES.AGENTE_ADUANERO, label: ROLE_LABELS[ROLES.AGENTE_ADUANERO] },
+  { value: ROLES.SUPERVISOR_TRANSPORTE, label: ROLE_LABELS[ROLES.SUPERVISOR_TRANSPORTE] },
+  { value: ROLES.CONTADOR, label: ROLE_LABELS[ROLES.CONTADOR] },
+  { value: ROLES.ASESOR_LEGAL, label: ROLE_LABELS[ROLES.ASESOR_LEGAL] }
+]

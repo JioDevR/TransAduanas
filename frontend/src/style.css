@@ -106,6 +106,30 @@
   /* Transiciones */
   --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
   --transition-normal: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* PrimeVue Design Tokens Overrides para Modo Claro Warm Editorial */
+  --p-content-background: #ffffff;
+  --p-content-hover-background: #f2ebe1;
+  --p-content-color: #2b2520;
+  --p-content-border-color: #e4dacb;
+  --p-paginator-background: #f2ebe1;
+  --p-paginator-color: #6f6356;
+  --p-paginator-border-color: #e4dacb;
+  --p-paginator-nav-button-background: #ffffff;
+  --p-paginator-nav-button-hover-background: #f2ebe1;
+  --p-paginator-nav-button-selected-background: #352f2a;
+  --p-paginator-nav-button-selected-color: #ffffff;
+  --p-paginator-current-page-report-color: #6f6356;
+  --p-datatable-header-cell-background: #f2ebe1;
+  --p-datatable-header-cell-border-color: #e4dacb;
+  --p-datatable-header-cell-color: #6f6356;
+  --p-datatable-row-background: #ffffff;
+  --p-datatable-row-color: #2b2520;
+  --p-datatable-row-border-color: #ede5d8;
+  --p-datatable-row-hover-background: #f2ebe1;
+  --p-datatable-row-hover-color: #2b2520;
+  --p-datatable-footer-cell-background: #f2ebe1;
+  --p-datatable-border-color: #e4dacb;
 }
 
 /* ==========================================================================
@@ -207,6 +231,18 @@ html, body {
 
 .font-sans {
   font-family: var(--font-sans) !important;
+}
+
+.text-pending {
+  color: var(--color-warning-text) !important;
+}
+
+.text-success {
+  color: var(--color-success-text) !important;
+}
+
+.text-muted {
+  color: var(--color-text-muted) !important;
 }
 
 #app {
@@ -734,18 +770,21 @@ textarea.textarea-input:disabled {
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
 }
 
-.p-datatable {
+.p-datatable,
+.custom-datatable {
   background: transparent !important;
 }
 
-.p-datatable .p-datatable-table {
+.p-datatable .p-datatable-table,
+.custom-datatable .p-datatable-table {
   background: transparent !important;
   border-collapse: separate;
   border-spacing: 0;
   width: 100%;
 }
 
-.p-datatable .p-datatable-thead > tr > th {
+.p-datatable .p-datatable-thead > tr > th,
+.custom-datatable .p-datatable-thead > tr > th {
   background: var(--color-bg-subtle) !important;
   color: var(--color-text-muted) !important;
   border-bottom: 1px solid var(--color-border) !important;
@@ -759,18 +798,21 @@ textarea.textarea-input:disabled {
   padding: 0.85rem 1rem !important;
 }
 
-.p-datatable .p-datatable-tbody > tr {
+.p-datatable .p-datatable-tbody > tr,
+.custom-datatable .p-datatable-tbody > tr {
   background: var(--color-bg-surface) !important;
   color: var(--color-text-main) !important;
   border-bottom: 1px solid var(--color-border-subtle) !important;
   transition: background var(--transition-fast) !important;
 }
 
-.p-datatable .p-datatable-tbody > tr:hover {
+.p-datatable .p-datatable-tbody > tr:hover,
+.custom-datatable .p-datatable-tbody > tr:hover {
   background: var(--color-bg-subtle) !important;
 }
 
-.p-datatable .p-datatable-tbody > tr > td {
+.p-datatable .p-datatable-tbody > tr > td,
+.custom-datatable .p-datatable-tbody > tr > td {
   border-bottom: 1px solid var(--color-border-subtle) !important;
   border-top: none !important;
   border-left: none !important;

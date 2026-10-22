@@ -113,6 +113,35 @@ export const finanzasService = {
   async validarAnticipo(idPago, payload) {
     const response = await apiClient.patch(`/finanzas/anticipos/${idPago}/validar`, payload)
     return response.data.data
+  },
+
+  // ==========================================
+  // GESTIÓN DE COBRANZA PRE-EXPEDIENTE (COTIZACIONES)
+  // ==========================================
+  /**
+   * Listar cotizaciones aprobadas para gestión de cobranza y anticipos
+   */
+  async getCotizacionesAprobadas(params = {}) {
+    const response = await apiClient.get('/cotizaciones', {
+      params: { estado: 'APROBADA', ...params }
+    })
+    return response.data.data
+  },
+
+  /**
+   * Listar historial de abonos bancarios de una cotización
+   */
+  async getPagosCotizacion(idCotizacion) {
+    const response = await apiClient.get(`/cotizaciones/${idCotizacion}/pagos`)
+    return response.data.data
+  },
+
+  /**
+   * Registrar abono directo para una cotización aprobada
+   */
+  async registrarPagoCotizacion(idCotizacion, data) {
+    const response = await apiClient.post(`/cotizaciones/${idCotizacion}/pagos`, data)
+    return response.data.data
   }
 }
 

@@ -408,50 +408,68 @@
       <!-- SUB-OPCIONES: 06 FINANZAS -->
       <!-- ======================================================== -->
       <ul v-else-if="navigationStore.currentModule === 'finanzas'" class="nav-list">
+        <!-- Sub-opción 01: Dashboard Financiero -->
         <li class="nav-item">
           <button
             type="button"
-            :class="['nav-sub-btn', { active: navigationStore.finanzasSubOption === 'liquidacion' }]"
-            @click="handleFinanzasSubClick('liquidacion')"
-            :title="isCollapsed ? 'Liquidación de Cuentas' : ''"
+            :class="['nav-sub-btn', { active: navigationStore.finanzasSubOption === 'dashboard' }]"
+            @click="handleFinanzasSubClick('dashboard')"
+            :title="isCollapsed ? 'Dashboard Financiero' : ''"
           >
             <span class="nav-num">01</span>
-            <span v-if="!isCollapsed" class="nav-label">Liquidación de Cuentas</span>
-          </button>
-        </li>
-        <li class="nav-item">
-          <button
-            type="button"
-            :class="['nav-sub-btn', { active: navigationStore.finanzasSubOption === 'facturacion' }]"
-            @click="handleFinanzasSubClick('facturacion')"
-            :title="isCollapsed ? 'Facturación & Pagos' : ''"
-          >
-            <span class="nav-num">02</span>
-            <span v-if="!isCollapsed" class="nav-label">Facturación & Pagos</span>
-          </button>
-        </li>
-        <li class="nav-item">
-          <button
-            type="button"
-            :class="['nav-sub-btn', { active: navigationStore.finanzasSubOption === 'anticipos' }]"
-            @click="handleFinanzasSubClick('anticipos')"
-            :title="isCollapsed ? 'Anticipos de Cotización Pre-Expediente' : ''"
-          >
-            <span class="nav-num">03</span>
-            <span v-if="!isCollapsed" class="nav-label">Anticipos Cotización</span>
+            <span v-if="!isCollapsed" class="nav-label">Dashboard Financiero</span>
           </button>
         </li>
 
-        <!-- Sub-opción 04: Acción Rápida - Registrar Anticipo / Pago -->
+        <!-- Sub-opción 02: Pagos Pre-Expedientes (Cotizaciones Aprobadas) -->
+        <li class="nav-item">
+          <button
+            type="button"
+            :class="['nav-sub-btn', { active: navigationStore.finanzasSubOption === 'pre-expedientes' || navigationStore.finanzasSubOption === 'anticipos' }]"
+            @click="handleFinanzasSubClick('pre-expedientes')"
+            :title="isCollapsed ? 'Pagos Pre-Expedientes' : ''"
+          >
+            <span class="nav-num">02</span>
+            <span v-if="!isCollapsed" class="nav-label">Pagos Pre-Expedientes</span>
+          </button>
+        </li>
+
+        <!-- Sub-opción 03: Liquidación de Cuentas -->
+        <li class="nav-item">
+          <button
+            type="button"
+            :class="['nav-sub-btn', { active: navigationStore.finanzasSubOption === 'liquidaciones' || navigationStore.finanzasSubOption === 'liquidacion' || navigationStore.finanzasSubOption === 'por-liquidar' }]"
+            @click="handleFinanzasSubClick('liquidaciones')"
+            :title="isCollapsed ? 'Liquidación de Cuentas' : ''"
+          >
+            <span class="nav-num">03</span>
+            <span v-if="!isCollapsed" class="nav-label">Liquidación de Cuentas</span>
+          </button>
+        </li>
+
+        <!-- Sub-opción 04: Facturación & Conciliación -->
+        <li class="nav-item">
+          <button
+            type="button"
+            :class="['nav-sub-btn', { active: navigationStore.finanzasSubOption === 'conciliacion' || navigationStore.finanzasSubOption === 'facturacion' }]"
+            @click="handleFinanzasSubClick('conciliacion')"
+            :title="isCollapsed ? 'Facturación & Conciliación' : ''"
+          >
+            <span class="nav-num">04</span>
+            <span v-if="!isCollapsed" class="nav-label">Facturación & Conciliación</span>
+          </button>
+        </li>
+
+        <!-- Sub-opción 05: Acción Rápida - Registrar Anticipo / Abono -->
         <li class="nav-item">
           <button
             type="button"
             class="nav-sub-btn action-item"
             @click="handleFinanzasAction('registrar-anticipo')"
-            :title="isCollapsed ? 'Registrar Pago / Anticipo' : ''"
+            :title="isCollapsed ? 'Registrar Pago / Abono' : ''"
           >
-            <span class="nav-num">04</span>
-            <span v-if="!isCollapsed" class="nav-label">+ Registrar Anticipo</span>
+            <span class="nav-num">+</span>
+            <span v-if="!isCollapsed" class="nav-label">+ Registrar Abono</span>
           </button>
         </li>
       </ul>
@@ -569,7 +587,7 @@ const handleModuleSelectChange = () => {
       router.push('/transporte-flota')
     }
   } else if (mod === 'finanzas') {
-    navigationStore.setFinanzasSubOption('liquidacion')
+    navigationStore.setFinanzasSubOption('dashboard')
     if (route.path !== '/finanzas') {
       router.push('/finanzas')
     }

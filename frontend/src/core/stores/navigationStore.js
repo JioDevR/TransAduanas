@@ -20,8 +20,8 @@ export const useNavigationStore = defineStore('navigation', {
     transporteFlotaSubOption: 'despachos',
     // Sub-opciones en Legal y Auditoría: 'expedientes' | 'auditorias'
     legalAuditoriaSubOption: 'expedientes',
-    // Sub-opciones en Finanzas: 'liquidacion' | 'facturacion' | 'anticipos'
-    finanzasSubOption: 'liquidacion',
+    // Sub-opciones en Finanzas: 'dashboard' | 'pre-expedientes' | 'liquidaciones' | 'conciliacion'
+    finanzasSubOption: 'dashboard',
     // Disparadores de acciones modales directas
     comercialActionTrigger: null,
     administracionTiActionTrigger: null,
@@ -149,6 +149,7 @@ export const useNavigationStore = defineStore('navigation', {
 
     setFinanzasSubOption(option) {
       this.finanzasSubOption = option
+      this.finanzasActionTrigger = null
       this.navTick++
     },
 

@@ -13,7 +13,7 @@
       <div v-if="despacho" class="despacho-summary mb-4">
         <div class="summary-line">
           <span class="text-xs text-muted">Tracking:</span>
-          <span class="font-mono font-semibold">{{ despacho.numeroTracking }}</span>
+          <span class="font-mono font-semibold">{{ despacho.codigoTracking || despacho.numeroTracking }}</span>
         </div>
         <div class="summary-line">
           <span class="text-xs text-muted">Destino:</span>

@@ -429,7 +429,7 @@ const loadDashboardData = async () => {
       isBackendHealthy.value = true
       backendVersion.value = healthRes.value.data.data?.version || '1.0.0-MODULO1'
     } else {
-      isBackendHealthy.value = true
+      isBackendHealthy.value = false
     }
 
     // 2. Usuarios

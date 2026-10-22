@@ -764,30 +764,6 @@
             </li>
           </ul>
         </div>
-
-        <!-- Botones de Acción Fijos del Panel Lateral -->
-        <div class="sidebar-actions-card">
-          <button
-            type="button"
-            class="btn-espresso btn-block"
-            @click="handleSubmit"
-            :disabled="loading || !isFormValid"
-          >
-            <i v-if="loading" class="pi pi-spin pi-spinner"></i>
-            <i v-else class="pi pi-send"></i>
-            <span>Registrar y Enviar a Finanzas</span>
-          </button>
-
-          <button
-            type="button"
-            class="btn-outline-warm btn-block"
-            @click="$emit('cancel')"
-            :disabled="loading"
-          >
-            <i class="pi pi-arrow-left"></i>
-            <span>Cancelar y Volver</span>
-          </button>
-        </div>
       </aside>
     </div>
   </div>

@@ -601,30 +601,6 @@
             </li>
           </ul>
         </div>
-
-        <!-- Botones de Acción Fijos del Panel Lateral -->
-        <div class="sidebar-actions-card">
-          <button
-            type="button"
-            class="btn-espresso btn-block"
-            @click="handleSubmit"
-            :disabled="submitting || !isFormReady"
-          >
-            <i v-if="submitting" class="pi pi-spin pi-spinner"></i>
-            <i v-else class="pi pi-save"></i>
-            <span>{{ isEditMode ? 'Guardar Cambios' : 'Registrar Operador' }}</span>
-          </button>
-
-          <button
-            type="button"
-            class="btn-outline-warm btn-block"
-            @click="$emit('cancel')"
-            :disabled="submitting"
-          >
-            <i class="pi pi-arrow-left"></i>
-            <span>Cancelar y Volver</span>
-          </button>
-        </div>
       </aside>
     </div>
   </div>
@@ -963,11 +939,21 @@ const handleSubmit = () => {
   emit('saved', {
     isEdit: isEditMode.value,
     userId: props.userToEdit?.idUsuario,
-    payload
+    payload,
+    done: () => {
+      submitting.value = false
+    }
   })
-
-  submitting.value = false
 }
+
+const setSubmitting = (val) => {
+  submitting.value = val
+}
+
+defineExpose({
+  submitting,
+  setSubmitting
+})
 </script>
 
 <style scoped>

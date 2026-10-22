@@ -814,6 +814,7 @@ import Column from 'primevue/column'
 import Tag from 'primevue/tag'
 import Dialog from 'primevue/dialog'
 import Textarea from 'primevue/textarea'
+import { useRoute, useRouter } from 'vue-router'
 import { gestionAduaneraService } from '../services/gestionAduaneraService'
 import { expedienteService } from '../services/expedienteService'
 import { useAuthStore } from '@/features/auth/stores/authStore'
@@ -826,6 +827,8 @@ import CanalLevanteModal from '../components/CanalLevanteModal.vue'
 import DocumentosManagerModal from '@/shared/components/DocumentosManagerModal.vue'
 import AuditoriaExpedienteModal from '../components/AuditoriaExpedienteModal.vue'
 
+const route = useRoute()
+const router = useRouter()
 const authStore = useAuthStore()
 const navigationStore = useNavigationStore()
 
@@ -894,20 +897,37 @@ const rejectReason = ref('')
 const actionCotizacion = ref(null)
 const processingAction = ref(false)
 
-// Sincronización reactiva con el menú lateral (Sidebar)
+// Sincronización reactiva con el menú lateral (Sidebar) y URL
 const switchTab = (tabName) => {
   activeTab.value = tabName
   navigationStore.setGestionAduaneraSubOption(tabName)
+  if (route.query.tab !== tabName) {
+    router.replace({ query: { ...route.query, tab: tabName } })
+  }
 }
+
+watch(
+  () => route.query.tab,
+  (newTab) => {
+    if (newTab && ['cotizaciones', 'expedientes'].includes(newTab)) {
+      activeTab.value = newTab
+      if (navigationStore.gestionAduaneraSubOption !== newTab) {
+        navigationStore.setGestionAduaneraSubOption(newTab)
+      }
+    }
+  },
+  { immediate: true }
+)
 
 watch(
   () => [navigationStore.gestionAduaneraSubOption, navigationStore.navTick],
   ([newSub]) => {
     if (newSub && ['cotizaciones', 'expedientes'].includes(newSub)) {
-      activeTab.value = newSub
+      if (activeTab.value !== newSub) {
+        activeTab.value = newSub
+      }
     }
-  },
-  { immediate: true }
+  }
 )
 
 // Métricas Computadas

@@ -516,11 +516,14 @@ import { ref, computed, onMounted, watch } from 'vue'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import Tag from 'primevue/tag'
+import { useRoute, useRouter } from 'vue-router'
 import { gestionAduaneraService } from '@/features/roles-modules/services/gestionAduaneraService'
 import DocumentosManagerModal from '@/shared/components/DocumentosManagerModal.vue'
 import { useNotification } from '@/shared/composables/useNotification'
 import { useNavigationStore } from '@/core/stores/navigationStore'
 
+const route = useRoute()
+const router = useRouter()
 const { showSuccess, showError, showInfo } = useNotification()
 const navigationStore = useNavigationStore()
 
@@ -646,7 +649,11 @@ const switchTab = (tab) => {
     arancel: 'clasificacion',
     calculadora: 'tributos'
   }
-  navigationStore.setGestionAduaneraSubOption(subMap[tab] || tab)
+  const subOption = subMap[tab] || tab
+  navigationStore.setGestionAduaneraSubOption(subOption)
+  if (route.query.tab !== subOption) {
+    router.replace({ query: { ...route.query, tab: subOption } })
+  }
 }
 
 const cargarEnCalculadora = (exp) => {
@@ -721,13 +728,28 @@ const getCanalClass = (canal) => {
 }
 
 watch(
-  () => [navigationStore.gestionAduaneraSubOption, navigationStore.navTick],
-  ([sub]) => {
-    if (sub && ['declaraciones', 'clasificacion', 'tributos'].includes(sub)) {
-      activeTab.value = sub === 'clasificacion' ? 'arancel' : sub === 'tributos' ? 'calculadora' : 'declaraciones'
+  () => route.query.tab,
+  (newTab) => {
+    if (newTab && ['declaraciones', 'clasificacion', 'tributos'].includes(newTab)) {
+      activeTab.value = newTab === 'clasificacion' ? 'arancel' : newTab === 'tributos' ? 'calculadora' : 'declaraciones'
+      if (navigationStore.gestionAduaneraSubOption !== newTab) {
+        navigationStore.setGestionAduaneraSubOption(newTab)
+      }
     }
   },
   { immediate: true }
+)
+
+watch(
+  () => [navigationStore.gestionAduaneraSubOption, navigationStore.navTick],
+  ([sub]) => {
+    if (sub && ['declaraciones', 'clasificacion', 'tributos'].includes(sub)) {
+      const target = sub === 'clasificacion' ? 'arancel' : sub === 'tributos' ? 'calculadora' : 'declaraciones'
+      if (activeTab.value !== target) {
+        activeTab.value = target
+      }
+    }
+  }
 )
 
 onMounted(() => {

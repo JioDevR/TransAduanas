@@ -157,7 +157,7 @@
             <div class="sede-left-meta">
               <span class="sede-code-badge font-mono">{{ s.codigoSede }}</span>
               <div class="sede-names">
-                <span class="sede-title">{{ s.nombreSede }}</span>
+                <span class="sede-title">{{ s.nombre || s.nombreSede }}</span>
                 <span class="sede-distrito">{{ s.distrito || 'Jurisdicción no asignada' }}</span>
               </div>
             </div>
@@ -446,8 +446,11 @@ const loadDashboardData = async () => {
       const pData = puertosRes.value?.data || puertosRes.value || []
       const list = Array.isArray(pData) ? pData : []
       puertosCount.value = list.length
-      maritimosCount.value = list.filter((p) => p.tipoPuerto === 'MARITIMO').length
-      aereosCount.value = list.filter((p) => p.tipoPuerto === 'AEREO' || p.tipoPuerto === 'FLUVIAL' || p.tipoPuerto === 'TERRESTRE').length
+      maritimosCount.value = list.filter((p) => (p.tipo || p.tipoPuerto) === 'MARITIMO').length
+      aereosCount.value = list.filter((p) => {
+        const t = p.tipo || p.tipoPuerto
+        return t === 'AEREO' || t === 'FLUVIAL' || t === 'TERRESTRE'
+      }).length
     }
 
     // 3. Tipos de Carga

@@ -13,7 +13,7 @@
       <div v-if="despacho" class="despacho-summary mb-4">
         <div class="summary-line">
           <span class="text-xs text-muted">Tracking:</span>
-          <span class="font-mono font-semibold">{{ despacho.numeroTracking }}</span>
+          <span class="font-mono font-semibold">{{ despacho.codigoTracking || despacho.numeroTracking }}</span>
         </div>
         <div class="summary-line">
           <span class="text-xs text-muted">Expediente:</span>
@@ -161,7 +161,8 @@ const handleSubmit = async () => {
       observaciones: form.value.observaciones || null
     }
 
-    const res = await transporteFlotaService.asignarRecursos(props.despacho.idDespacho, payload)
+    const despachoId = props.despacho.idDespachoTransporte ?? props.despacho.idDespacho
+    const res = await transporteFlotaService.asignarRecursos(despachoId, payload)
     emit('saved', res)
     handleClose()
   } catch (err) {

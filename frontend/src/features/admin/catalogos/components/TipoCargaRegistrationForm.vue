@@ -408,28 +408,6 @@
               <span>Estado operativo asignado</span>
             </li>
           </ul>
-
-          <div class="sidebar-action-buttons">
-            <button
-              type="button"
-              class="btn-espresso full-width"
-              @click="handleSubmit"
-              :disabled="submitting || !isFormReady"
-            >
-              <i v-if="submitting" class="pi pi-spin pi-spinner"></i>
-              <i v-else class="pi pi-save"></i>
-              <span>{{ isEditMode ? 'Guardar Cambios' : 'Registrar Tipo de Carga' }}</span>
-            </button>
-
-            <button
-              type="button"
-              class="btn-outline-warm full-width"
-              @click="$emit('cancel')"
-              :disabled="submitting"
-            >
-              <span>Descartar y Regresar</span>
-            </button>
-          </div>
         </div>
       </aside>
     </div>
@@ -598,6 +576,15 @@ const handleSubmit = async () => {
     submitting.value = false
   }
 }
+
+const setSubmitting = (val) => {
+  submitting.value = val
+}
+
+defineExpose({
+  submitting,
+  setSubmitting
+})
 </script>
 
 <style scoped>
@@ -606,8 +593,7 @@ const handleSubmit = async () => {
   flex-direction: column;
   gap: var(--space-6, 1.5rem);
   padding-bottom: var(--space-10, 2.5rem);
-  max-width: 1400px;
-  margin: 0 auto;
+  width: 100%;
 }
 
 /* 1. Header Bar */

@@ -637,8 +637,8 @@ const handleAdminSubClick = (subOption) => {
 const handleComercialSubClick = (subOption) => {
   navigationStore.setActiveModule('comercial')
   navigationStore.setComercialSubOption(subOption)
-  if (route.path !== '/recepcion-comercial') {
-    router.push('/recepcion-comercial')
+  if (route.path !== '/recepcion-comercial' || route.query.tab !== subOption) {
+    router.push({ path: '/recepcion-comercial', query: { tab: subOption } })
   }
 }
 
@@ -656,12 +656,12 @@ const handleGestionAduaneraSubClick = (subOption) => {
   navigationStore.setActiveModule('gestion-aduanera')
   navigationStore.setGestionAduaneraSubOption(subOption)
   if (['declaraciones', 'clasificacion', 'tributos'].includes(subOption)) {
-    if (route.path !== '/gestion-aduanera/liquidacion') {
-      router.push('/gestion-aduanera/liquidacion')
+    if (route.path !== '/gestion-aduanera/liquidacion' || route.query.tab !== subOption) {
+      router.push({ path: '/gestion-aduanera/liquidacion', query: { tab: subOption } })
     }
   } else {
-    if (route.path !== '/gestion-aduanera') {
-      router.push('/gestion-aduanera')
+    if (route.path !== '/gestion-aduanera' || route.query.tab !== subOption) {
+      router.push({ path: '/gestion-aduanera', query: { tab: subOption } })
     }
   }
 }
@@ -670,8 +670,8 @@ const handleGestionAduaneraSubClick = (subOption) => {
 const handleAgenteAduaneroSubClick = (subOption) => {
   navigationStore.setActiveModule('agente-aduanero')
   navigationStore.setAgenteAduaneroSubOption(subOption)
-  if (route.path !== '/agente-aduanero') {
-    router.push('/agente-aduanero')
+  if (route.path !== '/agente-aduanero' || route.query.tab !== subOption) {
+    router.push({ path: '/agente-aduanero', query: { tab: subOption } })
   }
 }
 
@@ -679,8 +679,8 @@ const handleAgenteAduaneroSubClick = (subOption) => {
 const handleTransporteFlotaSubClick = (subOption) => {
   navigationStore.setActiveModule('transporte-flota')
   navigationStore.setTransporteFlotaSubOption(subOption)
-  if (route.path !== '/transporte-flota') {
-    router.push('/transporte-flota')
+  if (route.path !== '/transporte-flota' || route.query.tab !== subOption) {
+    router.push({ path: '/transporte-flota', query: { tab: subOption } })
   }
 }
 
@@ -688,8 +688,8 @@ const handleTransporteFlotaSubClick = (subOption) => {
 const handleLegalAuditoriaSubClick = (subOption) => {
   navigationStore.setActiveModule('legal-auditoria')
   navigationStore.setLegalAuditoriaSubOption(subOption)
-  if (route.path !== '/legal-auditoria') {
-    router.push('/legal-auditoria')
+  if (route.path !== '/legal-auditoria' || route.query.tab !== subOption) {
+    router.push({ path: '/legal-auditoria', query: { tab: subOption } })
   }
 }
 
@@ -697,8 +697,8 @@ const handleLegalAuditoriaSubClick = (subOption) => {
 const handleFinanzasSubClick = (subOption) => {
   navigationStore.setActiveModule('finanzas')
   navigationStore.setFinanzasSubOption(subOption)
-  if (route.path !== '/finanzas') {
-    router.push('/finanzas')
+  if (route.path !== '/finanzas' || route.query.tab !== subOption) {
+    router.push({ path: '/finanzas', query: { tab: subOption } })
   }
 }
 

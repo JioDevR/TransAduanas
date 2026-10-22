@@ -1,4 +1,6 @@
 import apiClient from '@/core/api/apiClient'
+import finanzasService from './finanzasService'
+import { expedienteService } from './expedienteService'
 
 export const comercialService = {
   // ==========================================
@@ -88,35 +90,30 @@ export const comercialService = {
   },
 
   // ==========================================
-  // PAGOS Y ANTICIPOS DE COTIZACIÓN
+  // PAGOS Y ANTICIPOS (Consolidados via finanzasService)
   // ==========================================
   async registrarPagoCotizacion(idCotizacion, data) {
-    const response = await apiClient.post(`/cotizaciones/${idCotizacion}/pagos`, data)
-    return response.data.data
+    return finanzasService.registrarPagoCotizacion(idCotizacion, data)
   },
 
   async getPagosCotizacion(idCotizacion) {
-    const response = await apiClient.get(`/cotizaciones/${idCotizacion}/pagos`)
-    return response.data.data
+    return finanzasService.getPagosCotizacion(idCotizacion)
   },
 
   // ==========================================
-  // EXPEDIENTES ADUANEROS OPERATIVOS
+  // EXPEDIENTES ADUANEROS (Consolidados via expedienteService)
   // ==========================================
   async createExpediente(data) {
-    const response = await apiClient.post('/expedientes', data)
-    return response.data.data
+    return expedienteService.createExpediente(data)
   },
 
   async updateExpedienteEstado(id, data) {
-    const response = await apiClient.put(`/expedientes/${id}`, data)
-    return response.data.data
+    return expedienteService.updateExpediente(id, data)
   },
 
   async deleteExpediente(id) {
-    const response = await apiClient.delete(`/expedientes/${id}`)
-    return response.data
-  },
+    return expedienteService.deleteExpediente(id)
+  }
 }
 
 export const ventasService = comercialService

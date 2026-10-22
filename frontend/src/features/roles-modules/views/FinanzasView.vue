@@ -1810,14 +1810,6 @@
       @close="showDocsModal = false"
     />
 
-    <!-- Modal: Registro de Pago / Anticipo de Cotizaciones (Finanzas) -->
-    <RegistrarPagoModal
-      :visible="showRegistrarPagoModal"
-      :cotizacion="selectedCotizacionForPago"
-      @close="closeRegistrarPagoModal"
-      @saved="onPagoRegistradoEnFinanzas"
-    />
-
     <!-- ===================================================================== -->
     <!-- MODAL: HISTORIAL DE ABONOS Y VOUCHERS POR COTIZACIÓN                 -->
     <!-- ===================================================================== -->
@@ -1980,14 +1972,20 @@ import Column from 'primevue/column'
 import Tag from 'primevue/tag'
 import Dialog from 'primevue/dialog'
 
+import { useRoute, useRouter } from 'vue-router'
 import DocumentosManagerModal from '@/shared/components/DocumentosManagerModal.vue'
-import RegistrarPagoModal from '../components/RegistrarPagoModal.vue'
 import RegistroPagoFullView from '../components/RegistroPagoFullView.vue'
 
 import finanzasService from '../services/finanzasService'
 import { expedienteService } from '../services/expedienteService'
 import { useNavigationStore } from '@/core/stores/navigationStore'
+import { useNotification } from '@/shared/composables/useNotification'
+import { useConfirmation } from '@/shared/composables/useConfirmation'
 
+const route = useRoute()
+const router = useRouter()
+const { showSuccess, showError } = useNotification()
+const { confirmAction } = useConfirmation()
 const navigationStore = useNavigationStore()
 
 // Pestañas principales sincronizadas con Sidebar ('dashboard' | 'pre-expedientes' | 'liquidaciones' | 'conciliacion')
@@ -2038,7 +2036,6 @@ const showPagoModal = ref(false)
 const showDetalleModal = ref(false)
 const showDocsModal = ref(false)
 const showValidarAnticipoModal = ref(false)
-const showRegistrarPagoModal = ref(false)
 const showRegistroPagoFullView = ref(false)
 
 // Estado para Anticipos de Cotización
@@ -2364,7 +2361,7 @@ async function submitEmision() {
     await loadAllData()
   } catch (err) {
     console.error('Error al emitir liquidación:', err)
-    alert('Error al emitir liquidación: ' + (err.response?.data?.message || err.message))
+    showError('Error al emitir liquidación: ' + (err.response?.data?.message || err.message))
   } finally {
     submittingEmision.value = false
   }
@@ -2396,7 +2393,7 @@ async function submitPago() {
     await loadAllData()
   } catch (err) {
     console.error('Error al registrar cobro:', err)
-    alert('Error al registrar cobro: ' + (err.response?.data?.message || err.message))
+    showError('Error al registrar cobro: ' + (err.response?.data?.message || err.message))
   } finally {
     submittingPago.value = false
   }
@@ -2419,13 +2416,18 @@ function openDocumentos(item) {
 }
 
 async function confirmAnular(liquidacion) {
-  if (!confirm(`¿Está seguro de anular la liquidación ${liquidacion.codigoLiquidacion}?`)) return
+  const confirmed = await confirmAction(
+    `¿Está seguro de anular la liquidación ${liquidacion.codigoLiquidacion}? Esta acción no se puede deshacer.`,
+    'Confirmar Anulación de Liquidación'
+  )
+  if (!confirmed) return
   try {
     await finanzasService.anularLiquidacion(liquidacion.idLiquidacion)
+    showSuccess(`Liquidación ${liquidacion.codigoLiquidacion} anulada correctamente`)
     await loadAllData()
   } catch (err) {
     console.error('Error al anular liquidación:', err)
-    alert('No se pudo anular la liquidación.')
+    showError('No se pudo anular la liquidación.')
   }
 }
 
@@ -2552,7 +2554,7 @@ async function submitValidarAnticipo() {
     }
   } catch (err) {
     console.error('Error al validar anticipo:', err)
-    alert(err.response?.data?.message || 'Error al validar el pago bancario.')
+    showError(err.response?.data?.message || 'Error al validar el pago bancario.')
   } finally {
     submittingValidacion.value = false
   }
@@ -2590,9 +2592,7 @@ async function handlePagoRegistradoDesdeFullView(data) {
 }
 
 function closeRegistrarPagoModal() {
-  showRegistrarPagoModal.value = false
-  showRegistroPagoFullView.value = false
-  selectedCotizacionForPago.value = null
+  closeRegistroPagoFullView()
 }
 
 async function openHistorialCotizacion(cotizacion) {
@@ -2617,12 +2617,18 @@ function switchTab(tab, sub = null) {
     activeTab.value = 'pre-expedientes'
     if (sub) vistaPreExpedientes.value = sub
     navigationStore.setFinanzasSubOption('pre-expedientes')
+    if (route.query.tab !== 'pre-expedientes') {
+      router.replace({ query: { ...route.query, tab: 'pre-expedientes' } })
+    }
     return
   }
   if (tab === 'por-liquidar') {
     activeTab.value = 'liquidaciones'
     subTabLiquidacion.value = 'por-liquidar'
     navigationStore.setFinanzasSubOption('liquidaciones')
+    if (route.query.tab !== 'liquidaciones') {
+      router.replace({ query: { ...route.query, tab: 'liquidaciones' } })
+    }
     return
   }
   activeTab.value = tab
@@ -2630,6 +2636,9 @@ function switchTab(tab, sub = null) {
     vistaPreExpedientes.value = sub
   }
   navigationStore.setFinanzasSubOption(tab)
+  if (route.query.tab !== tab) {
+    router.replace({ query: { ...route.query, tab } })
+  }
 }
 
 function formatEstadoPagoCotizacionLabel(st) {
@@ -2674,6 +2683,19 @@ async function onPagoRegistradoEnFinanzas() {
   }
 }
 
+// Sincronizar activeTab con query param de la URL
+watch(
+  () => route.query.tab,
+  (newTab) => {
+    if (newTab && ['dashboard', 'pre-expedientes', 'anticipos', 'liquidaciones', 'por-liquidar', 'conciliacion', 'facturacion'].includes(newTab)) {
+      if (navigationStore.finanzasSubOption !== newTab) {
+        navigationStore.setFinanzasSubOption(newTab)
+      }
+    }
+  },
+  { immediate: true }
+)
+
 // Escuchar cambios de subopción desde el menú lateral si aplica
 watch(
   () => [navigationStore.finanzasSubOption, navigationStore.navTick],
@@ -2697,8 +2719,7 @@ watch(
     } else {
       activeTab.value = 'dashboard'
     }
-  },
-  { immediate: true }
+  }
 )
 
 // Escuchar disparadores de acciones desde el Sidebar

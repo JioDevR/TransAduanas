@@ -9,28 +9,41 @@ export function useConfirmation() {
 
   /**
    * Abre un diálogo de confirmación y retorna una Promesa que resuelve a `true` si el usuario acepta o `false` si cancela.
+   * Soporta tanto llamada con objeto { message, header, ... } como parámetros posicionales (message, header).
    */
-  const confirmAction = ({
-    message,
-    header = 'Confirmar Acción',
-    icon = 'pi pi-exclamation-triangle',
-    acceptLabel = 'Aceptar',
-    rejectLabel = 'Cancelar',
-    acceptClass = 'p-button-danger',
-    rejectClass = 'p-button-secondary p-button-text'
-  }) => {
+  const confirmAction = (optionsOrMessage = {}, headerArg = 'Confirmar Acción') => {
+    const options =
+      typeof optionsOrMessage === 'string'
+        ? { message: optionsOrMessage, header: headerArg }
+        : (optionsOrMessage || {})
+
     return new Promise((resolve) => {
       confirm.require({
-        message,
-        header,
-        icon,
-        acceptLabel,
-        rejectLabel,
-        acceptClass,
-        rejectClass,
-        accept: () => resolve(true),
-        reject: () => resolve(false),
-        onHide: () => resolve(false)
+        message: options.message || '¿Está seguro de continuar?',
+        header: options.header || 'Confirmar Acción',
+        icon: options.icon || 'pi pi-exclamation-triangle',
+        acceptLabel: options.acceptLabel || 'Aceptar',
+        rejectLabel: options.rejectLabel || 'Cancelar',
+        acceptClass: options.acceptClass || 'p-button-danger',
+        rejectClass: options.rejectClass || 'p-button-secondary p-button-text',
+        accept: async () => {
+          if (typeof options.onAccept === 'function') {
+            await options.onAccept()
+          }
+          resolve(true)
+        },
+        reject: () => {
+          if (typeof options.onReject === 'function') {
+            options.onReject()
+          }
+          resolve(false)
+        },
+        onHide: () => {
+          if (typeof options.onHide === 'function') {
+            options.onHide()
+          }
+          resolve(false)
+        }
       })
     })
   }

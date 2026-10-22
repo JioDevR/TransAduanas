@@ -378,13 +378,13 @@
                     <td class="text-center text-muted">—</td>
                     <td class="text-right font-mono font-bold">${{ formatCurrency(cotizacion.gastosOperativos) }}</td>
                   </tr>
-                  <tr v-if="Number(cotizacion.costoTransporteRuta || 0) > 0">
+                  <tr v-if="Number(cotizacion.costoTransporteInterno || cotizacion.costoTransporteRuta || 0) > 0">
                     <td>
                       <strong>Flete Terrestre Nacional</strong>
                       <span class="concept-sub">Transporte local de carga (Ruta nacional)</span>
                     </td>
                     <td class="text-center text-muted">—</td>
-                    <td class="text-right font-mono font-bold">${{ formatCurrency(cotizacion.costoTransporteRuta) }}</td>
+                    <td class="text-right font-mono font-bold">${{ formatCurrency(cotizacion.costoTransporteInterno || cotizacion.costoTransporteRuta) }}</td>
                   </tr>
                 </tbody>
                 <tfoot>
@@ -482,7 +482,7 @@
             </div>
             <div class="p-sum-line">
               <span class="p-line-label">Servicios SGA:</span>
-              <span class="p-line-val font-mono">${{ formatCurrency((Number(cotizacion.montoHonorariosEstimado || 0) + Number(cotizacion.gastosOperativos || 0) + Number(cotizacion.costoTransporteRuta || 0))) }}</span>
+              <span class="p-line-val font-mono">${{ formatCurrency((Number(cotizacion.montoHonorariosEstimado || 0) + Number(cotizacion.gastosOperativos || 0) + Number(cotizacion.costoTransporteInterno || cotizacion.costoTransporteRuta || 0))) }}</span>
             </div>
           </div>
 

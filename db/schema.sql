@@ -11,21 +11,37 @@ SET FOREIGN_KEY_CHECKS = 0;
 
 -- Limpieza preventiva de tablas existentes
 DROP TABLE IF EXISTS cotizacion_pago;
+
 DROP TABLE IF EXISTS documento_adjunto;
+
 DROP TABLE IF EXISTS liquidacion_financiera;
+
 DROP TABLE IF EXISTS despacho_transporte;
+
 DROP TABLE IF EXISTS conductor;
+
 DROP TABLE IF EXISTS unidad_transporte;
+
 DROP TABLE IF EXISTS control_almacen;
+
 DROP TABLE IF EXISTS expediente;
+
 DROP TABLE IF EXISTS orden_servicio;
+
 DROP TABLE IF EXISTS cotizacion;
+
 DROP TABLE IF EXISTS catalogo_mercancia;
+
 DROP TABLE IF EXISTS cliente;
+
 DROP TABLE IF EXISTS usuario;
+
 DROP TABLE IF EXISTS sede;
+
 DROP TABLE IF EXISTS rol;
+
 DROP TABLE IF EXISTS catalogo_tipo_carga;
+
 DROP TABLE IF EXISTS catalogo_puerto;
 
 -- =============================================================================
@@ -40,7 +56,6 @@ CREATE TABLE catalogo_puerto (
     pais VARCHAR(50) NOT NULL,
     tipo VARCHAR(30) NOT NULL DEFAULT 'MARITIMO',
     estado VARCHAR(20) NOT NULL DEFAULT 'ACTIVO',
-
     -- Llave primaria y restricciones
     PRIMARY KEY (id_puerto),
     CONSTRAINT uq_puerto_codigo UNIQUE (codigo_puerto)
@@ -52,7 +67,6 @@ CREATE TABLE catalogo_tipo_carga (
     codigo VARCHAR(30) NOT NULL,
     nombre VARCHAR(100) NOT NULL,
     estado VARCHAR(20) NOT NULL DEFAULT 'ACTIVO',
-
     -- Llave primaria y restricciones
     PRIMARY KEY (id_tipo_carga),
     CONSTRAINT uq_tipo_carga_codigo UNIQUE (codigo)
@@ -64,13 +78,11 @@ CREATE TABLE catalogo_mercancia (
     codigo VARCHAR(30) NOT NULL,
     nombre VARCHAR(150) NOT NULL,
     categoria VARCHAR(80) NOT NULL,
-
     -- Regulación y tributación aduanera
     requiere_permiso BOOLEAN NOT NULL DEFAULT FALSE,
     entidad_reguladora VARCHAR(80) NULL,
     arancel_base_pct DECIMAL(5, 2) NOT NULL DEFAULT 0.00,
     estado VARCHAR(20) NOT NULL DEFAULT 'ACTIVO',
-
     -- Llave primaria y restricciones
     PRIMARY KEY (id_mercancia),
     CONSTRAINT uq_mercancia_codigo UNIQUE (codigo)
@@ -86,7 +98,6 @@ CREATE TABLE rol (
     nombre_rol VARCHAR(50) NOT NULL,
     descripcion VARCHAR(255) NULL,
     estado_activo BOOLEAN NOT NULL DEFAULT TRUE,
-
     -- Llave primaria y restricciones
     PRIMARY KEY (id_rol),
     CONSTRAINT uq_rol_nombre UNIQUE (nombre_rol)
@@ -102,7 +113,6 @@ CREATE TABLE sede (
     distrito VARCHAR(100) NOT NULL,
     telefono VARCHAR(50) NULL,
     estado VARCHAR(50) NOT NULL DEFAULT 'OPERATIVO',
-
     -- Llave primaria y restricciones
     PRIMARY KEY (id_sede),
     CONSTRAINT uq_sede_codigo UNIQUE (codigo_sede)
@@ -113,11 +123,9 @@ CREATE TABLE usuario (
     id_usuario INT NOT NULL AUTO_INCREMENT,
     id_rol INT NOT NULL,
     id_sede INT NULL,
-
     -- Credenciales de acceso
     username VARCHAR(50) NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
-
     -- Información personal y contacto
     nombres VARCHAR(100) NOT NULL,
     apellidos VARCHAR(100) NOT NULL,
@@ -125,15 +133,12 @@ CREATE TABLE usuario (
     tipo_documento VARCHAR(10) NOT NULL DEFAULT 'DNI',
     numero_documento VARCHAR(20) NULL,
     telefono VARCHAR(20) NULL,
-
     -- Perfil operativo y SUNAT
     cargo_titulo VARCHAR(100) NULL,
     codigo_sunat VARCHAR(50) NULL,
-
     -- Auditoría y estado
     ultimo_acceso DATETIME NULL,
     estado_activo BOOLEAN NOT NULL DEFAULT TRUE,
-
     -- Llave primaria y restricciones
     PRIMARY KEY (id_usuario),
     CONSTRAINT uq_usuario_username UNIQUE (username),
@@ -156,10 +161,8 @@ CREATE TABLE cliente (
     direccion_fiscal VARCHAR(200) NULL,
     correo_contacto VARCHAR(100) NOT NULL,
     telefono_contacto VARCHAR(20) NULL,
-
     -- Control y estado comercial
     es_prospecto BOOLEAN NOT NULL DEFAULT TRUE,
-
     -- Llave primaria y restricciones
     PRIMARY KEY (id_cliente),
     CONSTRAINT uq_cliente_num_doc UNIQUE (numero_documento)
@@ -173,7 +176,6 @@ CREATE TABLE cotizacion (
     id_usuario_comercial INT NOT NULL,
     id_mercancia INT NULL,
     id_tipo_carga INT NULL,
-
     -- Operación, régimen y ruta logística
     regimen_aduanero VARCHAR(50) NOT NULL DEFAULT 'IMPORTACION_DEFINITIVA',
     id_puerto_envio INT NULL,
@@ -184,7 +186,6 @@ CREATE TABLE cotizacion (
     destino_departamento VARCHAR(60) NULL,
     destino_provincia VARCHAR(60) NULL,
     costo_transporte_interno DECIMAL(12, 2) NOT NULL DEFAULT 0.00,
-
     -- Costos y liquidación estimada (USD)
     valor_fob DECIMAL(12, 2) NOT NULL DEFAULT 0.00,
     monto_flete DECIMAL(12, 2) NOT NULL DEFAULT 0.00,
@@ -196,19 +197,16 @@ CREATE TABLE cotizacion (
     total_cotizado DECIMAL(12, 2) NOT NULL DEFAULT 0.00,
     validez_dias INT NOT NULL DEFAULT 15,
     fecha_emision DATE NOT NULL,
-
     -- Revisión técnica del agente aduanero (Paso 2)
     estado VARCHAR(20) NOT NULL DEFAULT 'PENDIENTE',
     id_agente_revisor INT NULL,
     fecha_revision DATETIME NULL,
     motivo_observacion TEXT NULL,
     observaciones TEXT NULL,
-
     -- Control financiero y anticipos (Paso 2.5: Pre-Expediente)
     estado_pago VARCHAR(25) NOT NULL DEFAULT 'SIN_PAGO',
     total_abonado DECIMAL(12, 2) NOT NULL DEFAULT 0.00,
     saldo_pendiente DECIMAL(12, 2) NOT NULL DEFAULT 0.00,
-
     -- Llave primaria y restricciones
     PRIMARY KEY (id_cotizacion),
     CONSTRAINT uq_cotizacion_codigo UNIQUE (codigo_cotizacion),
@@ -226,14 +224,12 @@ CREATE TABLE cotizacion_pago (
     id_pago INT NOT NULL AUTO_INCREMENT,
     id_cotizacion INT NOT NULL,
     codigo_pago VARCHAR(30) NOT NULL,
-
     -- Detalle del abono y conversión monetaria
     tipo_abono VARCHAR(30) NOT NULL DEFAULT 'ADELANTO',
     monto_abonado DECIMAL(12, 2) NOT NULL,
     moneda VARCHAR(5) NOT NULL DEFAULT 'USD',
     tipo_cambio DECIMAL(8, 4) NOT NULL DEFAULT 3.7500,
     monto_equivalente_pen DECIMAL(12, 2) NOT NULL,
-
     -- Información bancaria y comprobante
     metodo_pago VARCHAR(50) NOT NULL,
     banco_origen VARCHAR(80) NULL,
@@ -241,17 +237,14 @@ CREATE TABLE cotizacion_pago (
     numero_operacion VARCHAR(60) NOT NULL,
     fecha_operacion DATE NOT NULL,
     id_documento_comprobante INT NULL,
-
     -- Validación financiera y contable
     estado_pago VARCHAR(25) NOT NULL DEFAULT 'PENDIENTE_REVISION',
     id_usuario_finanzas INT NULL,
     fecha_validacion DATETIME NULL,
     observacion_finanzas TEXT NULL,
-
     -- Auditoría de registro
     id_usuario_registro INT NOT NULL,
     fecha_registro DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
     -- Llave primaria y restricciones
     PRIMARY KEY (id_pago),
     CONSTRAINT uq_cotizacion_pago_codigo UNIQUE (codigo_pago),
@@ -273,43 +266,35 @@ CREATE TABLE expediente (
     id_cliente INT NOT NULL,
     id_mercancia INT NULL,
     id_tipo_carga INT NULL,
-
     -- Asignación a agente aduanero responsable (Paso 3)
     id_agente_aduanero INT NOT NULL,
     fecha_asignacion DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
     -- Contacto exterior (Import: Proveedor en origen | Export: Comprador en destino)
     contacto_exterior_nombre VARCHAR(150) NULL,
     contacto_exterior_telefono VARCHAR(30) NULL,
     contacto_exterior_correo VARCHAR(100) NULL,
-
     -- Fechas de tránsito internacional
     fecha_zarpe_etd DATE NULL,
     fecha_llegada_eta DATE NULL,
     fecha_arribo_aduana DATETIME NULL,
-
     -- Trámite aduanero SUNAT y canales (Pasos 4, 5 y 6)
     numero_dam VARCHAR(30) NULL,
     canal_sunat VARCHAR(20) NOT NULL DEFAULT 'PENDIENTE',
     fecha_asignacion_canal DATETIME NULL,
-
     -- Notificación e inspección de canales (Naranja / Rojo - Paso 6)
     notificado_agente BOOLEAN NOT NULL DEFAULT FALSE,
     fecha_notificacion DATETIME NULL,
     detalle_inspeccion TEXT NULL,
     fecha_levante_autorizacion DATETIME NULL,
-
     -- Carga, contenedor y nave
     numero_contenedor VARCHAR(30) NULL,
     precinto_aduanero VARCHAR(50) NULL,
     nave_viaje VARCHAR(100) NULL,
-
     -- Ciclo de vida y estado del expediente
     estado_expediente VARCHAR(30) NOT NULL DEFAULT 'ASIGNADO',
     fecha_apertura DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     fecha_cierre DATETIME NULL,
     observaciones TEXT NULL,
-
     -- Llave primaria y restricciones
     PRIMARY KEY (id_expediente),
     CONSTRAINT uq_expediente_codigo UNIQUE (codigo_expediente),
@@ -330,13 +315,11 @@ CREATE TABLE control_almacen (
     -- Identificador y expediente vinculado
     id_control_almacen INT NOT NULL AUTO_INCREMENT,
     id_expediente INT NOT NULL,
-
     -- Depósito temporal y ubicación
     deposito_temporal VARCHAR(100) NOT NULL,
     ubicacion_bahia VARCHAR(50) NULL DEFAULT 'Patio General',
     tipo_ingreso VARCHAR(30) NOT NULL DEFAULT 'DIRECTO_VERDE',
     finalidad_almacenaje VARCHAR(30) NOT NULL DEFAULT 'INGRESO_IMPORTACION',
-
     -- Control de tiempos, pesaje y precintos
     fecha_ingreso DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     dias_libres_almacen INT NOT NULL DEFAULT 15,
@@ -345,13 +328,11 @@ CREATE TABLE control_almacen (
     peso_bruto_kg DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
     ticket_pesaje_vgm VARCHAR(50) NULL,
     precinto_conforme BOOLEAN NOT NULL DEFAULT TRUE,
-
     -- Autorización de retiro y estado de custodia
     autorizado_movimiento BOOLEAN NOT NULL DEFAULT FALSE,
     fecha_salida DATETIME NULL,
     estado_almacen VARCHAR(30) NOT NULL DEFAULT 'EN_CUSTODIA',
     observaciones TEXT NULL,
-
     -- Llave primaria y restricciones
     PRIMARY KEY (id_control_almacen),
     CONSTRAINT uq_almacen_expediente UNIQUE (id_expediente),
@@ -366,22 +347,18 @@ CREATE TABLE conductor (
     -- Identificador y vinculación de usuario
     id_conductor INT NOT NULL AUTO_INCREMENT,
     id_usuario INT NULL,
-
     -- Información personal y contacto
     nombres VARCHAR(100) NOT NULL,
     apellidos VARCHAR(100) NOT NULL,
     numero_documento VARCHAR(15) NULL,
     telefono VARCHAR(20) NULL,
-
     -- Licencia de conducir profesional
     tipo_licencia VARCHAR(10) NOT NULL DEFAULT 'A-IIIc',
     numero_licencia VARCHAR(20) NOT NULL,
     fecha_vencimiento_licencia DATE NULL,
-
     -- Disponibilidad y estado operativo
     estado_operativo VARCHAR(20) NOT NULL DEFAULT 'DISPONIBLE',
     estado_activo BOOLEAN NOT NULL DEFAULT TRUE,
-
     -- Llave primaria y restricciones
     PRIMARY KEY (id_conductor),
     CONSTRAINT uq_conductor_usuario UNIQUE (id_usuario),
@@ -398,16 +375,13 @@ CREATE TABLE unidad_transporte (
     ano_fabricacion INT NULL,
     tipo_vehiculo VARCHAR(50) NOT NULL DEFAULT 'TRACTO_PLATAFORMA',
     capacidad_carga_kg DECIMAL(10, 2) NOT NULL DEFAULT 30000.00,
-
     -- Certificaciones técnicas y kilometraje
     soat_vencimiento DATE NULL,
     citv_vencimiento DATE NULL,
     kilometraje_actual INT NOT NULL DEFAULT 0,
-
     -- Disponibilidad y estado operativo
     estado_operativo VARCHAR(20) NOT NULL DEFAULT 'DISPONIBLE',
     estado_activo BOOLEAN NOT NULL DEFAULT TRUE,
-
     -- Llave primaria y restricciones
     PRIMARY KEY (id_unidad),
     CONSTRAINT uq_unidad_tracto UNIQUE (placa_tracto)
@@ -419,33 +393,27 @@ CREATE TABLE despacho_transporte (
     id_expediente INT NOT NULL,
     codigo_tracking VARCHAR(30) NOT NULL,
     tipo_traslado VARCHAR(30) NOT NULL DEFAULT 'ENTREGA_IMPORTACION',
-
     -- Recursos asignados normalizados (3NF)
     id_conductor INT NULL,
     id_unidad INT NULL,
-
     -- Documentación y ruta de traslado
     guia_remision_transporte VARCHAR(30) NULL,
     id_documento_remision INT NULL,
     direccion_partida VARCHAR(255) NOT NULL,
     direccion_llegada VARCHAR(255) NOT NULL,
     distrito_llegada VARCHAR(100) NOT NULL,
-
     -- Datos del receptor de la carga
     contacto_recepcion VARCHAR(100) NULL,
     receptor_nombre VARCHAR(120) NULL,
     receptor_dni VARCHAR(15) NULL,
-
     -- Fechas y control de traslado
     fecha_programada DATETIME NOT NULL,
     fecha_salida_ruta DATETIME NULL,
     fecha_entrega_conforme DATETIME NULL,
-
     -- Incidencias y estado del traslado
     estado_transporte VARCHAR(30) NOT NULL DEFAULT 'PENDIENTE_ASIGNACION',
     detalle_incidencia TEXT NULL,
     observaciones TEXT NULL,
-
     -- Llave primaria y restricciones
     PRIMARY KEY (id_despacho_transporte),
     CONSTRAINT uq_transporte_expediente UNIQUE (id_expediente),
@@ -466,7 +434,6 @@ CREATE TABLE liquidacion_financiera (
     codigo_liquidacion VARCHAR(30) NOT NULL,
     id_expediente INT NOT NULL,
     id_usuario_liquidador INT NULL,
-
     -- Desglose de cobranza consolidada
     total_tributos_sunat DECIMAL(12, 2) NOT NULL DEFAULT 0.00,
     gastos_almacen_puerto DECIMAL(12, 2) NOT NULL DEFAULT 0.00,
@@ -474,7 +441,6 @@ CREATE TABLE liquidacion_financiera (
     honorarios_agencia DECIMAL(12, 2) NOT NULL DEFAULT 0.00,
     subtotal_imponible DECIMAL(12, 2) NOT NULL DEFAULT 0.00,
     igv_monto DECIMAL(12, 2) NOT NULL DEFAULT 0.00,
-
     -- Detracciones SPOT y totales finales
     aplica_detraccion BOOLEAN NOT NULL DEFAULT TRUE,
     porcentaje_detraccion DECIMAL(5, 2) NOT NULL DEFAULT 12.00,
@@ -482,7 +448,6 @@ CREATE TABLE liquidacion_financiera (
     total_general_pen DECIMAL(12, 2) NOT NULL DEFAULT 0.00,
     total_general_usd DECIMAL(12, 2) NOT NULL DEFAULT 0.00,
     tipo_cambio DECIMAL(8, 4) NOT NULL DEFAULT 3.7500,
-
     -- Cobranza, facturación y conciliación bancaria
     estado_pago VARCHAR(20) NOT NULL DEFAULT 'PENDIENTE',
     numero_factura VARCHAR(30) NULL,
@@ -494,7 +459,6 @@ CREATE TABLE liquidacion_financiera (
     fecha_emision DATE NOT NULL,
     fecha_pago DATETIME NULL,
     observaciones TEXT NULL,
-
     -- Llave primaria y restricciones
     PRIMARY KEY (id_liquidacion),
     CONSTRAINT uq_liquidacion_codigo UNIQUE (codigo_liquidacion),
@@ -512,7 +476,6 @@ CREATE TABLE liquidacion_financiera (
 CREATE TABLE documento_adjunto (
     -- Identificador del documento
     id_documento INT NOT NULL AUTO_INCREMENT,
-
     -- Metadatos y almacenamiento del archivo físico
     nombre_original VARCHAR(255) NOT NULL,
     nombre_almacenado VARCHAR(255) NOT NULL,
@@ -520,22 +483,18 @@ CREATE TABLE documento_adjunto (
     extension VARCHAR(20) NOT NULL,
     tamano_bytes BIGINT NOT NULL,
     ruta_almacenamiento VARCHAR(500) NOT NULL,
-
     -- Clasificación documental
     categoria VARCHAR(50) NOT NULL DEFAULT 'GENERAL',
     descripcion VARCHAR(255) NULL,
-
     -- Asociación polimórfica a entidades de negocio
     entidad_tipo VARCHAR(40) NOT NULL DEFAULT 'GENERAL',
     id_cotizacion INT NULL,
     id_expediente INT NULL,
     id_cliente INT NULL,
-
     -- Auditoría y estado
     id_usuario_creador INT NOT NULL,
     fecha_creacion DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     activo TINYINT(1) NOT NULL DEFAULT 1,
-
     -- Llave primaria y restricciones
     PRIMARY KEY (id_documento),
     CONSTRAINT uq_doc_nombre_almacenado UNIQUE (nombre_almacenado),
@@ -551,34 +510,57 @@ CREATE TABLE documento_adjunto (
 
 -- Catálogos y Seguridad TI
 CREATE INDEX idx_puerto_estado ON catalogo_puerto (estado);
+
 CREATE INDEX idx_tipo_carga_estado ON catalogo_tipo_carga (estado);
+
 CREATE INDEX idx_mercancia_estado ON catalogo_mercancia (estado);
+
 CREATE INDEX idx_mercancia_categoria ON catalogo_mercancia (categoria);
+
 CREATE INDEX idx_rol_estado ON rol (estado_activo);
+
 CREATE INDEX idx_sede_estado ON sede (estado);
+
 CREATE INDEX idx_usuario_rol ON usuario (id_rol);
+
 CREATE INDEX idx_usuario_sede ON usuario (id_sede);
+
 CREATE INDEX idx_usuario_estado ON usuario (estado_activo);
 
 -- Marketing y Comercial (Cotizaciones y Pagos)
 CREATE INDEX idx_cotizacion_cliente ON cotizacion (id_cliente);
+
 CREATE INDEX idx_cotizacion_comercial ON cotizacion (id_usuario_comercial);
+
 CREATE INDEX idx_cotizacion_puerto_envio ON cotizacion (id_puerto_envio);
+
 CREATE INDEX idx_cotizacion_puerto_destino ON cotizacion (id_puerto_destino);
+
 CREATE INDEX idx_cotizacion_revisor ON cotizacion (id_agente_revisor);
+
 CREATE INDEX idx_cotizacion_mercancia ON cotizacion (id_mercancia);
+
 CREATE INDEX idx_cotizacion_estado ON cotizacion (estado);
+
 CREATE INDEX idx_cotizacion_estado_pago ON cotizacion (estado_pago);
+
 CREATE INDEX idx_pago_cotizacion ON cotizacion_pago (id_cotizacion);
+
 CREATE INDEX idx_pago_estado ON cotizacion_pago (estado_pago);
+
 CREATE INDEX idx_pago_cotizacion_estado ON cotizacion_pago (id_cotizacion, estado_pago);
+
 CREATE INDEX idx_pago_fecha ON cotizacion_pago (fecha_operacion);
 
 -- Operaciones Aduaneras (Expedientes)
 CREATE INDEX idx_expediente_cliente ON expediente (id_cliente);
+
 CREATE INDEX idx_expediente_agente ON expediente (id_agente_aduanero);
+
 CREATE INDEX idx_expediente_mercancia ON expediente (id_mercancia);
+
 CREATE INDEX idx_expediente_canal ON expediente (canal_sunat);
+
 CREATE INDEX idx_expediente_estado ON expediente (estado_expediente);
 
 -- Almacén y Depósitos Temporales
@@ -586,20 +568,37 @@ CREATE INDEX idx_almacen_estado ON control_almacen (estado_almacen);
 
 -- Transporte y Distribución Local
 CREATE INDEX idx_conductor_licencia ON conductor (numero_licencia);
+
 CREATE INDEX idx_conductor_usuario ON conductor (id_usuario);
+
 CREATE INDEX idx_conductor_estado_operativo ON conductor (estado_operativo);
+
 CREATE INDEX idx_unidad_placa ON unidad_transporte (placa_tracto);
-CREATE INDEX idx_unidad_vencimientos ON unidad_transporte (soat_vencimiento, citv_vencimiento);
+
+CREATE INDEX idx_unidad_vencimientos ON unidad_transporte (
+    soat_vencimiento,
+    citv_vencimiento
+);
+
 CREATE INDEX idx_unidad_estado ON unidad_transporte (estado_operativo);
+
 CREATE INDEX idx_transporte_estado ON despacho_transporte (estado_transporte);
 
 -- Finanzas y Liquidación
 CREATE INDEX idx_liquidacion_estado_pago ON liquidacion_financiera (estado_pago);
+
 CREATE INDEX idx_liquidacion_liquidador ON liquidacion_financiera (id_usuario_liquidador);
 
 -- Gestión Documental
-CREATE INDEX idx_doc_entidad ON documento_adjunto (entidad_tipo, id_cotizacion, id_expediente, id_cliente);
+CREATE INDEX idx_doc_entidad ON documento_adjunto (
+    entidad_tipo,
+    id_cotizacion,
+    id_expediente,
+    id_cliente
+);
+
 CREATE INDEX idx_doc_categoria ON documento_adjunto (categoria);
+
 CREATE INDEX idx_doc_activo ON documento_adjunto (activo);
 
 -- Rehabilitación de validación de claves foráneas

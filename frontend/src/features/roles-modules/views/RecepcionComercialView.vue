@@ -719,7 +719,7 @@
 
           <Column header="N° DAM">
             <template #body="{ data: exp }">
-              <span class="font-mono text-xs font-bold">{{ exp.numeroDeclaracion || '—' }}</span>
+              <span class="font-mono text-xs font-bold">{{ exp.numeroDam || exp.numeroDeclaracion || '—' }}</span>
             </template>
           </Column>
 
@@ -799,6 +799,7 @@
 
 <script setup>
 import { ref, reactive, computed, onMounted, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import Tag from 'primevue/tag'
@@ -814,6 +815,8 @@ import ClienteRegistrationForm from '../components/ClienteRegistrationForm.vue'
 import CotizacionRegistrationForm from '../components/CotizacionRegistrationForm.vue'
 import DocumentosManagerModal from '@/shared/components/DocumentosManagerModal.vue'
 
+const route = useRoute()
+const router = useRouter()
 const authStore = useAuthStore()
 const navigationStore = useNavigationStore()
 const { showSuccess, showError, showInfo } = useNotification()
@@ -832,6 +835,9 @@ const navigateTo = (subOption) => {
   closeAllForms()
   activeTab.value = subOption
   navigationStore.setComercialSubOption(subOption)
+  if (route.query.tab !== subOption) {
+    router.replace({ query: { ...route.query, tab: subOption } })
+  }
 }
 
 const getEstadoPagoLabel = (st) => {
@@ -896,16 +902,32 @@ const closeAllForms = () => {
   selectedCliente.value = null
 }
 
+// Sincronizar activeTab y resetear formularios con query tab de la URL
+watch(
+  () => route.query.tab,
+  (newTab) => {
+    if (newTab && ['dashboard', 'cotizaciones', 'clientes', 'ordenes'].includes(newTab)) {
+      activeTab.value = newTab
+      if (navigationStore.comercialSubOption !== newTab) {
+        navigationStore.setComercialSubOption(newTab)
+      }
+      closeAllForms()
+    }
+  },
+  { immediate: true }
+)
+
 // Sincronizar activeTab y resetear formularios con sub-opción de navegación Comercial y navTick
 watch(
   () => [navigationStore.comercialSubOption, navigationStore.navTick],
   ([newSub]) => {
     if (newSub && ['dashboard', 'cotizaciones', 'clientes', 'ordenes'].includes(newSub)) {
-      activeTab.value = newSub
-      closeAllForms()
+      if (activeTab.value !== newSub) {
+        activeTab.value = newSub
+        closeAllForms()
+      }
     }
-  },
-  { immediate: true }
+  }
 )
 
 // Escuchar disparadores de acciones desde el Sidebar
@@ -1056,6 +1078,7 @@ const filteredExpedientes = computed(() => {
       exp.codigoExpediente?.toLowerCase().includes(q) ||
       exp.codigoCotizacion?.toLowerCase().includes(q) ||
       exp.clienteRazonSocial?.toLowerCase().includes(q) ||
+      exp.numeroDam?.toLowerCase().includes(q) ||
       exp.numeroDeclaracion?.toLowerCase().includes(q)
 
     return matchStatus && matchSearch
@@ -1093,7 +1116,7 @@ const openEditCliente = (cliente) => {
   showClienteForm.value = true
 }
 
-const handleClienteSaved = async ({ isEdit, clienteId, payload }) => {
+const handleClienteSaved = async ({ isEdit, clienteId, payload, done }) => {
   try {
     if (isEdit) {
       await comercialService.updateCliente(clienteId, payload)
@@ -1106,6 +1129,8 @@ const handleClienteSaved = async ({ isEdit, clienteId, payload }) => {
     await loadData()
   } catch (err) {
     showToast(err.response?.data?.message || 'Error al guardar cliente.', 'error')
+  } finally {
+    done?.()
   }
 }
 
@@ -1142,7 +1167,7 @@ const handleQuickClientCreated = async (newClient) => {
   await loadData()
 }
 
-const handleCotizacionSaved = async ({ isEdit, cotizacionId, payload, documentos }) => {
+const handleCotizacionSaved = async ({ isEdit, cotizacionId, payload, documentos, done }) => {
   try {
     if (isEdit) {
       await comercialService.updateCotizacion(cotizacionId, payload)
@@ -1176,13 +1201,19 @@ const handleCotizacionSaved = async ({ isEdit, cotizacionId, payload, documentos
     await loadData()
   } catch (err) {
     showToast(err.response?.data?.message || 'Error al guardar cotización.', 'error')
+  } finally {
+    done?.()
   }
 }
 
 const handleCambiarEstadoCotizacion = async (cotizacion, nuevoEstado) => {
   let motivo = ''
   if (nuevoEstado === 'RECHAZADA') {
-    motivo = window.prompt('Ingrese el motivo de rechazo (opcional):') || ''
+    const confirmed = await confirmAction(
+      `¿Está seguro de marcar como RECHAZADA la cotización ${cotizacion.codigoCotizacion}?`,
+      'Confirmar Rechazo de Cotización'
+    )
+    if (!confirmed) return
   }
 
   try {

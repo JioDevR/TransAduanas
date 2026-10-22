@@ -84,11 +84,14 @@ export const useNavigationStore = defineStore('navigation', {
         transporte: 'transporte-flota',
         legal: 'legal-auditoria'
       }
-      this.activeModule = mapping[moduleName] || moduleName
+      const target = mapping[moduleName] || moduleName
+      if (this.activeModule === target) return
+      this.activeModule = target
       this.navTick++
     },
 
     setAdministracionTiSubOption(option) {
+      if (this.administracionTiSubOption === option) return
       this.administracionTiSubOption = option
       this.navTick++
     },
@@ -97,6 +100,7 @@ export const useNavigationStore = defineStore('navigation', {
     },
 
     setGerenciaGeneralSubOption(option) {
+      if (this.gerenciaGeneralSubOption === option) return
       this.gerenciaGeneralSubOption = option
       this.navTick++
     },
@@ -105,6 +109,7 @@ export const useNavigationStore = defineStore('navigation', {
     },
 
     setComercialSubOption(option) {
+      if (this.comercialSubOption === option) return
       this.comercialSubOption = option
       this.navTick++
     },
@@ -113,6 +118,7 @@ export const useNavigationStore = defineStore('navigation', {
     },
 
     setGestionAduaneraSubOption(option) {
+      if (this.gestionAduaneraSubOption === option) return
       this.gestionAduaneraSubOption = option
       this.navTick++
     },
@@ -124,6 +130,7 @@ export const useNavigationStore = defineStore('navigation', {
     },
 
     setAgenteAduaneroSubOption(option) {
+      if (this.agenteAduaneroSubOption === option) return
       this.agenteAduaneroSubOption = option
       this.navTick++
     },
@@ -132,6 +139,7 @@ export const useNavigationStore = defineStore('navigation', {
     },
 
     setTransporteFlotaSubOption(option) {
+      if (this.transporteFlotaSubOption === option) return
       this.transporteFlotaSubOption = option
       this.navTick++
     },
@@ -140,6 +148,7 @@ export const useNavigationStore = defineStore('navigation', {
     },
 
     setLegalAuditoriaSubOption(option) {
+      if (this.legalAuditoriaSubOption === option) return
       this.legalAuditoriaSubOption = option
       this.navTick++
     },
@@ -148,6 +157,7 @@ export const useNavigationStore = defineStore('navigation', {
     },
 
     setFinanzasSubOption(option) {
+      if (this.finanzasSubOption === option && !this.finanzasActionTrigger) return
       this.finanzasSubOption = option
       this.finanzasActionTrigger = null
       this.navTick++

@@ -813,8 +813,6 @@ import { useConfirmation } from '@/shared/composables/useConfirmation'
 import ClienteRegistrationForm from '../components/ClienteRegistrationForm.vue'
 import CotizacionRegistrationForm from '../components/CotizacionRegistrationForm.vue'
 import DocumentosManagerModal from '@/shared/components/DocumentosManagerModal.vue'
-import HeroBannerCard from '@/shared/components/HeroBannerCard.vue'
-import MetricCard from '@/shared/components/MetricCard.vue'
 
 const authStore = useAuthStore()
 const navigationStore = useNavigationStore()

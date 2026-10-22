@@ -1,11 +1,40 @@
 <template>
   <div class="legal-view">
-    <!-- Hero Banner Card Editorial -->
-    <HeroBannerCard
-      kicker="LEGAL Y AUDITORÍA // ASUNTOS CONTENCIOSO-TRIBUTARIOS & SUNAT"
-      title="Legal y Auditoría - Recursos de Reclamación y Dictámenes"
-      description="Patrocinio y defensa jurídica en despachos aduaneros observados, contingencias de duda razonable de valor, inspecciones de Canal Rojo y apelaciones ante el Tribunal Fiscal."
-    />
+    <!-- 1. Header Toolbar Editorial -->
+    <header class="legal-action-toolbar">
+      <div class="toolbar-identity">
+        <span class="badge-kicker">LEGAL Y AUDITORÍA // ASUNTOS CONTENCIOSO-TRIBUTARIOS & SUNAT</span>
+        <div class="title-with-badge">
+          <h2 class="toolbar-title">Legal y Auditoría - Recursos y Dictámenes</h2>
+          <span class="count-badge font-mono">{{ expedientesRojosList.length + recursosList.length }} Casos Activos</span>
+        </div>
+        <p class="toolbar-description">
+          Patrocinio y defensa jurídica en despachos observados, contingencias de duda razonable de valor, inspecciones Canal Rojo y apelaciones ante el Tribunal Fiscal.
+        </p>
+      </div>
+
+      <div class="toolbar-actions">
+        <button
+          type="button"
+          class="btn-warm-outline"
+          :disabled="loadingExpedientes"
+          @click="loadExpedientes"
+          title="Actualizar expedientes"
+        >
+          <i class="pi pi-refresh" :class="{ 'pi-spin': loadingExpedientes }"></i>
+          <span>Actualizar</span>
+        </button>
+
+        <button
+          type="button"
+          class="btn-espresso"
+          @click="openNuevoRecursoModal(null)"
+        >
+          <i class="pi pi-file-plus"></i>
+          <span>+ Nuevo Recurso</span>
+        </button>
+      </div>
+    </header>
 
     <!-- Pestañas de Navegación -->
     <div class="module-tabs-nav">
@@ -46,12 +75,51 @@
     <!-- TAB 1: EXPEDIENTES OBSERVADOS Y CANAL ROJO                            -->
     <!-- ===================================================================== -->
     <div v-if="activeTab === 'observados'" class="tab-container">
-      <!-- Métricas Legales -->
-      <div class="metrics-grid">
-        <MetricCard index="01" label="En Canal Rojo (Físico)" :value="expedientesRojosList.length" severity="danger" highlight />
-        <MetricCard index="02" label="Duda Razonable de Valor" :value="dudaRazonableCount" severity="warning" />
-        <MetricCard index="03" label="Dictámenes Redactados" :value="recursosList.length" severity="success" />
-        <MetricCard index="04" label="Total en Fiscalización" :value="expedientesTotalAuditoria" severity="accent" />
+      <!-- Métricas Legales KPI Grid Warm Editorial -->
+      <div class="metrics-kpi-grid">
+        <div class="kpi-card highlight-card">
+          <div class="kpi-header">
+            <span class="kpi-index">01</span>
+            <span class="kpi-badge badge-danger">Inspección Física</span>
+          </div>
+          <div class="kpi-body">
+            <span class="kpi-value font-mono">{{ expedientesRojosList.length }}</span>
+            <span class="kpi-label">En Canal Rojo (Físico)</span>
+          </div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-header">
+            <span class="kpi-index">02</span>
+            <span class="kpi-badge badge-warning">Ajuste OMC</span>
+          </div>
+          <div class="kpi-body">
+            <span class="kpi-value font-mono">{{ dudaRazonableCount }}</span>
+            <span class="kpi-label">Duda Razonable de Valor</span>
+          </div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-header">
+            <span class="kpi-index">03</span>
+            <span class="kpi-badge badge-success">Dictaminados</span>
+          </div>
+          <div class="kpi-body">
+            <span class="kpi-value font-mono">{{ recursosList.length }}</span>
+            <span class="kpi-label">Dictámenes Redactados</span>
+          </div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-header">
+            <span class="kpi-index">04</span>
+            <span class="kpi-badge badge-info">Auditoría SUNAT</span>
+          </div>
+          <div class="kpi-body">
+            <span class="kpi-value font-mono">{{ expedientesTotalAuditoria }}</span>
+            <span class="kpi-label">Total en Fiscalización</span>
+          </div>
+        </div>
       </div>
 
       <!-- Tabla de Expedientes en Contingencia -->
@@ -388,8 +456,6 @@
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
-import HeroBannerCard from '@/shared/components/HeroBannerCard.vue'
-import MetricCard from '@/shared/components/MetricCard.vue'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import Tag from 'primevue/tag'
@@ -589,7 +655,122 @@ onMounted(() => {
 .legal-view {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: var(--space-4, 1rem);
+  width: 100%;
+}
+
+/* 1. Header Action Toolbar Editorial */
+.legal-action-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-4, 1rem);
+  padding: var(--space-4, 1rem) var(--space-5, 1.25rem);
+  background: var(--color-bg-surface, #ffffff);
+  border: 1px solid var(--color-border, #e4dacb);
+  border-radius: var(--radius-lg, 0.75rem);
+  box-shadow: var(--shadow-subtle, 0 1px 3px rgba(45, 35, 25, 0.04));
+}
+
+.toolbar-identity {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1, 0.25rem);
+}
+
+.badge-kicker {
+  font-family: var(--font-family-mono, monospace);
+  font-size: var(--font-size-xs, 0.75rem);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--color-accent-kicker, #8c6b3e);
+  text-transform: uppercase;
+}
+
+.title-with-badge {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3, 0.75rem);
+  flex-wrap: wrap;
+}
+
+.toolbar-title {
+  margin: 0;
+  font-size: var(--font-size-xl, 1.25rem);
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--color-text-main, #2b2520);
+}
+
+.count-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.6rem;
+  background-color: var(--color-bg-subtle, #f2ebe1);
+  color: var(--color-text-main, #2b2520);
+  border: 1px solid var(--color-border, #e4dacb);
+  border-radius: var(--radius-pill, 9999px);
+  font-size: var(--font-size-xs, 0.75rem);
+  font-weight: 700;
+}
+
+.toolbar-description {
+  margin: 0;
+  font-size: var(--font-size-sm, 0.8125rem);
+  color: var(--color-text-muted, #6f6356);
+  max-width: 820px;
+  line-height: 1.45;
+}
+
+.toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3, 0.75rem);
+  flex-shrink: 0;
+}
+
+.btn-warm-outline {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2, 0.5rem);
+  padding: 0.55rem 0.95rem;
+  border-radius: var(--radius-sm, 0.375rem);
+  border: 1px solid var(--color-border, #e4dacb);
+  background-color: var(--color-bg-surface, #ffffff);
+  color: var(--color-text-main, #2b2520);
+  font-size: var(--font-size-sm, 0.8125rem);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-warm-outline:hover:not(:disabled) {
+  background-color: var(--color-bg-subtle, #f2ebe1);
+  border-color: var(--color-border-strong, #d5c8b6);
+}
+
+.btn-warm-outline:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-espresso {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2, 0.5rem);
+  padding: 0.55rem 1rem;
+  border-radius: var(--radius-sm, 0.375rem);
+  border: 1px solid var(--color-primary, #352f2a);
+  background-color: var(--color-primary, #352f2a);
+  color: var(--color-primary-text, #ffffff);
+  font-size: var(--font-size-sm, 0.8125rem);
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-espresso:hover {
+  filter: brightness(1.15);
 }
 
 .module-tabs-nav {
@@ -599,6 +780,7 @@ onMounted(() => {
   padding-bottom: 0.25rem;
   flex-wrap: wrap;
 }
+
 .tab-nav-btn {
   display: inline-flex;
   align-items: center;
@@ -610,29 +792,37 @@ onMounted(() => {
   margin-bottom: -0.35rem;
   font-size: 0.85rem;
   font-weight: 700;
-  color: #7a7065;
+  color: var(--color-text-muted, #7a7065);
   cursor: pointer;
+  transition: color 0.2s ease;
 }
+
+.tab-nav-btn:hover {
+  color: var(--color-text-main, #2b2520);
+}
+
 .tab-nav-btn.active {
-  color: var(--color-accent, #9a7f60);
-  border-bottom-color: var(--color-accent, #9a7f60);
+  color: var(--color-accent-kicker, #8c6b3e);
+  border-bottom-color: var(--color-accent-kicker, #8c6b3e);
 }
+
 .tab-counter {
-  background: #ede6db;
-  color: #352f2a;
+  background: var(--color-bg-subtle, #ede6db);
+  color: var(--color-text-main, #352f2a);
   font-size: 0.7rem;
   padding: 0.1rem 0.45rem;
   border-radius: 12px;
-  font-family: var(--font-mono, monospace);
+  font-family: var(--font-family-mono, monospace);
 }
+
 .tab-counter-danger {
-  background: #faebeb;
-  color: #b42318;
-  border: 1px solid #e89797;
+  background: var(--color-danger-bg, #fdf0f0);
+  color: var(--color-danger-text, #9e2a2b);
+  border: 1px solid var(--color-danger-border, #f6c8c8);
   font-size: 0.7rem;
   padding: 0.1rem 0.45rem;
   border-radius: 12px;
-  font-family: var(--font-mono, monospace);
+  font-family: var(--font-family-mono, monospace);
   font-weight: 700;
 }
 
@@ -642,10 +832,96 @@ onMounted(() => {
   gap: 1.25rem;
 }
 
-.metrics-grid {
+/* Métricas KPI Grid Warm Editorial */
+.metrics-kpi-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 1rem;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-4, 1rem);
+  margin-bottom: var(--space-2, 0.5rem);
+}
+
+.kpi-card {
+  background-color: var(--color-bg-surface, #ffffff);
+  border: 1px solid var(--color-border, #e4dacb);
+  border-radius: var(--radius-md, 0.5rem);
+  padding: var(--space-4, 1rem);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3, 0.75rem);
+  box-shadow: var(--shadow-subtle, 0 1px 3px rgba(45, 35, 25, 0.04));
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.kpi-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-hover, 0 4px 12px rgba(45, 35, 25, 0.08));
+}
+
+.kpi-card.highlight-card {
+  border-left: 3px solid var(--color-accent-kicker, #8c6b3e);
+}
+
+.kpi-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.kpi-index {
+  font-family: var(--font-family-mono, monospace);
+  font-size: var(--font-size-xs, 0.75rem);
+  font-weight: 700;
+  color: var(--color-text-subtle, #998c7e);
+}
+
+.kpi-badge {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  padding: 0.15rem 0.45rem;
+  border-radius: var(--radius-pill, 9999px);
+}
+
+.badge-danger {
+  background-color: var(--color-danger-bg, #fdf0f0);
+  color: var(--color-danger-text, #9e2a2b);
+  border: 1px solid var(--color-danger-border, #f6c8c8);
+}
+
+.badge-warning {
+  background-color: var(--color-warning-bg, #fdf6ec);
+  color: var(--color-warning-text, #945308);
+  border: 1px solid var(--color-warning-border, #f6e0b5);
+}
+
+.badge-success {
+  background-color: var(--color-success-bg, #eaf6ed);
+  color: var(--color-success-text, #1e6638);
+  border: 1px solid var(--color-success-border, #bce5c6);
+}
+
+.badge-info {
+  background-color: var(--color-info-bg, #eff6ff);
+  color: var(--color-info-text, #1e40af);
+  border: 1px solid var(--color-info-border, #bfdbfe);
+}
+
+.kpi-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.kpi-value {
+  font-size: 1.4rem;
+  font-weight: 800;
+  line-height: 1.1;
+  color: var(--color-text-main, #2b2520);
+}
+
+.kpi-label {
+  font-size: var(--font-size-xs, 0.75rem);
+  color: var(--color-text-muted, #6f6356);
+  font-weight: 600;
 }
 
 .content-table-card {
@@ -855,13 +1131,30 @@ onMounted(() => {
   font-weight: 700;
   color: var(--color-text-primary, #352f2a);
 }
-.form-input, .form-select, .form-textarea {
+.form-input, .form-textarea {
   padding: 0.45rem 0.65rem;
   border: 1px solid var(--color-border, #e2d9cd);
-  background: #ffffff;
+  background: var(--color-bg-surface, #ffffff);
+  color: var(--color-text-main, #352f2a);
   border-radius: 4px;
   font-size: 0.825rem;
 }
+
+.form-select {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  padding: 0.45rem 2rem 0.45rem 0.65rem;
+  border: 1px solid var(--color-border, #e2d9cd);
+  border-radius: 4px;
+  background-color: var(--color-bg-surface, #ffffff);
+  color: var(--color-text-main, #352f2a);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236f6356' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat !important;
+  background-position: right 0.65rem center !important;
+  background-size: 1rem 1rem !important;
+  font-size: 0.825rem;
+}
+
 .modal-footer-actions {
   display: flex;
   justify-content: flex-end;
@@ -890,5 +1183,67 @@ onMounted(() => {
   font-size: 0.8rem;
   font-weight: 600;
   cursor: pointer;
+}
+
+/* Media Queries & Responsive */
+@media (max-width: 1024px) {
+  .metrics-kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .legal-action-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .toolbar-actions {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 640px) {
+  .metrics-kpi-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Modo Oscuro (.dark-theme) */
+:global(.dark-theme) .legal-view .form-select {
+  background-color: var(--color-bg-surface, #24221c) !important;
+  color: var(--color-text-main, #ede5d8) !important;
+  border-color: var(--color-border, #444138) !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d6b476' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") !important;
+}
+
+:global(.dark-theme) .legal-view .content-table-card,
+:global(.dark-theme) .legal-view .normativa-card {
+  background-color: var(--color-bg-surface, #24221c);
+  border-color: var(--color-border, #444138);
+}
+
+:global(.dark-theme) .legal-view .table-container {
+  background-color: var(--color-bg-surface, #24221c);
+  border-color: var(--color-border, #444138);
+}
+
+:global(.dark-theme) .legal-view .btn-espresso {
+  background-color: var(--color-primary, #d6b476);
+  color: var(--color-primary-text, #1d1b15) !important;
+  border-color: var(--color-primary, #d6b476);
+}
+
+:global(.dark-theme) .legal-view .btn-warm-outline {
+  background-color: var(--color-bg-surface, #24221c);
+  border-color: var(--color-border, #444138);
+  color: var(--color-text-main, #ede5d8);
+}
+
+:global(.dark-theme) .legal-view .btn-warm-outline:hover:not(:disabled) {
+  background-color: var(--color-bg-subtle, #332f27);
+}
+
+:global(.dark-theme) .legal-view .search-input {
+  background-color: var(--color-bg-surface, #24221c);
+  color: var(--color-text-main, #ede5d8);
+  border-color: var(--color-border, #444138);
 }
 </style>

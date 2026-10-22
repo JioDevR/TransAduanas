@@ -13,6 +13,13 @@ export const userService = {
   },
 
   /**
+   * Alias en español para getUsers
+   */
+  async getUsuarios(soloActivos = false) {
+    return this.getUsers(soloActivos)
+  },
+
+  /**
    * Obtener detalle de usuario por ID
    * @param {Number} id ID del usuario
    */

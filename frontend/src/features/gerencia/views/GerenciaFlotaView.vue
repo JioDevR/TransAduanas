@@ -1,21 +1,101 @@
 <template>
   <div class="gerencia-flota-view">
-    <!-- Hero Banner Card -->
-    <HeroBannerCard
-      kicker="GERENCIA GENERAL // GESTIÓN DE ACTIVOS & TRANSPORTE"
-      title="Parque Automotor & Flota de Unidades MTC"
-      description="Alta, control técnico y mantenimiento de tractos, plataformas y carretas autorizadas para el transporte de carga aduanera y contenedores."
-    />
+    <!-- 1. Toolbar de Acciones Warm Editorial (Sin Banners Invasivos) -->
+    <div class="flota-action-toolbar">
+      <div class="toolbar-left-info">
+        <span class="badge-kicker">GESTIÓN DE ACTIVOS & TRANSPORTE // FLOTA MTC</span>
+        <h3 class="toolbar-title">Parque Automotor & Unidades de Carga</h3>
+      </div>
 
-    <!-- Métricas Rápidas de Flota -->
-    <div class="metrics-grid">
-      <MetricCard index="01" label="Tractos Disponibles" :value="tractosDisponiblesCount" severity="success" highlight />
-      <MetricCard index="02" label="Unidades en Ruta" :value="unidadesEnRutaCount" severity="pending" />
-      <MetricCard index="03" label="En Taller / Mantenimiento" :value="unidadesMantenimientoCount" severity="warning" />
-      <MetricCard index="04" label="Total Parque Automotor" :value="unidadesList.length" severity="accent" />
+      <div class="toolbar-actions-group">
+        <span class="count-badge font-mono">{{ filteredUnidades.length }} de {{ unidadesList.length }} unidades</span>
+
+        <button
+          type="button"
+          class="btn-outline-warm"
+          @click="loadUnidades"
+          :disabled="loading"
+          title="Recargar inventario de flota"
+        >
+          <i :class="['pi pi-sync', { 'pi-spin': loading }]"></i>
+          <span>Actualizar</span>
+        </button>
+
+        <button
+          type="button"
+          class="btn-espresso"
+          @click="openCreateModal"
+        >
+          <i class="pi pi-plus"></i>
+          <span>+ Ingresar Vehículo</span>
+        </button>
+      </div>
     </div>
 
-    <!-- Alertas Preventivas de Vencimiento SOAT / CITV -->
+    <!-- 2. Grid de Métricas KPI Técnicas (Estándar Editorial Warm) -->
+    <div class="metrics-kpi-grid">
+      <div class="kpi-card success-card" @click="filterCondicion = 'DISPONIBLE'">
+        <div class="kpi-card-header">
+          <span class="kpi-num">01</span>
+          <span class="kpi-label">Tractos Disponibles</span>
+          <i class="pi pi-truck kpi-icon success"></i>
+        </div>
+        <div class="kpi-main-stat">
+          <span class="kpi-value font-mono text-success">{{ tractosDisponiblesCount }}</span>
+          <span class="kpi-badge success">En Patio</span>
+        </div>
+        <div class="kpi-footer-note">
+          <span>Listos para asignación de ruta</span>
+        </div>
+      </div>
+
+      <div class="kpi-card" @click="filterCondicion = 'EN_RUTA'">
+        <div class="kpi-card-header">
+          <span class="kpi-num">02</span>
+          <span class="kpi-label">Unidades en Ruta</span>
+          <i class="pi pi-compass kpi-icon"></i>
+        </div>
+        <div class="kpi-main-stat">
+          <span class="kpi-value font-mono">{{ unidadesEnRutaCount }}</span>
+          <span class="kpi-badge info">En Tránsito</span>
+        </div>
+        <div class="kpi-footer-note">
+          <span>Despachos aduaneros activos</span>
+        </div>
+      </div>
+
+      <div class="kpi-card warning-card" @click="filterCondicion = 'MANTENIMIENTO'">
+        <div class="kpi-card-header">
+          <span class="kpi-num">03</span>
+          <span class="kpi-label">En Mantenimiento</span>
+          <i class="pi pi-wrench kpi-icon warning"></i>
+        </div>
+        <div class="kpi-main-stat">
+          <span class="kpi-value font-mono text-warning">{{ unidadesMantenimientoCount }}</span>
+          <span class="kpi-badge warning">En Taller</span>
+        </div>
+        <div class="kpi-footer-note">
+          <span>Preventivo y correctivo</span>
+        </div>
+      </div>
+
+      <div class="kpi-card" @click="filterCondicion = ''">
+        <div class="kpi-card-header">
+          <span class="kpi-num">04</span>
+          <span class="kpi-label">Parque Automotor</span>
+          <i class="pi pi-database kpi-icon"></i>
+        </div>
+        <div class="kpi-main-stat">
+          <span class="kpi-value font-mono">{{ unidadesList.length }}</span>
+          <span class="kpi-badge accent">Total Flota</span>
+        </div>
+        <div class="kpi-footer-note">
+          <span>Habilitaciones técnicas MTC</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. Alertas Preventivas de Vencimiento SOAT / CITV -->
     <div v-if="alertasVencimiento.length > 0" class="alerts-container">
       <div v-for="alerta in alertasVencimiento" :key="alerta.id" class="alert-item" :class="alerta.tipo">
         <i class="pi pi-exclamation-triangle alert-icon"></i>
@@ -26,15 +106,29 @@
       </div>
     </div>
 
-    <!-- Sección de Gestión y Tabla -->
-    <div class="flota-table-card">
-      <div class="card-header-bar">
-        <div class="header-titles">
-          <span class="badge-kicker">PADRÓN VEHICULAR</span>
-          <h3 class="section-title">Registro de Unidades de Carga Pesada</h3>
+    <!-- 4. Sección de Gestión y Tabla -->
+    <div class="table-card">
+      <div class="table-toolbar">
+        <div class="search-input-wrapper">
+          <i class="pi pi-search search-icon"></i>
+          <input
+            v-model="searchQuery"
+            type="text"
+            class="table-search-input"
+            placeholder="Buscar por placa, marca o modelo..."
+          />
+          <button
+            v-if="searchQuery"
+            type="button"
+            class="clear-search-btn"
+            @click="searchQuery = ''"
+            title="Limpiar búsqueda"
+          >
+            <i class="pi pi-times"></i>
+          </button>
         </div>
 
-        <div class="header-actions">
+        <div class="filter-group">
           <!-- Filtro Tipo -->
           <select v-model="filterTipoVehiculo" class="filter-select">
             <option value="">Todos los Tipos</option>
@@ -52,41 +146,23 @@
             <option value="MANTENIMIENTO">En Mantenimiento</option>
             <option value="FUERA_DE_SERVICIO">Fuera de Servicio</option>
           </select>
-
-          <!-- Buscador -->
-          <div class="search-input-wrap">
-            <i class="pi pi-search search-icon"></i>
-            <input
-              v-model="searchQuery"
-              type="text"
-              class="search-input"
-              placeholder="Buscar por placa o marca..."
-            />
-          </div>
-
-          <button type="button" class="btn-refresh" @click="loadUnidades" :disabled="loading">
-            <i :class="['pi pi-sync', { 'pi-spin': loading }]"></i>
-            <span>Actualizar</span>
-          </button>
-
-          <button type="button" class="btn-primary-add" @click="openCreateModal">
-            <i class="pi pi-plus"></i>
-            <span>+ Ingresar Vehículo</span>
-          </button>
         </div>
       </div>
 
       <!-- Tabla de Unidades -->
-      <div class="table-container">
+      <div class="data-table-container">
         <DataTable
           :value="filteredUnidades"
           :loading="loading"
           responsiveLayout="scroll"
           class="custom-datatable"
           dataKey="idUnidad"
+          :paginator="filteredUnidades.length > 10"
+          :rows="10"
+          :rowsPerPageOptions="[10, 20, 50]"
         >
           <template #empty>
-            <div class="empty-state">
+            <div class="empty-state-box">
               <i class="pi pi-truck empty-icon"></i>
               <p class="empty-title">No hay unidades registradas</p>
               <p class="empty-desc">Registre los vehículos de carga pesada autorizados por el MTC para operar.</p>
@@ -96,8 +172,8 @@
           <Column header="Placa Tracto">
             <template #body="{ data: u }">
               <div class="plate-cell">
-                <i class="pi pi-truck"></i>
-                <span class="font-mono font-bold">{{ u.placaTracto }}</span>
+                <i class="pi pi-truck plate-icon"></i>
+                <span class="font-mono font-bold plate-badge">{{ u.placaTracto }}</span>
               </div>
             </template>
           </Column>
@@ -125,7 +201,7 @@
 
           <Column header="SOAT MTC">
             <template #body="{ data: u }">
-              <span :class="['doc-date', getDocDateClass(u.fechaVencimientoSoat)]">
+              <span :class="['doc-date font-mono', getDocDateClass(u.fechaVencimientoSoat)]">
                 {{ formatDate(u.fechaVencimientoSoat) }}
               </span>
             </template>
@@ -133,7 +209,7 @@
 
           <Column header="Rev. Técnica (CITV)">
             <template #body="{ data: u }">
-              <span :class="['doc-date', getDocDateClass(u.fechaVencimientoCitv)]">
+              <span :class="['doc-date font-mono', getDocDateClass(u.fechaVencimientoCitv)]">
                 {{ formatDate(u.fechaVencimientoCitv) }}
               </span>
             </template>
@@ -166,7 +242,7 @@
               <div class="action-buttons-cell">
                 <button
                   type="button"
-                  class="btn-row-action"
+                  class="action-btn edit-action"
                   title="Editar Unidad"
                   @click="openEditModal(u)"
                 >
@@ -176,7 +252,7 @@
                 <button
                   v-if="u.estadoActivo"
                   type="button"
-                  class="btn-row-action btn-row-danger"
+                  class="action-btn delete-action"
                   title="Desactivar Unidad"
                   @click="toggleEstado(u)"
                 >
@@ -185,7 +261,7 @@
                 <button
                   v-else
                   type="button"
-                  class="btn-row-action btn-row-success"
+                  class="action-btn reactivate-action"
                   title="Reactivar Unidad"
                   @click="toggleEstado(u)"
                 >
@@ -313,20 +389,20 @@
         </div>
 
         <div class="form-group">
-          <label class="form-label">Observaciones Mecánicas / Documentarias</label>
+          <label class="form-label">Observaciones y Mantenimiento</label>
           <textarea
             v-model="form.observaciones"
-            class="form-textarea"
             rows="2"
-            placeholder="Detalles de inspección técnica, pólizas o revisiones programadas..."
+            class="form-textarea"
+            placeholder="Notas técnicas, vigencia de pólizas, kilometraje actual..."
           ></textarea>
         </div>
 
         <div class="modal-footer-actions">
-          <button type="button" class="btn-cancel" @click="showModal = false">
+          <button type="button" class="btn-outline-warm" @click="showModal = false" :disabled="saving">
             Cancelar
           </button>
-          <button type="submit" class="btn-save" :disabled="saving">
+          <button type="submit" class="btn-espresso" :disabled="saving">
             <i v-if="saving" class="pi pi-spin pi-spinner"></i>
             <span>{{ isEditing ? 'Guardar Cambios' : 'Dar de Alta Vehículo' }}</span>
           </button>
@@ -338,8 +414,6 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import HeroBannerCard from '@/shared/components/HeroBannerCard.vue'
-import MetricCard from '@/shared/components/MetricCard.vue'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import Tag from 'primevue/tag'
@@ -373,68 +447,85 @@ const form = ref({
   observaciones: ''
 })
 
-const tractosDisponiblesCount = computed(() =>
-  unidadesList.value.filter(u => u.estadoActivo && u.estadoOperativo === 'DISPONIBLE').length
-)
-const unidadesEnRutaCount = computed(() =>
-  unidadesList.value.filter(u => u.estadoOperativo === 'EN_RUTA').length
-)
-const unidadesMantenimientoCount = computed(() =>
-  unidadesList.value.filter(u => u.estadoOperativo === 'MANTENIMIENTO' || u.estadoOperativo === 'FUERA_DE_SERVICIO').length
-)
+const tractosDisponiblesCount = computed(() => {
+  return unidadesList.value.filter(
+    u => u.tipoVehiculo === 'TRACTO' && u.estadoOperativo === 'DISPONIBLE' && u.estadoActivo
+  ).length
+})
+
+const unidadesEnRutaCount = computed(() => {
+  return unidadesList.value.filter(u => u.estadoOperativo === 'EN_RUTA' && u.estadoActivo).length
+})
+
+const unidadesMantenimientoCount = computed(() => {
+  return unidadesList.value.filter(
+    u => (u.estadoOperativo === 'MANTENIMIENTO' || u.estadoOperativo === 'FUERA_DE_SERVICIO') && u.estadoActivo
+  ).length
+})
 
 const alertasVencimiento = computed(() => {
   const alerts = []
-  const hoy = new Date()
-  const en30Dias = new Date()
-  en30Dias.setDate(hoy.getDate() + 30)
+  const today = new Date()
+  const in30Days = new Date()
+  in30Days.setDate(today.getDate() + 30)
 
   unidadesList.value.forEach(u => {
+    if (!u.estadoActivo) return
+
     if (u.fechaVencimientoSoat) {
-      const fSoat = new Date(u.fechaVencimientoSoat)
-      if (fSoat < hoy) {
+      const soatDate = new Date(u.fechaVencimientoSoat)
+      if (soatDate < today) {
         alerts.push({
-          id: `soat-venc-${u.idUnidad}`,
+          id: `soat-exp-${u.idUnidad}`,
           placa: u.placaTracto,
           tipo: 'danger',
           mensaje: `SOAT vencido el ${formatDate(u.fechaVencimientoSoat)}. Unidad no autorizada para circular.`
         })
-      } else if (fSoat <= en30Dias) {
+      } else if (soatDate <= in30Days) {
         alerts.push({
-          id: `soat-prox-${u.idUnidad}`,
+          id: `soat-warn-${u.idUnidad}`,
           placa: u.placaTracto,
           tipo: 'warning',
           mensaje: `SOAT por vencer el ${formatDate(u.fechaVencimientoSoat)}.`
         })
       }
     }
+
     if (u.fechaVencimientoCitv) {
-      const fCitv = new Date(u.fechaVencimientoCitv)
-      if (fCitv < hoy) {
+      const citvDate = new Date(u.fechaVencimientoCitv)
+      if (citvDate < today) {
         alerts.push({
-          id: `citv-venc-${u.idUnidad}`,
+          id: `citv-exp-${u.idUnidad}`,
           placa: u.placaTracto,
           tipo: 'danger',
-          mensaje: `Revisión Técnica (CITV) vencida el ${formatDate(u.fechaVencimientoCitv)}.`
+          mensaje: `Revisión Técnica CITV vencida el ${formatDate(u.fechaVencimientoCitv)}.`
+        })
+      } else if (citvDate <= in30Days) {
+        alerts.push({
+          id: `citv-warn-${u.idUnidad}`,
+          placa: u.placaTracto,
+          tipo: 'warning',
+          mensaje: `Revisión Técnica CITV próxima a vencer el ${formatDate(u.fechaVencimientoCitv)}.`
         })
       }
     }
   })
-  return alerts
+
+  return alerts.slice(0, 3)
 })
 
 const filteredUnidades = computed(() => {
   return unidadesList.value.filter(u => {
-    if (filterTipoVehiculo.value && u.tipoVehiculo !== filterTipoVehiculo.value) return false
-    if (filterCondicion.value && u.estadoOperativo !== filterCondicion.value) return false
-    if (searchQuery.value) {
-      const q = searchQuery.value.toLowerCase().trim()
-      const tracto = (u.placaTracto || '').toLowerCase()
-      const carreta = (u.placaCarreta || '').toLowerCase()
-      const marca = (u.marcaModelo || '').toLowerCase()
-      if (!tracto.includes(q) && !carreta.includes(q) && !marca.includes(q)) return false
-    }
-    return true
+    const matchTipo = !filterTipoVehiculo.value || u.tipoVehiculo === filterTipoVehiculo.value
+    const matchCond = !filterCondicion.value || u.estadoOperativo === filterCondicion.value
+    const query = searchQuery.value.trim().toLowerCase()
+    const matchSearch =
+      !query ||
+      (u.placaTracto && u.placaTracto.toLowerCase().includes(query)) ||
+      (u.placaCarreta && u.placaCarreta.toLowerCase().includes(query)) ||
+      (u.marcaModelo && u.marcaModelo.toLowerCase().includes(query))
+
+    return matchTipo && matchCond && matchSearch
   })
 })
 
@@ -442,9 +533,9 @@ const loadUnidades = async () => {
   loading.value = true
   try {
     const data = await transporteFlotaService.getUnidades({ soloActivos: false })
-    unidadesList.value = data || []
+    unidadesList.value = Array.isArray(data) ? data : []
   } catch (err) {
-    showError('Error al cargar unidades de transporte')
+    showError(err.message || 'Error al conectar con la flota')
   } finally {
     loading.value = false
   }
@@ -472,9 +563,9 @@ const openEditModal = (u) => {
   isEditing.value = true
   editingId.value = u.idUnidad
   form.value = {
-    placaTracto: u.placaTracto,
+    placaTracto: u.placaTracto || '',
     placaCarreta: u.placaCarreta || '',
-    marcaModelo: u.marcaModelo,
+    marcaModelo: u.marcaModelo || '',
     tipoVehiculo: u.tipoVehiculo || 'TRACTO',
     capacidadCargaKg: u.capacidadCargaKg || 30000,
     anioFabricacion: u.anioFabricacion || new Date().getFullYear(),
@@ -489,30 +580,22 @@ const openEditModal = (u) => {
 const saveUnidad = async () => {
   saving.value = true
   try {
-    const payload = {
-      placaTracto: form.value.placaTracto.toUpperCase().trim(),
-      placaCarreta: form.value.placaCarreta ? form.value.placaCarreta.toUpperCase().trim() : null,
-      marcaModelo: form.value.marcaModelo.trim(),
-      tipoVehiculo: form.value.tipoVehiculo,
-      capacidadCargaKg: Number(form.value.capacidadCargaKg),
-      anioFabricacion: form.value.anioFabricacion ? Number(form.value.anioFabricacion) : null,
-      fechaVencimientoSoat: form.value.fechaVencimientoSoat || null,
-      fechaVencimientoCitv: form.value.fechaVencimientoCitv || null,
-      estadoOperativo: form.value.estadoOperativo,
-      observaciones: form.value.observaciones || null
-    }
+    const payload = { ...form.value }
+    if (!payload.placaCarreta) delete payload.placaCarreta
+    if (!payload.fechaVencimientoSoat) delete payload.fechaVencimientoSoat
+    if (!payload.fechaVencimientoCitv) delete payload.fechaVencimientoCitv
 
     if (isEditing.value) {
       await transporteFlotaService.updateUnidad(editingId.value, payload)
-      showSuccess('Unidad vehicular actualizada')
+      showSuccess(`Unidad ${payload.placaTracto} actualizada exitosamente`)
     } else {
       await transporteFlotaService.createUnidad(payload)
-      showSuccess('Vehículo ingresado a la flota')
+      showSuccess(`Vehículo ${payload.placaTracto} ingresado al padrón`)
     }
     showModal.value = false
     await loadUnidades()
   } catch (err) {
-    showError(err.response?.data?.message || 'Error al guardar unidad vehicular')
+    showError(err.message || 'Error al procesar vehículo')
   } finally {
     saving.value = false
   }
@@ -522,50 +605,47 @@ const toggleEstado = async (u) => {
   try {
     if (u.estadoActivo) {
       await transporteFlotaService.deleteUnidad(u.idUnidad)
-      showInfo(`Unidad ${u.placaTracto} dada de baja`)
+      showInfo(`Unidad ${u.placaTracto} desactivada del padrón`)
     } else {
       await transporteFlotaService.reactivarUnidad(u.idUnidad)
-      showSuccess(`Unidad ${u.placaTracto} reactivada`)
+      showSuccess(`Unidad ${u.placaTracto} reactivada en servicio`)
     }
     await loadUnidades()
   } catch (err) {
-    showError('Error al cambiar estado de la unidad')
+    showError(err.message || 'Error al cambiar estado')
   }
 }
 
-const formatTipo = (tipo) => {
+const formatTipo = (t) => {
   const map = {
     TRACTO: 'Tracto Camión',
     PLATAFORMA: 'Plataforma / Carreta',
     FURGON: 'Furgón Cerrado',
     CAMION_BARANDA: 'Camión Baranda'
   }
-  return map[tipo] || tipo || 'Tracto'
+  return map[t] || t
 }
 
-const formatDate = (val) => {
-  if (!val) return '— No reg. —'
-  try {
-    const d = new Date(val)
-    return d.toLocaleDateString('es-PE', { year: 'numeric', month: '2-digit', day: '2-digit' })
-  } catch {
-    return val
-  }
+const formatDate = (d) => {
+  if (!d) return '— No registrado —'
+  const date = new Date(d)
+  return isNaN(date.getTime()) ? d : date.toLocaleDateString('es-PE')
 }
 
-const getDocDateClass = (val) => {
-  if (!val) return 'text-muted'
-  const hoy = new Date()
-  const d = new Date(val)
-  if (d < hoy) return 'text-danger font-bold'
-  const en30 = new Date()
-  en30.setDate(hoy.getDate() + 30)
-  if (d <= en30) return 'text-warning font-semibold'
+const getDocDateClass = (d) => {
+  if (!d) return 'text-muted'
+  const date = new Date(d)
+  const today = new Date()
+  const in30Days = new Date()
+  in30Days.setDate(today.getDate() + 30)
+
+  if (date < today) return 'text-danger'
+  if (date <= in30Days) return 'text-warning'
   return 'text-success'
 }
 
-const getCondicionSeverity = (cond) => {
-  switch (cond) {
+const getCondicionSeverity = (c) => {
+  switch (c) {
     case 'DISPONIBLE': return 'success'
     case 'EN_RUTA': return 'info'
     case 'MANTENIMIENTO': return 'warning'
@@ -583,15 +663,187 @@ onMounted(() => {
 .gerencia-flota-view {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: var(--space-6, 1.5rem);
+  width: 100%;
 }
 
-.metrics-grid {
+/* ==========================================================================
+   1. TOOLBAR EDITORIAL
+   ========================================================================== */
+.flota-action-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-4, 1rem);
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg, 12px);
+  padding: var(--space-4, 1rem) var(--space-5, 1.25rem);
+  box-shadow: var(--shadow-subtle);
+}
+
+.toolbar-left-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.badge-kicker {
+  font-size: var(--font-size-2xs, 0.6875rem);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--color-accent-kicker);
+  text-transform: uppercase;
+}
+
+.toolbar-title {
+  margin: 0;
+  font-size: var(--font-size-lg, 1.125rem);
+  font-weight: 700;
+  color: var(--color-text-main);
+  letter-spacing: -0.015em;
+}
+
+.toolbar-actions-group {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3, 0.75rem);
+  flex-wrap: wrap;
+}
+
+.count-badge {
+  font-size: var(--font-size-xs, 0.75rem);
+  font-weight: 700;
+  color: var(--color-accent-kicker);
+  background: var(--color-bg-subtle);
+  border: 1px solid var(--color-border-subtle);
+  padding: 0.35rem 0.65rem;
+  border-radius: var(--radius-pill, 9999px);
+}
+
+/* ==========================================================================
+   2. REJILLA DE TARJETAS KPI (WARM EDITORIAL)
+   ========================================================================== */
+.metrics-kpi-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 1rem;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-4, 1rem);
 }
 
+.kpi-card {
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg, 12px);
+  padding: var(--space-4, 1rem) var(--space-5, 1.25rem);
+  box-shadow: var(--shadow-card);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: var(--space-3, 0.75rem);
+  cursor: pointer;
+  transition: transform var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.kpi-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--color-accent-kicker);
+  box-shadow: var(--shadow-elevated);
+}
+
+.kpi-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.kpi-num {
+  font-family: var(--font-mono, monospace);
+  font-size: var(--font-size-2xs, 0.6875rem);
+  font-weight: 700;
+  color: var(--color-accent-kicker);
+  background: var(--color-bg-subtle);
+  border: 1px solid var(--color-border-subtle);
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+}
+
+.kpi-label {
+  font-size: var(--font-size-xs, 0.75rem);
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-right: auto;
+  margin-left: 0.65rem;
+}
+
+.kpi-icon {
+  font-size: 1.1rem;
+  color: var(--color-text-subtle);
+}
+
+.kpi-icon.success { color: var(--color-success-text); }
+.kpi-icon.warning { color: var(--color-warning-text); }
+
+.kpi-main-stat {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.kpi-value {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: var(--color-text-main);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.kpi-badge {
+  font-size: var(--font-size-2xs, 0.6875rem);
+  font-weight: 700;
+  padding: 0.2rem 0.55rem;
+  border-radius: var(--radius-pill, 9999px);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.kpi-badge.accent {
+  background: var(--color-bg-subtle);
+  color: var(--color-accent-kicker);
+  border: 1px solid var(--color-border-subtle);
+}
+
+.kpi-badge.success {
+  background: var(--color-success-bg);
+  color: var(--color-success-text);
+  border: 1px solid var(--color-success-border);
+}
+
+.kpi-badge.warning {
+  background: var(--color-warning-bg);
+  color: var(--color-warning-text);
+  border: 1px solid var(--color-warning-border);
+}
+
+.kpi-badge.info {
+  background: var(--color-info-bg);
+  color: var(--color-info-text);
+  border: 1px solid var(--color-info-border);
+}
+
+.kpi-footer-note {
+  font-size: var(--font-size-xs, 0.75rem);
+  color: var(--color-text-subtle);
+  border-top: 1px dashed var(--color-border-subtle);
+  padding-top: var(--space-2, 0.5rem);
+}
+
+/* ==========================================================================
+   3. ALERTAS PREVENTIVAS
+   ========================================================================== */
 .alerts-container {
   display: flex;
   flex-direction: column;
@@ -602,137 +854,124 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  padding: 0.75rem 1rem;
-  border-radius: 4px;
-  font-size: 0.825rem;
+  padding: 0.75rem 1.15rem;
+  border-radius: var(--radius-md, 8px);
+  font-size: var(--font-size-sm, 0.8125rem);
 }
+
 .alert-item.warning {
-  background: #fdf5ea;
-  border: 1px solid #e8c697;
-  color: #8c5b1b;
+  background: var(--color-warning-bg);
+  border: 1px solid var(--color-warning-border);
+  color: var(--color-warning-text);
 }
+
 .alert-item.danger {
-  background: #faebeb;
-  border: 1px solid #e89797;
-  color: #9c2828;
+  background: var(--color-danger-bg);
+  border: 1px solid var(--color-danger-border);
+  color: var(--color-danger-text);
 }
+
 .alert-icon {
-  font-size: 1.1rem;
+  font-size: 1.15rem;
 }
+
 .alert-content {
   display: flex;
   flex-direction: column;
+  gap: 0.15rem;
 }
 
-.flota-table-card {
-  background: var(--color-bg-card, #ede6db);
-  border: 1px solid var(--color-border, #e2d9cd);
-  border-radius: 6px;
-  padding: 1.25rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+/* ==========================================================================
+   4. TABLA Y TOOLBAR DE FILTROS
+   ========================================================================== */
+.table-card {
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg, 12px);
+  overflow: hidden;
+  box-shadow: var(--shadow-card);
 }
 
-.card-header-bar {
+.table-toolbar {
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
   flex-wrap: wrap;
-  gap: 0.75rem;
+  gap: 0.85rem;
+  padding: 1rem 1.25rem;
+  background: var(--color-bg-subtle);
+  border-bottom: 1px solid var(--color-border-subtle);
 }
 
-.badge-kicker {
-  font-family: var(--font-mono, monospace);
-  font-size: 0.65rem;
-  letter-spacing: 0.08em;
-  color: var(--color-accent, #9a7f60);
-  font-weight: 700;
-  display: block;
+.search-input-wrapper {
+  position: relative;
+  flex: 1;
+  min-width: 260px;
 }
 
-.section-title {
-  margin: 0;
-  font-size: 1.15rem;
-  font-weight: 700;
-  color: var(--color-text-primary, #352f2a);
+.search-icon {
+  position: absolute;
+  left: 0.85rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-text-subtle);
+  font-size: 0.85rem;
 }
 
-.header-actions {
+.table-search-input {
+  width: 100%;
+  padding: 0.55rem 2.25rem 0.55rem 2.15rem;
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md, 8px);
+  color: var(--color-text-main);
+  font-size: var(--font-size-sm, 0.8125rem);
+  outline: none;
+  transition: border-color var(--transition-fast);
+}
+
+.table-search-input:focus {
+  border-color: var(--color-primary);
+}
+
+.clear-search-btn {
+  position: absolute;
+  right: 0.65rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  color: var(--color-text-subtle);
+  cursor: pointer;
+  padding: 0.25rem;
+}
+
+.filter-group {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.65rem;
   flex-wrap: wrap;
 }
 
 .filter-select {
-  padding: 0.45rem 0.65rem;
-  border: 1px solid var(--color-border, #e2d9cd);
-  background: #ffffff;
-  border-radius: 4px;
-  font-size: 0.8rem;
-  color: var(--color-text-primary, #352f2a);
-}
-
-.search-input-wrap {
-  position: relative;
-}
-.search-icon {
-  position: absolute;
-  left: 0.6rem;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #8c827a;
-  font-size: 0.8rem;
-}
-.search-input {
-  padding: 0.45rem 0.65rem 0.45rem 1.8rem;
-  border: 1px solid var(--color-border, #e2d9cd);
-  background: #ffffff;
-  border-radius: 4px;
-  font-size: 0.8rem;
-  width: 200px;
-}
-
-.btn-refresh {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.45rem 0.75rem;
-  background: transparent;
-  border: 1px solid var(--color-border, #e2d9cd);
-  border-radius: 4px;
-  font-size: 0.8rem;
-  font-weight: 600;
+  padding: 0.55rem 2.25rem 0.55rem 0.85rem;
+  border: 1px solid var(--color-border);
+  background-color: var(--color-bg-surface);
+  border-radius: var(--radius-md, 8px);
+  color: var(--color-text-main);
+  font-size: var(--font-size-sm, 0.8125rem);
+  font-weight: 500;
   cursor: pointer;
-  color: var(--color-text-primary, #352f2a);
-}
-.btn-refresh:hover {
-  background: #ffffff;
-}
-
-.btn-primary-add {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.45rem 0.85rem;
-  background: var(--color-accent, #9a7f60);
-  border: none;
-  border-radius: 4px;
-  color: #ffffff;
-  font-size: 0.8rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: opacity 0.15s ease;
-}
-.btn-primary-add:hover {
-  opacity: 0.9;
+  outline: none;
+  appearance: none !important;
+  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%236f6356%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+  background-repeat: no-repeat !important;
+  background-position: right 0.75rem center !important;
+  background-size: 0.65rem auto !important;
 }
 
-.table-container {
-  background: #ffffff;
-  border-radius: 4px;
-  overflow: hidden;
-  border: 1px solid var(--color-border, #e2d9cd);
+.filter-select:focus {
+  border-color: var(--color-primary);
 }
 
 .plate-cell {
@@ -741,67 +980,111 @@ onMounted(() => {
   gap: 0.5rem;
 }
 
+.plate-icon {
+  color: var(--color-accent-kicker);
+  font-size: 0.95rem;
+}
+
+.plate-badge {
+  color: var(--color-text-main);
+  background: var(--color-bg-subtle);
+  border: 1px solid var(--color-border-subtle);
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+}
+
 .vehicle-info {
   display: flex;
   flex-direction: column;
+  gap: 0.15rem;
 }
+
 .vehicle-title {
   font-weight: 700;
-  font-size: 0.825rem;
+  font-size: 0.85rem;
+  color: var(--color-text-main);
 }
+
 .vehicle-type {
   font-size: 0.725rem;
-  color: #6b635b;
+  color: var(--color-text-subtle);
 }
 
 .doc-date {
-  font-family: var(--font-mono, monospace);
   font-size: 0.775rem;
 }
-.text-danger { color: #b42318; }
-.text-warning { color: #b54708; }
-.text-success { color: #027a48; }
-.text-muted { color: #8c827a; }
 
 .action-buttons-cell {
   display: inline-flex;
-  gap: 0.35rem;
+  gap: 0.4rem;
 }
 
-.btn-row-action {
-  width: 28px;
-  height: 28px;
-  border-radius: 4px;
-  border: 1px solid var(--color-border, #e2d9cd);
-  background: transparent;
-  cursor: pointer;
+.action-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.75rem;
-  color: #352f2a;
-}
-.btn-row-action:hover {
-  background: #f6f3ee;
-}
-.btn-row-danger {
-  color: #b42318;
-}
-.btn-row-danger:hover {
-  background: #faebeb;
-  border-color: #e89797;
-}
-.btn-row-success {
-  color: #027a48;
-}
-.btn-row-success:hover {
-  background: #eef8f3;
-  border-color: #a6dbbe;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-sm, 6px);
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all var(--transition-fast);
 }
 
-.tag-xs {
-  font-size: 0.675rem;
-  padding: 0.15rem 0.4rem;
+.edit-action {
+  background: var(--color-bg-subtle);
+  border-color: var(--color-border);
+  color: var(--color-text-main);
+}
+
+.edit-action:hover {
+  background: var(--color-bg-surface);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.delete-action {
+  background: var(--color-danger-bg);
+  border-color: var(--color-danger-border);
+  color: var(--color-danger-text);
+}
+
+.delete-action:hover {
+  filter: brightness(1.1);
+}
+
+.reactivate-action {
+  background: var(--color-success-bg);
+  border-color: var(--color-success-border);
+  color: var(--color-success-text);
+}
+
+.reactivate-action:hover {
+  filter: brightness(1.1);
+}
+
+.empty-state-box {
+  padding: 3rem 1rem;
+  text-align: center;
+  color: var(--color-text-subtle);
+}
+
+.empty-icon {
+  font-size: 2.25rem;
+  margin-bottom: 0.75rem;
+  color: var(--color-accent-kicker);
+}
+
+.empty-title {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--color-text-main);
+  margin: 0 0 0.25rem;
+}
+
+.empty-desc {
+  font-size: 0.825rem;
+  margin: 0;
 }
 
 /* Modales */
@@ -811,64 +1094,117 @@ onMounted(() => {
   gap: 1rem;
   padding-top: 0.5rem;
 }
+
 .form-grid-2 {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 0.75rem;
+  gap: 0.85rem;
 }
+
 .form-grid-3 {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
-  gap: 0.75rem;
+  gap: 0.85rem;
 }
+
 .form-group {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.3rem;
 }
+
 .form-label {
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs, 0.75rem);
   font-weight: 700;
-  color: var(--color-text-primary, #352f2a);
+  color: var(--color-text-main);
 }
+
 .form-input, .form-select, .form-textarea {
-  padding: 0.45rem 0.65rem;
-  border: 1px solid var(--color-border, #e2d9cd);
-  background: #ffffff;
-  border-radius: 4px;
-  font-size: 0.8rem;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid var(--color-border);
+  background-color: var(--color-bg-surface);
+  color: var(--color-text-main);
+  border-radius: var(--radius-md, 8px);
+  font-size: var(--font-size-sm, 0.8125rem);
+  outline: none;
 }
+
+.form-input:focus, .form-select:focus, .form-textarea:focus {
+  border-color: var(--color-primary);
+}
+
 .text-uppercase {
   text-transform: uppercase;
 }
+
 .modal-footer-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 0.5rem;
-  margin-top: 0.5rem;
-  padding-top: 0.75rem;
-  border-top: 1px solid var(--color-border, #e2d9cd);
+  gap: 0.65rem;
+  margin-top: 0.75rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--color-border-subtle);
 }
-.btn-cancel {
-  padding: 0.45rem 0.85rem;
-  background: transparent;
-  border: 1px solid var(--color-border, #e2d9cd);
-  border-radius: 4px;
-  font-size: 0.8rem;
-  font-weight: 600;
-  cursor: pointer;
-}
-.btn-save {
+
+.btn-espresso {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
-  padding: 0.45rem 1rem;
-  background: var(--color-accent, #9a7f60);
-  border: none;
-  border-radius: 4px;
-  color: #ffffff;
-  font-size: 0.8rem;
+  gap: 0.45rem;
+  background: var(--color-primary);
+  color: var(--color-primary-text);
+  border: 1px solid var(--color-primary);
+  font-size: 0.8125rem;
   font-weight: 600;
+  padding: 0.5rem 0.95rem;
+  border-radius: var(--radius-md, 8px);
   cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.btn-espresso:hover:not(:disabled) {
+  background: var(--color-primary-hover);
+  border-color: var(--color-primary-hover);
+}
+
+.btn-outline-warm {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-main);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  padding: 0.5rem 0.95rem;
+  border-radius: var(--radius-md, 8px);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.btn-outline-warm:hover:not(:disabled) {
+  background: var(--color-bg-subtle);
+  border-color: var(--color-border-strong);
+}
+
+.text-success { color: var(--color-success-text) !important; }
+.text-warning { color: var(--color-warning-text) !important; }
+.text-danger  { color: var(--color-danger-text) !important; }
+.text-muted   { color: var(--color-text-muted) !important; }
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .metrics-kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .metrics-kpi-grid {
+    grid-template-columns: 1fr;
+  }
+  .form-grid-2,
+  .form-grid-3 {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

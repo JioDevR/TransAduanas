@@ -3,7 +3,17 @@ import { ROLES } from '@/core/auth/roles'
 export const gerenciaRoutes = [
   {
     path: '/gerencia-general',
-    redirect: '/gerencia-general/sedes'
+    redirect: '/gerencia-general/dashboard'
+  },
+  {
+    path: '/gerencia-general/dashboard',
+    name: 'GerenciaDashboard',
+    component: () => import('@/features/gerencia/views/GerenciaDashboardView.vue'),
+    meta: {
+      requiresAuth: true,
+      roles: [ROLES.GERENTE_GENERAL, ROLES.ADMINISTRADOR_TI],
+      title: 'Gerencia General - Dashboard Ejecutivo - SGA'
+    }
   },
   {
     path: '/gerencia-general/sedes',
@@ -27,13 +37,7 @@ export const gerenciaRoutes = [
   },
   {
     path: '/gerencia-general/resumen',
-    name: 'GerenciaResumen',
-    component: () => import('@/features/admin/overview/views/AdminOverviewView.vue'),
-    meta: {
-      requiresAuth: true,
-      roles: [ROLES.GERENTE_GENERAL, ROLES.ADMINISTRADOR_TI],
-      title: 'Gerencia General - Resumen Ejecutivo - SGA'
-    }
+    redirect: '/gerencia-general/dashboard'
   },
   {
     path: '/gerencia-general/flota',

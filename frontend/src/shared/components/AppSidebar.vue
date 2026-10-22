@@ -62,7 +62,20 @@
       <!-- SUB-OPCIONES: 00 ADMINISTRACIÓN TI -->
       <!-- ======================================================== -->
       <ul v-if="navigationStore.currentModule === 'administracion-ti'" class="nav-list">
-        <!-- Sub-opción 01: Usuarios -->
+        <!-- Sub-opción 01: Dashboard TI -->
+        <li class="nav-item">
+          <button
+            type="button"
+            :class="['nav-sub-btn', { active: navigationStore.administracionTiSubOption === 'dashboard' }]"
+            @click="handleAdminSubClick('dashboard')"
+            :title="isCollapsed ? 'Dashboard de Control TI' : ''"
+          >
+            <span class="nav-num">01</span>
+            <span v-if="!isCollapsed" class="nav-label">Dashboard TI</span>
+          </button>
+        </li>
+
+        <!-- Sub-opción 02: Usuarios -->
         <li class="nav-item">
           <button
             type="button"
@@ -70,21 +83,8 @@
             @click="handleAdminSubClick('users')"
             :title="isCollapsed ? 'Gestión de Usuarios' : ''"
           >
-            <span class="nav-num">01</span>
-            <span v-if="!isCollapsed" class="nav-label">Usuarios</span>
-          </button>
-        </li>
-
-        <!-- Sub-opción 02: Acerca de -->
-        <li class="nav-item">
-          <button
-            type="button"
-            :class="['nav-sub-btn', { active: navigationStore.administracionTiSubOption === 'about' }]"
-            @click="handleAdminSubClick('about')"
-            :title="isCollapsed ? 'Acerca de SGA' : ''"
-          >
             <span class="nav-num">02</span>
-            <span v-if="!isCollapsed" class="nav-label">Acerca de</span>
+            <span v-if="!isCollapsed" class="nav-label">Usuarios</span>
           </button>
         </li>
 
@@ -100,22 +100,35 @@
             <span v-if="!isCollapsed" class="nav-label">Logs TI</span>
           </button>
         </li>
+
+        <!-- Sub-opción 04: Acerca de -->
+        <li class="nav-item">
+          <button
+            type="button"
+            :class="['nav-sub-btn', { active: navigationStore.administracionTiSubOption === 'about' }]"
+            @click="handleAdminSubClick('about')"
+            :title="isCollapsed ? 'Acerca de SGA' : ''"
+          >
+            <span class="nav-num">04</span>
+            <span v-if="!isCollapsed" class="nav-label">Acerca de</span>
+          </button>
+        </li>
       </ul>
 
       <!-- ======================================================== -->
       <!-- SUB-OPCIONES: 01 GERENCIA GENERAL -->
       <!-- ======================================================== -->
       <ul v-else-if="navigationStore.currentModule === 'gerencia-general'" class="nav-list">
-        <!-- Sub-opción 01: Vista General (KPIs) -->
+        <!-- Sub-opción 01: Dashboard Ejecutivo -->
         <li class="nav-item">
           <button
             type="button"
-            :class="['nav-sub-btn', { active: navigationStore.gerenciaGeneralSubOption === 'overview' }]"
-            @click="handleGerenciaSubClick('overview')"
-            :title="isCollapsed ? 'Vista General Ejecutiva' : ''"
+            :class="['nav-sub-btn', { active: navigationStore.gerenciaGeneralSubOption === 'dashboard' || navigationStore.gerenciaGeneralSubOption === 'overview' }]"
+            @click="handleGerenciaSubClick('dashboard')"
+            :title="isCollapsed ? 'Dashboard Ejecutivo' : ''"
           >
             <span class="nav-num">01</span>
-            <span v-if="!isCollapsed" class="nav-label">Vista General</span>
+            <span v-if="!isCollapsed" class="nav-label">Dashboard Ejecutivo</span>
           </button>
         </li>
 
@@ -526,14 +539,14 @@ const moduleNumberCode = computed(() => {
 const handleModuleSelectChange = () => {
   const mod = navigationStore.activeModule
   if (mod === 'administracion-ti') {
-    navigationStore.setAdministracionTiSubOption('users')
-    if (route.path !== '/administracion-ti/usuarios') {
-      router.push('/administracion-ti/usuarios')
+    navigationStore.setAdministracionTiSubOption('dashboard')
+    if (route.path !== '/administracion-ti/dashboard') {
+      router.push('/administracion-ti/dashboard')
     }
   } else if (mod === 'gerencia-general') {
-    navigationStore.setGerenciaGeneralSubOption('sedes')
-    if (route.path !== '/gerencia-general/sedes') {
-      router.push('/gerencia-general/sedes')
+    navigationStore.setGerenciaGeneralSubOption('dashboard')
+    if (route.path !== '/gerencia-general/dashboard') {
+      router.push('/gerencia-general/dashboard')
     }
   } else if (mod === 'comercial') {
     navigationStore.setComercialSubOption('cotizaciones')
@@ -573,13 +586,14 @@ const handleGerenciaSubClick = (subOption) => {
   navigationStore.setActiveModule('gerencia-general')
   navigationStore.setGerenciaGeneralSubOption(subOption)
   const pathMap = {
-    overview: '/gerencia-general/resumen',
+    dashboard: '/gerencia-general/dashboard',
+    overview: '/gerencia-general/dashboard',
     sedes: '/gerencia-general/sedes',
     catalogos: '/gerencia-general/catalogos',
     flota: '/gerencia-general/flota',
     conductores: '/gerencia-general/conductores'
   }
-  const target = pathMap[subOption] || '/gerencia-general/sedes'
+  const target = pathMap[subOption] || '/gerencia-general/dashboard'
   if (route.path !== target) {
     router.push(target)
   }
@@ -589,12 +603,13 @@ const handleGerenciaSubClick = (subOption) => {
 const handleAdminSubClick = (subOption) => {
   navigationStore.setActiveModule('administracion-ti')
   navigationStore.setAdministracionTiSubOption(subOption)
-  let target = '/administracion-ti/usuarios'
-  if (subOption === 'about') {
-    target = '/administracion-ti/acerca-de'
-  } else if (subOption === 'logs') {
-    target = '/administracion-ti/logs'
+  const pathMap = {
+    dashboard: '/administracion-ti/dashboard',
+    users: '/administracion-ti/usuarios',
+    logs: '/administracion-ti/logs',
+    about: '/administracion-ti/acerca-de'
   }
+  const target = pathMap[subOption] || '/administracion-ti/dashboard'
   if (route.path !== target) {
     router.push(target)
   }

@@ -363,10 +363,10 @@ const getAvatarBg = (username = '') => {
 }
 
 .filter-select {
-  background: var(--color-bg-surface);
+  background-color: var(--color-bg-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  padding: 0.6rem 0.95rem;
+  padding: 0.6rem 2.25rem 0.6rem 0.85rem;
   color: var(--color-text-main);
   font-size: 0.825rem;
   font-weight: 500;
@@ -470,6 +470,7 @@ const getAvatarBg = (username = '') => {
 }
 
 .sede-code {
+  font-family: var(--font-mono, monospace);
   font-weight: 700;
   color: var(--color-text-main);
   font-size: 0.8rem;
@@ -509,6 +510,7 @@ const getAvatarBg = (username = '') => {
 }
 
 .user-doc-badge {
+  font-family: var(--font-mono, monospace);
   font-size: 0.65rem;
   font-weight: 700;
   color: var(--color-text-subtle);
@@ -531,6 +533,7 @@ const getAvatarBg = (username = '') => {
 }
 
 .sunat-table-badge {
+  font-family: var(--font-mono, monospace);
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;

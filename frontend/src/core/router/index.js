@@ -91,12 +91,16 @@ router.beforeEach(async (to, from, next) => {
   const navStore = useNavigationStore()
   if (to.path.startsWith('/administracion-ti')) {
     navStore.setActiveModule('administracion-ti')
-    if (to.path.includes('acerca-de')) {
-      navStore.setAdministracionTiSubOption('about')
+    if (to.path.includes('dashboard')) {
+      navStore.setAdministracionTiSubOption('dashboard')
+    } else if (to.path.includes('usuarios')) {
+      navStore.setAdministracionTiSubOption('users')
     } else if (to.path.includes('logs')) {
       navStore.setAdministracionTiSubOption('logs')
+    } else if (to.path.includes('acerca-de')) {
+      navStore.setAdministracionTiSubOption('about')
     } else {
-      navStore.setAdministracionTiSubOption('users')
+      navStore.setAdministracionTiSubOption('dashboard')
     }
   } else if (to.path.startsWith('/gerencia-general')) {
     navStore.setActiveModule('gerencia-general')
@@ -104,12 +108,14 @@ router.beforeEach(async (to, from, next) => {
       navStore.setGerenciaGeneralSubOption('sedes')
     } else if (to.path.includes('catalogos')) {
       navStore.setGerenciaGeneralSubOption('catalogos')
-    } else if (to.path.includes('resumen')) {
-      navStore.setGerenciaGeneralSubOption('overview')
+    } else if (to.path.includes('dashboard') || to.path.includes('resumen')) {
+      navStore.setGerenciaGeneralSubOption('dashboard')
     } else if (to.path.includes('flota')) {
       navStore.setGerenciaGeneralSubOption('flota')
     } else if (to.path.includes('conductores')) {
       navStore.setGerenciaGeneralSubOption('conductores')
+    } else {
+      navStore.setGerenciaGeneralSubOption('dashboard')
     }
   } else if (to.path.startsWith('/recepcion-comercial')) {
     navStore.setActiveModule('comercial')

@@ -1,11 +1,49 @@
 <template>
   <div class="finanzas-view">
-    <!-- 1. Hero Banner Card Warm Editorial Reutilizable -->
-    <HeroBannerCard
-      kicker="FINANZAS // GESTIÓN DE LIQUIDACIONES Y COBRANZAS"
-      title="Finanzas - Liquidación Aduanera, Facturación y Cobranzas"
-      description="Emisión y consolidación de balances aduaneros: tributos liquidados ante SUNAT, gastos de depósito temporal, flete local terrestre y honorarios profesionales de despacho. Control de cobranzas bancarias y detracciones SPOT."
-    />
+    <!-- 1. Header Toolbar Editorial -->
+    <header class="finanzas-action-toolbar">
+      <div class="toolbar-identity">
+        <span class="badge-kicker">FINANZAS // GESTIÓN DE LIQUIDACIONES Y COBRANZAS</span>
+        <div class="title-with-badge">
+          <h2 class="toolbar-title">Finanzas - Liquidación Aduanera y Cobranzas</h2>
+          <span class="count-badge font-mono">{{ liquidacionesList.length + anticiposList.length }} Operaciones</span>
+        </div>
+        <p class="toolbar-description">
+          Emisión y consolidación de balances aduaneros: tributos SUNAT, gastos de depósito temporal, flete local y cobranzas SPOT.
+        </p>
+      </div>
+
+      <div class="toolbar-actions">
+        <button
+          type="button"
+          class="btn-warm-outline"
+          :disabled="loading"
+          @click="loadAllData"
+          title="Actualizar datos financieros"
+        >
+          <i class="pi pi-refresh" :class="{ 'pi-spin': loading }"></i>
+          <span>Actualizar</span>
+        </button>
+
+        <button
+          type="button"
+          class="btn-warm-outline"
+          @click="showRegistrarPagoModal = true"
+        >
+          <i class="pi pi-wallet"></i>
+          <span>Registrar Anticipo</span>
+        </button>
+
+        <button
+          type="button"
+          class="btn-espresso"
+          @click="openEmisionModal()"
+        >
+          <i class="pi pi-receipt"></i>
+          <span>Nueva Liquidación</span>
+        </button>
+      </div>
+    </header>
 
     <!-- 2. Pestañas Principales del Módulo -->
     <div class="module-tabs-nav">
@@ -50,37 +88,55 @@
       >
         <i class="pi pi-shield"></i>
         <span>Anticipos Pre-Expediente</span>
-        <span class="tab-counter" :style="anticiposPendientesCount > 0 ? 'background: #ea580c; color: #fff; font-weight: 700;' : ''">{{ anticiposList.length }}</span>
+        <span class="tab-counter" :class="{ 'counter-alert': anticiposPendientesCount > 0 }">{{ anticiposList.length }}</span>
       </button>
     </div>
 
-    <!-- 3. Cuadrícula de Métricas KPI en Warm Editorial -->
-    <div class="metrics-grid">
-      <MetricCard
-        index="01"
-        label="Total Cobrado (S/)"
-        :value="formatCurrencyPen(metricas.totalCobradoPen)"
-        severity="success"
-        highlight
-      />
-      <MetricCard
-        index="02"
-        label="Cuentas por Cobrar (S/)"
-        :value="formatCurrencyPen(metricas.cuentasPorCobrarPen)"
-        severity="warning"
-      />
-      <MetricCard
-        index="03"
-        label="Tributos Pagados SUNAT"
-        :value="formatCurrencyPen(metricas.totalTributosSunatPen)"
-        severity="accent"
-      />
-      <MetricCard
-        index="04"
-        label="Detracciones SPOT (12%)"
-        :value="formatCurrencyPen(metricas.totalDetraccionesPen)"
-        severity="pending"
-      />
+    <!-- 3. Cuadrícula de Métricas KPI en Warm Editorial 2.0 -->
+    <div class="metrics-kpi-grid">
+      <div class="kpi-card highlight-card">
+        <div class="kpi-header">
+          <span class="kpi-index">01</span>
+          <span class="kpi-badge badge-success">Recaudación Conforme</span>
+        </div>
+        <div class="kpi-body">
+          <span class="kpi-value font-mono">{{ formatCurrencyPen(metricas.totalCobradoPen) }}</span>
+          <span class="kpi-label">Total Cobrado (S/)</span>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-header">
+          <span class="kpi-index">02</span>
+          <span class="kpi-badge badge-warning">Por Cobrar</span>
+        </div>
+        <div class="kpi-body">
+          <span class="kpi-value font-mono">{{ formatCurrencyPen(metricas.cuentasPorCobrarPen) }}</span>
+          <span class="kpi-label">Cuentas por Cobrar (S/)</span>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-header">
+          <span class="kpi-index">03</span>
+          <span class="kpi-badge badge-info">Fiscal SUNAT</span>
+        </div>
+        <div class="kpi-body">
+          <span class="kpi-value font-mono">{{ formatCurrencyPen(metricas.totalTributosSunatPen) }}</span>
+          <span class="kpi-label">Tributos Pagados SUNAT</span>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-header">
+          <span class="kpi-index">04</span>
+          <span class="kpi-badge badge-neutral">SPOT 12%</span>
+        </div>
+        <div class="kpi-body">
+          <span class="kpi-value font-mono">{{ formatCurrencyPen(metricas.totalDetraccionesPen) }}</span>
+          <span class="kpi-label">Detracciones SPOT (12%)</span>
+        </div>
+      </div>
     </div>
 
     <!-- ===================================================================== -->
@@ -1164,8 +1220,6 @@ import Column from 'primevue/column'
 import Tag from 'primevue/tag'
 import Dialog from 'primevue/dialog'
 
-import HeroBannerCard from '@/shared/components/HeroBannerCard.vue'
-import MetricCard from '@/shared/components/MetricCard.vue'
 import DocumentosManagerModal from '@/shared/components/DocumentosManagerModal.vue'
 import RegistrarPagoModal from '../components/RegistrarPagoModal.vue'
 
@@ -1685,17 +1739,132 @@ onMounted(() => {
 .finanzas-view {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: var(--space-4, 1rem);
   width: 100%;
+}
+
+/* 1. Header Action Toolbar Editorial */
+.finanzas-action-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-4, 1rem);
+  padding: var(--space-4, 1rem) var(--space-5, 1.25rem);
+  background: var(--color-bg-surface, #ffffff);
+  border: 1px solid var(--color-border, #e4dacb);
+  border-radius: var(--radius-lg, 0.75rem);
+  box-shadow: var(--shadow-subtle, 0 1px 3px rgba(45, 35, 25, 0.04));
+}
+
+.toolbar-identity {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1, 0.25rem);
+}
+
+.badge-kicker {
+  font-family: var(--font-family-mono, monospace);
+  font-size: var(--font-size-xs, 0.75rem);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--color-accent-kicker, #8c6b3e);
+  text-transform: uppercase;
+}
+
+.title-with-badge {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3, 0.75rem);
+  flex-wrap: wrap;
+}
+
+.toolbar-title {
+  margin: 0;
+  font-size: var(--font-size-xl, 1.25rem);
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--color-text-main, #2b2520);
+}
+
+.count-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.6rem;
+  background-color: var(--color-bg-subtle, #f2ebe1);
+  color: var(--color-text-main, #2b2520);
+  border: 1px solid var(--color-border, #e4dacb);
+  border-radius: var(--radius-pill, 9999px);
+  font-size: var(--font-size-xs, 0.75rem);
+  font-weight: 700;
+}
+
+.toolbar-description {
+  margin: 0;
+  font-size: var(--font-size-sm, 0.8125rem);
+  color: var(--color-text-muted, #6f6356);
+  max-width: 820px;
+  line-height: 1.45;
+}
+
+.toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3, 0.75rem);
+  flex-shrink: 0;
+}
+
+.btn-warm-outline {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2, 0.5rem);
+  padding: 0.55rem 0.95rem;
+  border-radius: var(--radius-sm, 0.375rem);
+  border: 1px solid var(--color-border, #e4dacb);
+  background-color: var(--color-bg-surface, #ffffff);
+  color: var(--color-text-main, #2b2520);
+  font-size: var(--font-size-sm, 0.8125rem);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-warm-outline:hover:not(:disabled) {
+  background-color: var(--color-bg-subtle, #f2ebe1);
+  border-color: var(--color-border-strong, #d5c8b6);
+}
+
+.btn-warm-outline:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-espresso {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2, 0.5rem);
+  padding: 0.55rem 1rem;
+  border-radius: var(--radius-sm, 0.375rem);
+  border: 1px solid var(--color-primary, #352f2a);
+  background-color: var(--color-primary, #352f2a);
+  color: var(--color-primary-text, #ffffff);
+  font-size: var(--font-size-sm, 0.8125rem);
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-espresso:hover {
+  filter: brightness(1.15);
 }
 
 /* Pestañas de Navegación */
 .module-tabs-nav {
   display: flex;
   gap: 0.75rem;
-  margin: 1.5rem 0 1rem;
-  border-bottom: 2px solid var(--color-border-warm, #d8cdbf);
+  margin: 0.5rem 0;
+  border-bottom: 2px solid var(--color-border, #e4dacb);
   padding-bottom: 0.5rem;
+  overflow-x: auto;
 }
 
 .tab-nav-btn {
@@ -1705,17 +1874,18 @@ onMounted(() => {
   padding: 0.65rem 1.25rem;
   border: none;
   background: transparent;
-  color: var(--color-text-muted, #7c7267);
-  font-size: 0.9rem;
+  color: var(--color-text-muted, #6f6356);
+  font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
-  border-radius: 6px;
+  border-radius: var(--radius-md, 0.5rem);
   transition: all 0.2s ease;
+  white-space: nowrap;
 }
 
 .tab-nav-btn:hover {
-  background: var(--color-bg-card, #ede6db);
-  color: var(--color-primary, #352f2a);
+  background: var(--color-bg-subtle, #f2ebe1);
+  color: var(--color-text-main, #2b2520);
 }
 
 .tab-nav-btn.active {
@@ -1726,8 +1896,15 @@ onMounted(() => {
 .tab-counter {
   font-size: 0.75rem;
   padding: 0.15rem 0.5rem;
-  border-radius: 12px;
+  border-radius: var(--radius-pill, 9999px);
   background: rgba(0, 0, 0, 0.08);
+}
+
+.tab-counter.counter-alert {
+  background: var(--color-warning-bg, #fef3c7);
+  color: var(--color-warning-text, #92400e);
+  border: 1px solid var(--color-warning-border, #fde68a);
+  font-weight: 700;
 }
 
 .tab-nav-btn.active .tab-counter {
@@ -1735,12 +1912,101 @@ onMounted(() => {
   color: #fff;
 }
 
-/* Métricas Grid */
-.metrics-grid {
+.tab-nav-btn.active .tab-counter.counter-alert {
+  background: #ea580c;
+  color: #ffffff;
+}
+
+/* Métricas KPI Grid Warm Editorial */
+.metrics-kpi-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 1rem;
-  margin-bottom: 1.5rem;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-4, 1rem);
+  margin-bottom: var(--space-2, 0.5rem);
+}
+
+.kpi-card {
+  background-color: var(--color-bg-surface, #ffffff);
+  border: 1px solid var(--color-border, #e4dacb);
+  border-radius: var(--radius-md, 0.5rem);
+  padding: var(--space-4, 1rem);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3, 0.75rem);
+  box-shadow: var(--shadow-subtle, 0 1px 3px rgba(45, 35, 25, 0.04));
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.kpi-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-hover, 0 4px 12px rgba(45, 35, 25, 0.08));
+}
+
+.kpi-card.highlight-card {
+  border-left: 3px solid var(--color-accent-kicker, #8c6b3e);
+}
+
+.kpi-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.kpi-index {
+  font-family: var(--font-family-mono, monospace);
+  font-size: var(--font-size-xs, 0.75rem);
+  font-weight: 700;
+  color: var(--color-text-subtle, #998c7e);
+}
+
+.kpi-badge {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  padding: 0.15rem 0.45rem;
+  border-radius: var(--radius-pill, 9999px);
+}
+
+.badge-success {
+  background-color: var(--color-success-bg, #eaf6ed);
+  color: var(--color-success-text, #1e6638);
+  border: 1px solid var(--color-success-border, #bce5c6);
+}
+
+.badge-warning {
+  background-color: var(--color-warning-bg, #fdf6ec);
+  color: var(--color-warning-text, #945308);
+  border: 1px solid var(--color-warning-border, #f6e0b5);
+}
+
+.badge-info {
+  background-color: var(--color-info-bg, #eff6ff);
+  color: var(--color-info-text, #1e40af);
+  border: 1px solid var(--color-info-border, #bfdbfe);
+}
+
+.badge-neutral {
+  background-color: var(--color-bg-subtle, #f2ebe1);
+  color: var(--color-text-muted, #6f6356);
+  border: 1px solid var(--color-border, #e4dacb);
+}
+
+.kpi-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.kpi-value {
+  font-size: 1.4rem;
+  font-weight: 800;
+  line-height: 1.1;
+  color: var(--color-text-main, #2b2520);
+}
+
+.kpi-label {
+  font-size: var(--font-size-xs, 0.75rem);
+  color: var(--color-text-muted, #6f6356);
+  font-weight: 600;
 }
 
 /* Secciones de Contenido */
@@ -1786,12 +2052,18 @@ onMounted(() => {
 }
 
 .filter-select {
-  padding: 0.5rem 0.75rem;
-  border: 1px solid var(--color-border-warm, #d8cdbf);
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  padding: 0.5rem 2rem 0.5rem 0.75rem;
+  border: 1px solid var(--color-border, #d8cdbf);
   border-radius: 6px;
-  background: #fff;
+  background-color: var(--color-bg-surface, #ffffff);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236f6356' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat !important;
+  background-position: right 0.75rem center !important;
+  background-size: 1rem 1rem !important;
   font-size: 0.85rem;
-  color: var(--color-primary, #352f2a);
+  color: var(--color-text-main, #352f2a);
 }
 
 .search-input-wrap {
@@ -2018,13 +2290,28 @@ onMounted(() => {
   color: #a34e36;
 }
 
-.form-input, .form-select, .form-textarea {
+.form-input, .form-textarea {
   padding: 0.5rem 0.75rem;
-  border: 1px solid var(--color-border-warm, #d8cdbf);
+  border: 1px solid var(--color-border, #d8cdbf);
   border-radius: 6px;
   font-size: 0.88rem;
-  background: #fff;
-  color: var(--color-primary, #352f2a);
+  background: var(--color-bg-surface, #ffffff);
+  color: var(--color-text-main, #352f2a);
+}
+
+.form-select {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  padding: 0.5rem 2rem 0.5rem 0.75rem;
+  border: 1px solid var(--color-border, #d8cdbf);
+  border-radius: 6px;
+  font-size: 0.88rem;
+  background-color: var(--color-bg-surface, #ffffff);
+  color: var(--color-text-main, #352f2a);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236f6356' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat !important;
+  background-position: right 0.75rem center !important;
+  background-size: 1rem 1rem !important;
 }
 
 .form-input:focus, .form-select:focus, .form-textarea:focus {
@@ -2364,5 +2651,57 @@ onMounted(() => {
   border-radius: 6px;
   color: #92400e;
   font-size: 0.8125rem;
+}
+
+/* Media Queries & Responsive */
+@media (max-width: 1024px) {
+  .metrics-kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .finanzas-action-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .toolbar-actions {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 640px) {
+  .metrics-kpi-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Modo Oscuro (.dark-theme) */
+:global(.dark-theme) .finanzas-view .filter-select,
+:global(.dark-theme) .finanzas-view .form-select {
+  background-color: var(--color-bg-surface, #24221c) !important;
+  color: var(--color-text-main, #ede5d8) !important;
+  border-color: var(--color-border, #444138) !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d6b476' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") !important;
+}
+
+:global(.dark-theme) .finanzas-view .tab-content-section,
+:global(.dark-theme) .finanzas-view .anticipo-validation-summary {
+  background-color: var(--color-bg-surface, #24221c);
+  border-color: var(--color-border, #444138);
+}
+
+:global(.dark-theme) .finanzas-view .btn-espresso {
+  background-color: var(--color-primary, #d6b476);
+  color: var(--color-primary-text, #1d1b15) !important;
+  border-color: var(--color-primary, #d6b476);
+}
+
+:global(.dark-theme) .finanzas-view .btn-warm-outline {
+  background-color: var(--color-bg-surface, #24221c);
+  border-color: var(--color-border, #444138);
+  color: var(--color-text-main, #ede5d8);
+}
+
+:global(.dark-theme) .finanzas-view .btn-warm-outline:hover:not(:disabled) {
+  background-color: var(--color-bg-subtle, #332f27);
 }
 </style>

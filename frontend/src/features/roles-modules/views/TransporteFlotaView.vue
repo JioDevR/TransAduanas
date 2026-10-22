@@ -776,8 +776,10 @@ import AsignarRecursosModal from '../components/AsignarRecursosModal.vue'
 import ConfirmarEntregaModal from '../components/ConfirmarEntregaModal.vue'
 import DocumentosManagerModal from '@/shared/components/DocumentosManagerModal.vue'
 import { useNotification } from '@/shared/composables/useNotification'
+import { useConfirmation } from '@/shared/composables/useConfirmation'
 
 const { showSuccess, showError, showInfo } = useNotification()
+const { confirmAction } = useConfirmation()
 const navigationStore = useNavigationStore()
 const authStore = useAuthStore()
 
@@ -916,7 +918,11 @@ const loadDespachosGlobal = async () => {
 // Iniciar Salida a Ruta
 const handleIniciarRuta = async (despacho) => {
   const id = despacho.idDespachoTransporte || despacho.idDespacho
-  if (!confirm(`¿Confirmar salida a ruta del despacho ${despacho.codigoTracking || id}?`)) return
+  const confirmed = await confirmAction(
+    `¿Confirmar salida a ruta del despacho ${despacho.codigoTracking || id}?`,
+    'Confirmar Salida a Ruta'
+  )
+  if (!confirmed) return
 
   actionBusy.value = true
   try {

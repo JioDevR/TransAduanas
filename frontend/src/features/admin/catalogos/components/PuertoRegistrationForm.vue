@@ -320,28 +320,6 @@
             </li>
           </ul>
         </div>
-
-        <!-- Botones de Acción en Barra Lateral -->
-        <div class="sidebar-actions-card">
-          <button
-            type="button"
-            class="btn-espresso btn-block"
-            @click="handleSubmit"
-            :disabled="submitting || !isFormReady"
-          >
-            <i v-if="submitting" class="pi pi-spin pi-spinner"></i>
-            <i v-else class="pi pi-check"></i>
-            <span>{{ isEditMode ? 'Guardar Cambios' : 'Registrar Puerto' }}</span>
-          </button>
-          <button
-            type="button"
-            class="btn-outline-warm btn-block"
-            @click="$emit('cancel')"
-            :disabled="submitting"
-          >
-            <span>Cancelar y Volver</span>
-          </button>
-        </div>
       </div>
     </div>
   </div>
@@ -474,8 +452,7 @@ defineExpose({
   display: flex;
   flex-direction: column;
   gap: 1.75rem;
-  max-width: 1440px;
-  margin: 0 auto;
+  width: 100%;
   animation: fadeIn 0.25s ease-out;
 }
 

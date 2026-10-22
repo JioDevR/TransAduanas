@@ -1187,7 +1187,11 @@ const handleCotizacionSaved = async ({ isEdit, cotizacionId, payload, documentos
 const handleCambiarEstadoCotizacion = async (cotizacion, nuevoEstado) => {
   let motivo = ''
   if (nuevoEstado === 'RECHAZADA') {
-    motivo = window.prompt('Ingrese el motivo de rechazo (opcional):') || ''
+    const confirmed = await confirmAction(
+      `¿Está seguro de marcar como RECHAZADA la cotización ${cotizacion.codigoCotizacion}?`,
+      'Confirmar Rechazo de Cotización'
+    )
+    if (!confirmed) return
   }
 
   try {

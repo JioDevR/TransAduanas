@@ -1,0 +1,22 @@
+services:
+  mysql:
+    image: docker.io/library/mysql:8.4
+    container_name: sga-mysql
+    restart: unless-stopped
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --default-time-zone=-05:00
+    environment:
+      MYSQL_ROOT_PASSWORD: [PASSWORD]
+      MYSQL_DATABASE: SGAdb
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: [PASSWORD]
+    ports:
+      - "3306:3306"
+    volumes:
+      - sga-mysql-data:/var/lib/mysql
+
+volumes:
+  sga-mysql-data:
+    name: sga-mysql-data

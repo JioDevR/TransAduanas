@@ -181,11 +181,14 @@ const currentSectionName = computed(() => {
 
 const currentTitle = computed(() => {
   if (navigationStore.currentModule === 'administracion-ti') {
-    if (navigationStore.administracionTiSubOption === 'about') return 'Acerca del Sistema SGA'
-    if (navigationStore.administracionTiSubOption === 'logs') return 'Bitácora y Consola de Logs TI'
-    return navigationStore.administracionTiSubOption === 'create-user'
-      ? 'Ficha de Registro de Operador'
-      : 'Gestor y Directorio de Usuarios TI'
+    const tiTitles = {
+      dashboard: 'Centro de Control y Monitoreo del Sistema TI',
+      users: 'Gestor y Directorio de Usuarios TI',
+      'create-user': 'Ficha de Registro de Operador',
+      logs: 'Bitácora y Consola de Logs TI',
+      about: 'Acerca del Sistema SGA'
+    }
+    return tiTitles[navigationStore.administracionTiSubOption] || 'Administración TI'
   }
   if (navigationStore.currentModule === 'gerencia-general') {
     const gMap = {
@@ -245,7 +248,14 @@ const currentKicker = computed(() => {
     return 'DIRECCIÓN EJECUTIVA // GESTIÓN CORPORATIVA'
   }
   if (navigationStore.currentModule === 'administracion-ti') {
-    return 'SISTEMAS & SEGURIDAD // CONSOLA TI'
+    const tiKickers = {
+      dashboard: 'PANEL DE CONTROL TI // INFRAESTRUCTURA & SEGURIDAD',
+      users: 'ADMINISTRACIÓN DE PERSONAL // SEGURIDAD & ACCESOS',
+      'create-user': 'ALTA DE OPERADOR // SGA-FORM-00',
+      logs: 'AUDITORÍA & MONITOREO // TRAZAS SPRING BOOT',
+      about: 'INGENIERÍA DE SOFTWARE // FICHA TÉCNICA'
+    }
+    return tiKickers[navigationStore.administracionTiSubOption] || 'SISTEMAS & SEGURIDAD // CONSOLA TI'
   }
   if (navigationStore.currentModule === 'gestion-aduanera') {
     return 'SUPERVISIÓN & CONTROL // OPERACIONES ADUANERAS'
@@ -270,7 +280,14 @@ const currentSubtitle = computed(() => {
     return 'Supervisión global de sedes territoriales, parque automotor y conductores acreditados MTC.'
   }
   if (navigationStore.currentModule === 'administracion-ti') {
-    return 'Control de accesos de operadores, parámetros de infraestructura y auditoría técnica del sistema.'
+    const tiSubs = {
+      dashboard: 'Supervisión en tiempo real de servicios core, personal aduanero activo, infraestructura territorial y bitácora.',
+      users: 'Seguimiento de cuentas de operador aduanero, asignación de perfiles de acceso y supervisión de acreditaciones SUNAT.',
+      'create-user': 'Complete los datos legales, acreditaciones aduaneras SUNAT y credenciales para dar de alta al operador.',
+      logs: 'Monitoreo de trazas de ejecución en Spring Boot 3, eventos JWT y diagnóstico de excepciones.',
+      about: 'Especificaciones de arquitectura, dependencias de compilación y estado del stack tecnológico.'
+    }
+    return tiSubs[navigationStore.administracionTiSubOption] || 'Control de accesos de operadores, parámetros de infraestructura y auditoría técnica del sistema.'
   }
   if (navigationStore.currentModule === 'gestion-aduanera') {
     const sMap = {

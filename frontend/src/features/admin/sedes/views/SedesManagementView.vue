@@ -10,31 +10,15 @@
 
     <!-- Directorio y Métricas Territoriales -->
     <template v-else>
-      <!-- 1. Hero Banner Card -->
-      <HeroBannerCard
-        title="Gestión de sedes, agencias y depósitos aduaneros"
-        kicker="INFRAESTRUCTURA & CONTROL TERRITORIAL"
-        description="Supervisión de sucursales operativas a nivel nacional, terminales de despacho y puntos de enlace logístico asignados a colaboradores."
-      />
-
-      <!-- 2. Tarjetas de Métricas Rápidas (01, 02, 03, 04) -->
-      <div class="metrics-grid">
-        <MetricCard index="01" label="Total Sedes Registradas" :value="sedes.length" />
-        <MetricCard index="02" label="Sedes Operativas" :value="operativasCount" severity="success" />
-        <MetricCard index="03" label="Inactivas / Mantenimiento" :value="inactivasCount" severity="danger" />
-        <MetricCard index="04" label="Jurisdicciones / Distritos" :value="distritosCount" severity="accent" />
-      </div>
-
-    <!-- 3. Toolbar y Tabla Principal -->
-    <div class="section-container">
-      <div class="section-header-row">
-        <div>
-          <span class="badge-kicker">DIRECTORIO TERRITORIAL</span>
-          <h3 class="section-title">Infraestructura de Sedes y Agencias</h3>
+      <!-- 1. Toolbar de Acciones Warm Editorial (Sin Banners Invasivos) -->
+      <div class="sedes-action-toolbar">
+        <div class="toolbar-left-info">
+          <span class="badge-kicker">INFRAESTRUCTURA & CONTROL TERRITORIAL // SEDES ADUANERAS</span>
+          <h3 class="toolbar-title">Directorio de Sedes y Agencias Territoriales</h3>
         </div>
 
-        <div class="section-controls">
-          <span class="count-badge">{{ filteredSedes.length }} de {{ sedes.length }} sedes</span>
+        <div class="toolbar-actions-group">
+          <span class="count-badge font-mono">{{ filteredSedes.length }} de {{ sedes.length }} sedes</span>
 
           <button
             type="button"
@@ -70,6 +54,72 @@
           </button>
         </div>
       </div>
+
+      <!-- 2. Grid de Métricas KPI Técnicas (Estándar Editorial Warm) -->
+      <div class="metrics-kpi-grid">
+        <div class="kpi-card" @click="loadSedes">
+          <div class="kpi-card-header">
+            <span class="kpi-num">01</span>
+            <span class="kpi-label">Sedes Registradas</span>
+            <i class="pi pi-building kpi-icon"></i>
+          </div>
+          <div class="kpi-main-stat">
+            <span class="kpi-value font-mono">{{ sedes.length }}</span>
+            <span class="kpi-badge accent">Agencias</span>
+          </div>
+          <div class="kpi-footer-note">
+            <span>Red territorial operativa nacional</span>
+          </div>
+        </div>
+
+        <div class="kpi-card success-card">
+          <div class="kpi-card-header">
+            <span class="kpi-num">02</span>
+            <span class="kpi-label">Sedes Operativas</span>
+            <i class="pi pi-check-circle kpi-icon success"></i>
+          </div>
+          <div class="kpi-main-stat">
+            <span class="kpi-value font-mono text-success">{{ operativasCount }}</span>
+            <span class="kpi-badge success">En Servicio</span>
+          </div>
+          <div class="kpi-footer-note">
+            <span>Operaciones aduaneras activas</span>
+          </div>
+        </div>
+
+        <div class="kpi-card danger-card">
+          <div class="kpi-card-header">
+            <span class="kpi-num">03</span>
+            <span class="kpi-label">Inactivas / Mant.</span>
+            <i class="pi pi-exclamation-circle kpi-icon danger"></i>
+          </div>
+          <div class="kpi-main-stat">
+            <span class="kpi-value font-mono text-danger">{{ inactivasCount }}</span>
+            <span class="kpi-badge warning">En Pausa</span>
+          </div>
+          <div class="kpi-footer-note">
+            <span>Terminales fuera de servicio</span>
+          </div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-card-header">
+            <span class="kpi-num">04</span>
+            <span class="kpi-label">Jurisdicciones</span>
+            <i class="pi pi-map-marker kpi-icon"></i>
+          </div>
+          <div class="kpi-main-stat">
+            <span class="kpi-value font-mono">{{ distritosCount }}</span>
+            <span class="kpi-badge info">Distritos</span>
+          </div>
+          <div class="kpi-footer-note">
+            <span>Callao, Paita, Matarani, Jorge Chávez</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. Contenedor de Directorio y Tabla Principal -->
+      <div class="section-container">
 
       <!-- Barra de Filtros y Búsqueda -->
       <div class="filters-bar">
@@ -242,8 +292,6 @@ import Tag from 'primevue/tag'
 import SedeRegistrationForm from '../components/SedeRegistrationForm.vue'
 import sedeService from '../services/sedeService'
 import { downloadBlob } from '@/shared/utils/download'
-import HeroBannerCard from '@/shared/components/HeroBannerCard.vue'
-import MetricCard from '@/shared/components/MetricCard.vue'
 
 const sedes = ref([])
 const loading = ref(false)
@@ -389,115 +437,256 @@ onMounted(() => {
 .sedes-management-view {
   display: flex;
   flex-direction: column;
-  gap: 1.75rem;
-  animation: fadeIn 0.3s ease-out;
+  gap: var(--space-6, 1.5rem);
+  padding-bottom: var(--space-10, 2.5rem);
+  width: 100%;
 }
 
-/* 1. Hero Banner */
-.hero-banner-card {
-  position: relative;
-  background: linear-gradient(135deg, #1c1917 0%, #292524 60%, #453406 100%);
-  border: 1px solid rgba(234, 179, 8, 0.25);
+/* ==========================================================================
+   1. TOOLBAR DE ACCIONES WARM EDITORIAL
+   ========================================================================== */
+.sedes-action-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-4, 1rem);
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-lg, 12px);
-  padding: 1.75rem 2rem;
-  color: #fafaf9;
-  overflow: hidden;
-  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  padding: var(--space-4, 1rem) var(--space-5, 1.25rem);
+  box-shadow: var(--shadow-subtle);
 }
 
-.hero-content {
-  max-width: 780px;
-  position: relative;
-  z-index: 2;
+.toolbar-left-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
 }
 
 .badge-kicker {
-  display: inline-block;
-  font-size: 0.6875rem;
+  font-size: var(--font-size-2xs, 0.6875rem);
   font-weight: 700;
-  letter-spacing: 0.1em;
-  color: #eab308;
-  margin-bottom: 0.5rem;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-}
-
-.hero-title {
-  font-size: 1.65rem;
-  font-weight: 700;
-  color: #ffffff;
-  margin: 0 0 0.5rem;
-  letter-spacing: -0.015em;
-  line-height: 1.25;
-}
-
-.hero-desc {
-  font-size: 0.875rem;
-  color: #d6d3d1;
-  margin: 0;
-  line-height: 1.5;
-}
-
-.hero-watermark {
-  position: absolute;
-  right: 1.5rem;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 7rem;
-  font-weight: 900;
-  color: rgba(255, 255, 255, 0.03);
-  user-select: none;
-  pointer-events: none;
-}
-
-/* 2. Métricas Rápidas */
-.metrics-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 1.25rem;
-}
-
-.metric-card {
-  background: var(--color-bg-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  padding: 1.4rem;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
-}
-
-.metric-top {
-  display: flex;
-  align-items: center;
-  gap: 0.65rem;
-  margin-bottom: 0.65rem;
-}
-
-.metric-idx {
-  font-size: 0.75rem;
-  font-weight: 800;
   color: var(--color-accent-kicker);
 }
 
-.metric-label {
-  font-size: 0.775rem;
-  font-weight: 600;
-  color: var(--color-text-subtle);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+.toolbar-title {
+  font-size: var(--font-size-xl, 1.25rem);
+  font-weight: 700;
+  color: var(--color-text-main);
+  margin: 0;
+  letter-spacing: -0.015em;
 }
 
-.metric-val {
-  font-size: 2.25rem;
+.toolbar-actions-group {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+}
+
+.count-badge {
+  font-size: var(--font-size-xs, 0.75rem);
+  font-weight: 700;
+  color: var(--color-accent-kicker);
+  background: var(--color-bg-subtle);
+  border: 1px solid var(--color-border-subtle);
+  padding: 0.35rem 0.65rem;
+  border-radius: var(--radius-pill, 9999px);
+}
+
+/* ==========================================================================
+   2. REJILLA DE TARJETAS KPI (WARM EDITORIAL)
+   ========================================================================== */
+.metrics-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-4, 1rem);
+}
+
+@media (max-width: 1200px) {
+  .metrics-kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .metrics-kpi-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.kpi-card {
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg, 12px);
+  padding: var(--space-4, 1rem) var(--space-5, 1.25rem);
+  box-shadow: var(--shadow-card);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: var(--space-3, 0.75rem);
+  cursor: pointer;
+  transition: transform var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.kpi-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--color-border-strong);
+  box-shadow: var(--shadow-elevated);
+}
+
+.kpi-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.kpi-num {
+  font-family: var(--font-mono, monospace);
+  font-size: var(--font-size-2xs, 0.6875rem);
+  font-weight: 700;
+  color: var(--color-accent-kicker);
+  background: var(--color-bg-subtle);
+  border: 1px solid var(--color-border-subtle);
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+}
+
+.kpi-label {
+  font-size: var(--font-size-xs, 0.75rem);
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-right: auto;
+  margin-left: 0.65rem;
+}
+
+.kpi-icon {
+  font-size: 1.1rem;
+  color: var(--color-text-subtle);
+}
+
+.kpi-icon.warning {
+  color: var(--color-warning-text, #d97706);
+}
+
+.kpi-icon.danger {
+  color: var(--color-danger-text, #ef4444);
+}
+
+.kpi-icon.success {
+  color: var(--color-success-text, #16a34a);
+}
+
+.kpi-main-stat {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.kpi-value {
+  font-family: var(--font-sans);
+  font-size: 1.65rem;
   font-weight: 800;
   color: var(--color-text-main);
-  font-variant-numeric: tabular-nums;
-  line-height: 1;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
 }
 
-.metric-val-active {
-  color: var(--color-success-text);
+.kpi-value.font-mono {
+  font-family: var(--font-mono, monospace);
+  font-size: 1.35rem;
+}
+
+.text-success {
+  color: var(--color-success-text, #16a34a) !important;
+}
+
+.text-danger {
+  color: var(--color-danger-text, #ef4444) !important;
+}
+
+.kpi-badge {
+  font-size: var(--font-size-2xs, 0.6875rem);
+  font-weight: 700;
+  padding: 0.2rem 0.55rem;
+  border-radius: var(--radius-pill, 9999px);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.kpi-badge.accent {
+  background: var(--color-bg-subtle);
+  color: var(--color-accent-kicker);
+  border: 1px solid var(--color-border-subtle);
+}
+
+.kpi-badge.warning {
+  background: var(--color-warning-bg, #fef3c7);
+  color: var(--color-warning-text, #92400e);
+}
+
+.kpi-badge.success {
+  background: var(--color-success-bg, #dcfce7);
+  color: var(--color-success-text, #166534);
+}
+
+.kpi-badge.info {
+  background: var(--color-info-bg, #e0f2fe);
+  color: var(--color-info-text, #0369a1);
+}
+
+.kpi-footer-note {
+  font-size: var(--font-size-xs, 0.75rem);
+  color: var(--color-text-subtle);
+  border-top: 1px dashed var(--color-border-subtle);
+  padding-top: var(--space-2, 0.5rem);
+}
+
+/* Botones Oficiales Warm Editorial */
+.btn-espresso {
+  background: var(--color-primary);
+  color: var(--color-primary-text);
+  border: 1px solid var(--color-primary);
+  padding: 0.55rem 1rem;
+  border-radius: var(--radius-md, 8px);
+  font-weight: 600;
+  font-size: var(--font-size-sm, 0.8125rem);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  transition: all var(--transition-fast);
+}
+
+.btn-espresso:hover:not(:disabled) {
+  background: var(--color-primary-hover);
+  border-color: var(--color-primary-hover);
+}
+
+.btn-outline-warm {
+  background: var(--color-bg-surface);
+  color: var(--color-text-main);
+  border: 1px solid var(--color-border);
+  padding: 0.5rem 0.9rem;
+  border-radius: var(--radius-md, 8px);
+  font-weight: 600;
+  font-size: var(--font-size-sm, 0.8125rem);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  transition: all var(--transition-fast);
+}
+
+.btn-outline-warm:hover:not(:disabled) {
+  background: var(--color-bg-subtle);
+  border-color: var(--color-border-strong);
 }
 
 /* 3. Sección Principal */
@@ -616,6 +805,20 @@ onMounted(() => {
 
 .filter-select:focus {
   border-color: var(--color-primary);
+}
+
+.table-card {
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg, 12px);
+  overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+}
+
+:deep(.p-datatable .p-paginator) {
+  background: var(--color-bg-subtle) !important;
+  border-top: 1px solid var(--color-border-subtle) !important;
+  color: var(--color-text-muted) !important;
 }
 
 /* Celdas Custom en Tabla */

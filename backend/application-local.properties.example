@@ -1,0 +1,20 @@
+# =============================================================================
+# SGA - Configuración Local de Desarrollo (NO VERSIONAR)
+# =============================================================================
+# Copia este archivo como 'application-local.properties' en esta misma carpeta
+# o en la raíz del proyecto para definir tus credenciales locales sin exponerlas a Git.
+#
+# cp application-local.properties.example application-local.properties
+# =============================================================================
+
+# Credenciales de conexión a MySQL
+spring.datasource.url=jdbc:mysql://localhost:3306/SGAdb?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+spring.datasource.username=root
+spring.datasource.password=tu_contraseña_aqui
+
+# Puerto de ejecución del backend (por defecto: 8085)
+# server.port=8085
+
+# Parámetros opcionales de desarrollo / depuración
+# spring.jpa.show-sql=true
+# spring.jpa.properties.hibernate.format_sql=true

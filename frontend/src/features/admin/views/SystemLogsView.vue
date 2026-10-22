@@ -1,43 +1,130 @@
 <template>
   <div class="system-logs-view">
-    <!-- 1. Hero Banner Editorial Cálido Reutilizable -->
-    <HeroBannerCard
-      kicker="ADMINISTRACIÓN & CONTROL TI // MONITOREO DE SISTEMA"
-      title="Consola de Bitácora y Diagnóstico en Tiempo Real"
-      description="Monitoreo de trazas de ejecución de Spring Boot 3, eventos de seguridad JWT, excepciones no controladas y rotación de archivos Logback."
-    />
+    <!-- 1. Toolbar de Acciones Warm Editorial (Sin Banners Invasivos) -->
+    <div class="logs-action-toolbar">
+      <div class="toolbar-left-info">
+        <span class="badge-kicker">ADMINISTRACIÓN & CONTROL TI // MONITOREO DE SISTEMA</span>
+        <h3 class="toolbar-title">Consola de Bitácora y Diagnóstico en Tiempo Real</h3>
+      </div>
 
-    <!-- 2. Métricas y Estado del Archivo de Log -->
-    <div class="metrics-grid">
-      <MetricCard
-        index="01"
-        label="Archivo Activo"
-        :value="logData.fileName || 'sga-backend.log'"
-        severity="accent"
-      />
-      <MetricCard
-        index="02"
-        label="Tamaño en Servidor"
-        :value="formattedFileSize"
-        severity="warning"
-      />
-      <MetricCard
-        index="03"
-        label="Líneas en Terminal"
-        :value="filteredLines.length"
-        severity="success"
-      />
-      <MetricCard
-        index="04"
-        label="Total Histórico Servidor"
-        :value="logData.totalLines || 0"
-        severity="pending"
-      />
+      <div class="toolbar-actions-group">
+        <!-- Toggle Auto-Refresco -->
+        <button
+          type="button"
+          :class="['btn-toggle-auto', { active: isAutoRefresh }]"
+          @click="toggleAutoRefresh"
+          title="Conmutar actualización automática cada 5 segundos"
+        >
+          <span class="live-pulse" :class="{ 'pulse-active': isAutoRefresh }"></span>
+          <span>{{ isAutoRefresh ? 'Auto (5s)' : 'Pausado' }}</span>
+        </button>
+
+        <!-- Botón Refrescar Manual -->
+        <button
+          type="button"
+          class="btn-outline-warm"
+          @click="fetchLogs"
+          :disabled="loading"
+          title="Recargar logs ahora"
+        >
+          <i :class="['pi pi-sync', { 'pi-spin': loading }]"></i>
+          <span>Actualizar</span>
+        </button>
+
+        <!-- Botón Descargar Log Completo -->
+        <button
+          type="button"
+          class="btn-outline-warm"
+          @click="downloadFullLog"
+          title="Descargar archivo .log completo"
+        >
+          <i class="pi pi-download"></i>
+          <span>Descargar</span>
+        </button>
+
+        <!-- Botón Vaciar / Truncar Log -->
+        <button
+          type="button"
+          class="btn-outline-warm btn-danger-action"
+          @click="handleClearLog"
+          title="Vaciar archivo de log en servidor"
+        >
+          <i class="pi pi-trash"></i>
+          <span>Vaciar</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- 2. Grid de Métricas KPI Técnicas (Estándar Editorial Warm) -->
+    <div class="metrics-kpi-grid">
+      <!-- Tarjeta 01: Archivo Activo -->
+      <div class="kpi-card" @click="fetchLogs">
+        <div class="kpi-card-header">
+          <span class="kpi-num">01</span>
+          <span class="kpi-label">Archivo de Registro Activo</span>
+          <i class="pi pi-file-code kpi-icon"></i>
+        </div>
+        <div class="kpi-main-stat">
+          <span class="kpi-value font-mono">{{ logData.fileName || 'sga-backend.log' }}</span>
+          <span class="kpi-badge accent">Logback</span>
+        </div>
+        <div class="kpi-footer-note">
+          <span>Rotación: <strong class="font-mono text-muted">RollingFileAppender</strong></span>
+        </div>
+      </div>
+
+      <!-- Tarjeta 02: Tamaño en Servidor -->
+      <div class="kpi-card warning-card">
+        <div class="kpi-card-header">
+          <span class="kpi-num">02</span>
+          <span class="kpi-label">Tamaño en Disco</span>
+          <i class="pi pi-database kpi-icon warning"></i>
+        </div>
+        <div class="kpi-main-stat">
+          <span class="kpi-value font-mono">{{ formattedFileSize }}</span>
+          <span class="kpi-badge warning">En Servidor</span>
+        </div>
+        <div class="kpi-footer-note">
+          <span>Límite de buffer: <strong class="font-mono text-muted">10 MB máx</strong></span>
+        </div>
+      </div>
+
+      <!-- Tarjeta 03: Líneas en Terminal -->
+      <div class="kpi-card success-card">
+        <div class="kpi-card-header">
+          <span class="kpi-num">03</span>
+          <span class="kpi-label">Trazas Filtradas en Pantalla</span>
+          <i class="pi pi-list kpi-icon success"></i>
+        </div>
+        <div class="kpi-main-stat">
+          <span class="kpi-value text-success font-mono">{{ filteredLines.length }}</span>
+          <span class="kpi-badge success">En Memoria</span>
+        </div>
+        <div class="kpi-footer-note">
+          <span>Profundidad: <strong class="font-mono text-muted">{{ linesLimit }} líneas</strong></span>
+        </div>
+      </div>
+
+      <!-- Tarjeta 04: Total Histórico Servidor -->
+      <div class="kpi-card pending-card">
+        <div class="kpi-card-header">
+          <span class="kpi-num">04</span>
+          <span class="kpi-label">Total Histórico Servidor</span>
+          <i class="pi pi-history kpi-icon"></i>
+        </div>
+        <div class="kpi-main-stat">
+          <span class="kpi-value font-mono">{{ logData.totalLines || 0 }}</span>
+          <span class="kpi-badge info font-mono">Líneas</span>
+        </div>
+        <div class="kpi-footer-note">
+          <span>Última sincronización: <strong class="font-mono text-muted">{{ lastSyncTime }}</strong></span>
+        </div>
+      </div>
     </div>
 
     <!-- 3. Consola Terminal Interactiva -->
     <div class="terminal-card">
-      <!-- Toolbar Superior de la Terminal -->
+      <!-- Toolbar de Controles y Filtros de Terminal -->
       <div class="terminal-toolbar">
         <div class="toolbar-left">
           <!-- Selector de Archivo de Log -->
@@ -91,53 +178,6 @@
             </button>
           </div>
         </div>
-
-        <div class="toolbar-right">
-          <!-- Toggle Auto-Refresco -->
-          <button
-            type="button"
-            :class="['btn-toggle-auto', { active: isAutoRefresh }]"
-            @click="toggleAutoRefresh"
-            title="Conmutar actualización automática cada 5 segundos"
-          >
-            <span class="live-pulse" :class="{ 'pulse-active': isAutoRefresh }"></span>
-            <span>{{ isAutoRefresh ? 'Auto (5s)' : 'Pausado' }}</span>
-          </button>
-
-          <!-- Botón Refrescar Manual -->
-          <button
-            type="button"
-            class="btn-terminal-action"
-            @click="fetchLogs"
-            :disabled="loading"
-            title="Recargar logs ahora"
-          >
-            <i :class="['pi pi-sync', { 'pi-spin': loading }]"></i>
-            <span>Actualizar</span>
-          </button>
-
-          <!-- Botón Descargar Log Completo -->
-          <button
-            type="button"
-            class="btn-terminal-action"
-            @click="downloadFullLog"
-            title="Descargar archivo .log completo"
-          >
-            <i class="pi pi-download"></i>
-            <span>Descargar</span>
-          </button>
-
-          <!-- Botón Vaciar / Truncar Log -->
-          <button
-            type="button"
-            class="btn-terminal-action btn-danger-term"
-            @click="handleClearLog"
-            title="Vaciar archivo de log en servidor"
-          >
-            <i class="pi pi-trash"></i>
-            <span>Vaciar</span>
-          </button>
-        </div>
       </div>
 
       <!-- Cuerpo de Salida de Consola -->
@@ -184,8 +224,6 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
-import HeroBannerCard from '@/shared/components/HeroBannerCard.vue'
-import MetricCard from '@/shared/components/MetricCard.vue'
 import { logsService } from '../services/logsService'
 import { useNotification } from '@/shared/composables/useNotification'
 import { useConfirmation } from '@/shared/composables/useConfirmation'
@@ -328,14 +366,244 @@ onUnmounted(() => {
 .system-logs-view {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
-  padding-bottom: 2.5rem;
+  gap: var(--space-6, 1.5rem);
+  padding-bottom: var(--space-10, 2.5rem);
+  width: 100%;
 }
 
-.metrics-grid {
+/* ==========================================================================
+   1. TOOLBAR DE ACCIONES WARM EDITORIAL
+   ========================================================================== */
+.logs-action-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-4, 1rem);
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg, 12px);
+  padding: var(--space-4, 1rem) var(--space-5, 1.25rem);
+  box-shadow: var(--shadow-subtle);
+}
+
+.toolbar-left-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.badge-kicker {
+  font-size: var(--font-size-2xs, 0.6875rem);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-accent-kicker);
+}
+
+.toolbar-title {
+  font-size: var(--font-size-xl, 1.25rem);
+  font-weight: 700;
+  color: var(--color-text-main);
+  margin: 0;
+  letter-spacing: -0.015em;
+}
+
+.toolbar-actions-group {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+}
+
+/* ==========================================================================
+   2. REJILLA DE TARJETAS KPI (WARM EDITORIAL)
+   ========================================================================== */
+.metrics-kpi-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-  gap: 1rem;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-4, 1rem);
+}
+
+@media (max-width: 1200px) {
+  .metrics-kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .metrics-kpi-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.kpi-card {
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg, 12px);
+  padding: var(--space-4, 1rem) var(--space-5, 1.25rem);
+  box-shadow: var(--shadow-card);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: var(--space-3, 0.75rem);
+  cursor: pointer;
+  transition: transform var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.kpi-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--color-border-strong);
+  box-shadow: var(--shadow-elevated);
+}
+
+.kpi-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.kpi-num {
+  font-family: var(--font-mono, monospace);
+  font-size: var(--font-size-2xs, 0.6875rem);
+  font-weight: 700;
+  color: var(--color-accent-kicker);
+  background: var(--color-bg-subtle);
+  border: 1px solid var(--color-border-subtle);
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+}
+
+.kpi-label {
+  font-size: var(--font-size-xs, 0.75rem);
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-right: auto;
+  margin-left: 0.65rem;
+}
+
+.kpi-icon {
+  font-size: 1.1rem;
+  color: var(--color-text-subtle);
+}
+
+.kpi-icon.warning {
+  color: var(--color-warning-text, #d97706);
+}
+
+.kpi-icon.success {
+  color: var(--color-success-text, #16a34a);
+}
+
+.kpi-main-stat {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.kpi-value {
+  font-family: var(--font-sans);
+  font-size: 1.65rem;
+  font-weight: 800;
+  color: var(--color-text-main);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.kpi-value.font-mono {
+  font-family: var(--font-mono, monospace);
+  font-size: 1.35rem;
+}
+
+.text-success {
+  color: var(--color-success-text, #16a34a) !important;
+}
+
+.kpi-badge {
+  font-size: var(--font-size-2xs, 0.6875rem);
+  font-weight: 700;
+  padding: 0.2rem 0.55rem;
+  border-radius: var(--radius-pill, 9999px);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.kpi-badge.accent {
+  background: var(--color-bg-subtle);
+  color: var(--color-accent-kicker);
+  border: 1px solid var(--color-border-subtle);
+}
+
+.kpi-badge.warning {
+  background: var(--color-warning-bg, #fef3c7);
+  color: var(--color-warning-text, #92400e);
+}
+
+.kpi-badge.success {
+  background: var(--color-success-bg, #dcfce7);
+  color: var(--color-success-text, #166534);
+}
+
+.kpi-badge.info {
+  background: var(--color-info-bg, #e0f2fe);
+  color: var(--color-info-text, #0369a1);
+}
+
+.kpi-footer-note {
+  font-size: var(--font-size-xs, 0.75rem);
+  color: var(--color-text-subtle);
+  border-top: 1px dashed var(--color-border-subtle);
+  padding-top: var(--space-2, 0.5rem);
+}
+
+/* Botones Oficiales Warm Editorial */
+.btn-espresso {
+  background: var(--color-primary);
+  color: var(--color-primary-text);
+  border: 1px solid var(--color-primary);
+  padding: 0.55rem 1rem;
+  border-radius: var(--radius-md, 8px);
+  font-weight: 600;
+  font-size: var(--font-size-sm, 0.8125rem);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  transition: all var(--transition-fast);
+}
+
+.btn-espresso:hover:not(:disabled) {
+  background: var(--color-primary-hover);
+  border-color: var(--color-primary-hover);
+}
+
+.btn-outline-warm {
+  background: var(--color-bg-surface);
+  color: var(--color-text-main);
+  border: 1px solid var(--color-border);
+  padding: 0.5rem 0.9rem;
+  border-radius: var(--radius-md, 8px);
+  font-weight: 600;
+  font-size: var(--font-size-sm, 0.8125rem);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  transition: all var(--transition-fast);
+}
+
+.btn-outline-warm:hover:not(:disabled) {
+  background: var(--color-bg-subtle);
+  border-color: var(--color-border-strong);
+}
+
+.btn-danger-action:hover:not(:disabled) {
+  background: var(--color-danger-bg, #fee2e2) !important;
+  color: var(--color-danger-text, #b91c1c) !important;
+  border-color: var(--color-danger-border, #fca5a5) !important;
 }
 
 /* ==========================================================================
@@ -386,10 +654,16 @@ onUnmounted(() => {
 }
 
 .terminal-select {
-  background: #191815;
+  appearance: none;
+  -webkit-appearance: none;
+  background-color: #191815;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23d6b476'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2.2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.5rem center;
+  background-size: 0.85rem 0.85rem;
   border: 1px solid #443e35;
   color: #ede6db;
-  padding: 0.35rem 0.65rem;
+  padding: 0.35rem 1.75rem 0.35rem 0.65rem;
   border-radius: var(--radius-sm, 6px);
   font-size: 0.8125rem;
   outline: none;

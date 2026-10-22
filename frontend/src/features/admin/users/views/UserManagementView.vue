@@ -1,50 +1,26 @@
 <template>
   <div class="user-management-view">
-
-
-    <!-- VISTA 00: USUARIOS & CONTROL TI -->
-    <!-- 01. Formulario de Registro / Edición de Usuario -->
+    <!-- 01. Formulario de Registro / Edición de Usuario a Pantalla Completa -->
     <UserRegistrationForm
       v-if="navigationStore.adminSubOption === 'create-user'"
       :user-to-edit="selectedUser"
       :roles="roles"
       :sedes="sedes"
-      @cancel="navigationStore.setAdminSubOption('users')"
+      @cancel="navigationStore.setAdministracionTiSubOption('users')"
       @saved="handleUserSaved"
     />
 
-    <!-- 02. Vista Acerca de (Información del Proyecto y Compilación) -->
-    <AboutSystemView
-      v-else-if="navigationStore.adminSubOption === 'about'"
-    />
-
-    <!-- 03. Sub-opción Usuarios: Directorio y Métricas Específicas de Personal -->
-    <template v-else>
-        <!-- 1. Hero Banner Card -->
-        <HeroBannerCard
-          title="Control y administración de usuarios del sistema"
-          kicker="GESTIÓN DE OPERACIONES & ACCESOS"
-          description="Seguimiento de cada cuenta de operador aduanero, asignación de perfiles de acceso y supervisión de sedes territoriales."
-        />
-
-        <!-- 2. Tarjetas de Métricas Rápidas con Números Indexados (01, 02, 03, 04) -->
-        <div class="metrics-grid">
-          <MetricCard index="01" label="Usuarios del Sistema" :value="users.length" />
-          <MetricCard index="02" label="Operadores Activos" :value="activeUsersCount" severity="success" />
-          <MetricCard index="03" label="Desactivados / Baja" :value="inactiveUsersCount" severity="danger" />
-          <MetricCard index="04" label="Roles en Sistema" :value="roles.length" severity="accent" />
+    <!-- 02. Directorio Principal y Métricas de Personal (Sin Banners Invasivos) -->
+    <div v-else class="users-master-container">
+      <!-- 1. Barra de Herramientas y Acciones Rápidas -->
+      <div class="user-action-toolbar">
+        <div class="toolbar-left-info">
+          <span class="badge-kicker">ADMINISTRACIÓN DE PERSONAL // SEGURIDAD & ACCESOS</span>
+          <h3 class="toolbar-title">Directorio de Usuarios y Acreditaciones</h3>
         </div>
 
-    <!-- 3. Sección: Órdenes y Usuarios por Estado -->
-    <div class="section-container">
-      <div class="section-header-row">
-        <div>
-          <span class="badge-kicker">ADMINISTRACIÓN DE PERSONAL</span>
-          <h3 class="section-title">Usuarios por estado de cuenta</h3>
-        </div>
-
-        <div class="section-controls">
-          <span class="count-badge">{{ users.length }} usuarios</span>
+        <div class="toolbar-actions-group">
+          <span class="count-badge font-mono">{{ users.length }} usuarios registrados</span>
 
           <button
             type="button"
@@ -65,7 +41,7 @@
             title="Descargar reporte oficial JasperReports"
           >
             <i :class="['pi', exportingPdf ? 'pi-spin pi-spinner' : 'pi-file-pdf']"></i>
-            <span>Ver Reporte</span>
+            <span>Ver Reporte (PDF)</span>
           </button>
 
           <button
@@ -79,85 +55,103 @@
         </div>
       </div>
 
-      <!-- Tarjetas de Distribución por Estado (Estilo Columnas de la referencia) -->
-      <div class="status-columns-grid">
-        <div class="status-col-card">
-          <div class="status-col-header">
-            <span class="status-col-name">Activos</span>
-            <span class="status-col-pill active-pill">{{ activeUsersCount }}</span>
+      <!-- 2. Grid de Métricas KPI Técnicas de Personal -->
+      <div class="metrics-kpi-grid">
+        <!-- Tarjeta 01: Total Usuarios -->
+        <div class="kpi-card" @click="loadData">
+          <div class="kpi-card-header">
+            <span class="kpi-num">01</span>
+            <span class="kpi-label">Personal Registrado</span>
+            <i class="pi pi-users kpi-icon"></i>
           </div>
-          <div class="status-col-body">
-            <span class="status-sub">Operadores con acceso vigente y sesiones autorizadas</span>
+          <div class="kpi-main-stat">
+            <span class="kpi-value font-mono">{{ users.length }}</span>
+            <span class="kpi-badge accent">{{ roles.length }} Roles</span>
           </div>
-        </div>
-
-        <div class="status-col-card">
-          <div class="status-col-header">
-            <span class="status-col-name">Desactivados</span>
-            <span class="status-col-pill inactive-pill">{{ inactiveUsersCount }}</span>
-          </div>
-          <div class="status-col-body">
-            <span class="status-sub">Cuentas con baja lógica o acceso suspendido</span>
+          <div class="kpi-footer-note">
+            <span>Cuentas de operadores aduaneros</span>
           </div>
         </div>
 
-        <div class="status-col-card">
-          <div class="status-col-header">
-            <span class="status-col-name">Administradores</span>
-            <span class="status-col-pill admin-pill-col">{{ adminCount }}</span>
+        <!-- Tarjeta 02: Operadores Activos -->
+        <div class="kpi-card success-card">
+          <div class="kpi-card-header">
+            <span class="kpi-num">02</span>
+            <span class="kpi-label">Operadores Activos</span>
+            <i class="pi pi-check-circle kpi-icon success"></i>
           </div>
-          <div class="status-col-body">
-            <span class="status-sub">Control total de configuraciones, TI y auditoría</span>
+          <div class="kpi-main-stat">
+            <span class="kpi-value text-success font-mono">{{ activeUsersCount }}</span>
+            <span class="kpi-badge success">Acceso Vigente</span>
+          </div>
+          <div class="kpi-footer-note">
+            <span>Sesiones y credenciales habilitadas</span>
           </div>
         </div>
 
-        <div class="status-col-card">
-          <div class="status-col-header">
-            <span class="status-col-name">Sedes Registradas</span>
-            <span class="status-col-pill sedes-pill">{{ sedes.length }}</span>
+        <!-- Tarjeta 03: Desactivados / Baja -->
+        <div class="kpi-card danger-card">
+          <div class="kpi-card-header">
+            <span class="kpi-num">03</span>
+            <span class="kpi-label">Cuentas Suspendidas</span>
+            <i class="pi pi-user-minus kpi-icon danger"></i>
           </div>
-          <div class="status-col-body">
-            <span class="status-sub">Puntos de control y aduanas descentralizadas</span>
+          <div class="kpi-main-stat">
+            <span class="kpi-value text-danger font-mono">{{ inactiveUsersCount }}</span>
+            <span class="kpi-badge danger">Baja Lógica</span>
+          </div>
+          <div class="kpi-footer-note">
+            <span>Acceso revocado temporalmente</span>
+          </div>
+        </div>
+
+        <!-- Tarjeta 04: Administradores TI -->
+        <div class="kpi-card">
+          <div class="kpi-card-header">
+            <span class="kpi-num">04</span>
+            <span class="kpi-label">Administradores TI</span>
+            <i class="pi pi-shield kpi-icon"></i>
+          </div>
+          <div class="kpi-main-stat">
+            <span class="kpi-value font-mono">{{ adminCount }}</span>
+            <span class="kpi-badge info">Control Total</span>
+          </div>
+          <div class="kpi-footer-note">
+            <span>Soporte, configuración y auditoría</span>
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- 4. Sección de Directorio y Seguimiento -->
-    <div class="section-container table-section">
-      <div class="table-section-heading">
-        <span class="badge-kicker">SEGUIMIENTO</span>
-        <h3 class="section-title">Directorio de usuarios y credenciales</h3>
+      <!-- 3. Sección de Directorio y Seguimiento -->
+      <div class="section-container table-section">
+        <div class="table-section-heading">
+          <span class="badge-kicker">SEGUIMIENTO DE CUENTAS & AUDITORÍA</span>
+          <h3 class="section-title">Directorio de Operadores y Credenciales</h3>
+        </div>
+
+        <!-- Tabla Principal de Usuarios -->
+        <UserTable
+          :users="users"
+          :roles="roles"
+          :loading="loading"
+          @edit="openEditDialog"
+          @toggle-status="handleToggleStatus"
+        />
       </div>
-
-      <!-- Tabla Principal de Usuarios -->
-      <UserTable
-        :users="users"
-        :roles="roles"
-        :loading="loading"
-        @edit="openEditDialog"
-        @toggle-status="handleToggleStatus"
-      />
     </div>
-  </template>
-</div>
+  </div>
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted, watch, defineAsyncComponent } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { userService } from '../services/userService'
 import { ROLES } from '@/core/auth/roles'
 import { useNavigationStore } from '@/core/stores/navigationStore'
 import { useNotification } from '@/shared/composables/useNotification'
 import { useConfirmation } from '@/shared/composables/useConfirmation'
 import { downloadBlob } from '@/shared/utils/download'
-import HeroBannerCard from '@/shared/components/HeroBannerCard.vue'
-import MetricCard from '@/shared/components/MetricCard.vue'
 import UserTable from '../components/UserTable.vue'
 import UserRegistrationForm from '../components/UserRegistrationForm.vue'
-
-// Vista Acerca de para Administrador TI
-const AboutSystemView = defineAsyncComponent(() => import('@/features/admin/about/views/AboutSystemView.vue'))
 
 const navigationStore = useNavigationStore()
 const { showSuccess, showError, showInfo } = useNotification()
@@ -309,135 +303,206 @@ onMounted(() => {
 .user-management-view {
   display: flex;
   flex-direction: column;
-  gap: 2rem;
-  max-width: 1440px;
-  margin: 0 auto;
+  gap: var(--space-6, 1.5rem);
+  width: 100%;
 }
 
-/* 1. Hero Banner Card */
-.hero-banner-card {
-  position: relative;
-  background: linear-gradient(135deg, #1c1917 0%, #292524 60%, #453406 100%);
-  border: 1px solid rgba(234, 179, 8, 0.25);
+.users-master-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6, 1.5rem);
+  width: 100%;
+}
+
+/* ==========================================================================
+   1. TOOLBAR DE ACCIONES (ESTÁNDAR EDITORIAL CÁLIDO)
+   ========================================================================== */
+.user-action-toolbar {
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-lg, 12px);
-  padding: 1.75rem 2rem;
-  color: #fafaf9;
-  overflow: hidden;
-  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  padding: 1rem 1.35rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  box-shadow: var(--shadow-subtle);
 }
 
-.hero-content {
-  max-width: 780px;
-  position: relative;
-  z-index: 2;
+.toolbar-left-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
 }
 
 .badge-kicker {
-  display: inline-block;
   font-size: 0.6875rem;
   font-weight: 700;
-  letter-spacing: 0.1em;
-  color: #eab308;
-  margin-bottom: 0.5rem;
+  letter-spacing: 0.08em;
+  color: var(--color-accent-kicker);
   text-transform: uppercase;
 }
 
-.hero-title {
-  font-size: 1.65rem;
+.toolbar-title {
+  font-size: 1.15rem;
   font-weight: 700;
-  color: #ffffff;
-  letter-spacing: -0.015em;
-  margin: 0.15rem 0 0.45rem;
-  line-height: 1.25;
-}
-
-.hero-desc {
-  font-size: 0.875rem;
-  color: #d6d3d1;
-  line-height: 1.5;
+  color: var(--color-text-main);
   margin: 0;
+  letter-spacing: -0.01em;
 }
 
-.hero-watermark {
-  position: absolute;
-  right: 1.5rem;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 7rem;
-  font-weight: 900;
-  color: rgba(255, 255, 255, 0.03);
-  user-select: none;
-  pointer-events: none;
+.toolbar-actions-group {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex-wrap: wrap;
 }
 
-/* 2. Grid de Métricas */
-.metrics-grid {
+.count-badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: var(--color-bg-subtle);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  padding: 0.4rem 0.75rem;
+  border-radius: var(--radius-pill, 9999px);
+}
+
+/* ==========================================================================
+   2. REJILLA DE MÉTRICAS KPI (ESTÁNDAR EDITORIAL WARM)
+   ========================================================================== */
+.metrics-kpi-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 1.25rem;
 }
 
-.metric-card {
+.kpi-card {
   background: var(--color-bg-surface);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  padding: 1.35rem 1.45rem;
+  border-radius: var(--radius-lg, 12px);
+  padding: 1.25rem 1.45rem;
   display: flex;
   flex-direction: column;
-  gap: 0.65rem;
+  gap: 0.75rem;
   box-shadow: var(--shadow-subtle);
-  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+  cursor: pointer;
+  transition: all var(--transition-fast, 150ms);
+  user-select: none;
 }
 
-.metric-card:hover {
+.kpi-card:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow-card);
+  border-color: var(--color-border-strong);
 }
 
-.metric-top {
+.kpi-card-header {
   display: flex;
   align-items: center;
-  gap: 0.65rem;
+  justify-content: space-between;
+  gap: 0.5rem;
 }
 
-.metric-idx {
+.kpi-num {
   font-size: 0.6875rem;
   font-weight: 700;
   color: var(--color-accent-kicker);
   background: var(--color-bg-subtle);
   border: 1px solid var(--color-border-subtle);
-  border-radius: 6px;
+  border-radius: 4px;
   padding: 0.15rem 0.45rem;
   letter-spacing: 0.02em;
 }
 
-.metric-label {
-  font-size: 0.8rem;
-  color: var(--color-text-muted);
+.kpi-label {
+  font-size: 0.825rem;
   font-weight: 600;
+  color: var(--color-text-muted);
+  flex: 1;
 }
 
-.metric-val {
-  font-size: 2rem;
-  font-weight: 700;
+.kpi-icon {
+  font-size: 1.05rem;
+  color: var(--color-text-subtle);
+}
+
+.kpi-icon.success {
+  color: var(--color-success-text);
+}
+
+.kpi-icon.danger {
+  color: var(--color-danger-text);
+}
+
+.kpi-main-stat {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.kpi-value {
+  font-size: 2.15rem;
+  font-weight: 800;
   color: var(--color-text-main);
   line-height: 1;
   letter-spacing: -0.02em;
 }
 
-/* 3. Secciones Generales */
+.kpi-badge {
+  font-size: 0.725rem;
+  font-weight: 700;
+  padding: 0.2rem 0.55rem;
+  border-radius: var(--radius-pill, 9999px);
+  border: 1px solid transparent;
+}
+
+.kpi-badge.success {
+  background: var(--color-success-bg);
+  color: var(--color-success-text);
+  border-color: var(--color-success-border);
+}
+
+.kpi-badge.danger {
+  background: var(--color-danger-bg);
+  color: var(--color-danger-text);
+  border-color: var(--color-danger-border);
+}
+
+.kpi-badge.accent {
+  background: var(--color-bg-subtle);
+  color: var(--color-accent-kicker);
+  border-color: var(--color-border-subtle);
+}
+
+.kpi-badge.info {
+  background: var(--color-info-bg);
+  color: var(--color-info-text);
+  border-color: var(--color-info-border);
+}
+
+.kpi-footer-note {
+  font-size: 0.725rem;
+  color: var(--color-text-subtle);
+  padding-top: 0.5rem;
+  border-top: 1px dashed var(--color-border-subtle);
+}
+
+/* ==========================================================================
+   3. SECCIÓN TABLA DE USUARIOS
+   ========================================================================== */
 .section-container {
   display: flex;
   flex-direction: column;
   gap: 1rem;
 }
 
-.section-header-row {
+.table-section-heading {
   display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  flex-wrap: wrap;
-  gap: 1rem;
+  flex-direction: column;
+  gap: 0.2rem;
 }
 
 .section-title {
@@ -448,126 +513,68 @@ onMounted(() => {
   letter-spacing: -0.01em;
 }
 
-.section-controls {
-  display: flex;
+/* Botones estándar */
+.btn-espresso {
+  display: inline-flex;
   align-items: center;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-}
-
-.count-badge {
-  font-size: 0.75rem;
+  gap: 0.45rem;
+  background: var(--color-primary);
+  color: var(--color-primary-text);
+  border: 1px solid var(--color-primary);
+  font-size: 0.8125rem;
   font-weight: 600;
-  background: var(--color-bg-subtle);
-  border: 1px solid var(--color-border);
-  color: var(--color-text-muted);
-  padding: 0.35rem 0.75rem;
-  border-radius: var(--radius-pill);
+  padding: 0.5rem 0.95rem;
+  border-radius: var(--radius-md, 8px);
+  cursor: pointer;
+  transition: all var(--transition-fast, 150ms);
 }
 
-/* Status Columns Grid */
-.status-columns-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 1.25rem;
+.btn-espresso:hover:not(:disabled) {
+  background: var(--color-primary-hover);
+  border-color: var(--color-primary-hover);
 }
 
-.status-col-card {
-  background: var(--color-bg-subtle);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  padding: 1.25rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.65rem;
-  min-height: 105px;
-  transition: transform var(--transition-fast), border-color var(--transition-fast);
-}
-
-.status-col-header {
-  display: flex;
+.btn-outline-warm {
+  display: inline-flex;
   align-items: center;
-  justify-content: space-between;
-}
-
-.status-col-name {
-  font-size: 0.84rem;
-  font-weight: 700;
-  color: var(--color-text-main);
-}
-
-.status-col-pill {
-  font-size: 0.75rem;
-  font-weight: 700;
-  padding: 0.15rem 0.55rem;
-  border-radius: var(--radius-pill);
-  min-width: 24px;
-  text-align: center;
+  gap: 0.45rem;
   background: var(--color-bg-surface);
   border: 1px solid var(--color-border);
+  color: var(--color-text-main);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  padding: 0.5rem 0.95rem;
+  border-radius: var(--radius-md, 8px);
+  cursor: pointer;
+  transition: all var(--transition-fast, 150ms);
 }
 
-.active-pill {
-  color: var(--color-success-text);
-  border-color: var(--color-success-border);
+.btn-outline-warm:hover:not(:disabled) {
+  background: var(--color-bg-subtle);
+  border-color: var(--color-border-strong);
 }
 
-.inactive-pill {
-  color: var(--color-danger-text);
-  border-color: var(--color-danger-border);
+.text-success {
+  color: var(--color-success-text) !important;
 }
 
-.admin-pill-col {
-  color: var(--color-accent-kicker);
+.text-danger {
+  color: var(--color-danger-text) !important;
 }
 
-.sedes-pill {
-  color: var(--color-text-muted);
-}
-
-.status-sub {
-  font-size: 0.75rem;
-  color: var(--color-text-muted);
-  line-height: 1.4;
-}
-
-/* 4. Tabla Sección */
-.table-section {
-  margin-top: 0.5rem;
-}
-
-.table-section-heading {
-  margin-bottom: 0.35rem;
-}
-
-.slide-down-enter-active,
-.slide-down-leave-active {
-  transition: all 0.25s ease;
-}
-.slide-down-enter-from,
-.slide-down-leave-to {
-  transform: translateY(-20px);
-  opacity: 0;
-}
-
+/* Responsive */
 @media (max-width: 1024px) {
-  .metrics-grid,
-  .status-columns-grid {
+  .metrics-kpi-grid {
     grid-template-columns: repeat(2, 1fr);
   }
 }
 
 @media (max-width: 640px) {
-  .metrics-grid,
-  .status-columns-grid {
+  .metrics-kpi-grid {
     grid-template-columns: 1fr;
   }
-  .hero-banner-card {
-    padding: 1.5rem;
-  }
-  .hero-watermark {
-    display: none;
+  .toolbar-actions-group {
+    width: 100%;
   }
 }
-
 </style>

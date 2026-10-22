@@ -91,12 +91,16 @@ router.beforeEach(async (to, from, next) => {
   const navStore = useNavigationStore()
   if (to.path.startsWith('/administracion-ti')) {
     navStore.setActiveModule('administracion-ti')
-    if (to.path.includes('acerca-de')) {
-      navStore.setAdministracionTiSubOption('about')
+    if (to.path.includes('dashboard')) {
+      navStore.setAdministracionTiSubOption('dashboard')
+    } else if (to.path.includes('usuarios')) {
+      navStore.setAdministracionTiSubOption('users')
     } else if (to.path.includes('logs')) {
       navStore.setAdministracionTiSubOption('logs')
+    } else if (to.path.includes('acerca-de')) {
+      navStore.setAdministracionTiSubOption('about')
     } else {
-      navStore.setAdministracionTiSubOption('users')
+      navStore.setAdministracionTiSubOption('dashboard')
     }
   } else if (to.path.startsWith('/gerencia-general')) {
     navStore.setActiveModule('gerencia-general')

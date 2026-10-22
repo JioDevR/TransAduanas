@@ -11,7 +11,7 @@ export const gerenciaRoutes = [
     component: () => import('@/features/admin/sedes/views/SedesManagementView.vue'),
     meta: {
       requiresAuth: true,
-      roles: [ROLES.GERENTE_GENERAL, ROLES.ADMINISTRADOR_TI],
+      roles: [ROLES.GERENTE_GENERAL],
       title: 'Gerencia General - Sedes - SGA'
     }
   },
@@ -21,7 +21,7 @@ export const gerenciaRoutes = [
     component: () => import('@/features/admin/catalogos/views/CatalogosManagementView.vue'),
     meta: {
       requiresAuth: true,
-      roles: [ROLES.GERENTE_GENERAL, ROLES.ADMINISTRADOR_TI],
+      roles: [ROLES.GERENTE_GENERAL],
       title: 'Gerencia General - Catálogos Auxiliares - SGA'
     }
   },

@@ -119,16 +119,16 @@
       <!-- SUB-OPCIONES: 01 GERENCIA GENERAL -->
       <!-- ======================================================== -->
       <ul v-else-if="navigationStore.currentModule === 'gerencia-general'" class="nav-list">
-        <!-- Sub-opción 01: Vista General (KPIs) -->
+        <!-- Sub-opción 01: Dashboard Ejecutivo -->
         <li class="nav-item">
           <button
             type="button"
-            :class="['nav-sub-btn', { active: navigationStore.gerenciaGeneralSubOption === 'overview' }]"
-            @click="handleGerenciaSubClick('overview')"
-            :title="isCollapsed ? 'Vista General Ejecutiva' : ''"
+            :class="['nav-sub-btn', { active: navigationStore.gerenciaGeneralSubOption === 'dashboard' || navigationStore.gerenciaGeneralSubOption === 'overview' }]"
+            @click="handleGerenciaSubClick('dashboard')"
+            :title="isCollapsed ? 'Dashboard Ejecutivo' : ''"
           >
             <span class="nav-num">01</span>
-            <span v-if="!isCollapsed" class="nav-label">Vista General</span>
+            <span v-if="!isCollapsed" class="nav-label">Dashboard Ejecutivo</span>
           </button>
         </li>
 
@@ -544,9 +544,9 @@ const handleModuleSelectChange = () => {
       router.push('/administracion-ti/dashboard')
     }
   } else if (mod === 'gerencia-general') {
-    navigationStore.setGerenciaGeneralSubOption('sedes')
-    if (route.path !== '/gerencia-general/sedes') {
-      router.push('/gerencia-general/sedes')
+    navigationStore.setGerenciaGeneralSubOption('dashboard')
+    if (route.path !== '/gerencia-general/dashboard') {
+      router.push('/gerencia-general/dashboard')
     }
   } else if (mod === 'comercial') {
     navigationStore.setComercialSubOption('cotizaciones')
@@ -586,13 +586,14 @@ const handleGerenciaSubClick = (subOption) => {
   navigationStore.setActiveModule('gerencia-general')
   navigationStore.setGerenciaGeneralSubOption(subOption)
   const pathMap = {
-    overview: '/gerencia-general/resumen',
+    dashboard: '/gerencia-general/dashboard',
+    overview: '/gerencia-general/dashboard',
     sedes: '/gerencia-general/sedes',
     catalogos: '/gerencia-general/catalogos',
     flota: '/gerencia-general/flota',
     conductores: '/gerencia-general/conductores'
   }
-  const target = pathMap[subOption] || '/gerencia-general/sedes'
+  const target = pathMap[subOption] || '/gerencia-general/dashboard'
   if (route.path !== target) {
     router.push(target)
   }

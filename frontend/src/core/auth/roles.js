@@ -36,7 +36,7 @@ export const ROLE_MODULE_MAP = {
 
 export const ROLE_HOME_PATH = {
   [ROLES.ADMINISTRADOR_TI]: '/administracion-ti/dashboard',
-  [ROLES.GERENTE_GENERAL]: '/gerencia-general/sedes',
+  [ROLES.GERENTE_GENERAL]: '/gerencia-general/dashboard',
   [ROLES.AGENTE_COMERCIAL]: '/recepcion-comercial',
   [ROLES.SUPERVISOR_ADUANERO]: '/gestion-aduanera',
   [ROLES.AGENTE_ADUANERO]: '/agente-aduanero',

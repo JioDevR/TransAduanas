@@ -192,7 +192,8 @@ const currentTitle = computed(() => {
   }
   if (navigationStore.currentModule === 'gerencia-general') {
     const gMap = {
-      overview: 'Panel Ejecutivo y Métricas Generales',
+      dashboard: 'Dashboard Ejecutivo y Métricas Generales',
+      overview: 'Dashboard Ejecutivo y Métricas Generales',
       sedes: 'Gestión Integral de Sedes y Agencias Territoriales',
       catalogos: 'Catálogos Auxiliares (Puertos y Tipos de Carga)',
       flota: 'Parque Automotor & Flota de Transporte',

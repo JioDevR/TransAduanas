@@ -108,12 +108,14 @@ router.beforeEach(async (to, from, next) => {
       navStore.setGerenciaGeneralSubOption('sedes')
     } else if (to.path.includes('catalogos')) {
       navStore.setGerenciaGeneralSubOption('catalogos')
-    } else if (to.path.includes('resumen')) {
-      navStore.setGerenciaGeneralSubOption('overview')
+    } else if (to.path.includes('dashboard') || to.path.includes('resumen')) {
+      navStore.setGerenciaGeneralSubOption('dashboard')
     } else if (to.path.includes('flota')) {
       navStore.setGerenciaGeneralSubOption('flota')
     } else if (to.path.includes('conductores')) {
       navStore.setGerenciaGeneralSubOption('conductores')
+    } else {
+      navStore.setGerenciaGeneralSubOption('dashboard')
     }
   } else if (to.path.startsWith('/recepcion-comercial')) {
     navStore.setActiveModule('comercial')

@@ -8,8 +8,8 @@ export const useNavigationStore = defineStore('navigation', {
     activeModule: 'administracion-ti',
     // Sub-opciones en Administración TI: 'dashboard' | 'users' | 'sedes' | 'catalogos' | 'logs' | 'about'
     administracionTiSubOption: 'dashboard',
-    // Sub-opciones en Gerencia General: 'overview' | 'sedes' | 'catalogos' | 'flota' | 'conductores'
-    gerenciaGeneralSubOption: 'sedes',
+    // Sub-opciones en Gerencia General: 'dashboard' | 'sedes' | 'catalogos' | 'flota' | 'conductores'
+    gerenciaGeneralSubOption: 'dashboard',
     // Sub-opciones en Recepción Comercial: 'dashboard' | 'cotizaciones' | 'clientes' | 'ordenes'
     comercialSubOption: 'dashboard',
     // Sub-opciones en Gestión Aduanera: 'cotizaciones' | 'expedientes' | 'declaraciones' | 'clasificacion' | 'tributos'

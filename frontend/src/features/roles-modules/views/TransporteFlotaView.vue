@@ -82,6 +82,28 @@
         <span>Monitoreo Global</span>
         <span class="tab-counter">{{ despachosGlobalList.length }}</span>
       </button>
+
+      <!-- Pestaña de Flota de Unidades -->
+      <button
+        type="button"
+        class="tab-nav-btn"
+        :class="{ active: activeTab === 'unidades' }"
+        @click="switchTab('unidades')"
+      >
+        <i class="pi pi-truck"></i>
+        <span>Parque Automotor</span>
+      </button>
+
+      <!-- Pestaña de Conductores -->
+      <button
+        type="button"
+        class="tab-nav-btn"
+        :class="{ active: activeTab === 'conductores' }"
+        @click="switchTab('conductores')"
+      >
+        <i class="pi pi-users"></i>
+        <span>Directorio de Choferes</span>
+      </button>
     </div>
 
     <!-- ===================================================================== -->
@@ -695,6 +717,20 @@
     </div>
 
     <!-- ===================================================================== -->
+    <!-- TAB 5: PARQUE AUTOMOTOR & UNIDADES (PANEL COMPARTIDO)                 -->
+    <!-- ===================================================================== -->
+    <div v-if="activeTab === 'unidades'" class="tab-container fade-in">
+      <FlotaManagementPanel />
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- TAB 6: CONDUCTORES MTC & ASIGNACIONES (PANEL COMPARTIDO)              -->
+    <!-- ===================================================================== -->
+    <div v-if="activeTab === 'conductores'" class="tab-container fade-in">
+      <ConductoresManagementPanel />
+    </div>
+
+    <!-- ===================================================================== -->
     <!-- MODAL: REPORTAR INCIDENCIA EN RUTA                                    -->
     <!-- ===================================================================== -->
     <Dialog
@@ -776,6 +812,8 @@ import CrearDespachoModal from '../components/CrearDespachoModal.vue'
 import AsignarRecursosModal from '../components/AsignarRecursosModal.vue'
 import ConfirmarEntregaModal from '../components/ConfirmarEntregaModal.vue'
 import DocumentosManagerModal from '@/shared/components/DocumentosManagerModal.vue'
+import FlotaManagementPanel from '@/features/transporte/components/FlotaManagementPanel.vue'
+import ConductoresManagementPanel from '@/features/transporte/components/ConductoresManagementPanel.vue'
 import { useNotification } from '@/shared/composables/useNotification'
 import { useConfirmation } from '@/shared/composables/useConfirmation'
 
@@ -860,7 +898,7 @@ const filteredDespachosGlobal = computed(() => {
 watch(
   () => route.query.tab,
   (newTab) => {
-    if (newTab && ['cabina', 'camion', 'viajes', 'despachos'].includes(newTab)) {
+    if (newTab && ['cabina', 'camion', 'viajes', 'despachos', 'unidades', 'conductores'].includes(newTab)) {
       activeTab.value = newTab
       if (navigationStore.transporteFlotaSubOption !== newTab) {
         navigationStore.setTransporteFlotaSubOption(newTab)
@@ -873,7 +911,7 @@ watch(
 watch(
   () => [navigationStore.transporteFlotaSubOption, navigationStore.navTick],
   ([sub]) => {
-    if (sub && ['cabina', 'camion', 'viajes', 'despachos'].includes(sub)) {
+    if (sub && ['cabina', 'camion', 'viajes', 'despachos', 'unidades', 'conductores'].includes(sub)) {
       if (activeTab.value !== sub) {
         activeTab.value = sub
       }

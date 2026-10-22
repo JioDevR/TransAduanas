@@ -464,6 +464,15 @@ const isFormReady = computed(() => {
   return isDocumentoValid.value && form.value.razonSocial.trim().length >= 3 && isEmailValid.value
 })
 
+const setSubmitting = (val) => {
+  submitting.value = val
+}
+
+defineExpose({
+  submitting,
+  setSubmitting
+})
+
 const handleSubmit = () => {
   errorMessage.value = ''
   if (!isFormReady.value) {
@@ -475,7 +484,10 @@ const handleSubmit = () => {
   emit('saved', {
     isEdit: isEditMode.value,
     clienteId: props.clienteToEdit?.idCliente,
-    payload: { ...form.value }
+    payload: { ...form.value },
+    done: () => {
+      submitting.value = false
+    }
   })
 }
 </script>

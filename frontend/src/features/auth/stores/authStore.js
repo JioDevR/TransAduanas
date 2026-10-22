@@ -2,6 +2,40 @@ import { defineStore } from 'pinia'
 import { authService } from '../services/authService'
 import { ROLES, ROLE_HOME_PATH } from '@/core/auth/roles'
 
+/**
+ * Decodifica de manera segura el payload de un token JWT.
+ */
+function decodeJwtPayload(token) {
+  if (!token || typeof token !== 'string') return null
+  const parts = token.split('.')
+  if (parts.length !== 3) return null
+  try {
+    const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/')
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    )
+    return JSON.parse(jsonPayload)
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Valida si un token JWT tiene formato válido y no ha expirado.
+ */
+function isTokenValid(token) {
+  if (!token) return false
+  const payload = decodeJwtPayload(token)
+  if (!payload) return false
+  if (payload.exp && typeof payload.exp === 'number') {
+    return payload.exp * 1000 > Date.now()
+  }
+  return true
+}
+
 export const useAuthStore = defineStore('auth', {
   state: () => {
     let user = null
@@ -22,7 +56,14 @@ export const useAuthStore = defineStore('auth', {
       user = null
     }
 
-    const token = user ? (localStorage.getItem('sga_token') || null) : null
+    let token = user ? (localStorage.getItem('sga_token') || null) : null
+    if (token && !isTokenValid(token)) {
+      localStorage.removeItem('sga_token')
+      localStorage.removeItem('sga_user')
+      token = null
+      user = null
+    }
+
     if (!token && user) {
       localStorage.removeItem('sga_user')
       user = null
@@ -37,7 +78,11 @@ export const useAuthStore = defineStore('auth', {
   },
 
   getters: {
-    isAuthenticated: (state) => !!state.token && !!state.user && Object.values(ROLES).includes(state.user.rol),
+    isAuthenticated: (state) =>
+      !!state.token &&
+      isTokenValid(state.token) &&
+      !!state.user &&
+      Object.values(ROLES).includes(state.user.rol),
     userRole: (state) => state.user?.rol || '',
     isAdministradorTI: (state) => state.user?.rol === ROLES.ADMINISTRADOR_TI,
     isGerenteGeneral: (state) => state.user?.rol === ROLES.GERENTE_GENERAL,

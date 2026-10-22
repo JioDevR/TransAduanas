@@ -1561,9 +1561,21 @@ const handleSubmit = () => {
       ...form.value,
       idUsuarioComercial: authStore.user?.idUsuario || form.value.idUsuarioComercial || 1
     },
-    documentos: queuedDocs.value
+    documentos: queuedDocs.value,
+    done: () => {
+      submitting.value = false
+    }
   })
 }
+
+const setSubmitting = (val) => {
+  submitting.value = val
+}
+
+defineExpose({
+  submitting,
+  setSubmitting
+})
 </script>
 
 <style scoped>

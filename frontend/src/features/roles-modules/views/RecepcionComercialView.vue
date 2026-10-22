@@ -719,7 +719,7 @@
 
           <Column header="N° DAM">
             <template #body="{ data: exp }">
-              <span class="font-mono text-xs font-bold">{{ exp.numeroDeclaracion || '—' }}</span>
+              <span class="font-mono text-xs font-bold">{{ exp.numeroDam || exp.numeroDeclaracion || '—' }}</span>
             </template>
           </Column>
 
@@ -1056,6 +1056,7 @@ const filteredExpedientes = computed(() => {
       exp.codigoExpediente?.toLowerCase().includes(q) ||
       exp.codigoCotizacion?.toLowerCase().includes(q) ||
       exp.clienteRazonSocial?.toLowerCase().includes(q) ||
+      exp.numeroDam?.toLowerCase().includes(q) ||
       exp.numeroDeclaracion?.toLowerCase().includes(q)
 
     return matchStatus && matchSearch
@@ -1093,7 +1094,7 @@ const openEditCliente = (cliente) => {
   showClienteForm.value = true
 }
 
-const handleClienteSaved = async ({ isEdit, clienteId, payload }) => {
+const handleClienteSaved = async ({ isEdit, clienteId, payload, done }) => {
   try {
     if (isEdit) {
       await comercialService.updateCliente(clienteId, payload)
@@ -1106,6 +1107,8 @@ const handleClienteSaved = async ({ isEdit, clienteId, payload }) => {
     await loadData()
   } catch (err) {
     showToast(err.response?.data?.message || 'Error al guardar cliente.', 'error')
+  } finally {
+    done?.()
   }
 }
 
@@ -1142,7 +1145,7 @@ const handleQuickClientCreated = async (newClient) => {
   await loadData()
 }
 
-const handleCotizacionSaved = async ({ isEdit, cotizacionId, payload, documentos }) => {
+const handleCotizacionSaved = async ({ isEdit, cotizacionId, payload, documentos, done }) => {
   try {
     if (isEdit) {
       await comercialService.updateCotizacion(cotizacionId, payload)
@@ -1176,6 +1179,8 @@ const handleCotizacionSaved = async ({ isEdit, cotizacionId, payload, documentos
     await loadData()
   } catch (err) {
     showToast(err.response?.data?.message || 'Error al guardar cotización.', 'error')
+  } finally {
+    done?.()
   }
 }
 

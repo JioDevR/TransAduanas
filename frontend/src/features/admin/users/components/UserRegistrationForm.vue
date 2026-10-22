@@ -963,11 +963,21 @@ const handleSubmit = () => {
   emit('saved', {
     isEdit: isEditMode.value,
     userId: props.userToEdit?.idUsuario,
-    payload
+    payload,
+    done: () => {
+      submitting.value = false
+    }
   })
-
-  submitting.value = false
 }
+
+const setSubmitting = (val) => {
+  submitting.value = val
+}
+
+defineExpose({
+  submitting,
+  setSubmitting
+})
 </script>
 
 <style scoped>

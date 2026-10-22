@@ -458,6 +458,15 @@ const handleSubmit = async () => {
     submitting.value = false
   }
 }
+
+const setSubmitting = (val) => {
+  submitting.value = val
+}
+
+defineExpose({
+  submitting,
+  setSubmitting
+})
 </script>
 
 <style scoped>

@@ -218,7 +218,7 @@ const openEditDialog = (user) => {
   navigationStore.setAdministracionTiSubOption('create-user')
 }
 
-const handleUserSaved = async ({ isEdit, userId, payload }) => {
+const handleUserSaved = async ({ isEdit, userId, payload, done }) => {
   try {
     if (isEdit) {
       await userService.updateUser(userId, payload)
@@ -235,6 +235,8 @@ const handleUserSaved = async ({ isEdit, userId, payload }) => {
       err.response?.data?.error ||
       'No se pudo completar la operación.'
     showToast(errorMsg, 'error')
+  } finally {
+    done?.()
   }
 }
 

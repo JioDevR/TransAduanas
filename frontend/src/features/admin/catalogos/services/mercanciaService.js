@@ -1,68 +1,40 @@
-import apiClient from '@/core/api/apiClient'
+import { catalogoService } from './catalogoService'
 
+/**
+ * mercanciaService consolidado: delega en catalogoService normalizando la respuesta.
+ */
 export const mercanciaService = {
-  /**
-   * Listar mercancías con filtros opcionales
-   * @param {Object} params { soloActivas, categoria, requierePermiso }
-   */
   async getMercancias(params = {}) {
-    const response = await apiClient.get('/catalogos/mercancias', { params })
-    return response.data.data
+    const res = await catalogoService.getMercancias(params)
+    return res?.data ?? res
   },
 
-  /**
-   * Buscar mercancía por ID
-   * @param {Number} id ID de la mercancía
-   */
   async getMercanciaById(id) {
-    const response = await apiClient.get(`/catalogos/mercancias/${id}`)
-    return response.data.data
+    const res = await catalogoService.getMercanciaById(id)
+    return res?.data ?? res
   },
 
-  /**
-   * Buscar mercancía por código arancelario / técnico
-   * @param {String} codigo Código de la mercancía
-   */
   async getMercanciaByCodigo(codigo) {
-    const response = await apiClient.get(`/catalogos/mercancias/codigo/${codigo}`)
-    return response.data.data
+    const res = await catalogoService.getMercanciaByCodigo(codigo)
+    return res?.data ?? res
   },
 
-  /**
-   * Registrar nueva mercancía / partida
-   * @param {Object} data CatalogoMercanciaRequestDTO
-   */
   async createMercancia(data) {
-    const response = await apiClient.post('/catalogos/mercancias', data)
-    return response.data.data
+    const res = await catalogoService.createMercancia(data)
+    return res?.data ?? res
   },
 
-  /**
-   * Actualizar clasificación o arancel de mercancía
-   * @param {Number} id ID de la mercancía
-   * @param {Object} data CatalogoMercanciaRequestDTO
-   */
   async updateMercancia(id, data) {
-    const response = await apiClient.put(`/catalogos/mercancias/${id}`, data)
-    return response.data.data
+    const res = await catalogoService.updateMercancia(id, data)
+    return res?.data ?? res
   },
 
-  /**
-   * Borrado lógico (estado = INACTIVO)
-   * @param {Number} id ID de la mercancía
-   */
   async deleteMercancia(id) {
-    const response = await apiClient.delete(`/catalogos/mercancias/${id}`)
-    return response.data
+    return catalogoService.deleteMercancia(id)
   },
 
-  /**
-   * Reactivar mercancía
-   * @param {Number} id ID de la mercancía
-   */
   async reactivarMercancia(id) {
-    const response = await apiClient.patch(`/catalogos/mercancias/${id}/reactivar`)
-    return response.data
+    return catalogoService.reactivarMercancia(id)
   }
 }
 

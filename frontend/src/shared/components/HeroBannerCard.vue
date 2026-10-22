@@ -41,13 +41,13 @@ defineProps({
 <style scoped>
 .hero-banner-card {
   position: relative;
-  background: linear-gradient(135deg, #1c1917 0%, #292524 60%, #453406 100%);
-  border: 1px solid rgba(234, 179, 8, 0.25);
+  background: var(--color-bg-hero, #ebdcc9);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-lg, 12px);
   padding: 1.75rem 2rem;
-  color: #fafaf9;
+  color: var(--color-text-main);
   overflow: hidden;
-  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  box-shadow: var(--shadow-subtle);
 }
 
 .hero-content {
@@ -69,14 +69,14 @@ defineProps({
   font-size: 0.6875rem;
   font-weight: 700;
   letter-spacing: 0.1em;
-  color: #eab308;
+  color: var(--color-accent-kicker, #9a7f60);
   text-transform: uppercase;
 }
 
 .hero-title {
   font-size: 1.625rem;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--color-text-main, #2b2520);
   line-height: 1.25;
   margin: 0.15rem 0 0.45rem;
   letter-spacing: -0.015em;
@@ -84,7 +84,7 @@ defineProps({
 
 .hero-desc {
   font-size: 0.875rem;
-  color: #d6d3d1;
+  color: var(--color-text-muted, #6f6356);
   line-height: 1.5;
   margin: 0;
 }
@@ -96,7 +96,8 @@ defineProps({
   transform: translateY(-50%);
   font-size: 7rem;
   font-weight: 900;
-  color: rgba(255, 255, 255, 0.03);
+  color: var(--color-border);
+  opacity: 0.35;
   pointer-events: none;
   user-select: none;
 }

@@ -1,68 +1,51 @@
-import apiClient from '@/core/api/apiClient'
+import { expedienteService } from './expedienteService'
+import { comercialService } from './comercialService'
 
 export const gestionAduaneraService = {
   // ==========================================
-  // BANDEJA DE AUDITORÍA Y COTIZACIONES
+  // BANDEJA DE AUDITORÍA Y COTIZACIONES (Consolidados via comercialService)
   // ==========================================
-  async getCotizaciones(params = {}) {
-    const response = await apiClient.get('/cotizaciones', { params })
-    return response.data.data
+  getCotizaciones(params = {}) {
+    return comercialService.getCotizaciones(params)
   },
 
-  async getCotizacionById(id) {
-    const response = await apiClient.get(`/cotizaciones/${id}`)
-    return response.data.data
+  getCotizacionById(id) {
+    return comercialService.getCotizacionById(id)
   },
 
-  /**
-   * Revisión Técnica oficial de Agente Aduanero (Paso 2)
-   * @param {Number} id ID de cotización
-   * @param {Object} payload { idAgenteRevisor, estado, motivoObservacion, observaciones }
-   */
-  async revisarCotizacion(id, payload) {
-    const response = await apiClient.patch(`/cotizaciones/${id}/revision`, payload)
-    return response.data.data
+  revisarCotizacion(id, payload) {
+    return comercialService.revisarCotizacion(id, payload)
   },
 
-  async cambiarEstadoCotizacion(id, { estado, motivoObservacion = '' }) {
-    const response = await apiClient.patch(`/cotizaciones/${id}/estado`, {
-      estado,
-      motivoObservacion
-    })
-    return response.data.data
+  cambiarEstadoCotizacion(id, { estado, motivoObservacion = '' }) {
+    return comercialService.updateCotizacionEstado(id, { estado, motivoObservacion })
   },
 
   // ==========================================
-  // GESTIÓN DE EXPEDIENTES ADUANEROS
+  // GESTIÓN DE EXPEDIENTES ADUANEROS (Consolidados via expedienteService)
   // ==========================================
-  async getExpedientes(params = {}) {
-    const response = await apiClient.get('/expedientes', { params })
-    return response.data.data
+  getExpedientes(params = {}) {
+    return expedienteService.getExpedientes(params)
   },
 
-  async getExpedienteById(id) {
-    const response = await apiClient.get(`/expedientes/${id}`)
-    return response.data.data
+  getExpedienteById(id) {
+    return expedienteService.getExpedienteById(id)
   },
 
-  async getExpedienteByCotizacion(idCotizacion) {
-    const response = await apiClient.get(`/expedientes/cotizacion/${idCotizacion}`)
-    return response.data.data
+  getExpedienteByCotizacion(idCotizacion) {
+    return expedienteService.getExpedienteByCotizacion(idCotizacion)
   },
 
-  async crearExpediente(data) {
-    const response = await apiClient.post('/expedientes', data)
-    return response.data.data
+  crearExpediente(data) {
+    return expedienteService.createExpediente(data)
   },
 
-  async asignarCanal(id, payload) {
-    const response = await apiClient.patch(`/expedientes/${id}/canal`, payload)
-    return response.data.data
+  asignarCanal(id, payload) {
+    return expedienteService.asignarCanal(id, payload)
   },
 
-  async autorizarLevante(id, payload) {
-    const response = await apiClient.patch(`/expedientes/${id}/levante`, payload)
-    return response.data.data
+  autorizarLevante(id, payload) {
+    return expedienteService.autorizarLevante(id, payload)
   }
 }
 

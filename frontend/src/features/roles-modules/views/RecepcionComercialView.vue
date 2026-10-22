@@ -799,6 +799,7 @@
 
 <script setup>
 import { ref, reactive, computed, onMounted, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import Tag from 'primevue/tag'
@@ -814,6 +815,8 @@ import ClienteRegistrationForm from '../components/ClienteRegistrationForm.vue'
 import CotizacionRegistrationForm from '../components/CotizacionRegistrationForm.vue'
 import DocumentosManagerModal from '@/shared/components/DocumentosManagerModal.vue'
 
+const route = useRoute()
+const router = useRouter()
 const authStore = useAuthStore()
 const navigationStore = useNavigationStore()
 const { showSuccess, showError, showInfo } = useNotification()
@@ -832,6 +835,9 @@ const navigateTo = (subOption) => {
   closeAllForms()
   activeTab.value = subOption
   navigationStore.setComercialSubOption(subOption)
+  if (route.query.tab !== subOption) {
+    router.replace({ query: { ...route.query, tab: subOption } })
+  }
 }
 
 const getEstadoPagoLabel = (st) => {
@@ -896,16 +902,32 @@ const closeAllForms = () => {
   selectedCliente.value = null
 }
 
+// Sincronizar activeTab y resetear formularios con query tab de la URL
+watch(
+  () => route.query.tab,
+  (newTab) => {
+    if (newTab && ['dashboard', 'cotizaciones', 'clientes', 'ordenes'].includes(newTab)) {
+      activeTab.value = newTab
+      if (navigationStore.comercialSubOption !== newTab) {
+        navigationStore.setComercialSubOption(newTab)
+      }
+      closeAllForms()
+    }
+  },
+  { immediate: true }
+)
+
 // Sincronizar activeTab y resetear formularios con sub-opción de navegación Comercial y navTick
 watch(
   () => [navigationStore.comercialSubOption, navigationStore.navTick],
   ([newSub]) => {
     if (newSub && ['dashboard', 'cotizaciones', 'clientes', 'ordenes'].includes(newSub)) {
-      activeTab.value = newSub
-      closeAllForms()
+      if (activeTab.value !== newSub) {
+        activeTab.value = newSub
+        closeAllForms()
+      }
     }
-  },
-  { immediate: true }
+  }
 )
 
 // Escuchar disparadores de acciones desde el Sidebar

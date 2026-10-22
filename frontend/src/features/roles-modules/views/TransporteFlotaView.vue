@@ -763,6 +763,7 @@
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import Tag from 'primevue/tag'
@@ -778,6 +779,8 @@ import DocumentosManagerModal from '@/shared/components/DocumentosManagerModal.v
 import { useNotification } from '@/shared/composables/useNotification'
 import { useConfirmation } from '@/shared/composables/useConfirmation'
 
+const route = useRoute()
+const router = useRouter()
 const { showSuccess, showError, showInfo } = useNotification()
 const { confirmAction } = useConfirmation()
 const navigationStore = useNavigationStore()
@@ -853,20 +856,37 @@ const filteredDespachosGlobal = computed(() => {
   })
 })
 
-// Sincronización con navigationStore
+// Sincronización con navigationStore y URL
 watch(
-  () => [navigationStore.transporteFlotaSubOption, navigationStore.navTick],
-  ([sub]) => {
-    if (sub && ['cabina', 'camion', 'viajes', 'despachos'].includes(sub)) {
-      activeTab.value = sub
+  () => route.query.tab,
+  (newTab) => {
+    if (newTab && ['cabina', 'camion', 'viajes', 'despachos'].includes(newTab)) {
+      activeTab.value = newTab
+      if (navigationStore.transporteFlotaSubOption !== newTab) {
+        navigationStore.setTransporteFlotaSubOption(newTab)
+      }
     }
   },
   { immediate: true }
 )
 
+watch(
+  () => [navigationStore.transporteFlotaSubOption, navigationStore.navTick],
+  ([sub]) => {
+    if (sub && ['cabina', 'camion', 'viajes', 'despachos'].includes(sub)) {
+      if (activeTab.value !== sub) {
+        activeTab.value = sub
+      }
+    }
+  }
+)
+
 const switchTab = (tab) => {
   activeTab.value = tab
   navigationStore.setTransporteFlotaSubOption(tab)
+  if (route.query.tab !== tab) {
+    router.replace({ query: { ...route.query, tab } })
+  }
   if (tab === 'cabina' || tab === 'camion') {
     loadMiDespacho()
   } else if (tab === 'viajes') {

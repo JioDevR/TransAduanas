@@ -1972,6 +1972,7 @@ import Column from 'primevue/column'
 import Tag from 'primevue/tag'
 import Dialog from 'primevue/dialog'
 
+import { useRoute, useRouter } from 'vue-router'
 import DocumentosManagerModal from '@/shared/components/DocumentosManagerModal.vue'
 import RegistroPagoFullView from '../components/RegistroPagoFullView.vue'
 
@@ -1981,6 +1982,8 @@ import { useNavigationStore } from '@/core/stores/navigationStore'
 import { useNotification } from '@/shared/composables/useNotification'
 import { useConfirmation } from '@/shared/composables/useConfirmation'
 
+const route = useRoute()
+const router = useRouter()
 const { showSuccess, showError } = useNotification()
 const { confirmAction } = useConfirmation()
 const navigationStore = useNavigationStore()
@@ -2614,12 +2617,18 @@ function switchTab(tab, sub = null) {
     activeTab.value = 'pre-expedientes'
     if (sub) vistaPreExpedientes.value = sub
     navigationStore.setFinanzasSubOption('pre-expedientes')
+    if (route.query.tab !== 'pre-expedientes') {
+      router.replace({ query: { ...route.query, tab: 'pre-expedientes' } })
+    }
     return
   }
   if (tab === 'por-liquidar') {
     activeTab.value = 'liquidaciones'
     subTabLiquidacion.value = 'por-liquidar'
     navigationStore.setFinanzasSubOption('liquidaciones')
+    if (route.query.tab !== 'liquidaciones') {
+      router.replace({ query: { ...route.query, tab: 'liquidaciones' } })
+    }
     return
   }
   activeTab.value = tab
@@ -2627,6 +2636,9 @@ function switchTab(tab, sub = null) {
     vistaPreExpedientes.value = sub
   }
   navigationStore.setFinanzasSubOption(tab)
+  if (route.query.tab !== tab) {
+    router.replace({ query: { ...route.query, tab } })
+  }
 }
 
 function formatEstadoPagoCotizacionLabel(st) {
@@ -2671,6 +2683,19 @@ async function onPagoRegistradoEnFinanzas() {
   }
 }
 
+// Sincronizar activeTab con query param de la URL
+watch(
+  () => route.query.tab,
+  (newTab) => {
+    if (newTab && ['dashboard', 'pre-expedientes', 'anticipos', 'liquidaciones', 'por-liquidar', 'conciliacion', 'facturacion'].includes(newTab)) {
+      if (navigationStore.finanzasSubOption !== newTab) {
+        navigationStore.setFinanzasSubOption(newTab)
+      }
+    }
+  },
+  { immediate: true }
+)
+
 // Escuchar cambios de subopción desde el menú lateral si aplica
 watch(
   () => [navigationStore.finanzasSubOption, navigationStore.navTick],
@@ -2694,8 +2719,7 @@ watch(
     } else {
       activeTab.value = 'dashboard'
     }
-  },
-  { immediate: true }
+  }
 )
 
 // Escuchar disparadores de acciones desde el Sidebar

@@ -259,6 +259,7 @@
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import Tag from 'primevue/tag'
@@ -268,6 +269,8 @@ import { useNotification } from '@/shared/composables/useNotification'
 import { useConfirmation } from '@/shared/composables/useConfirmation'
 import IngresoAlmacenModal from '../components/IngresoAlmacenModal.vue'
 
+const route = useRoute()
+const router = useRouter()
 const navigationStore = useNavigationStore()
 const { showSuccess, showError, showInfo } = useNotification()
 const { confirmAction, confirmDelete } = useConfirmation()
@@ -279,6 +282,18 @@ const searchQuery = ref('')
 const showIngresoModal = ref(false)
 
 watch(
+  () => route.query.tab,
+  (newTab) => {
+    if (newTab && ['almacen', 'recepcion', 'bultos'].includes(newTab)) {
+      if (navigationStore.agenteAduaneroSubOption !== newTab) {
+        navigationStore.setAgenteAduaneroSubOption(newTab)
+      }
+    }
+  },
+  { immediate: true }
+)
+
+watch(
   () => [navigationStore.agenteAduaneroSubOption, navigationStore.navTick],
   ([sub]) => {
     if (sub === 'recepcion') {
@@ -288,8 +303,7 @@ watch(
     } else {
       filterEstado.value = ''
     }
-  },
-  { immediate: true }
+  }
 )
 
 // Métricas

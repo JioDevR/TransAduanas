@@ -90,7 +90,9 @@ router.beforeEach(async (to, from, next) => {
   // Sincronizar activeModule con la ruta actual
   const navStore = useNavigationStore()
   if (to.path.startsWith('/administracion-ti')) {
-    navStore.setActiveModule('administracion-ti')
+    if (navStore.activeModule !== 'administracion-ti') {
+      navStore.setActiveModule('administracion-ti')
+    }
     if (to.path.includes('dashboard')) {
       navStore.setAdministracionTiSubOption('dashboard')
     } else if (to.path.includes('usuarios')) {
@@ -103,7 +105,9 @@ router.beforeEach(async (to, from, next) => {
       navStore.setAdministracionTiSubOption('dashboard')
     }
   } else if (to.path.startsWith('/gerencia-general')) {
-    navStore.setActiveModule('gerencia-general')
+    if (navStore.activeModule !== 'gerencia-general') {
+      navStore.setActiveModule('gerencia-general')
+    }
     if (to.path.includes('sedes')) {
       navStore.setGerenciaGeneralSubOption('sedes')
     } else if (to.path.includes('catalogos')) {
@@ -118,20 +122,32 @@ router.beforeEach(async (to, from, next) => {
       navStore.setGerenciaGeneralSubOption('dashboard')
     }
   } else if (to.path.startsWith('/recepcion-comercial')) {
-    navStore.setActiveModule('comercial')
+    if (navStore.activeModule !== 'comercial') {
+      navStore.setActiveModule('comercial')
+    }
   } else if (to.path.startsWith('/gestion-aduanera')) {
-    navStore.setActiveModule('gestion-aduanera')
+    if (navStore.activeModule !== 'gestion-aduanera') {
+      navStore.setActiveModule('gestion-aduanera')
+    }
     if (to.path.includes('liquidacion')) {
       navStore.setGestionAduaneraSubOption('declaraciones')
     }
   } else if (to.path.startsWith('/agente-aduanero')) {
-    navStore.setActiveModule('agente-aduanero')
+    if (navStore.activeModule !== 'agente-aduanero') {
+      navStore.setActiveModule('agente-aduanero')
+    }
   } else if (to.path.startsWith('/transporte-flota')) {
-    navStore.setActiveModule('transporte-flota')
+    if (navStore.activeModule !== 'transporte-flota') {
+      navStore.setActiveModule('transporte-flota')
+    }
   } else if (to.path.startsWith('/legal-auditoria')) {
-    navStore.setActiveModule('legal-auditoria')
+    if (navStore.activeModule !== 'legal-auditoria') {
+      navStore.setActiveModule('legal-auditoria')
+    }
   } else if (to.path.startsWith('/finanzas')) {
-    navStore.setActiveModule('finanzas')
+    if (navStore.activeModule !== 'finanzas') {
+      navStore.setActiveModule('finanzas')
+    }
   }
 
   next()

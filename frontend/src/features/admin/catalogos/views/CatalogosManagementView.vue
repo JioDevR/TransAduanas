@@ -790,7 +790,7 @@ const loadPuertos = async () => {
   loadingPuertos.value = true
   try {
     const res = await catalogoService.getPuertos(false)
-    puertos.value = res.data || []
+    puertos.value = Array.isArray(res) ? res : (res?.data || [])
   } catch (error) {
     console.error('Error cargando puertos:', error)
     showToast('Error al conectar con el catálogo de puertos', 'error')
@@ -804,7 +804,7 @@ const loadTiposCarga = async () => {
   loadingTipos.value = true
   try {
     const res = await catalogoService.getTiposCarga(false)
-    tiposCarga.value = res.data || []
+    tiposCarga.value = Array.isArray(res) ? res : (res?.data || [])
   } catch (error) {
     console.error('Error cargando tipos de carga:', error)
     showToast('Error al conectar con el catálogo de tipos de carga', 'error')
@@ -967,7 +967,7 @@ const loadMercancias = async () => {
   loadingMercancias.value = true
   try {
     const res = await mercanciaService.getMercancias()
-    mercancias.value = res || []
+    mercancias.value = Array.isArray(res) ? res : (res?.data || res?.content || [])
   } catch (error) {
     console.error('Error cargando mercancías:', error)
     showToast('Error al conectar con el catálogo de mercancías', 'error')

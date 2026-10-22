@@ -460,11 +460,14 @@ import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import Tag from 'primevue/tag'
 import Dialog from 'primevue/dialog'
+import { useRoute, useRouter } from 'vue-router'
 import { gestionAduaneraService } from '@/features/roles-modules/services/gestionAduaneraService'
 import DocumentosManagerModal from '@/shared/components/DocumentosManagerModal.vue'
 import { useNotification } from '@/shared/composables/useNotification'
 import { useNavigationStore } from '@/core/stores/navigationStore'
 
+const route = useRoute()
+const router = useRouter()
 const { showSuccess, showError, showInfo } = useNotification()
 const navigationStore = useNavigationStore()
 
@@ -555,7 +558,11 @@ const loadExpedientes = async () => {
 
 const switchTab = (tab) => {
   activeTab.value = tab
-  navigationStore.setLegalAuditoriaSubOption(tab === 'observados' ? 'expedientes' : tab === 'recursos' ? 'auditorias' : 'expedientes')
+  const subOption = tab === 'observados' ? 'expedientes' : tab === 'recursos' ? 'auditorias' : 'expedientes'
+  navigationStore.setLegalAuditoriaSubOption(subOption)
+  if (route.query.tab !== subOption) {
+    router.replace({ query: { ...route.query, tab: subOption } })
+  }
 }
 
 const openNuevoRecursoModal = (exp) => {
@@ -637,13 +644,28 @@ const getTipoRecursoSeverity = (tipo) => {
 }
 
 watch(
-  () => [navigationStore.legalAuditoriaSubOption, navigationStore.navTick],
-  ([sub]) => {
-    if (sub && ['expedientes', 'auditorias'].includes(sub)) {
-      activeTab.value = sub === 'auditorias' ? 'recursos' : 'observados'
+  () => route.query.tab,
+  (newTab) => {
+    if (newTab && ['expedientes', 'auditorias'].includes(newTab)) {
+      activeTab.value = newTab === 'auditorias' ? 'recursos' : 'observados'
+      if (navigationStore.legalAuditoriaSubOption !== newTab) {
+        navigationStore.setLegalAuditoriaSubOption(newTab)
+      }
     }
   },
   { immediate: true }
+)
+
+watch(
+  () => [navigationStore.legalAuditoriaSubOption, navigationStore.navTick],
+  ([sub]) => {
+    if (sub && ['expedientes', 'auditorias'].includes(sub)) {
+      const target = sub === 'auditorias' ? 'recursos' : 'observados'
+      if (activeTab.value !== target) {
+        activeTab.value = target
+      }
+    }
+  }
 )
 
 onMounted(() => {

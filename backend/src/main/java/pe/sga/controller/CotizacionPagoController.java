@@ -19,6 +19,7 @@ import pe.sga.service.ICotizacionPagoService;
 import java.util.List;
 
 @RestController
+@RequestMapping("/api/v1")
 @RequiredArgsConstructor
 public class CotizacionPagoController {
 
@@ -28,7 +29,7 @@ public class CotizacionPagoController {
     // ENDPOINTS EN ÁREA DE COTIZACIÓN (REGISTRO Y CONSULTA DE PAGOS / ADELANTOS)
     // =========================================================================
 
-    @PostMapping("/api/v1/cotizaciones/{idCotizacion}/pagos")
+    @PostMapping("/cotizaciones/{idCotizacion}/pagos")
     @PreAuthorize(SecurityRoles.ACCESS_CLIENTE_COTIZACION_WRITE)
     public ResponseEntity<ApiResponseDTO<CotizacionPagoResponseDTO>> registrarPago(
             @PathVariable Integer idCotizacion,
@@ -41,7 +42,7 @@ public class CotizacionPagoController {
                 .body(ApiResponseDTO.ok("Pago o adelanto de cotización registrado y enviado a validación en Finanzas", response));
     }
 
-    @GetMapping("/api/v1/cotizaciones/{idCotizacion}/pagos")
+    @GetMapping("/cotizaciones/{idCotizacion}/pagos")
     @PreAuthorize(SecurityRoles.ACCESS_CLIENTE_COTIZACION_READ)
     public ResponseEntity<ApiResponseDTO<List<CotizacionPagoResponseDTO>>> listarPorCotizacion(
             @PathVariable Integer idCotizacion) {
@@ -53,7 +54,7 @@ public class CotizacionPagoController {
     // ENDPOINTS EN MÓDULO DE FINANZAS (BANDEJA Y VALIDACIÓN DE ANTICIPOS)
     // =========================================================================
 
-    @GetMapping("/api/v1/finanzas/anticipos")
+    @GetMapping("/finanzas/anticipos")
     @PreAuthorize(SecurityRoles.ACCESS_LIQUIDACION_READ)
     public ResponseEntity<ApiResponseDTO<List<CotizacionPagoResponseDTO>>> listarAnticipos(
             @RequestParam(required = false) EstadoPagoCotizacion estado) {
@@ -66,21 +67,21 @@ public class CotizacionPagoController {
         return ResponseEntity.ok(ApiResponseDTO.ok("Lista de anticipos y pagos de cotización recuperada", response));
     }
 
-    @GetMapping("/api/v1/finanzas/anticipos/pendientes")
+    @GetMapping("/finanzas/anticipos/pendientes")
     @PreAuthorize(SecurityRoles.ACCESS_LIQUIDACION_READ)
     public ResponseEntity<ApiResponseDTO<List<CotizacionPagoResponseDTO>>> listarAnticiposPendientes() {
         List<CotizacionPagoResponseDTO> response = cotizacionPagoService.listarPorEstado(EstadoPagoCotizacion.PENDIENTE_REVISION);
         return ResponseEntity.ok(ApiResponseDTO.ok("Bandeja de anticipos pendientes de validación recuperada", response));
     }
 
-    @GetMapping("/api/v1/finanzas/anticipos/{idPago}")
+    @GetMapping("/finanzas/anticipos/{idPago}")
     @PreAuthorize(SecurityRoles.ACCESS_LIQUIDACION_READ)
     public ResponseEntity<ApiResponseDTO<CotizacionPagoResponseDTO>> buscarPorId(@PathVariable Integer idPago) {
         CotizacionPagoResponseDTO response = cotizacionPagoService.buscarPorId(idPago);
         return ResponseEntity.ok(ApiResponseDTO.ok("Detalle de pago de cotización recuperado", response));
     }
 
-    @PatchMapping("/api/v1/finanzas/anticipos/{idPago}/validar")
+    @PatchMapping("/finanzas/anticipos/{idPago}/validar")
     @PreAuthorize(SecurityRoles.ACCESS_LIQUIDACION_WRITE)
     public ResponseEntity<ApiResponseDTO<CotizacionPagoResponseDTO>> validarPago(
             @PathVariable Integer idPago,

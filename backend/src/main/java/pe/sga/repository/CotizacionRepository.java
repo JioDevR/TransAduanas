@@ -1,14 +1,12 @@
 package pe.sga.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
 import pe.sga.entity.Cotizacion;
 import pe.sga.entity.enums.EstadoCotizacion;
 
 import java.util.List;
 import java.util.Optional;
 
-@Repository
 public interface CotizacionRepository extends JpaRepository<Cotizacion, Integer> {
 
     Optional<Cotizacion> findByCodigoCotizacion(String codigoCotizacion);

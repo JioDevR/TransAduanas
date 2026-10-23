@@ -1,7 +1,6 @@
 package pe.sga.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
 import pe.sga.entity.Expediente;
 import pe.sga.entity.enums.CanalSunat;
 import pe.sga.entity.enums.EstadoExpediente;
@@ -9,7 +8,6 @@ import pe.sga.entity.enums.EstadoExpediente;
 import java.util.List;
 import java.util.Optional;
 
-@Repository
 public interface ExpedienteRepository extends JpaRepository<Expediente, Integer> {
 
     Optional<Expediente> findByCodigoExpediente(String codigoExpediente);

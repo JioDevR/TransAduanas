@@ -1,13 +1,11 @@
 package pe.sga.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
 import pe.sga.entity.DespachoTransporte;
 
 import java.util.List;
 import java.util.Optional;
 
-@Repository
 public interface DespachoTransporteRepository extends JpaRepository<DespachoTransporte, Integer> {
 
     Optional<DespachoTransporte> findByCodigoTracking(String codigoTracking);

@@ -1120,6 +1120,13 @@ import CotizacionStepperNav from './CotizacionStepperNav.vue'
 import CotizacionProformaPreview from './CotizacionProformaPreview.vue'
 import DocumentosUploadPanel from '@/shared/components/DocumentosUploadPanel.vue'
 import { getDepartamentosPeru, getProvinciasPorDepartamento } from '../data/peruUbigeo'
+import {
+  calcularValorCif,
+  calcularMontoAdValorem,
+  calcularMontoIgv,
+  calcularMontoPercepcion,
+  calcularLiquidacionIntegral
+} from '@/features/comercial/composables/useCotizacionCalculator'
 
 const props = defineProps({
   cotizacionToEdit: {
@@ -1431,57 +1438,52 @@ const handleMercanciaChange = () => {
 // MOTOR DE VALORACIÓN ADUANERA Y LIQUIDACIÓN ECONÓMICA (SUNAT)
 // =========================================================================
 
-// Valor CIF Calculado = FOB + Flete + Seguro
+// Valor CIF Calculado = FOB + Flete + Seguro (Vía useCotizacionCalculator)
 const valorCif = computed(() => {
-  const fob = Number(form.value.valorFob) || 0
-  const flete = Number(form.value.montoFleteEstimado) || 0
-  const seguro = Number(form.value.montoSeguroEstimado) || 0
-  return Number((fob + flete + seguro).toFixed(2))
+  return calcularValorCif(form.value.valorFob, form.value.montoFleteEstimado, form.value.montoSeguroEstimado)
 })
 
 // Monto Ad-Valórem = CIF * tasa_advalorem
 const montoAdValorem = computed(() => {
-  if (form.value.regimenAduanero === 'EXPORTACION_DEFINITIVA') return 0
-  const tasa = Number(form.value.tasaAdValorem) || 0
-  return Number((valorCif.value * (tasa / 100)).toFixed(2))
+  return calcularMontoAdValorem(valorCif.value, form.value.tasaAdValorem, form.value.regimenAduanero)
 })
 
 // IGV (16%) + IPM (2%) = (CIF + Ad-Valórem) * 0.18
 const montoIgv = computed(() => {
-  if (form.value.regimenAduanero === 'EXPORTACION_DEFINITIVA') return 0
-  const base = valorCif.value + montoAdValorem.value
-  return Number((base * 0.18).toFixed(2))
+  return calcularMontoIgv(valorCif.value, montoAdValorem.value, form.value.regimenAduanero)
 })
 
 // Percepción SUNAT = (CIF + Ad-Valórem + IGV/IPM) * tasa_percepcion
 const montoPercepcion = computed(() => {
-  if (form.value.regimenAduanero === 'EXPORTACION_DEFINITIVA') return 0
-  const tasa = Number(form.value.tasaPercepcion) || 0
-  if (tasa <= 0) return 0
-  const base = valorCif.value + montoAdValorem.value + montoIgv.value
-  return Number((base * (tasa / 100)).toFixed(2))
+  return calcularMontoPercepcion(valorCif.value, montoAdValorem.value, montoIgv.value, form.value.tasaPercepcion, form.value.regimenAduanero)
 })
 
-// Recálculo integral de liquidación
+// Recálculo integral de liquidación delegando al motor tarifario especializado
 const recalcularLiquidacion = () => {
-  const fob = Number(form.value.valorFob) || 0
-  const flete = Number(form.value.montoFleteEstimado) || 0
-  const honorarios = Number(form.value.montoHonorariosEstimado) || 0
-  const costoTransp = form.value.servicioTransporte ? (Number(form.value.costoTransporteInterno) || 0) : 0
+  const result = calcularLiquidacionIntegral({
+    regimen: form.value.regimenAduanero,
+    valorFob: form.value.valorFob,
+    montoFleteEstimado: form.value.montoFleteEstimado,
+    montoSeguroEstimado: form.value.montoSeguroEstimado,
+    seguroManual: seguroManual.value,
+    montoHonorariosEstimado: form.value.montoHonorariosEstimado,
+    tasaAdValorem: form.value.tasaAdValorem,
+    tasaPercepcion: form.value.tasaPercepcion,
+    servicioTransporte: form.value.servicioTransporte,
+    costoTransporteInterno: form.value.costoTransporteInterno
+  })
 
   if (form.value.regimenAduanero === 'EXPORTACION_DEFINITIVA') {
     form.value.tasaAdValorem = 0
     form.value.tasaPercepcion = 0
     form.value.montoTributosEstimado = 0
-    form.value.totalCotizado = Number((flete + honorarios + costoTransp).toFixed(2))
+    form.value.totalCotizado = result.totalCotizado
   } else {
-    // Si no fue editado manualmente, seguro = fob * 0.0075 (~0.75% SUNAT)
     if (!seguroManual.value) {
-      form.value.montoSeguroEstimado = Number((fob * 0.0075).toFixed(2))
+      form.value.montoSeguroEstimado = result.montoSeguro
     }
-    const tributos = Number((montoAdValorem.value + montoIgv.value + montoPercepcion.value).toFixed(2))
-    form.value.montoTributosEstimado = tributos
-    form.value.totalCotizado = Number((flete + honorarios + tributos + costoTransp).toFixed(2))
+    form.value.montoTributosEstimado = result.montoTributos
+    form.value.totalCotizado = result.totalCotizado
   }
 }
 

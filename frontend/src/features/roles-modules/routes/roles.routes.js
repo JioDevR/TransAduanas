@@ -4,7 +4,7 @@ export const rolesRoutes = [
   {
     path: '/recepcion-comercial',
     name: 'RecepcionComercialModule',
-    component: () => import('../views/RecepcionComercialView.vue'),
+    component: () => import('@/features/comercial/views/RecepcionComercialView.vue'),
     meta: {
       requiresAuth: true,
       roles: [ROLES.ADMINISTRADOR_TI, ROLES.GERENTE_GENERAL, ROLES.AGENTE_COMERCIAL],
@@ -14,7 +14,7 @@ export const rolesRoutes = [
   {
     path: '/gestion-aduanera',
     name: 'GestionAduaneraModule',
-    component: () => import('../views/GestionAduaneraView.vue'),
+    component: () => import('@/features/aduanas/views/GestionAduaneraView.vue'),
     meta: {
       requiresAuth: true,
       roles: [ROLES.ADMINISTRADOR_TI, ROLES.GERENTE_GENERAL, ROLES.SUPERVISOR_ADUANERO],
@@ -24,7 +24,7 @@ export const rolesRoutes = [
   {
     path: '/gestion-aduanera/liquidacion',
     name: 'LiquidacionAduaneraModule',
-    component: () => import('../views/LiquidacionAduaneraView.vue'),
+    component: () => import('@/features/liquidacion/views/LiquidacionAduaneraView.vue'),
     meta: {
       requiresAuth: true,
       roles: [ROLES.ADMINISTRADOR_TI, ROLES.GERENTE_GENERAL, ROLES.SUPERVISOR_ADUANERO],
@@ -34,7 +34,7 @@ export const rolesRoutes = [
   {
     path: '/agente-aduanero',
     name: 'AgenteAduaneroModule',
-    component: () => import('../views/AgenteAduaneroView.vue'),
+    component: () => import('@/features/almacen/views/AgenteAduaneroView.vue'),
     meta: {
       requiresAuth: true,
       roles: [ROLES.ADMINISTRADOR_TI, ROLES.GERENTE_GENERAL, ROLES.SUPERVISOR_ADUANERO, ROLES.AGENTE_ADUANERO],
@@ -44,7 +44,7 @@ export const rolesRoutes = [
   {
     path: '/transporte-flota',
     name: 'TransporteFlotaModule',
-    component: () => import('../views/TransporteFlotaView.vue'),
+    component: () => import('@/features/transporte/views/TransporteFlotaView.vue'),
     meta: {
       requiresAuth: true,
       roles: [ROLES.ADMINISTRADOR_TI, ROLES.GERENTE_GENERAL, ROLES.SUPERVISOR_TRANSPORTE],
@@ -54,7 +54,7 @@ export const rolesRoutes = [
   {
     path: '/finanzas',
     name: 'FinanzasModule',
-    component: () => import('../views/FinanzasView.vue'),
+    component: () => import('@/features/finanzas/views/FinanzasView.vue'),
     meta: {
       requiresAuth: true,
       roles: [ROLES.ADMINISTRADOR_TI, ROLES.GERENTE_GENERAL, ROLES.CONTADOR],
@@ -64,7 +64,7 @@ export const rolesRoutes = [
   {
     path: '/legal-auditoria',
     name: 'LegalAuditoriaModule',
-    component: () => import('../views/LegalAuditoriaView.vue'),
+    component: () => import('@/features/legal/views/LegalAuditoriaView.vue'),
     meta: {
       requiresAuth: true,
       roles: [ROLES.ADMINISTRADOR_TI, ROLES.GERENTE_GENERAL, ROLES.ASESOR_LEGAL],

@@ -8,7 +8,7 @@ export const useNavigationStore = defineStore('navigation', {
     activeModule: 'administracion-ti',
     // Sub-opciones en Administración TI: 'dashboard' | 'users' | 'sedes' | 'catalogos' | 'logs' | 'about'
     administracionTiSubOption: 'dashboard',
-    // Sub-opciones en Gerencia General: 'dashboard' | 'sedes' | 'catalogos' | 'flota' | 'conductores'
+    // Sub-opciones en Gerencia General: 'dashboard' | 'sedes' | 'puertos' | 'tipos-carga' | 'mercancias' | 'flota' | 'conductores'
     gerenciaGeneralSubOption: 'dashboard',
     // Sub-opciones en Recepción Comercial: 'dashboard' | 'cotizaciones' | 'clientes' | 'ordenes'
     comercialSubOption: 'dashboard',
@@ -100,8 +100,9 @@ export const useNavigationStore = defineStore('navigation', {
     },
 
     setGerenciaGeneralSubOption(option) {
-      if (this.gerenciaGeneralSubOption === option) return
-      this.gerenciaGeneralSubOption = option
+      const target = option === 'catalogos' ? 'puertos' : option
+      if (this.gerenciaGeneralSubOption === target) return
+      this.gerenciaGeneralSubOption = target
       this.navTick++
     },
     setGerenciaSubOption(option) {

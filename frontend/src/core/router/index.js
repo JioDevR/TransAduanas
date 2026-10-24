@@ -110,8 +110,12 @@ router.beforeEach(async (to, from, next) => {
     }
     if (to.path.includes('sedes')) {
       navStore.setGerenciaGeneralSubOption('sedes')
-    } else if (to.path.includes('catalogos')) {
-      navStore.setGerenciaGeneralSubOption('catalogos')
+    } else if (to.path.includes('puertos') || to.path.includes('catalogos')) {
+      navStore.setGerenciaGeneralSubOption('puertos')
+    } else if (to.path.includes('tipos-carga')) {
+      navStore.setGerenciaGeneralSubOption('tipos-carga')
+    } else if (to.path.includes('mercancias')) {
+      navStore.setGerenciaGeneralSubOption('mercancias')
     } else if (to.path.includes('dashboard') || to.path.includes('resumen')) {
       navStore.setGerenciaGeneralSubOption('dashboard')
     } else if (to.path.includes('flota')) {

@@ -145,20 +145,46 @@
           </button>
         </li>
 
-        <!-- Sub-opción 03: Catálogos Auxiliares -->
+        <!-- Sub-opción 03: Puertos & Terminales -->
         <li class="nav-item">
           <button
             type="button"
-            :class="['nav-sub-btn', { active: navigationStore.gerenciaGeneralSubOption === 'catalogos' }]"
-            @click="handleGerenciaSubClick('catalogos')"
-            :title="isCollapsed ? 'Catálogos Auxiliares' : ''"
+            :class="['nav-sub-btn', { active: navigationStore.gerenciaGeneralSubOption === 'puertos' }]"
+            @click="handleGerenciaSubClick('puertos')"
+            :title="isCollapsed ? 'Puertos y Terminales Aduaneros' : ''"
           >
             <span class="nav-num">03</span>
-            <span v-if="!isCollapsed" class="nav-label">Catálogos Auxiliares</span>
+            <span v-if="!isCollapsed" class="nav-label">Puertos & Terminales</span>
           </button>
         </li>
 
-        <!-- Sub-opción 04: Parque de Flota -->
+        <!-- Sub-opción 04: Tipos de Carga -->
+        <li class="nav-item">
+          <button
+            type="button"
+            :class="['nav-sub-btn', { active: navigationStore.gerenciaGeneralSubOption === 'tipos-carga' }]"
+            @click="handleGerenciaSubClick('tipos-carga')"
+            :title="isCollapsed ? 'Tipos de Carga & Contenedor' : ''"
+          >
+            <span class="nav-num">04</span>
+            <span v-if="!isCollapsed" class="nav-label">Tipos de Carga</span>
+          </button>
+        </li>
+
+        <!-- Sub-opción 05: Mercancías & Partidas -->
+        <li class="nav-item">
+          <button
+            type="button"
+            :class="['nav-sub-btn', { active: navigationStore.gerenciaGeneralSubOption === 'mercancias' }]"
+            @click="handleGerenciaSubClick('mercancias')"
+            :title="isCollapsed ? 'Mercancías & Partidas Arancelarias' : ''"
+          >
+            <span class="nav-num">05</span>
+            <span v-if="!isCollapsed" class="nav-label">Mercancías & Partidas</span>
+          </button>
+        </li>
+
+        <!-- Sub-opción 06: Parque de Flota -->
         <li class="nav-item">
           <button
             type="button"
@@ -166,12 +192,12 @@
             @click="handleGerenciaSubClick('flota')"
             :title="isCollapsed ? 'Parque Automotor & Flota' : ''"
           >
-            <span class="nav-num">04</span>
+            <span class="nav-num">06</span>
             <span v-if="!isCollapsed" class="nav-label">Parque de Flota</span>
           </button>
         </li>
 
-        <!-- Sub-opción 05: Conductores MTC -->
+        <!-- Sub-opción 07: Conductores MTC -->
         <li class="nav-item">
           <button
             type="button"
@@ -179,7 +205,7 @@
             @click="handleGerenciaSubClick('conductores')"
             :title="isCollapsed ? 'Conductores MTC' : ''"
           >
-            <span class="nav-num">05</span>
+            <span class="nav-num">07</span>
             <span v-if="!isCollapsed" class="nav-label">Conductores MTC</span>
           </button>
         </li>
@@ -607,7 +633,10 @@ const handleGerenciaSubClick = (subOption) => {
     dashboard: '/gerencia-general/dashboard',
     overview: '/gerencia-general/dashboard',
     sedes: '/gerencia-general/sedes',
-    catalogos: '/gerencia-general/catalogos',
+    puertos: '/gerencia-general/puertos',
+    'tipos-carga': '/gerencia-general/tipos-carga',
+    mercancias: '/gerencia-general/mercancias',
+    catalogos: '/gerencia-general/puertos',
     flota: '/gerencia-general/flota',
     conductores: '/gerencia-general/conductores'
   }

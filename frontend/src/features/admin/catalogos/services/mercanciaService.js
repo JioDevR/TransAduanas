@@ -35,6 +35,10 @@ export const mercanciaService = {
 
   async reactivarMercancia(id) {
     return catalogoService.reactivarMercancia(id)
+  },
+
+  async downloadPdf() {
+    return catalogoService.downloadMercanciasPdf()
   }
 }
 

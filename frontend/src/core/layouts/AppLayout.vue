@@ -195,7 +195,10 @@ const currentTitle = computed(() => {
       dashboard: 'Dashboard Ejecutivo y Métricas Generales',
       overview: 'Dashboard Ejecutivo y Métricas Generales',
       sedes: 'Gestión Integral de Sedes y Agencias Territoriales',
-      catalogos: 'Catálogos Auxiliares (Puertos y Tipos de Carga)',
+      puertos: 'Puertos y Terminales Aduaneros',
+      'tipos-carga': 'Tipos de Carga & Contenedores Sugeridos',
+      mercancias: 'Mercancías y Subpartidas Arancelarias',
+      catalogos: 'Puertos y Terminales Aduaneros',
       flota: 'Parque Automotor & Flota de Transporte',
       conductores: 'Plantilla de Conductores Acreditados MTC'
     }
@@ -246,7 +249,17 @@ const currentKicker = computed(() => {
     return kMap[navigationStore.comercialSubOption] || 'RECEPCIÓN COMERCIAL // PROSPECTOS & COTIZACIONES'
   }
   if (navigationStore.currentModule === 'gerencia-general') {
-    return 'DIRECCIÓN EJECUTIVA // GESTIÓN CORPORATIVA'
+    const gKickers = {
+      dashboard: 'DIRECCIÓN EJECUTIVA // GESTIÓN CORPORATIVA',
+      sedes: 'INFRAESTRUCTURA & CONTROL TERRITORIAL // SEDES ADUANERAS',
+      puertos: 'CATÁLOGOS AUXILIARES // PUERTOS & TERMINALES ADUANEROS',
+      'tipos-carga': 'CATÁLOGOS AUXILIARES // LOGÍSTICA DE TRANSPORTE',
+      mercancias: 'NOMENCLATURA & RESTRICCIONES // SUNAT VUCE',
+      catalogos: 'CATÁLOGOS AUXILIARES // TABLAS MAESTRAS ADUANERAS',
+      flota: 'TRANSPORTE PESADO // FLOTA OPERATIVA',
+      conductores: 'PERSONAL CERTIFICADO // CONDUCTORES MTC'
+    }
+    return gKickers[navigationStore.gerenciaGeneralSubOption] || 'DIRECCIÓN EJECUTIVA // GESTIÓN CORPORATIVA'
   }
   if (navigationStore.currentModule === 'administracion-ti') {
     const tiKickers = {
@@ -278,7 +291,17 @@ const currentSubtitle = computed(() => {
     return sMap[navigationStore.comercialSubOption] || 'Supervisión comercial, emisión de presupuestos aduaneros y formalización de expedientes operativos.'
   }
   if (navigationStore.currentModule === 'gerencia-general') {
-    return 'Supervisión global de sedes territoriales, parque automotor y conductores acreditados MTC.'
+    const gSubs = {
+      dashboard: 'Supervisión global de sedes territoriales, parque automotor y conductores acreditados MTC.',
+      sedes: 'Directorio de sedes centrales, agencias aduaneras territoriales y terminales logísticos autorizados.',
+      puertos: 'Supervisión y control maestro de terminales marítimos, aéreos, terrestres y fluviales acreditados.',
+      'tipos-carga': 'Especificaciones técnicas de carga suelta, FCL, LCL y capacidades de tara recomendadas.',
+      mercancias: 'Catálogo arancelario NANDINA, porcentajes ad-valórem y entidades reguladoras VUCE.',
+      catalogos: 'Supervisión y control maestro de terminales marítimos, aéreos, terrestres y fluviales acreditados.',
+      flota: 'Control técnico del parque automotor, inspecciones vehiculares y asignación de unidades.',
+      conductores: 'Padrón de choferes profesionales con licencias vigentes ante el MTC y acreditaciones SUNAT.'
+    }
+    return gSubs[navigationStore.gerenciaGeneralSubOption] || 'Supervisión global de sedes territoriales, parque automotor y conductores acreditados MTC.'
   }
   if (navigationStore.currentModule === 'administracion-ti') {
     const tiSubs = {

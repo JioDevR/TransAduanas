@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <title>Reporte Oficial de Tipos de Carga y Clasificación Logística</title>
+    <style>
+        @page {
+            size: A4 portrait;
+            margin: 16mm 14mm 18mm 14mm;
+            @top-right {
+                content: "SGA // GESTIÓN ADUANERA INTEGRAL";
+                font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+                font-size: 7.5pt;
+                font-weight: bold;
+                color: #9a7f60;
+            }
+            @bottom-left {
+                content: "Documento oficial reservado para uso gerencial y fiscalización - TransAduanas del Perú S.A.C.";
+                font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+                font-size: 7pt;
+                color: #8c827a;
+            }
+            @bottom-right {
+                content: "Página " counter(page) " de " counter(pages);
+                font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+                font-size: 7.5pt;
+                font-weight: bold;
+                color: #352f2a;
+            }
+        }
+
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            color: #2b2520;
+            background-color: #ffffff;
+            font-size: 8.5pt;
+            line-height: 1.35;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Membrete Corporativo SGA Warm Editorial */
+        .header-table {
+            width: 100%;
+            border-bottom: 2px solid #352f2a;
+            padding-bottom: 10px;
+            margin-bottom: 12px;
+        }
+
+        .header-logo-cell {
+            width: 60%;
+            vertical-align: top;
+        }
+
+        .header-meta-cell {
+            width: 40%;
+            text-align: right;
+            vertical-align: top;
+        }
+
+        .brand-badge {
+            display: inline-block;
+            background-color: #352f2a;
+            color: #f6f3ee;
+            font-weight: bold;
+            font-size: 11pt;
+            padding: 4px 8px;
+            border-radius: 4px;
+            letter-spacing: 0.08em;
+            margin-bottom: 4px;
+        }
+
+        .company-title {
+            font-size: 13pt;
+            font-weight: bold;
+            color: #352f2a;
+            margin: 2px 0;
+            letter-spacing: -0.01em;
+        }
+
+        .company-subtitle {
+            font-size: 7.5pt;
+            color: #6f6356;
+            margin: 0;
+        }
+
+        .kicker-tag {
+            font-size: 6.5pt;
+            font-weight: bold;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: #9a7f60;
+            background-color: #f6f3ee;
+            padding: 2px 6px;
+            border: 1px solid #e4dacb;
+            border-radius: 3px;
+            display: inline-block;
+            margin-bottom: 4px;
+        }
+
+        .report-title {
+            font-size: 12pt;
+            font-weight: bold;
+            color: #2b2520;
+            margin: 2px 0 4px 0;
+        }
+
+        .meta-info-box {
+            font-size: 7.5pt;
+            color: #6f6356;
+            line-height: 1.4;
+        }
+
+        /* Resumen de Métricas KPI */
+        .kpi-table {
+            width: 100%;
+            margin-bottom: 14px;
+            border-collapse: separate;
+            border-spacing: 6px 0;
+        }
+
+        .kpi-box {
+            background-color: #fdfbf7;
+            border: 1px solid #e4dacb;
+            border-radius: 5px;
+            padding: 6px 10px;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        .kpi-box-num {
+            font-size: 6pt;
+            font-family: monospace;
+            font-weight: bold;
+            color: #9a7f60;
+            display: block;
+        }
+
+        .kpi-box-label {
+            font-size: 7pt;
+            font-weight: bold;
+            text-transform: uppercase;
+            color: #6f6356;
+            display: block;
+            margin-top: 1px;
+        }
+
+        .kpi-box-value {
+            font-size: 14pt;
+            font-weight: bold;
+            color: #352f2a;
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            margin-top: 2px;
+            display: block;
+        }
+
+        /* Tabla Principal de Datos */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 6px;
+            margin-bottom: 16px;
+        }
+
+        .data-table th {
+            background-color: #352f2a;
+            color: #ffffff;
+            font-size: 7.5pt;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            padding: 7px 6px;
+            border: 1px solid #352f2a;
+            text-align: left;
+        }
+
+        .data-table td {
+            font-size: 7.5pt;
+            padding: 5px 6px;
+            border: 1px solid #e4dacb;
+            color: #2b2520;
+            vertical-align: middle;
+        }
+
+        .data-table tr:nth-child(even) {
+            background-color: #faf7f2;
+        }
+
+        .code-cell {
+            font-family: monospace;
+            font-weight: bold;
+            color: #9a7f60;
+            background-color: #f6f3ee;
+            padding: 2px 4px;
+            border-radius: 3px;
+            display: inline-block;
+        }
+
+        .status-pill-activo {
+            background-color: #eaf6ed;
+            color: #1e6638;
+            border: 1px solid #bce5c6;
+            border-radius: 9999px;
+            padding: 1px 6px;
+            font-size: 6.5pt;
+            font-weight: bold;
+            text-transform: uppercase;
+            display: inline-block;
+        }
+
+        .status-pill-inactivo {
+            background-color: #fdf0f0;
+            color: #9e2a2b;
+            border: 1px solid #f6c8c8;
+            border-radius: 9999px;
+            padding: 1px 6px;
+            font-size: 6.5pt;
+            font-weight: bold;
+            text-transform: uppercase;
+            display: inline-block;
+        }
+
+        .container-badge {
+            background-color: #f6f3ee;
+            border: 1px solid #e4dacb;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-size: 7pt;
+            font-weight: 600;
+            color: #6f6356;
+        }
+
+        /* Bloque de Firmas y Certificación */
+        .signatures-table {
+            width: 100%;
+            margin-top: 25px;
+            page-break-inside: avoid;
+        }
+
+        .signature-cell {
+            width: 48%;
+            text-align: center;
+            vertical-align: bottom;
+            padding: 0 10px;
+        }
+
+        .signature-line {
+            border-top: 1px solid #352f2a;
+            padding-top: 4px;
+            margin-top: 40px;
+        }
+
+        .signature-title {
+            font-size: 8pt;
+            font-weight: bold;
+            color: #352f2a;
+        }
+
+        .signature-sub {
+            font-size: 7pt;
+            color: #6f6356;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 1. Encabezado Oficial -->
+    <table class="header-table">
+        <tr>
+            <td class="header-logo-cell">
+                <span class="brand-badge">SGA</span>
+                <div class="company-title">TRANSADUANAS DEL PERÚ S.A.C.</div>
+                <div class="company-subtitle">
+                    RUC: <strong>20601234567</strong> | OEA N° 0042-2026-SUNAT | Estándar ISO 6346 / BASC<br />
+                    Av. Elmer Faucett 2823, Callao, Lima - Perú | central@transaduanas.pe
+                </div>
+            </td>
+            <td class="header-meta-cell">
+                <span class="kicker-tag">LOGÍSTICA &amp; TRANSPORTE ADUANERO</span>
+                <div class="report-title">Catálogo de Tipos de Carga &amp; Contenedor</div>
+                <div class="meta-info-box">
+                    <strong>Fecha Emisión:</strong> <span th:text="${fechaGeneracion}">24/10/2026 14:00</span><br />
+                    <strong>Normativa:</strong> Clasificación FCL / LCL Internacional<br />
+                    <strong>Total Registrados:</strong> <strong th:text="${totalTipos}">9</strong> tipos
+                </div>
+            </td>
+        </tr>
+    </table>
+
+    <!-- 2. Grid de Métricas KPI -->
+    <table class="kpi-table">
+        <tr>
+            <td class="kpi-box" style="width: 25%;">
+                <span class="kpi-box-num">01</span>
+                <span class="kpi-box-label">Tipos Totales</span>
+                <span class="kpi-box-value" th:text="${totalTipos}">9</span>
+            </td>
+            <td class="kpi-box" style="width: 25%;">
+                <span class="kpi-box-num">02</span>
+                <span class="kpi-box-label">Cargas Activas</span>
+                <span class="kpi-box-value" style="color: #1e6638;" th:text="${totalActivos}">9</span>
+            </td>
+            <td class="kpi-box" style="width: 25%;">
+                <span class="kpi-box-num">03</span>
+                <span class="kpi-box-label">Modalidad FCL</span>
+                <span class="kpi-box-value" style="color: #92400e;" th:text="${totalFcl}">6</span>
+            </td>
+            <td class="kpi-box" style="width: 25%;">
+                <span class="kpi-box-num">04</span>
+                <span class="kpi-box-label">Carga Suelta / LCL</span>
+                <span class="kpi-box-value" style="color: #0369a1;" th:text="${totalLcl}">3</span>
+            </td>
+        </tr>
+    </table>
+
+    <!-- 3. Tabla Principal de Datos -->
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th style="width: 10%; text-align: center;">ID</th>
+                <th style="width: 22%;">CÓDIGO DE CARGA</th>
+                <th style="width: 48%;">DESCRIPCIÓN DE MERCANCÍA / CARGA</th>
+                <th style="width: 20%; text-align: center;">ESTADO</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="t : ${items}">
+                <td style="text-align: center; font-family: monospace;" th:text="${t.idTipoCarga}">1</td>
+                <td><span class="code-cell" th:text="${t.codigo}">CONT-20-DRY</span></td>
+                <td><strong th:text="${t.nombre}">Contenedor 20 Pies Dry Cargo</strong></td>
+                <td style="text-align: center;">
+                    <span th:if="${t.estado == 'ACTIVO'}" class="status-pill-activo" th:text="${t.estado}">ACTIVO</span>
+                    <span th:unless="${t.estado == 'ACTIVO'}" class="status-pill-inactivo" th:text="${t.estado}">INACTIVO</span>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- 4. Bloque de Firmas y Control Institucional -->
+    <table class="signatures-table">
+        <tr>
+            <td class="signature-cell">
+                <div class="signature-line">
+                    <div class="signature-title">Gerencia de Logística y Transporte</div>
+                    <div class="signature-sub">TransAduanas del Perú S.A.C.</div>
+                </div>
+            </td>
+            <td style="width: 4%;"></td>
+            <td class="signature-cell">
+                <div class="signature-line">
+                    <div class="signature-title">Auditoría Operativa Aduanera</div>
+                    <div class="signature-sub">Control de Flota &amp; Contenedores</div>
+                </div>
+            </td>
+        </tr>
+    </table>
+
+</body>
+</html>

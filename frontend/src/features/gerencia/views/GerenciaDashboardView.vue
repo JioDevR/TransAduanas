@@ -495,7 +495,10 @@ const goToSubOption = (option) => {
   navigationStore.setActiveModule('gerencia-general')
   const pathMap = {
     sedes: '/gerencia-general/sedes',
-    catalogos: '/gerencia-general/catalogos',
+    puertos: '/gerencia-general/puertos',
+    'tipos-carga': '/gerencia-general/tipos-carga',
+    mercancias: '/gerencia-general/mercancias',
+    catalogos: '/gerencia-general/puertos',
     flota: '/gerencia-general/flota',
     conductores: '/gerencia-general/conductores'
   }

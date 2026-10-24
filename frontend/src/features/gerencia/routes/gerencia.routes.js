@@ -65,23 +65,11 @@ export const gerenciaRoutes = [
   },
   {
     path: '/gerencia-general/flota',
-    name: 'GerenciaFlota',
-    component: () => import('@/features/gerencia/views/GerenciaFlotaView.vue'),
-    meta: {
-      requiresAuth: true,
-      roles: [ROLES.GERENTE_GENERAL, ROLES.ADMINISTRADOR_TI],
-      title: 'Gerencia General - Flota - SGA'
-    }
+    redirect: { path: '/transporte-flota', query: { tab: 'unidades' } }
   },
   {
     path: '/gerencia-general/conductores',
-    name: 'GerenciaConductores',
-    component: () => import('@/features/gerencia/views/GerenciaConductoresView.vue'),
-    meta: {
-      requiresAuth: true,
-      roles: [ROLES.GERENTE_GENERAL, ROLES.ADMINISTRADOR_TI],
-      title: 'Gerencia General - Conductores - SGA'
-    }
+    redirect: { path: '/transporte-flota', query: { tab: 'conductores' } }
   }
 ]
 

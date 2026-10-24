@@ -240,7 +240,7 @@
 
               <div v-else class="clients-grid">
                 <div
-                  v-for="c in filteredAvailableClients.slice(0, 8)"
+                  v-for="c in filteredAvailableClients.slice(0, 12)"
                   :key="c.idCliente"
                   class="client-select-card"
                   @click="selectClient(c)"
@@ -251,8 +251,8 @@
                       {{ c.esProspecto ? 'Prospecto' : 'Cliente' }}
                     </span>
                   </div>
-                  <span class="client-card-name">{{ c.razonSocial }}</span>
-                  <span class="client-card-email">{{ c.correoContacto }}</span>
+                  <span class="client-card-name" :title="c.razonSocial">{{ c.razonSocial }}</span>
+                  <span class="client-card-email" :title="c.correoContacto">{{ c.correoContacto }}</span>
                 </div>
               </div>
             </div>
@@ -323,7 +323,9 @@
                   optionLabel="nombre"
                   optionValue="idPuerto"
                   filter
-                  filterPlaceholder="Buscar puerto o país..."
+                  filterMatchMode="smart"
+                  :filterFields="['searchCorpus', 'codigoPuerto', 'nombre', 'pais', 'tipo']"
+                  filterPlaceholder="Buscar por puerto, país o código..."
                   placeholder="Seleccione puerto de embarque..."
                   class="sga-custom-select"
                   :disabled="submitting || loadingCatalogos"
@@ -358,7 +360,9 @@
                   optionLabel="nombre"
                   optionValue="idPuerto"
                   filter
-                  filterPlaceholder="Buscar puerto o aduana..."
+                  filterMatchMode="smart"
+                  :filterFields="['searchCorpus', 'codigoPuerto', 'nombre', 'pais', 'tipo']"
+                  filterPlaceholder="Buscar por puerto, país o código..."
                   placeholder="Seleccione puerto de arribo..."
                   class="sga-custom-select"
                   :disabled="submitting || loadingCatalogos"
@@ -395,6 +399,10 @@
                   :options="tiposCarga"
                   optionLabel="nombre"
                   optionValue="idTipoCarga"
+                  filter
+                  filterMatchMode="smart"
+                  :filterFields="['searchCorpus', 'codigo', 'nombre']"
+                  filterPlaceholder="Buscar tipo de carga o código..."
                   placeholder="Seleccione tipo de carga..."
                   class="sga-custom-select"
                   :disabled="submitting || loadingCatalogos"
@@ -425,6 +433,8 @@
                   optionLabel="nombre"
                   optionValue="idMercancia"
                   filter
+                  filterMatchMode="smart"
+                  :filterFields="['searchCorpus', 'codigo', 'nombre', 'categoria', 'entidadReguladora']"
                   filterPlaceholder="Buscar por código, nombre o sector..."
                   placeholder="Seleccione mercancía clasificada..."
                   class="sga-custom-select"
@@ -1111,6 +1121,7 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import Select from 'primevue/select'
 import Tag from 'primevue/tag'
+import { FilterService } from '@primevue/core/api'
 import { useAuthStore } from '@/features/auth/stores/authStore'
 import { comercialService } from '../services/comercialService'
 import { catalogoService } from '@/features/admin/catalogos/services/catalogoService'
@@ -1293,13 +1304,22 @@ const loadCatalogos = async () => {
       catalogoService.getMercancias(true)
     ])
     if (puertosRes.status === 'fulfilled') {
-      puertos.value = unwrapList(puertosRes.value)
+      puertos.value = unwrapList(puertosRes.value).map((p) => ({
+        ...p,
+        searchCorpus: `${p.codigoPuerto || ''} ${p.nombre || ''} ${p.pais || ''} ${p.tipo || ''}`
+      }))
     }
     if (tiposCargaRes.status === 'fulfilled') {
-      tiposCarga.value = unwrapList(tiposCargaRes.value)
+      tiposCarga.value = unwrapList(tiposCargaRes.value).map((t) => ({
+        ...t,
+        searchCorpus: `${t.codigo || ''} ${t.nombre || ''} ${t.descripcion || ''}`
+      }))
     }
     if (mercanciasRes.status === 'fulfilled') {
-      mercancias.value = unwrapList(mercanciasRes.value)
+      mercancias.value = unwrapList(mercanciasRes.value).map((m) => ({
+        ...m,
+        searchCorpus: `${m.codigo || ''} ${m.nombre || ''} ${m.categoria || ''} ${m.entidadReguladora || ''}`
+      }))
     }
   } catch (err) {
     console.error('Error cargando catálogos para cotización:', err)
@@ -1368,17 +1388,38 @@ watch(
   { immediate: true }
 )
 
-// Filtrado de Clientes para el Selector
+// Normalizador de texto para búsquedas (ignora tildes, mayúsculas y espacios extras)
+const normalizeSearchText = (text) => {
+  if (!text) return ''
+  return text
+    .toString()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim()
+}
+
+// Registrar filtro inteligente en FilterService para los componentes Select de PrimeVue
+FilterService.register('smart', (value, filter) => {
+  if (filter === undefined || filter === null || filter === '') return true
+  if (value === undefined || value === null) return false
+  const normVal = normalizeSearchText(value)
+  const tokens = normalizeSearchText(filter).split(/\s+/).filter(Boolean)
+  if (tokens.length === 0) return true
+  return tokens.every((tok) => normVal.includes(tok))
+})
+
+// Filtrado de Clientes para el Selector (Búsqueda inteligente sin tildes)
 const filteredAvailableClients = computed(() => {
-  const query = clientSearchQuery.value.toLowerCase().trim()
+  const query = normalizeSearchText(clientSearchQuery.value)
   if (!query) return localClientsList.value
 
+  const tokens = query.split(/\s+/).filter(Boolean)
   return localClientsList.value.filter((c) => {
-    return (
-      c.razonSocial?.toLowerCase().includes(query) ||
-      c.numeroDocumento?.includes(query) ||
-      c.correoContacto?.toLowerCase().includes(query)
+    const corpus = normalizeSearchText(
+      `${c.numeroDocumento || ''} ${c.razonSocial || ''} ${c.correoContacto || ''} ${c.contactoRepresentante || ''} ${c.telefonoContacto || ''} ${c.esProspecto ? 'prospecto' : 'cliente'}`
     )
+    return tokens.every((tok) => corpus.includes(tok))
   })
 })
 
@@ -2227,20 +2268,49 @@ defineExpose({
 }
 
 /* Lista de Selección de Clientes */
+/* Lista de Selección de Clientes - Grid consistente de 6 columnas */
 .clients-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: var(--space-3, 0.75rem);
 }
 
+@media (max-width: 1400px) {
+  .clients-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 1024px) {
+  .clients-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .clients-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 520px) {
+  .clients-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .client-select-card {
-  padding: var(--space-3, 0.75rem) var(--space-4, 1rem);
+  padding: 0.65rem 0.85rem;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg, 0.75rem);
   background: var(--color-bg-subtle);
   cursor: pointer;
   display: flex;
   flex-direction: column;
+  justify-content: space-between;
+  min-height: 84px;
+  height: 100%;
+  box-sizing: border-box;
   gap: 0.25rem;
   transition: all var(--transition-fast);
 }
@@ -2255,6 +2325,7 @@ defineExpose({
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 0.25rem;
 }
 
 .classification-pill-mini {
@@ -2262,6 +2333,7 @@ defineExpose({
   font-weight: 800;
   padding: 0.1rem 0.4rem;
   border-radius: var(--radius-full, 9999px);
+  white-space: nowrap;
 }
 
 .client-card-name {
@@ -2271,11 +2343,16 @@ defineExpose({
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  display: block;
 }
 
 .client-card-email {
   font-size: var(--font-size-2xs, 0.65rem);
   color: var(--color-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
 }
 
 .empty-clients-box {

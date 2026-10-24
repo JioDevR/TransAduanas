@@ -157,9 +157,9 @@
           responsiveLayout="scroll"
           class="custom-datatable"
           dataKey="idConductor"
-          :paginator="filteredConductores.length > 10"
-          :rows="10"
-          :rowsPerPageOptions="[10, 20, 50]"
+          :paginator="filteredConductores.length > 15"
+          :rows="15"
+          :rowsPerPageOptions="[15, 30, 50]"
         >
           <template #empty>
             <div class="empty-state-box">

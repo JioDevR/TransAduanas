@@ -183,32 +183,6 @@
             <span v-if="!isCollapsed" class="nav-label">Mercancías & Partidas</span>
           </button>
         </li>
-
-        <!-- Sub-opción 06: Parque de Flota -->
-        <li class="nav-item">
-          <button
-            type="button"
-            :class="['nav-sub-btn', { active: navigationStore.gerenciaGeneralSubOption === 'flota' }]"
-            @click="handleGerenciaSubClick('flota')"
-            :title="isCollapsed ? 'Parque Automotor & Flota' : ''"
-          >
-            <span class="nav-num">06</span>
-            <span v-if="!isCollapsed" class="nav-label">Parque de Flota</span>
-          </button>
-        </li>
-
-        <!-- Sub-opción 07: Conductores MTC -->
-        <li class="nav-item">
-          <button
-            type="button"
-            :class="['nav-sub-btn', { active: navigationStore.gerenciaGeneralSubOption === 'conductores' }]"
-            @click="handleGerenciaSubClick('conductores')"
-            :title="isCollapsed ? 'Conductores MTC' : ''"
-          >
-            <span class="nav-num">07</span>
-            <span v-if="!isCollapsed" class="nav-label">Conductores MTC</span>
-          </button>
-        </li>
       </ul>
 
       <!-- ======================================================== -->
@@ -426,6 +400,32 @@
           >
             <span class="nav-num">04</span>
             <span v-if="!isCollapsed" class="nav-label">Monitoreo Global</span>
+          </button>
+        </li>
+
+        <!-- Sub-opción 05: Parque de Flota -->
+        <li class="nav-item">
+          <button
+            type="button"
+            :class="['nav-sub-btn', { active: navigationStore.transporteFlotaSubOption === 'unidades' }]"
+            @click="handleTransporteFlotaSubClick('unidades')"
+            :title="isCollapsed ? 'Parque Automotor & Flota' : ''"
+          >
+            <span class="nav-num">05</span>
+            <span v-if="!isCollapsed" class="nav-label">Parque de Flota</span>
+          </button>
+        </li>
+
+        <!-- Sub-opción 06: Conductores MTC -->
+        <li class="nav-item">
+          <button
+            type="button"
+            :class="['nav-sub-btn', { active: navigationStore.transporteFlotaSubOption === 'conductores' }]"
+            @click="handleTransporteFlotaSubClick('conductores')"
+            :title="isCollapsed ? 'Conductores MTC' : ''"
+          >
+            <span class="nav-num">06</span>
+            <span v-if="!isCollapsed" class="nav-label">Conductores MTC</span>
           </button>
         </li>
       </ul>

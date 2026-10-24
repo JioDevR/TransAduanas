@@ -137,16 +137,13 @@
           </div>
 
           <!-- Filtro por Categoría -->
+          <!-- Filtro por Categoría Dinámico (Extraído de los registros reales) -->
           <div class="filter-dropdown">
             <select v-model="mercanciasCategoriaFilter" class="filter-select" title="Filtrar por categoría">
-              <option value="ALL">Todas las Categorías</option>
-              <option value="FARMACOS">Fármacos y Medicamentos</option>
-              <option value="ALIMENTOS">Alimentos y Perecibles</option>
-              <option value="TECNOLOGIA">Tecnología y Electrónica</option>
-              <option value="TEXTILES">Textiles y Calzado</option>
-              <option value="MAQUINARIA">Maquinaria y Repuestos</option>
-              <option value="QUIMICOS">Sustancias Químicas</option>
-              <option value="GENERAL">Carga General Miscelánea</option>
+              <option value="ALL">Todas las Categorías ({{ availableCategories.length }})</option>
+              <option v-for="cat in availableCategories" :key="cat" :value="cat">
+                {{ cat }}
+              </option>
             </select>
           </div>
 
@@ -206,8 +203,8 @@
           class="custom-datatable"
           dataKey="idMercancia"
           paginator
-          :rows="10"
-          :rowsPerPageOptions="[10, 20, 50]"
+          :rows="15"
+          :rowsPerPageOptions="[15, 30, 50]"
           currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} mercancías"
           paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown CurrentPageReport"
         >
@@ -324,6 +321,7 @@
     <MercanciaFormModal
       :visible="showMercanciaModal"
       :mercancia-to-edit="selectedMercancia"
+      :existing-categories="availableCategories"
       @close="showMercanciaModal = false"
       @saved="onMercanciaSaved"
     />
@@ -339,6 +337,7 @@ import mercanciaService from '../services/mercanciaService'
 import MercanciaFormModal from '../components/MercanciaFormModal.vue'
 import { useNotification } from '@/shared/composables/useNotification'
 import { useConfirmation } from '@/shared/composables/useConfirmation'
+import { openBlobInNewTab } from '@/shared/utils/download'
 
 const { showSuccess, showError, showInfo } = useNotification()
 const { confirmAction } = useConfirmation()
@@ -376,6 +375,17 @@ const activasCount = computed(() => {
 
 const vuceCount = computed(() => {
   return mercancias.value.filter((m) => m.requierePermiso).length
+})
+
+// Categorías dinámicas reales presentes en la base de datos
+const availableCategories = computed(() => {
+  const cats = new Set()
+  mercancias.value.forEach((m) => {
+    if (m.categoria && m.categoria.trim()) {
+      cats.add(m.categoria.trim())
+    }
+  })
+  return Array.from(cats).sort((a, b) => a.localeCompare(b))
 })
 
 const libreCount = computed(() => {
@@ -419,7 +429,8 @@ const filteredMercancias = computed(() => {
       m.categoria?.toLowerCase().includes(q)
 
     const matchesCategory =
-      mercanciasCategoriaFilter.value === 'ALL' || m.categoria === mercanciasCategoriaFilter.value
+      mercanciasCategoriaFilter.value === 'ALL' ||
+      (m.categoria && m.categoria.trim().toLowerCase() === mercanciasCategoriaFilter.value.trim().toLowerCase())
 
     const matchesStatus =
       mercanciasStatusFilter.value === 'ALL' || m.estado === mercanciasStatusFilter.value
@@ -520,20 +531,13 @@ const handleReactivateMercancia = async (mercancia) => {
   }
 }
 
-// Descargar Reporte PDF
+// Visualizar / Descargar Reporte PDF en nueva pestaña
 const handleExportPdf = async () => {
   exportingPdf.value = true
   try {
     const blobData = await mercanciaService.downloadPdf()
-    const url = window.URL.createObjectURL(new Blob([blobData], { type: 'application/pdf' }))
-    const link = document.createElement('a')
-    link.href = url
-    link.setAttribute('download', `reporte-subpartidas-arancelarias-${new Date().toISOString().slice(0, 10)}.pdf`)
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    window.URL.revokeObjectURL(url)
-    showToast('Reporte oficial de subpartidas arancelarias generado exitosamente')
+    openBlobInNewTab(blobData)
+    showToast('Reporte oficial de subpartidas arancelarias abierto en nueva pestaña')
   } catch (err) {
     console.error('Error al descargar reporte de mercancías:', err)
     showToast('No se pudo generar el reporte de mercancías', 'error')

@@ -200,8 +200,8 @@
           class="custom-datatable"
           dataKey="idPuerto"
           paginator
-          :rows="10"
-          :rowsPerPageOptions="[10, 20, 50]"
+          :rows="15"
+          :rowsPerPageOptions="[15, 30, 50]"
           currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} puertos"
           paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown CurrentPageReport"
         >
@@ -316,6 +316,7 @@ import catalogoService from '../services/catalogoService'
 import PuertoRegistrationForm from '../components/PuertoRegistrationForm.vue'
 import { useNotification } from '@/shared/composables/useNotification'
 import { useConfirmation } from '@/shared/composables/useConfirmation'
+import { openBlobInNewTab } from '@/shared/utils/download'
 
 const { showSuccess, showError, showInfo } = useNotification()
 const { confirmAction } = useConfirmation()
@@ -435,20 +436,13 @@ const loadPuertos = async () => {
   }
 }
 
-// Descargar Reporte PDF
+// Visualizar / Descargar Reporte PDF en nueva pestaña
 const handleExportPdf = async () => {
   exportingPdf.value = true
   try {
     const blobData = await catalogoService.downloadPuertosPdf()
-    const url = window.URL.createObjectURL(new Blob([blobData], { type: 'application/pdf' }))
-    const link = document.createElement('a')
-    link.href = url
-    link.setAttribute('download', `reporte-puertos-aduaneros-${new Date().toISOString().slice(0, 10)}.pdf`)
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    window.URL.revokeObjectURL(url)
-    showToast('Reporte oficial de puertos generado exitosamente')
+    openBlobInNewTab(blobData)
+    showToast('Reporte oficial de puertos abierto en nueva pestaña')
   } catch (err) {
     console.error('Error al descargar reporte de puertos:', err)
     showToast('No se pudo generar el reporte oficial de puertos', 'error')

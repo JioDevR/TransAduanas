@@ -144,6 +144,9 @@ router.beforeEach(async (to, from, next) => {
     if (navStore.activeModule !== 'transporte-flota') {
       navStore.setActiveModule('transporte-flota')
     }
+    if (to.query?.tab) {
+      navStore.setTransporteFlotaSubOption(to.query.tab)
+    }
   } else if (to.path.startsWith('/legal-auditoria')) {
     if (navStore.activeModule !== 'legal-auditoria') {
       navStore.setActiveModule('legal-auditoria')

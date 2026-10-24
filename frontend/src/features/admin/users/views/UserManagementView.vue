@@ -149,7 +149,7 @@ import { ROLES } from '@/core/auth/roles'
 import { useNavigationStore } from '@/core/stores/navigationStore'
 import { useNotification } from '@/shared/composables/useNotification'
 import { useConfirmation } from '@/shared/composables/useConfirmation'
-import { downloadBlob } from '@/shared/utils/download'
+import { downloadBlob, openBlobInNewTab } from '@/shared/utils/download'
 import UserTable from '../components/UserTable.vue'
 import UserRegistrationForm from '../components/UserRegistrationForm.vue'
 
@@ -287,8 +287,8 @@ const handleExportPdf = async () => {
   exportingPdf.value = true
   try {
     const blob = await userService.downloadPdf()
-    downloadBlob(blob, `reporte-usuarios-sga-${Date.now()}.pdf`)
-    showToast('Reporte PDF descargado exitosamente.')
+    openBlobInNewTab(blob)
+    showToast('Reporte PDF oficial abierto en nueva pestaña.')
   } catch (err) {
     showToast('No se pudo generar el reporte PDF desde JasperReports.', 'error')
   } finally {

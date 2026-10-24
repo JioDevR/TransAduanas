@@ -201,8 +201,8 @@
           class="custom-datatable"
           dataKey="idTipoCarga"
           paginator
-          :rows="10"
-          :rowsPerPageOptions="[10, 20, 50]"
+          :rows="15"
+          :rowsPerPageOptions="[15, 30, 50]"
           currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} tipos de carga"
           paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown CurrentPageReport"
         >
@@ -309,6 +309,7 @@ import catalogoService from '../services/catalogoService'
 import TipoCargaRegistrationForm from '../components/TipoCargaRegistrationForm.vue'
 import { useNotification } from '@/shared/composables/useNotification'
 import { useConfirmation } from '@/shared/composables/useConfirmation'
+import { openBlobInNewTab } from '@/shared/utils/download'
 
 const { showSuccess, showError, showInfo } = useNotification()
 const { confirmAction } = useConfirmation()
@@ -496,20 +497,13 @@ const handleReactivateTipo = async (tipo) => {
   }
 }
 
-// Descargar Reporte PDF
+// Visualizar / Descargar Reporte PDF en nueva pestaña
 const handleExportPdf = async () => {
   exportingPdf.value = true
   try {
     const blobData = await catalogoService.downloadTiposCargaPdf()
-    const url = window.URL.createObjectURL(new Blob([blobData], { type: 'application/pdf' }))
-    const link = document.createElement('a')
-    link.href = url
-    link.setAttribute('download', `reporte-tipos-carga-${new Date().toISOString().slice(0, 10)}.pdf`)
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    window.URL.revokeObjectURL(url)
-    showToast('Reporte oficial de tipos de carga generado exitosamente')
+    openBlobInNewTab(blobData)
+    showToast('Reporte oficial de tipos de carga abierto en nueva pestaña')
   } catch (err) {
     console.error('Error al descargar reporte de tipos de carga:', err)
     showToast('No se pudo generar el reporte de tipos de carga', 'error')

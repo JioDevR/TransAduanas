@@ -386,7 +386,7 @@ import { useNavigationStore } from '@/core/stores/navigationStore'
 import sedeService from '@/features/admin/sedes/services/sedeService'
 import catalogoService from '@/features/admin/catalogos/services/catalogoService'
 import { transporteFlotaService } from '@/features/roles-modules/services/transporteFlotaService'
-import { downloadBlob } from '@/shared/utils/download'
+import { downloadBlob, openBlobInNewTab } from '@/shared/utils/download'
 
 const router = useRouter()
 const navigationStore = useNavigationStore()
@@ -492,17 +492,22 @@ const loadDashboardData = async () => {
 }
 
 const goToSubOption = (option) => {
-  navigationStore.setActiveModule('gerencia-general')
   const pathMap = {
     sedes: '/gerencia-general/sedes',
     puertos: '/gerencia-general/puertos',
     'tipos-carga': '/gerencia-general/tipos-carga',
     mercancias: '/gerencia-general/mercancias',
     catalogos: '/gerencia-general/puertos',
-    flota: '/gerencia-general/flota',
-    conductores: '/gerencia-general/conductores'
+    flota: '/transporte-flota?tab=unidades',
+    conductores: '/transporte-flota?tab=conductores'
   }
-  navigationStore.setGerenciaGeneralSubOption(option)
+  if (option === 'flota' || option === 'conductores') {
+    navigationStore.setActiveModule('transporte-flota')
+    navigationStore.setTransporteFlotaSubOption(option === 'flota' ? 'unidades' : 'conductores')
+  } else {
+    navigationStore.setActiveModule('gerencia-general')
+    navigationStore.setGerenciaGeneralSubOption(option)
+  }
   const target = pathMap[option] || '/gerencia-general/dashboard'
   router.push(target)
 }
@@ -511,7 +516,7 @@ const exportSedesPdf = async () => {
   exportingSedes.value = true
   try {
     const blob = await sedeService.downloadPdf()
-    downloadBlob(blob, `reporte-sedes-sga-${new Date().toISOString().slice(0, 10)}.pdf`)
+    openBlobInNewTab(blob)
   } catch (err) {
     console.error('Error al exportar sedes PDF:', err)
   } finally {
@@ -523,7 +528,7 @@ const exportPuertosPdf = async () => {
   exportingPuertos.value = true
   try {
     const blob = await catalogoService.downloadPuertosPdf()
-    downloadBlob(blob, `reporte-puertos-sga-${new Date().toISOString().slice(0, 10)}.pdf`)
+    openBlobInNewTab(blob)
   } catch (err) {
     console.error('Error al exportar puertos PDF:', err)
   } finally {

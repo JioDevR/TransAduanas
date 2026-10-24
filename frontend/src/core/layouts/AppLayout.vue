@@ -227,7 +227,15 @@ const currentTitle = computed(() => {
     return 'Agente Aduanero'
   }
   if (navigationStore.currentModule === 'transporte-flota') {
-    return 'Transporte y Flota'
+    const tTitles = {
+      cabina: 'Mi Trabajo Actual (Cabina)',
+      camion: 'Camión Asignado',
+      viajes: 'Historial de Mis Viajes',
+      despachos: 'Monitoreo Global de Despachos',
+      unidades: 'Parque Automotor & Flota de Transporte',
+      conductores: 'Plantilla de Conductores Acreditados MTC'
+    }
+    return tTitles[navigationStore.transporteFlotaSubOption] || 'Transporte y Flota'
   }
   if (navigationStore.currentModule === 'legal-auditoria') {
     return 'Legal y Auditoría'
@@ -274,6 +282,17 @@ const currentKicker = computed(() => {
   if (navigationStore.currentModule === 'gestion-aduanera') {
     return 'SUPERVISIÓN & CONTROL // OPERACIONES ADUANERAS'
   }
+  if (navigationStore.currentModule === 'transporte-flota') {
+    const tKickers = {
+      cabina: 'CABINA DE RUTA // OPERACIÓN EN TIEMPO REAL',
+      camion: 'UNIDAD DE TRANSPORTE // HOJA DE VIDA',
+      viajes: 'BITÁCORA DE VIAJES // HISTORIAL OPERATIVO',
+      despachos: 'TORRE DE CONTROL // DESPACHOS EN CURSO',
+      unidades: 'TRANSPORTE PESADO // FLOTA OPERATIVA',
+      conductores: 'PERSONAL CERTIFICADO // CONDUCTORES MTC'
+    }
+    return tKickers[navigationStore.transporteFlotaSubOption] || 'LOGÍSTICA TERRESTRE // TRANSPORTE & FLOTA'
+  }
   if (navigationStore.currentModule === 'finanzas') {
     return 'GESTIÓN CONTABLE // TESORERÍA & FACTURACIÓN'
   }
@@ -312,6 +331,17 @@ const currentSubtitle = computed(() => {
       about: 'Especificaciones de arquitectura, dependencias de compilación y estado del stack tecnológico.'
     }
     return tiSubs[navigationStore.administracionTiSubOption] || 'Control de accesos de operadores, parámetros de infraestructura y auditoría técnica del sistema.'
+  }
+  if (navigationStore.currentModule === 'transporte-flota') {
+    const tSubs = {
+      cabina: 'Control en vivo del servicio de transporte en curso, confirmación de hitos y reporte de incidencias en ruta.',
+      camion: 'Detalles técnicos de la tractora, configuración de ejes, capacidad de arrastre y certificados CITV.',
+      viajes: 'Registro histórico de despachos ejecutados, tiempos de trayecto y liquidaciones de flete completadas.',
+      despachos: 'Visibilidad centralizada de todas las unidades en tránsito hacia terminales portuarios y almacenes.',
+      unidades: 'Control técnico del parque automotor, inspecciones vehiculares y asignación de unidades.',
+      conductores: 'Padrón de choferes profesionales con licencias vigentes ante el MTC y acreditaciones SUNAT.'
+    }
+    return tSubs[navigationStore.transporteFlotaSubOption] || 'Gestión integral de la flota vehicular y despacho terrestre aduanero.'
   }
   if (navigationStore.currentModule === 'gestion-aduanera') {
     const sMap = {

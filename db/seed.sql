@@ -8,6 +8,9 @@
 
 USE SGAdb;
 
+SET NAMES utf8mb4;
+SET CHARACTER SET utf8mb4;
+
 SET FOREIGN_KEY_CHECKS = 0;
 
 -- Limpieza previa en orden inverso de dependencias para asegurar idempotencia
@@ -19,7 +22,7 @@ DELETE FROM expediente;
 DELETE FROM cotizacion_pago;
 DELETE FROM cotizacion;
 DELETE FROM cliente;
-DELETE FROM usuario;
+DELETE FROM usuario WHERE rol != 'ADMINISTRADOR_TI' AND username != 'admin';
 DELETE FROM conductor;
 DELETE FROM unidad_transporte;
 DELETE FROM catalogo_mercancia;
@@ -31,7 +34,8 @@ ALTER TABLE sede AUTO_INCREMENT = 1;
 ALTER TABLE catalogo_puerto AUTO_INCREMENT = 1;
 ALTER TABLE catalogo_tipo_carga AUTO_INCREMENT = 1;
 ALTER TABLE catalogo_mercancia AUTO_INCREMENT = 1;
-ALTER TABLE usuario AUTO_INCREMENT = 1;
+ALTER TABLE usuario AUTO_INCREMENT = 2;
+ALTER TABLE cliente AUTO_INCREMENT = 1;
 
 -- =============================================================================
 -- 1. SEDES DEL SISTEMA (CATÁLOGO MAESTRO DE SEDES Y SUCURSALES)
@@ -231,17 +235,160 @@ INSERT INTO catalogo_mercancia (id_mercancia, codigo, nombre, categoria, requier
 -- =============================================================================
 -- 5. USUARIOS DEL SISTEMA (ROLES OPERATIVOS SGA)
 -- =============================================================================
--- Contraseña para todos los usuarios: Password123!
+-- Nota: El usuario 'admin' (ADMINISTRADOR_TI) no se incluye en esta semilla ya que es
+-- aprovisionado automáticamente por el sistema al iniciar (DataInitializer).
+-- Contraseña para todos los usuarios semilla: Password123!
 -- Hash BCrypt: $2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee
 INSERT INTO usuario (id_usuario, rol, id_sede, username, password_hash, nombres, apellidos, correo_institucional, tipo_documento, numero_documento, telefono, cargo_titulo, codigo_sunat, ultimo_acceso, estado_activo) VALUES
-    (1, 'ADMINISTRADOR_TI', 1, 'admin', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', 'Administrador', 'Sistema TI', 'admin@transaduanas.pe', 'DNI', '00000001', '+51 999 000 001', 'Administrador de TI', 'TI-001', NOW(), TRUE),
     (2, 'GERENTE_GENERAL', 1, 'gerente', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', 'Carlos', 'Mendoza Valdivia', 'gerencia@transaduanas.pe', 'DNI', '00000002', '+51 999 000 002', 'Gerente General', 'GG-001', NOW(), TRUE),
-    (3, 'AGENTE_COMERCIAL', 2, 'comercial', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', 'Sofía', 'Paredes Romero', 'ventas.sanisidro@transaduanas.pe', 'DNI', '00000003', '+51 999 000 003', 'Agente Comercial', 'COM-001', NOW(), TRUE),
-    (4, 'SUPERVISOR_ADUANERO', 3, 'supervisor', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', 'Martín', 'Sotomayor Vega', 'operaciones.maritimo@transaduanas.pe', 'DNI', '00000004', '+51 999 000 004', 'Supervisor Aduanero', 'SUP-001', NOW(), TRUE),
-    (5, 'AGENTE_ADUANERO', 4, 'agente', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', 'Jorge', 'Herrera Díaz', 'operaciones.aereo@transaduanas.pe', 'DNI', '00000005', '+51 999 000 005', 'Agente Aduanero', 'AGE-001', NOW(), TRUE),
-    (6, 'SUPERVISOR_TRANSPORTE', 3, 'transporte', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', 'Raúl', 'Cárdenas Meléndez', 'transporte@transaduanas.pe', 'DNI', '00000006', '+51 999 000 006', 'Supervisor de Transporte', 'TRA-001', NOW(), TRUE),
-    (7, 'CONTADOR', 1, 'contador', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', 'Elena', 'Morales Benítez', 'finanzas@transaduanas.pe', 'DNI', '00000007', '+51 999 000 007', 'Contador', 'CON-001', NOW(), TRUE),
-    (8, 'ASESOR_LEGAL', 1, 'legal', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', 'Fernando', 'Arana Silva', 'legal@transaduanas.pe', 'DNI', '00000008', '+51 999 000 008', 'Asesor Legal', 'LEG-001', NOW(), TRUE);
+    (3, 'ASESOR_LEGAL', 1, 'legal', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', 'Fernando', 'Arana Silva', 'legal@transaduanas.pe', 'DNI', '10234567', '+51 987 112 001', 'Asesor Legal', 'LEG-001', NOW(), TRUE),
+    (4, 'ASESOR_LEGAL', 2, 'mcamacho', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', 'Mariana', 'Camacho Ruiz', 'm.camacho@transaduanas.pe', 'DNI', '10345678', '+51 987 112 002', 'Asesor Legal', 'LEG-002', NOW(), TRUE),
+    (5, 'ASESOR_LEGAL', 5, 'jvilchez', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', 'Javier', 'Vilchez Navarro', 'j.vilchez@transaduanas.pe', 'DNI', '10456789', '+51 987 112 003', 'Asesor Legal', 'LEG-003', NOW(), TRUE),
+    (6, 'ASESOR_LEGAL', 6, 'cportugal', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', 'Claudia', 'Portugal Yabar', 'c.portugal@transaduanas.pe', 'DNI', '10567890', '+51 987 112 004', 'Asesor Legal', 'LEG-004', NOW(), TRUE),
+    (7, 'CONTADOR', 1, 'contador', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', 'Elena', 'Morales Benitez', 'finanzas@transaduanas.pe', 'DNI', '20123456', '+51 987 223 001', 'Contador', 'CON-001', NOW(), TRUE),
+    (8, 'CONTADOR', 2, 'rsalazar', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', 'Ricardo', 'Salazar Huaman', 'r.salazar@transaduanas.pe', 'DNI', '20234567', '+51 987 223 002', 'Contador', 'CON-002', NOW(), TRUE),
+    (9, 'CONTADOR', 3, 'gmontoya', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', 'Gisela', 'Montoya Cordova', 'g.montoya@transaduanas.pe', 'DNI', '20345678', '+51 987 223 003', 'Contador', 'CON-003', NOW(), TRUE),
+    (10, 'CONTADOR', 5, 'lcornejo', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', 'Luis', 'Cornejo Barrientos', 'l.cornejo@transaduanas.pe', 'DNI', '20456789', '+51 987 223 004', 'Contador', 'CON-004', NOW(), TRUE),
+    (11, 'CONTADOR', 6, 'vzamora', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', 'Valeria', 'Zamora Caceres', 'v.zamora@transaduanas.pe', 'DNI', '20567890', '+51 987 223 005', 'Contador', 'CON-005', NOW(), TRUE),
+    (12, 'AGENTE_COMERCIAL', 2, 'comercial', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', 'Sofia', 'Paredes Romero', 'ventas.sanisidro@transaduanas.pe', 'DNI', '30123456', '+51 987 334 001', 'Agente Comercial', 'COM-001', NOW(), TRUE),
+    (13, 'AGENTE_COMERCIAL', 1, 'dcastillo', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', 'Diego', 'Castillo Alva', 'd.castillo@transaduanas.pe', 'DNI', '30234567', '+51 987 334 002', 'Agente Comercial', 'COM-002', NOW(), TRUE),
+    (14, 'AGENTE_COMERCIAL', 1, 'nvalverde', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', 'Natalia', 'Valverde Castro', 'n.valverde@transaduanas.pe', 'DNI', '30345678', '+51 987 334 003', 'Agente Comercial', 'COM-003', NOW(), TRUE),
+    (15, 'AGENTE_COMERCIAL', 2, 'mrodriguez', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', 'Mateo', 'Rodriguez Chumpitaz', 'm.rodriguez@transaduanas.pe', 'DNI', '30456789', '+51 987 334 004', 'Agente Comercial', 'COM-004', NOW(), TRUE),
+    (16, 'AGENTE_COMERCIAL', 2, 'pquispe', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', 'Paola', 'Quispe Mamani', 'p.quispe@transaduanas.pe', 'DNI', '30567890', '+51 987 334 005', 'Agente Comercial', 'COM-005', NOW(), TRUE),
+    (17, 'AGENTE_COMERCIAL', 3, 'aguzman', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', 'Alvaro', 'Guzman Barreda', 'a.guzman@transaduanas.pe', 'DNI', '30678901', '+51 987 334 006', 'Agente Comercial', 'COM-006', NOW(), TRUE),
+    (18, 'AGENTE_COMERCIAL', 3, 'btorres', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', 'Brenda', 'Torres Llosa', 'b.torres@transaduanas.pe', 'DNI', '30789012', '+51 987 334 007', 'Agente Comercial', 'COM-007', NOW(), TRUE),
+    (19, 'AGENTE_COMERCIAL', 4, 'jchavez', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', 'Julio', 'Chavez Becerra', 'j.chavez@transaduanas.pe', 'DNI', '30890123', '+51 987 334 008', 'Agente Comercial', 'COM-008', NOW(), TRUE),
+    (20, 'AGENTE_COMERCIAL', 4, 'kdelgado', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', 'Karla', 'Delgado Ponce', 'k.delgado@transaduanas.pe', 'DNI', '30901234', '+51 987 334 009', 'Agente Comercial', 'COM-009', NOW(), TRUE),
+    (21, 'AGENTE_COMERCIAL', 5, 'hzeta', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', 'Hector', 'Zeta Seminario', 'h.zeta@transaduanas.pe', 'DNI', '31012345', '+51 987 334 010', 'Agente Comercial', 'COM-010', NOW(), TRUE),
+    (22, 'AGENTE_COMERCIAL', 5, 'mmorante', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', 'Monica', 'Morante Purizaca', 'm.morante@transaduanas.pe', 'DNI', '31123456', '+51 987 334 011', 'Agente Comercial', 'COM-011', NOW(), TRUE),
+    (23, 'AGENTE_COMERCIAL', 6, 'ggaldos', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', 'Gonzalo', 'Galdos Vera', 'g.galdos@transaduanas.pe', 'DNI', '31234567', '+51 987 334 012', 'Agente Comercial', 'COM-012', NOW(), TRUE),
+    (24, 'SUPERVISOR_ADUANERO', 3, 'supervisor', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', 'Martin', 'Sotomayor Vega', 'operaciones.maritimo@transaduanas.pe', 'DNI', '40123456', '+51 987 445 001', 'Supervisor Aduanero', 'SUP-001', NOW(), TRUE),
+    (25, 'SUPERVISOR_ADUANERO', 3, 'rcabrera', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', 'Renzo', 'Cabrera Farfan', 'r.cabrera@transaduanas.pe', 'DNI', '40234567', '+51 987 445 002', 'Supervisor Aduanero', 'SUP-002', NOW(), TRUE),
+    (26, 'SUPERVISOR_ADUANERO', 3, 'apena', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', 'Andrea', 'Pena Quintana', 'a.pena@transaduanas.pe', 'DNI', '40345678', '+51 987 445 003', 'Supervisor Aduanero', 'SUP-003', NOW(), TRUE),
+    (27, 'SUPERVISOR_ADUANERO', 4, 'dmiranda', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', 'Daniel', 'Miranda Bravo', 'd.miranda@transaduanas.pe', 'DNI', '40456789', '+51 987 445 004', 'Supervisor Aduanero', 'SUP-004', NOW(), TRUE),
+    (28, 'SUPERVISOR_ADUANERO', 4, 'sllanos', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', 'Silvia', 'Llanos Palacios', 's.llanos@transaduanas.pe', 'DNI', '40567890', '+51 987 445 005', 'Supervisor Aduanero', 'SUP-005', NOW(), TRUE),
+    (29, 'SUPERVISOR_ADUANERO', 5, 'eojeda', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', 'Edgar', 'Ojeda Garrido', 'e.ojeda@transaduanas.pe', 'DNI', '40678901', '+51 987 445 006', 'Supervisor Aduanero', 'SUP-006', NOW(), TRUE),
+    (30, 'SUPERVISOR_ADUANERO', 5, 'ctineo', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', 'Carmen', 'Tineo Carrasco', 'c.tineo@transaduanas.pe', 'DNI', '40789012', '+51 987 445 007', 'Supervisor Aduanero', 'SUP-007', NOW(), TRUE),
+    (31, 'SUPERVISOR_ADUANERO', 6, 'mzegarra', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', 'Manuel', 'Zegarra Valdivia', 'm.zegarra@transaduanas.pe', 'DNI', '40890123', '+51 987 445 008', 'Supervisor Aduanero', 'SUP-008', NOW(), TRUE),
+    (32, 'AGENTE_ADUANERO', 4, 'agente', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', 'Jorge', 'Herrera Diaz', 'operaciones.aereo@transaduanas.pe', 'DNI', '50123456', '+51 987 556 001', 'Agente Aduanero', 'AGE-001', NOW(), TRUE),
+    (33, 'AGENTE_ADUANERO', 3, 'fbalbuena', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', 'Franco', 'Balbuena Otero', 'f.balbuena@transaduanas.pe', 'DNI', '50234567', '+51 987 556 002', 'Agente Aduanero', 'AGE-002', NOW(), TRUE),
+    (34, 'AGENTE_ADUANERO', 3, 'lmejia', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', 'Lucia', 'Mejia Ramos', 'l.mejia@transaduanas.pe', 'DNI', '50345678', '+51 987 556 003', 'Agente Aduanero', 'AGE-003', NOW(), TRUE),
+    (35, 'AGENTE_ADUANERO', 3, 'ccordova', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', 'Cesar', 'Cordova Nunez', 'c.cordova@transaduanas.pe', 'DNI', '50456789', '+51 987 556 004', 'Agente Aduanero', 'AGE-004', NOW(), TRUE),
+    (36, 'AGENTE_ADUANERO', 3, 'rtapia', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', 'Rocio', 'Tapia Calderon', 'r.tapia@transaduanas.pe', 'DNI', '50567890', '+51 987 556 005', 'Agente Aduanero', 'AGE-005', NOW(), TRUE),
+    (37, 'AGENTE_ADUANERO', 3, 'jalarcon', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', 'Joel', 'Alarcon Suclupe', 'j.alarcon@transaduanas.pe', 'DNI', '50678901', '+51 987 556 006', 'Agente Aduanero', 'AGE-006', NOW(), TRUE),
+    (38, 'AGENTE_ADUANERO', 3, 'pflores', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', 'Patricia', 'Flores Yupanqui', 'p.flores@transaduanas.pe', 'DNI', '50789012', '+51 987 556 007', 'Agente Aduanero', 'AGE-007', NOW(), TRUE),
+    (39, 'AGENTE_ADUANERO', 3, 'gsuarez', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', 'Gustavo', 'Suarez Carreno', 'g.suarez@transaduanas.pe', 'DNI', '50890123', '+51 987 556 008', 'Agente Aduanero', 'AGE-008', NOW(), TRUE),
+    (40, 'AGENTE_ADUANERO', 4, 'mmendoza', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', 'Melanie', 'Mendoza Huaman', 'm.mendoza@transaduanas.pe', 'DNI', '50901234', '+51 987 556 009', 'Agente Aduanero', 'AGE-009', NOW(), TRUE),
+    (41, 'AGENTE_ADUANERO', 4, 'asalazar', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', 'Adrian', 'Salazar Vidal', 'a.salazar@transaduanas.pe', 'DNI', '51012345', '+51 987 556 010', 'Agente Aduanero', 'AGE-010', NOW(), TRUE),
+    (42, 'AGENTE_ADUANERO', 4, 'verazo', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', 'Vanessa', 'Erazo Luque', 'v.erazo@transaduanas.pe', 'DNI', '51123456', '+51 987 556 011', 'Agente Aduanero', 'AGE-011', NOW(), TRUE),
+    (43, 'AGENTE_ADUANERO', 4, 'carias', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', 'Christian', 'Arias Zavaleta', 'c.arias@transaduanas.pe', 'DNI', '51234567', '+51 987 556 012', 'Agente Aduanero', 'AGE-012', NOW(), TRUE),
+    (44, 'AGENTE_ADUANERO', 4, 'dgutierrez', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', 'Diana', 'Gutierrez Pino', 'd.gutierrez@transaduanas.pe', 'DNI', '51345678', '+51 987 556 013', 'Agente Aduanero', 'AGE-013', NOW(), TRUE),
+    (45, 'AGENTE_ADUANERO', 5, 'jpaz', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', 'Jonathan', 'Paz Farfan', 'j.paz@transaduanas.pe', 'DNI', '51456789', '+51 987 556 014', 'Agente Aduanero', 'AGE-015', NOW(), TRUE),
+    (46, 'AGENTE_ADUANERO', 5, 'ssandoval', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', 'Sara', 'Sandoval Yarleque', 's.sandoval@transaduanas.pe', 'DNI', '51567890', '+51 987 556 016', 'Agente Aduanero', 'AGE-016', NOW(), TRUE),
+    (47, 'AGENTE_ADUANERO', 5, 'mchunga', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', 'Moises', 'Chunga Ipanaque', 'm.chunga@transaduanas.pe', 'DNI', '51678901', '+51 987 556 017', 'Agente Aduanero', 'AGE-017', NOW(), TRUE),
+    (48, 'AGENTE_ADUANERO', 5, 'ymendoza', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', 'Yessenia', 'Mendoza Albujar', 'y.mendoza@transaduanas.pe', 'DNI', '51789012', '+51 987 556 018', 'Agente Aduanero', 'AGE-018', NOW(), TRUE),
+    (49, 'AGENTE_ADUANERO', 6, 'rcondori', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', 'Raul', 'Condori Mamani', 'r.condori@transaduanas.pe', 'DNI', '51890123', '+51 987 556 019', 'Agente Aduanero', 'AGE-019', NOW(), TRUE),
+    (50, 'AGENTE_ADUANERO', 6, 'mquispe', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', 'Miriam', 'Quispe Apaza', 'm.quispea@transaduanas.pe', 'DNI', '51901234', '+51 987 556 020', 'Agente Aduanero', 'AGE-020', NOW(), TRUE),
+    (51, 'AGENTE_ADUANERO', 6, 'fllanos', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', 'Fernando', 'Llanos Coaguila', 'f.llanos@transaduanas.pe', 'DNI', '52012345', '+51 987 556 021', 'Agente Aduanero', 'AGE-021', NOW(), TRUE),
+    (52, 'AGENTE_ADUANERO', 6, 'jchoque', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', 'Juana', 'Choque Huayta', 'j.choque@transaduanas.pe', 'DNI', '52123456', '+51 987 556 022', 'Agente Aduanero', 'AGE-022', NOW(), TRUE),
+    (53, 'AGENTE_ADUANERO', 6, 'aaguilar', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', 'Alex', 'Aguilar Cornejo', 'a.aguilar@transaduanas.pe', 'DNI', '52234567', '+51 987 556 023', 'Agente Aduanero', 'AGE-023', NOW(), TRUE),
+    (54, 'SUPERVISOR_TRANSPORTE', 3, 'transporte', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', 'Raul', 'Cardenas Melendez', 'transporte@transaduanas.pe', 'DNI', '60123456', '+51 987 667 001', 'Supervisor de Transporte', 'TRA-001', NOW(), TRUE),
+    (55, 'SUPERVISOR_TRANSPORTE', 3, 'ebravor', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', 'Enrique', 'Bravo Rojas', 'e.bravo@transaduanas.pe', 'DNI', '60234567', '+51 987 667 002', 'Supervisor de Transporte', 'TRA-002', NOW(), TRUE),
+    (56, 'SUPERVISOR_TRANSPORTE', 3, 'wgalarza', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', 'Wilmer', 'Galarza Silva', 'w.galarza@transaduanas.pe', 'DNI', '60345678', '+51 987 667 003', 'Supervisor de Transporte', 'TRA-003', NOW(), TRUE),
+    (57, 'SUPERVISOR_TRANSPORTE', 3, 'osanchez', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', 'Oscar', 'Sanchez Huamanchumo', 'o.sanchez@transaduanas.pe', 'DNI', '60456789', '+51 987 667 004', 'Supervisor de Transporte', 'TRA-004', NOW(), TRUE),
+    (58, 'SUPERVISOR_TRANSPORTE', 4, 'fparedes', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', 'Felix', 'Paredes Valles', 'f.paredes@transaduanas.pe', 'DNI', '60567890', '+51 987 667 005', 'Supervisor de Transporte', 'TRA-005', NOW(), TRUE),
+    (59, 'SUPERVISOR_TRANSPORTE', 4, 'jcastaneda', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', 'Juan', 'Castaneda Luna', 'j.castaneda@transaduanas.pe', 'DNI', '60678901', '+51 987 667 006', 'Supervisor de Transporte', 'TRA-006', NOW(), TRUE),
+    (60, 'SUPERVISOR_TRANSPORTE', 4, 'mmendozaa', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', 'Mario', 'Mendoza Ayala', 'm.mendozaa@transaduanas.pe', 'DNI', '60789012', '+51 987 667 007', 'Supervisor de Transporte', 'TRA-007', NOW(), TRUE),
+    (61, 'SUPERVISOR_TRANSPORTE', 5, 'wvillegas', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', 'Walter', 'Villegas Bancayan', 'w.villegas@transaduanas.pe', 'DNI', '60890123', '+51 987 667 008', 'Supervisor de Transporte', 'TRA-008', NOW(), TRUE),
+    (62, 'SUPERVISOR_TRANSPORTE', 5, 'gchiroque', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', 'Guillermo', 'Chiroque Pasache', 'g.chiroque@transaduanas.pe', 'DNI', '60901234', '+51 987 667 009', 'Supervisor de Transporte', 'TRA-009', NOW(), TRUE),
+    (63, 'SUPERVISOR_TRANSPORTE', 5, 'anavarro', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', 'Armando', 'Navarro Dioses', 'a.navarro@transaduanas.pe', 'DNI', '61012345', '+51 987 667 010', 'Supervisor de Transporte', 'TRA-010', NOW(), TRUE),
+    (64, 'SUPERVISOR_TRANSPORTE', 6, 'jcalisaya', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', 'Jose', 'Calisaya Pari', 'j.calisaya@transaduanas.pe', 'DNI', '61123456', '+51 987 667 011', 'Supervisor de Transporte', 'TRA-011', NOW(), TRUE),
+    (65, 'SUPERVISOR_TRANSPORTE', 6, 'mquispeq', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', 'Marco', 'Quispe Quispe', 'm.quispeq@transaduanas.pe', 'DNI', '61234567', '+51 987 667 012', 'Supervisor de Transporte', 'TRA-012', NOW(), TRUE);
+
+-- =============================================================================
+-- 6. CLIENTES DEL SISTEMA (EMPRESAS IMPORTADORAS Y EXPORTADORAS)
+-- =============================================================================
+INSERT INTO cliente (id_cliente, tipo_documento, numero_documento, razon_social, contacto_representante, direccion_fiscal, correo_contacto, telefono_contacto, es_prospecto, estado_activo) VALUES
+    (1, 'RUC', '20370146994', 'Camposol S.A.', 'Guillermo Lozano Benites', 'Carretera Panamericana Norte Km 497, Chao', 'import.export@camposol.com.pe', '(044) 60-7000', FALSE, TRUE),
+    (2, 'RUC', '20440058771', 'Danper Trujillo S.A.C.', 'Rosario Bazan Cabellos', 'Carretera Industrial Mz. L Lote 5, Trujillo', 'comercioexterior@danper.com', '(044) 25-1030', FALSE, TRUE),
+    (3, 'RUC', '20132397774', 'Agricola Cerro Prieto S.A.', 'Alfonso Bustamante Canny', 'Av. San Borja Sur 526, San Borja, Lima', 'operaciones@acp.com.pe', '(01) 475-2200', FALSE, TRUE),
+    (4, 'RUC', '20297052841', 'Viru S.A.', 'Yoselyn Maldonado Silva', 'Av. Manuel Bandeira 780, San Isidro, Lima', 'logistica@viru.com.pe', '(01) 618-5000', FALSE, TRUE),
+    (5, 'RUC', '20480392110', 'Sociedad Agricola Drokasa S.A. (Agrokasa)', 'Carlos Arrese Arbaiza', 'Av. Consorcio 110, La Victoria, Lima', 'aduanas@agrokasa.pe', '(01) 224-5500', FALSE, TRUE),
+    (6, 'RUC', '20452369882', 'Complejo Agroindustrial Beta S.A.', 'Lionel Arce Orbegozo', 'Av. Manuel Olguin 325, Of. 802, Surco, Lima', 'embarques@beta.com.pe', '(01) 611-3800', FALSE, TRUE),
+    (7, 'RUC', '20509631456', 'Agricola Don Ricardo S.A.C.', 'Ricardo Briceno Villena', 'Fundo Santa Margarita s/n, La Tinguina, Ica', 'ventas@donricardo.com', '(056) 40-2010', FALSE, TRUE),
+    (8, 'RUC', '20601248993', 'Exportadora Agricola Organica del Norte S.A.C.', 'Manuel Farfan Seminario', 'Carretera Sullana - Tambogrande Km 8.5, Piura', 'mfarfan@agroorganica.pe', '(073) 30-8812', TRUE, TRUE),
+    (9, 'RUC', '20554128963', 'Agroberries Peru S.A.C.', 'Felipe Valenzuela Rivas', 'Av. Primavera 120, Of. 504, Chacarilla, Surco, Lima', 'contacto.peru@agroberries.cl', '(01) 719-4450', FALSE, TRUE),
+    (10, 'RUC', '20603347891', 'Frutas y Especias del Huallaga E.I.R.L.', 'Segundo Huaman Tanchiva', 'Jr. San Martin 420, Tarapoto, San Martin', 'ventas@frutashuallaga.pe', '(042) 52-2311', TRUE, TRUE),
+    (11, 'RUC', '20100971772', 'Tecnologica de Alimentos S.A. (TASA)', 'Gonzalo de Romana', 'Av. Manuel Olguin 501, Piso 5, Surco, Lima', 'aduanas@tasa.com.pe', '(01) 611-1400', FALSE, TRUE),
+    (12, 'RUC', '20100070970', 'Pesquera Diamante S.A.', 'Fernando Brescia Moreyra', 'Av. Republica de Panama 2577, La Victoria, Lima', 'comex@diamante.com.pe', '(01) 513-2000', FALSE, TRUE),
+    (13, 'RUC', '20297052922', 'Pesquera Exalmar S.A.A.', 'Victor Matta Curotto', 'Av. Victor Andres Belaunde 214, San Isidro, Lima', 'logistica@exalmar.com.pe', '(01) 441-4420', FALSE, TRUE),
+    (14, 'RUC', '20100152356', 'Pesquera Hayduk S.A.', 'Walter Martinez Moreno', 'Av. Manuel Olguin 211, Piso 7, Surco, Lima', 'hayduk@hayduk.com.pe', '(01) 211-3400', FALSE, TRUE),
+    (15, 'RUC', '20484019219', 'Inversiones Prisco S.A.C. (Mar Frio)', 'Eduardo Osterling Letts', 'Carretera a Paita Km 3.5, Zona Industrial, Paita', 'operaciones@prisco.com.pe', '(073) 21-1250', FALSE, TRUE),
+    (16, 'RUC', '20512896541', 'Seafrost S.A.C.', 'Antonio Bologna Campodonico', 'Carretera Paita - Sullana Km 1.5, Paita, Piura', 'exportaciones@seafrost.com.pe', '(073) 53-2000', FALSE, TRUE),
+    (17, 'RUC', '20528963214', 'Altamar Foods Peru S.R.L.', 'Juan Carlos Benavides', 'Av. Nestor Gambetta Km 14.5, Callao', 'info@altamarfoods.pe', '(01) 577-4320', FALSE, TRUE),
+    (18, 'RUC', '20600124851', 'Acuacultura Marina del Sur S.A.C.', 'Roberto Zegarra Ballon', 'Calle Muelle Fiscal s/n, Islay, Matarani, Arequipa', 'rzegarra@acuasur.pe', '(054) 48-7320', TRUE, TRUE),
+    (19, 'RUC', '20604512398', 'Marinas y Conservas Chimbote S.A.C.', 'Enrique Cardenas Gil', 'Av. Los Pescadores Mz. A Lote 4, Chimbote, Ancash', 'comercial@marinaschimbote.pe', '(043) 35-1890', FALSE, TRUE),
+    (20, 'RUC', '20546321894', 'Langostinera del Pacifico Tumbes E.I.R.L.', 'Raul Dioses Carrillo', 'Carretera Panamericana Norte Km 1260, Tumbes', 'rdioses@langostinosdelpacifico.pe', '(072) 52-4411', TRUE, TRUE),
+    (21, 'RUC', '20300263578', 'Samsung Electronics Latinoamerica Peru S.A.C.', 'Hoon Kang', 'Av. Canaval y Moreyra 380, Piso 18, San Isidro, Lima', 'importaciones.peru@samsung.com', '(01) 710-8000', FALSE, TRUE),
+    (22, 'RUC', '20511894520', 'LG Electronics Peru S.A.', 'Ki Wook Kim', 'Av. Republica de Colombia 791, Piso 12, San Isidro, Lima', 'logistica.lg@lge.com', '(01) 618-2000', FALSE, TRUE),
+    (23, 'RUC', '20501874211', 'Lenovo Peru S.R.L.', 'Andres Becerra Moreno', 'Av. Rivera Navarrete 501, Piso 15, San Isidro, Lima', 'comex.peru@lenovo.com', '(01) 616-5200', FALSE, TRUE),
+    (24, 'RUC', '20556214875', 'Xiaomi Peru S.A.C.', 'Wei Chen', 'Av. Jorge Chavez 184, Of. 601, Miraflores, Lima', 'customs.peru@xiaomi.com', '(01) 712-9800', FALSE, TRUE),
+    (25, 'RUC', '20504128965', 'Deltron Computadoras S.A.C.', 'Nestor Quispe Zevallos', 'Av. Manuel Bandeira 241, San Martin de Porres, Lima', 'compras.exterior@deltron.com.pe', '(01) 415-0100', FALSE, TRUE),
+    (26, 'RUC', '20508932145', 'Ingram Micro Peru S.A.C.', 'Fernando Zevallos Ortiz', 'Av. Argentina 2060, Callao', 'logistica.ingram@ingrammicro.com', '(01) 614-4200', FALSE, TRUE),
+    (27, 'RUC', '20541239874', 'Intcomex del Peru S.A.C.', 'Luis Alfredo Gomez', 'Av. Elmer Faucett 1950, Callao', 'aduanas.intcomex@intcomex.com', '(01) 716-5000', FALSE, TRUE),
+    (28, 'RUC', '20602356981', 'Innova Tech Soluciones Globales S.A.C.', 'Marcos Barrientos Vega', 'Calle Schell 319, Of. 402, Miraflores, Lima', 'mbarrientos@innovatech.pe', '(01) 445-1289', TRUE, TRUE),
+    (29, 'RUC', '20605891234', 'SmartHome Peru Import S.A.C.', 'Brenda Caceres Wong', 'Av. Conquistadores 620, San Isidro, Lima', 'bcaceres@smarthomeperu.com', '(01) 421-8890', TRUE, TRUE),
+    (30, 'RUC', '20608974512', 'CyberGaming Hardware del Peru E.I.R.L.', 'Kevin Alarcon Torres', 'Av. Wilson 1240, Galeria Cyberplaza Tienda 210, Lima', 'ventas@cybergaming.pe', '(01) 424-6632', TRUE, TRUE),
+    (31, 'RUC', '20330790762', 'Compania Minera Antamina S.A.', 'Victor Gobitz Colchado', 'Av. El Derby 055, Torre 1, Piso 8, Surco, Lima', 'supplychain@antamina.com', '(01) 217-3000', FALSE, TRUE),
+    (32, 'RUC', '20100142989', 'Southern Peru Copper Corporation', 'Oscar Gonzalez Rocha', 'Av. Caminos del Inca 171, Chacarilla, Surco, Lima', 'compras.import@southernperu.com.pe', '(01) 512-0440', FALSE, TRUE),
+    (33, 'RUC', '20100055237', 'Ferreyros S.A.', 'Gonzaga Ferrand Aspillaga', 'Jr. Cristobal de Peralta Norte 820, Surco, Lima', 'aduanas@ferreyros.com.pe', '(01) 626-4000', FALSE, TRUE),
+    (34, 'RUC', '20100115663', 'Komatsu-Mitsui Maquinarias Peru S.A.', 'Julio Molina Barreda', 'Av. Nestor Gambetta Km 3.5, Callao', 'importaciones@kmmp.com.pe', '(01) 615-8000', FALSE, TRUE),
+    (35, 'RUC', '20508541296', 'Atlas Copco Peruana S.A.', 'Patricio Cabezas Silva', 'Calle Los Calderos 185, Urb. El Vulcano, Ate, Lima', 'logistica.peru@atlascopco.com', '(01) 411-6100', FALSE, TRUE),
+    (36, 'RUC', '20100085497', 'Epiroc Peru S.A.', 'Angel Tobar Morales', 'Av. Nicolas Ayllon 2634, Ate, Lima', 'customs.peru@epiroc.com', '(01) 205-3000', FALSE, TRUE),
+    (37, 'RUC', '20521489632', 'Metso Outotec Peru S.A.C.', 'Renato Silva Manrique', 'Av. Paseo de la Republica 3245, San Isidro, Lima', 'aduanas.metso@mogroup.com', '(01) 313-4000', FALSE, TRUE),
+    (38, 'RUC', '20601548792', 'Perforaciones & Taladros Andinos S.A.C.', 'Guillermo Holguin Prado', 'Av. Evitamiento Km 5, Parque Industrial, Arequipa', 'gholguin@perforacionesandinas.pe', '(054) 44-5511', TRUE, TRUE),
+    (39, 'RUC', '20603412589', 'Maquinarias Mineras del Sur E.I.R.L.', 'Hernan Mamani Choque', 'Av. Independencia 810, Cercado, Arequipa', 'hmamani@maquimin.pe', '(054) 28-9040', TRUE, TRUE),
+    (40, 'RUC', '20607845123', 'Generadores y Motores Industriales S.A.C.', 'Esteban Rospigliosi Ruiz', 'Av. Colonial 2480, Bellavista, Callao', 'erospigliosi@genmotores.pe', '(01) 451-9920', TRUE, TRUE),
+    (41, 'RUC', '20100038812', 'Toyota del Peru S.A.', 'Toshiro Nishimura', 'Av. Santo Toribio 173, Via Central 125, San Isidro, Lima', 'aduanas@toyotaperu.com.pe', '(01) 611-1000', FALSE, TRUE),
+    (42, 'RUC', '20384562145', 'Derco Peru S.A.', 'Claudio Echeverria Gomez', 'Av. Manuel Olguin 325, Piso 11, Surco, Lima', 'comex@derco.pe', '(01) 713-5000', FALSE, TRUE),
+    (43, 'RUC', '20100124816', 'Divemotor S.A.', 'Peter Gremler', 'Av. Canada 1160, La Victoria, Lima', 'importaciones@divemotor.com.pe', '(01) 712-2000', FALSE, TRUE),
+    (44, 'RUC', '20100236541', 'Volvo Peru S.A.', 'Jorgen Sjostedt', 'Carretera Panamericana Sur Km 23.8, Lurin, Lima', 'aduanas.volvo@volvo.com', '(01) 317-1111', FALSE, TRUE),
+    (45, 'RUC', '20501487923', 'Goodyear del Peru S.A.', 'Carlos Perez-Albela', 'Av. Argentina 6030, Carmen de la Legua, Callao', 'aduanas.peru@goodyear.com', '(01) 517-3100', FALSE, TRUE),
+    (46, 'RUC', '20514896325', 'Continental Tire Andina Sucursal Peru', 'Santiago Delgado Mora', 'Av. Canaval y Moreyra 452, San Isidro, Lima', 'importaciones@continental-tires.pe', '(01) 610-8500', FALSE, TRUE),
+    (47, 'RUC', '20536985214', 'Frenosa S.A.', 'Eduardo Echecopar Florez', 'Av. Maquinarias 2150, Cercado de Lima, Lima', 'export@frenosa.com.pe', '(01) 336-7000', FALSE, TRUE),
+    (48, 'RUC', '20601478523', 'Distribuidora de Repuestos Automotrices del Centro S.A.C.', 'Jorge Villacorta Poma', 'Av. Mariscal Castilla 1420, El Tambo, Huancayo', 'jvillacorta@repuestoscentro.pe', '(064) 24-8833', TRUE, TRUE),
+    (49, 'RUC', '20604578912', 'Llantas y Baterias del Norte E.I.R.L.', 'Fidel Chiroque Purizaca', 'Av. Sanchez Cerro 1080, Piura', 'fchiroque@llantasdelnorte.pe', '(073) 32-1590', TRUE, TRUE),
+    (50, 'RUC', '20609874125', 'Mundial Car Accesorios & Tuning S.A.C.', 'Cesar Melendez Canto', 'Av. Iquitos 840, La Victoria, Lima', 'ventas@mundialcar.pe', '(01) 431-2570', TRUE, TRUE),
+    (51, 'RUC', '20100017491', 'Quimica Suiza S.A.C.', 'Gianfranco Ferrari', 'Av. Republica de Panama 2577, La Victoria, Lima', 'comex@quimicasuiza.com.pe', '(01) 211-4000', FALSE, TRUE),
+    (52, 'RUC', '20100062446', 'Laboratorios Medifarma S.A.', 'Fernando Liendo Seminario', 'Jr. Ecuador 787, Cercado de Lima, Lima', 'aduanas@medifarma.com.pe', '(01) 330-3500', FALSE, TRUE),
+    (53, 'RUC', '20100035473', 'Laboratorios AC Farma S.A.', 'Arnulfo Carrion Cardenas', 'Calle Los Plateros 152, El Artesano, Ate, Lima', 'comercioexterior@acfarma.com.pe', '(01) 748-2000', FALSE, TRUE),
+    (54, 'RUC', '20100138281', 'Bayer S.A.', 'Mathias Schipper', 'Av. Paseo de la Republica 3074, San Isidro, Lima', 'aduanas.peru@bayer.com', '(01) 211-3800', FALSE, TRUE),
+    (55, 'RUC', '20100057281', 'Pfizer S.A.', 'Christopher Ariyan', 'Av. Javier Prado Este 444, Torre B, Piso 15, San Isidro, Lima', 'logistica.peru@pfizer.com', '(01) 615-2300', FALSE, TRUE),
+    (56, 'RUC', '20100108871', 'Belcorp (Cetco S.A.)', 'Eduardo Belmont Anderson', 'Av. Pardo y Aliaga 652, Piso 12, San Isidro, Lima', 'comex@belcorp.biz', '(01) 211-3600', FALSE, TRUE),
+    (57, 'RUC', '20502145896', 'Natura Cosmeticos S.A.', 'Daniella de Luca', 'Av. Faustino Sanchez Carrion 615, Jesus Maria, Lima', 'importaciones@natura.net', '(01) 611-1200', FALSE, TRUE),
+    (58, 'RUC', '20601985421', 'Biomedica & Diagnostico Clinico del Peru S.A.C.', 'Dr. Andres Valencia Otero', 'Av. Brasil 1450, Of. 502, Jesus Maria, Lima', 'avalencia@biomedicaperu.pe', '(01) 460-7714', TRUE, TRUE),
+    (59, 'RUC', '20603874512', 'Drogueria Farmavida Express E.I.R.L.', 'Dra. Luzmila Benavente Rios', 'Jr. Huancavelica 450, Trujillo, La Libertad', 'lbenavente@farmavida.pe', '(044) 20-3345', TRUE, TRUE),
+    (60, 'RUC', '20607412589', 'Insumos Odontologicos del Sur S.A.C.', 'Dr. Christian Apaza Nunez', 'Calle Mercaderes 210, Cercado, Arequipa', 'capaza@insumosdentalsur.pe', '(054) 22-8119', TRUE, TRUE),
+    (61, 'RUC', '20100055238', 'Alicorp S.A.A.', 'Alfredo Perez Gubbins', 'Av. Argentina 4793, Carmen de la Legua, Callao', 'comex@alicorp.com.pe', '(01) 315-0800', FALSE, TRUE),
+    (62, 'RUC', '20100100101', 'Gloria S.A.', 'Claudio Rodriguez Huaco', 'Av. Republica de Panama 2461, Santa Catalina, La Victoria, Lima', 'aduanas@gloria.com.pe', '(01) 470-7170', FALSE, TRUE),
+    (63, 'RUC', '20100030595', 'Union de Cervecerias Peruanas Backus y Johnston S.A.A.', 'Sergio Rincon', 'Av. Nicolas Ayllon 3986, Ate, Lima', 'supplychain@backus.com.pe', '(01) 311-3000', FALSE, TRUE),
+    (64, 'RUC', '20100070971', 'Molinera del Centro S.A.', 'Ernesto Nicolini de la Riva', 'Av. Enrique Meiggs 230, Chimbote, Ancash', 'comercioexterior@molineracentro.com.pe', '(043) 32-1400', FALSE, TRUE),
+    (65, 'RUC', '20100010721', 'Supermercados Peruanos S.A.', 'Juan Carlos Vallejo', 'Calle Morelli 181, San Borja, Lima', 'importaciones.retail@spsa.pe', '(01) 618-8000', FALSE, TRUE),
+    (66, 'RUC', '20100070972', 'Cencosud Retail Peru S.A.', 'Alfredo Mastrokalos', 'Calle Augusto Angulo 130, Miraflores, Lima', 'aduanas@cencosud.com.pe', '(01) 613-8888', FALSE, TRUE),
+    (67, 'RUC', '20100057282', 'Tiendas Por Departamento Ripley S.A.', 'Eduardo Daly', 'Av. Las Begonias 540, San Isidro, Lima', 'comex@ripley.com.pe', '(01) 610-4000', FALSE, TRUE),
+    (68, 'RUC', '20601239854', 'Importadora Gourmet Los Andes S.A.C.', 'Gonzalo Benavides Larco', 'Av. La Encalada 1240, Surco, Lima', 'gbenavides@gourmetandes.pe', '(01) 436-5520', TRUE, TRUE),
+    (69, 'RUC', '20604125896', 'Distribuidora de Licores & Vinos del Plata S.A.C.', 'Mariana Ocampo Cisneros', 'Av. Reducto 820, Miraflores, Lima', 'mocampo@vinosdelplata.pe', '(01) 446-9930', TRUE, TRUE),
+    (70, 'RUC', '20608521478', 'Snacks Saludables y Frutos Secos del Valle E.I.R.L.', 'Fabiola Cardenas Prado', 'Urb. San Andres Mz. C Lote 12, Trujillo', 'fcardenas@snacksvalle.pe', '(044) 29-1140', TRUE, TRUE),
+    (71, 'RUC', '20100010724', 'Corporacion Aceros Arequipa S.A.', 'Tulio Silgado Consiglieri', 'Av. Enrique Canaval y Moreyra 340, Piso 17, San Isidro, Lima', 'aduanas@aasa.com.pe', '(01) 517-1800', FALSE, TRUE),
+    (72, 'RUC', '20100142990', 'Empresa Siderurgica del Peru S.A.A. (Siderperu)', 'Richard Cervantes', 'Av. Santiago de Surco 3245, Surco, Lima', 'comex@sider.com.pe', '(01) 618-6800', FALSE, TRUE),
+    (73, 'RUC', '20100115664', 'Maestro Peru S.A. / Sodimac Peru S.A.', 'Wilhelm Ramberg', 'Av. Javier Prado Este 4200, Surco, Lima', 'aduanas@falabella.com.pe', '(01) 615-6000', FALSE, TRUE),
+    (74, 'RUC', '20100062447', 'Promart Homecenter (Homecenters Peruanos S.A.)', 'Manuel de la Rosa', 'Av. Aviacion 2405, Piso 6, San Borja, Lima', 'comercioexterior@promart.pe', '(01) 619-4000', FALSE, TRUE),
+    (75, 'RUC', '20100035474', 'San Lorenzo Ceramicas S.A.C.', 'Antoni Rovira', 'Av. Industrial 1010, Urb. Las Praderas, Lurin, Lima', 'export@sanlorenzo.com.pe', '(01) 614-7400', FALSE, TRUE),
+    (76, 'RUC', '20501487924', 'Pavco Wavin Peru S.A.', 'Carlos Gonzalez Morla', 'Calle Uno Mz. B Lote 1, Parque Industrial El Asesor, Ate, Lima', 'logistica@pavco.com.pe', '(01) 319-3200', FALSE, TRUE),
+    (77, 'RUC', '20601478524', 'Importaciones Ferreteras del Pacifico S.A.C.', 'Victor Hugo Zevallos', 'Av. Argentina 1840, Cercado de Lima, Lima', 'vzevallos@ferrepacifico.pe', '(01) 336-8810', TRUE, TRUE),
+    (78, 'RUC', '20603412590', 'Estructuras & Andamios Industriales S.A.C.', 'Ing. Cesar Montero Paredes', 'Av. Nestor Gambetta Km 8.5, Callao', 'cmontero@andamiosperu.pe', '(01) 577-6210', TRUE, TRUE),
+    (79, 'RUC', '20605891235', 'Maderas & Enchapados del Oriente E.I.R.L.', 'German Pinedo Vasquez', 'Av. Centenario Km 4.2, Pucallpa, Ucayali', 'gpinedo@maderaoriente.pe', '(061) 57-4422', TRUE, TRUE),
+    (80, 'RUC', '20609874126', 'Vidrios & Aluminios Arquitectonicos del Sur S.A.C.', 'Eduardo Caceres Valdivia', 'Parque Industrial Mz. G Lote 8, Cerro Colorado, Arequipa', 'ecaceres@vidriosur.pe', '(054) 44-8920', TRUE, TRUE);
 
 -- =============================================================================
 SET FOREIGN_KEY_CHECKS = 1;

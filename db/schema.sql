@@ -151,6 +151,7 @@ CREATE TABLE cliente (
     telefono_contacto VARCHAR(20) NULL,
     -- Control y estado comercial
     es_prospecto BOOLEAN NOT NULL DEFAULT TRUE,
+    estado_activo BOOLEAN NOT NULL DEFAULT TRUE,
     -- Llave primaria y restricciones
     PRIMARY KEY (id_cliente),
     CONSTRAINT uq_cliente_num_doc UNIQUE (numero_documento)

@@ -148,9 +148,9 @@ const handleSubmit = async () => {
     // Redirección directa según rol
     const redirectParam = route.query.redirect
     if (redirectParam && redirectParam !== '/') {
-      router.push(redirectParam)
+      router.replace(redirectParam)
     } else {
-      router.push(authStore.homePath)
+      router.replace(authStore.homePath)
     }
   } catch (err) {
     errorMessage.value = err.message || 'Credenciales inválidas o servidor no disponible.'

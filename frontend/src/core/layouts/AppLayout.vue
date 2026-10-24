@@ -158,7 +158,7 @@ onUnmounted(() => {
 const handleLogout = () => {
   isUserDropdownOpen.value = false
   authStore.logout()
-  router.push('/login')
+  router.replace('/login')
 }
 
 const displayUserRole = computed(() => {

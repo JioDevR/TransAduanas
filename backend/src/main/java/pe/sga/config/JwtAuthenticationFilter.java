@@ -37,7 +37,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             usuarioRepository.findByUsername(username).ifPresent(usuario -> {
                 if (Boolean.TRUE.equals(usuario.getEstadoActivo())) {
-                    String roleName = "ROLE_" + usuario.getRol().getNombreRol().toStandard().name();
+                    String roleName = "ROLE_" + usuario.getRol().getNombreRol().name();
                     SimpleGrantedAuthority authority = new SimpleGrantedAuthority(roleName);
 
                     UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(

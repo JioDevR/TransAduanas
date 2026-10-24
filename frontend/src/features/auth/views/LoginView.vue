@@ -5,16 +5,16 @@
       <div class="login-card">
         <!-- Brand Header -->
         <div class="brand-header">
-          <div class="brand-logo">
+          <div class="brand-logo" title="TransAduanas SGA">
             <i class="pi pi-shield"></i>
           </div>
-          <h1 class="brand-title">SGA</h1>
-          <p class="brand-subtitle">Sistema de Gestión Aduanera</p>
+          <h1 class="brand-title">TransAduanas - SGA</h1>
+          <p class="brand-subtitle">Sistema de Gestión Aduanera & Logística</p>
         </div>
 
         <!-- Mensaje de Error -->
         <transition name="fade">
-          <div v-if="errorMessage" class="alert-box error">
+          <div v-if="errorMessage" class="alert-box error" role="alert">
             <i class="pi pi-exclamation-circle"></i>
             <span>{{ errorMessage }}</span>
           </div>
@@ -57,6 +57,8 @@
                 type="button"
                 class="toggle-pwd-btn"
                 @click="showPassword = !showPassword"
+                :title="showPassword ? 'Ocultar contraseña' : 'Ver contraseña'"
+                aria-label="Alternar visibilidad de contraseña"
                 tabindex="-1"
               >
                 <i :class="showPassword ? 'pi pi-eye-slash' : 'pi pi-eye'"></i>
@@ -66,6 +68,7 @@
 
           <button
             type="submit"
+            id="btn-login-submit"
             class="submit-button"
             :disabled="loading || !isFormValid"
           >
@@ -74,27 +77,8 @@
           </button>
         </form>
 
-        <!-- Ayuda Rápida de Acceso por Roles -->
-        <div class="quick-credentials">
-          <p class="quick-title">Accesos Rápidos de Prueba por Rol</p>
-          <div class="credentials-group">
-            <div class="credentials-tag" @click="fillAdminCredentials" title="Acceso con rol ADMINISTRADOR_TI (todos los módulos)">
-              <span>Admin TI: <strong>admin</strong></span>
-              <span class="sep">•</span>
-              <span><strong>Password123!</strong></span>
-              <i class="pi pi-shield copy-icon"></i>
-            </div>
-            <div class="credentials-tag" @click="fillComercialCredentials" title="Acceso con rol AGENTE_COMERCIAL (Recepción Comercial)">
-              <span>Comercial: <strong>comercial</strong></span>
-              <span class="sep">•</span>
-              <span><strong>Password123!</strong></span>
-              <i class="pi pi-briefcase copy-icon"></i>
-            </div>
-          </div>
-        </div>
-
         <div class="footer-note">
-          Plataforma SIGAD &copy; 2026 • Acceso Restringido y Auditado
+          TransAduanas SGA &copy; 2026 &bull; Acceso Restringido y Auditado
         </div>
       </div>
     </div>
@@ -123,24 +107,12 @@ const isFormValid = computed(() => {
   return form.username.trim().length > 0 && form.password.length > 0
 })
 
-const fillAdminCredentials = () => {
-  form.username = 'admin'
-  form.password = 'Password123!'
-  errorMessage.value = ''
-}
-
-const fillComercialCredentials = () => {
-  form.username = 'comercial'
-  form.password = 'Password123!'
-  errorMessage.value = ''
-}
-
 const handleSubmit = async () => {
   if (!isFormValid.value) return
   errorMessage.value = ''
 
   try {
-    const user = await authStore.login({
+    await authStore.login({
       username: form.username,
       password: form.password
     })
@@ -167,9 +139,27 @@ const handleSubmit = async () => {
   background: var(--color-bg-base);
   padding: 1.5rem;
   font-family: inherit;
+  position: relative;
+  overflow: hidden;
+}
+
+.login-page::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 600px;
+  height: 600px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(214, 180, 118, 0.08) 0%, transparent 65%);
+  pointer-events: none;
+  z-index: 0;
 }
 
 .login-wrapper {
+  position: relative;
+  z-index: 1;
   width: 100%;
   max-width: 440px;
 }
@@ -181,6 +171,18 @@ const handleSubmit = async () => {
   padding: 2.75rem 2.25rem;
   box-shadow: var(--shadow-elevated);
   color: var(--color-text-main);
+  position: relative;
+  overflow: hidden;
+}
+
+.login-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, var(--color-primary), var(--color-accent-kicker), transparent);
 }
 
 .brand-header {
@@ -189,24 +191,30 @@ const handleSubmit = async () => {
 }
 
 .brand-logo {
-  width: 52px;
-  height: 52px;
-  background: var(--color-primary);
+  width: 54px;
+  height: 54px;
+  background: var(--color-bg-subtle);
+  border: 1px solid var(--color-border-strong);
   border-radius: 14px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   margin-bottom: 0.85rem;
-  box-shadow: 0 4px 12px rgba(53, 47, 42, 0.25);
+  box-shadow: var(--shadow-subtle);
+  transition: transform 0.25s ease;
+}
+
+.brand-logo:hover {
+  transform: scale(1.04);
 }
 
 .brand-logo i {
-  font-size: 1.6rem;
-  color: #efe7dd;
+  font-size: 1.65rem;
+  color: var(--color-primary);
 }
 
 .brand-title {
-  font-size: 1.85rem;
+  font-size: 1.65rem;
   font-weight: 700;
   letter-spacing: -0.025em;
   margin: 0;
@@ -270,7 +278,7 @@ const handleSubmit = async () => {
 
 .custom-input {
   width: 100%;
-  background: var(--color-bg-surface);
+  background: var(--color-bg-subtle);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   padding: 0.75rem 2.5rem 0.75rem 2.6rem;
@@ -281,8 +289,9 @@ const handleSubmit = async () => {
 }
 
 .custom-input:focus {
+  background: var(--color-bg-surface);
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(53, 47, 42, 0.08);
+  box-shadow: 0 0 0 3px rgba(214, 180, 118, 0.15);
 }
 
 .custom-input::placeholder {
@@ -309,7 +318,7 @@ const handleSubmit = async () => {
 
 .submit-button {
   background: var(--color-primary);
-  color: #ffffff;
+  color: var(--color-primary-text);
   border: none;
   border-radius: var(--radius-md);
   padding: 0.85rem;
@@ -320,7 +329,7 @@ const handleSubmit = async () => {
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  box-shadow: 0 2px 8px rgba(53, 47, 42, 0.2);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   transition: all 0.2s ease;
   margin-top: 0.5rem;
 }
@@ -328,70 +337,25 @@ const handleSubmit = async () => {
 .submit-button:hover:not(:disabled) {
   background: var(--color-primary-hover);
   transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+}
+
+.submit-button:active:not(:disabled) {
+  transform: translateY(0);
 }
 
 .submit-button:disabled {
-  opacity: 0.55;
+  opacity: 0.45;
   cursor: not-allowed;
-}
-
-.quick-credentials {
-  margin-top: 1.85rem;
-  padding-top: 1.25rem;
-  border-top: 1px dashed var(--color-border);
-  text-align: center;
-}
-
-.quick-title {
-  font-size: 0.725rem;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--color-accent-kicker);
-  font-weight: 700;
-  margin: 0 0 0.5rem 0;
-}
-
-.credentials-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  align-items: stretch;
-}
-
-.credentials-tag {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  background: #ede6dc;
-  border: 1px solid var(--color-border);
-  color: #4a3e33;
-  padding: 0.45rem 0.85rem;
-  border-radius: var(--radius-sm);
-  font-size: 0.8rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.credentials-tag:hover {
-  background: #e2d7c7;
-  border-color: #cbbead;
-}
-
-.credentials-tag .sep {
-  opacity: 0.4;
-}
-
-.copy-icon {
-  font-size: 0.75rem;
-  margin-left: 0.25rem;
-  opacity: 0.8;
+  transform: none;
+  box-shadow: none;
 }
 
 .footer-note {
   text-align: center;
   font-size: 0.725rem;
   color: var(--color-text-subtle);
-  margin-top: 1.5rem;
+  margin-top: 1.75rem;
 }
 
 .fade-enter-active,

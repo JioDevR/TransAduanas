@@ -5,7 +5,7 @@ export const authRoutes = [
     component: () => import('../views/LoginView.vue'),
     meta: {
       requiresAuth: false,
-      title: 'Iniciar Sesión - SGA'
+      title: 'TransAduanas - SGA | Iniciar Sesión'
     }
   }
 ]

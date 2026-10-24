@@ -62,6 +62,16 @@ frontend/pnpm-debug.log*
 frontend/.vscode/
 
 # -----------------------------------------------------------------------------
+# Landing (Astro + Vue)
+# -----------------------------------------------------------------------------
+landing/node_modules/
+landing/dist/
+landing/.astro/
+landing/.env
+landing/.env.production
+landing/.vscode/
+
+# -----------------------------------------------------------------------------
 # Database local dumps or temporary files
 # -----------------------------------------------------------------------------
 database/*.tmp

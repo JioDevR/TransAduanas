@@ -92,17 +92,6 @@ CREATE TABLE catalogo_mercancia (
 -- 1. MÓDULO DE SEGURIDAD Y ACCESO TI
 -- =============================================================================
 
-CREATE TABLE rol (
-    -- Identificador y datos del rol
-    id_rol INT NOT NULL AUTO_INCREMENT,
-    nombre_rol VARCHAR(50) NOT NULL,
-    descripcion VARCHAR(255) NULL,
-    estado_activo BOOLEAN NOT NULL DEFAULT TRUE,
-    -- Llave primaria y restricciones
-    PRIMARY KEY (id_rol),
-    CONSTRAINT uq_rol_nombre UNIQUE (nombre_rol)
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
-
 CREATE TABLE sede (
     -- Identificador y datos de ubicación
     id_sede INT NOT NULL AUTO_INCREMENT,
@@ -121,7 +110,7 @@ CREATE TABLE sede (
 CREATE TABLE usuario (
     -- Identificador y relaciones organizacionales
     id_usuario INT NOT NULL AUTO_INCREMENT,
-    id_rol INT NOT NULL,
+    rol VARCHAR(50) NOT NULL,
     id_sede INT NULL,
     -- Credenciales de acceso
     username VARCHAR(50) NOT NULL,
@@ -143,7 +132,6 @@ CREATE TABLE usuario (
     PRIMARY KEY (id_usuario),
     CONSTRAINT uq_usuario_username UNIQUE (username),
     CONSTRAINT uq_usuario_correo UNIQUE (correo_institucional),
-    CONSTRAINT fk_usuario_rol FOREIGN KEY (id_rol) REFERENCES rol (id_rol) ON UPDATE CASCADE ON DELETE RESTRICT,
     CONSTRAINT fk_usuario_sede FOREIGN KEY (id_sede) REFERENCES sede (id_sede) ON UPDATE CASCADE ON DELETE SET NULL
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
@@ -517,11 +505,9 @@ CREATE INDEX idx_mercancia_estado ON catalogo_mercancia (estado);
 
 CREATE INDEX idx_mercancia_categoria ON catalogo_mercancia (categoria);
 
-CREATE INDEX idx_rol_estado ON rol (estado_activo);
-
 CREATE INDEX idx_sede_estado ON sede (estado);
 
-CREATE INDEX idx_usuario_rol ON usuario (id_rol);
+CREATE INDEX idx_usuario_rol ON usuario (rol);
 
 CREATE INDEX idx_usuario_sede ON usuario (id_sede);
 

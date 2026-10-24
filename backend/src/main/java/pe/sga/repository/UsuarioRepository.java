@@ -18,7 +18,7 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Integer> {
 
     List<Usuario> findByEstadoActivoTrue();
 
-    List<Usuario> findByRol_IdRol(Integer idRol);
+    List<Usuario> findByRol(pe.sga.entity.enums.RolUsuario rol);
 
     List<Usuario> findBySede_IdSede(Integer idSede);
 }

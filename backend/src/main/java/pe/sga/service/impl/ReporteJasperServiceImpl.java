@@ -51,7 +51,7 @@ public class ReporteJasperServiceImpl implements IReporteJasperService {
                         .idUsuario(u.getIdUsuario())
                         .username(u.getUsername())
                         .nombreCompleto(u.getNombres() + " " + u.getApellidos())
-                        .rol(u.getRol() != null ? u.getRol().getNombreRol().name() : "-")
+                        .rol(u.getRol() != null ? u.getRol().name() : "-")
                         .cargoTitulo(u.getCargoTitulo() != null && !u.getCargoTitulo().isBlank()
                                 ? u.getCargoTitulo() : "Colaborador")
                         .sedeAgencia(u.getSede() != null ? u.getSede().getNombre() : "Sin Sede")

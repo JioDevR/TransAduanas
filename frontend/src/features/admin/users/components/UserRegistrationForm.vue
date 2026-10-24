@@ -437,20 +437,20 @@
               <div class="role-cards-grid">
                 <div
                   v-for="r in roles"
-                  :key="r.idRol"
-                  :class="['role-option-card', { active: Number(form.idRol) === Number(r.idRol) }]"
-                  @click="form.idRol = r.idRol"
+                  :key="r.nombreRol || r.rol || r.idRol"
+                  :class="['role-option-card', { active: form.rol === (r.nombreRol || r.rol) }]"
+                  @click="form.rol = (r.nombreRol || r.rol)"
                 >
                   <div class="role-card-top">
-                    <span :class="['role-badge-tag', getRoleClass(r.nombreRol)]">
-                      {{ ROLE_LABELS[r.nombreRol] || r.nombreRol }}
+                    <span :class="['role-badge-tag', getRoleClass(r.nombreRol || r.rol)]">
+                      {{ ROLE_LABELS[r.nombreRol || r.rol] || r.nombreRol || r.rol }}
                     </span>
                     <span class="radio-indicator">
-                      <i v-if="Number(form.idRol) === Number(r.idRol)" class="pi pi-check"></i>
+                      <i v-if="form.rol === (r.nombreRol || r.rol)" class="pi pi-check"></i>
                     </span>
                   </div>
                   <div class="role-card-desc">
-                    {{ r.descripcion || getRoleDescription(r.nombreRol) }}
+                    {{ r.descripcion || getRoleDescription(r.nombreRol || r.rol) }}
                   </div>
                 </div>
               </div>
@@ -591,8 +591,8 @@
               <i :class="form.correoInstitucional && form.correoInstitucional.includes('@') ? 'pi pi-check-circle text-success' : 'pi pi-circle text-muted'"></i>
               <span>Correo institucional válido</span>
             </li>
-            <li :class="{ complete: !!form.idRol }">
-              <i :class="form.idRol ? 'pi pi-check-circle text-success' : 'pi pi-circle text-muted'"></i>
+            <li :class="{ complete: !!form.rol }">
+              <i :class="form.rol ? 'pi pi-check-circle text-success' : 'pi pi-circle text-muted'"></i>
               <span>Perfil de Rol asignado</span>
             </li>
             <li :class="{ complete: !!form.idSede }">
@@ -646,7 +646,7 @@ const form = reactive({
   nombres: '',
   apellidos: '',
   correoInstitucional: '',
-  idRol: '',
+  rol: '',
   idSede: '',
   tipoDocumento: 'DNI',
   numeroDocumento: '',
@@ -682,7 +682,7 @@ watch(
       form.nombres = user.nombres || ''
       form.apellidos = user.apellidos || ''
       form.correoInstitucional = user.correoInstitucional || ''
-      form.idRol = user.idRol || ''
+      form.rol = user.rol || user.nombreRol || ''
       form.idSede = user.idSede || ''
       form.tipoDocumento = user.tipoDocumento || 'DNI'
       form.numeroDocumento = user.numeroDocumento || ''
@@ -695,7 +695,7 @@ watch(
       form.nombres = ''
       form.apellidos = ''
       form.correoInstitucional = ''
-      form.idRol = props.roles.length > 0 ? props.roles[0].idRol : ''
+      form.rol = props.roles.length > 0 ? (props.roles[0].nombreRol || props.roles[0].rol) : ''
       form.idSede = props.sedes.length > 0 ? props.sedes[0].idSede : ''
       form.tipoDocumento = 'DNI'
       form.numeroDocumento = ''
@@ -712,8 +712,8 @@ watch(
 watch(
   () => props.roles,
   (newRoles) => {
-    if (!props.userToEdit && newRoles.length > 0 && !form.idRol) {
-      form.idRol = newRoles[0].idRol
+    if (!props.userToEdit && newRoles.length > 0 && !form.rol) {
+      form.rol = newRoles[0].nombreRol || newRoles[0].rol
     }
   }
 )
@@ -824,9 +824,7 @@ const selectedSedeDetails = computed(() => {
 })
 
 const selectedRoleName = computed(() => {
-  if (!form.idRol) return ''
-  const r = props.roles.find((role) => Number(role.idRol) === Number(form.idRol))
-  return r ? r.nombreRol : ''
+  return form.rol || ''
 })
 
 const previewInitials = computed(() => {
@@ -849,7 +847,7 @@ const isFormReady = computed(() => {
   const hasUsername = !!form.username
   const hasPassword = isEditMode.value || (!!form.password && form.password.length >= 6)
   const hasEmail = !!form.correoInstitucional && form.correoInstitucional.includes('@')
-  const hasRol = !!form.idRol
+  const hasRol = !!form.rol
   const hasSede = !!form.idSede
   return hasDoc && hasNames && hasUsername && hasPassword && hasEmail && hasRol && hasSede
 })
@@ -905,7 +903,7 @@ const handleSubmit = () => {
     errorMessage.value = 'Ingrese un correo institucional válido.'
     return
   }
-  if (!form.idRol) {
+  if (!form.rol) {
     errorMessage.value = 'Debe seleccionar un rol del sistema.'
     return
   }
@@ -917,7 +915,7 @@ const handleSubmit = () => {
   submitting.value = true
 
   const payload = {
-    idRol: Number(form.idRol),
+    rol: form.rol,
     idSede: Number(form.idSede),
     nombres: form.nombres.trim(),
     apellidos: form.apellidos.trim(),

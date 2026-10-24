@@ -3,6 +3,8 @@ package pe.sga.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import pe.sga.entity.enums.RolUsuario;
+
 import java.time.LocalDateTime;
 
 @Entity
@@ -19,9 +21,9 @@ public class Usuario {
     @Column(name = "id_usuario")
     private Integer idUsuario;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "id_rol", nullable = false)
-    private Rol rol;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "rol", nullable = false, length = 50)
+    private RolUsuario rol;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "id_sede")

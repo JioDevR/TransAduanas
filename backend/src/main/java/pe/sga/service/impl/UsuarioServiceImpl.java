@@ -11,12 +11,10 @@ import pe.sga.dto.request.UsuarioCreateDTO;
 import pe.sga.dto.request.UsuarioUpdateDTO;
 import pe.sga.dto.response.AuthResponseDTO;
 import pe.sga.dto.response.UsuarioResponseDTO;
-import pe.sga.entity.Rol;
 import pe.sga.entity.Sede;
 import pe.sga.entity.Usuario;
 import pe.sga.exception.BadRequestException;
 import pe.sga.exception.ResourceNotFoundException;
-import pe.sga.repository.RolRepository;
 import pe.sga.repository.SedeRepository;
 import pe.sga.repository.UsuarioRepository;
 import pe.sga.service.IUsuarioService;
@@ -29,7 +27,6 @@ import java.util.List;
 public class UsuarioServiceImpl implements IUsuarioService {
 
     private final UsuarioRepository usuarioRepository;
-    private final RolRepository rolRepository;
     private final SedeRepository sedeRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider tokenProvider;
@@ -61,7 +58,7 @@ public class UsuarioServiceImpl implements IUsuarioService {
                 .nombres(usuario.getNombres())
                 .apellidos(usuario.getApellidos())
                 .correoInstitucional(usuario.getCorreoInstitucional())
-                .rol(usuario.getRol().getNombreRol().name())
+                .rol(usuario.getRol() != null ? usuario.getRol().name() : null)
                 .idSede(usuario.getSede() != null ? usuario.getSede().getIdSede() : null)
                 .codigoSede(usuario.getSede() != null ? usuario.getSede().getCodigoSede() : null)
                 .nombreSede(usuario.getSede() != null ? usuario.getSede().getNombre() : null)
@@ -110,9 +107,6 @@ public class UsuarioServiceImpl implements IUsuarioService {
             throw new BadRequestException("El correo institucional '" + dto.getCorreoInstitucional() + "' ya está registrado");
         }
 
-        Rol rol = rolRepository.findById(dto.getIdRol())
-                .orElseThrow(() -> new ResourceNotFoundException("Rol no encontrado con ID: " + dto.getIdRol()));
-
         Sede sede = null;
         if (dto.getIdSede() != null) {
             sede = sedeRepository.findById(dto.getIdSede())
@@ -120,7 +114,7 @@ public class UsuarioServiceImpl implements IUsuarioService {
         }
 
         Usuario usuario = Usuario.builder()
-                .rol(rol)
+                .rol(dto.getRol())
                 .sede(sede)
                 .username(dto.getUsername())
                 .passwordHash(passwordEncoder.encode(dto.getPassword()))
@@ -144,10 +138,8 @@ public class UsuarioServiceImpl implements IUsuarioService {
         Usuario usuario = usuarioRepository.findById(idUsuario)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con ID: " + idUsuario));
 
-        if (dto.getIdRol() != null && !dto.getIdRol().equals(usuario.getRol().getIdRol())) {
-            Rol rol = rolRepository.findById(dto.getIdRol())
-                    .orElseThrow(() -> new ResourceNotFoundException("Rol no encontrado con ID: " + dto.getIdRol()));
-            usuario.setRol(rol);
+        if (dto.getRol() != null) {
+            usuario.setRol(dto.getRol());
         }
 
         if (dto.getIdSede() != null) {
@@ -200,8 +192,9 @@ public class UsuarioServiceImpl implements IUsuarioService {
     private UsuarioResponseDTO mapToResponse(Usuario u) {
         return UsuarioResponseDTO.builder()
                 .idUsuario(u.getIdUsuario())
-                .idRol(u.getRol().getIdRol())
-                .nombreRol(u.getRol().getNombreRol().name())
+                .rol(u.getRol() != null ? u.getRol().name() : null)
+                .nombreRol(u.getRol() != null ? u.getRol().name() : null)
+                .idRol(u.getRol() != null ? u.getRol().ordinal() + 1 : null)
                 .idSede(u.getSede() != null ? u.getSede().getIdSede() : null)
                 .codigoSede(u.getSede() != null ? u.getSede().getCodigoSede() : null)
                 .nombreSede(u.getSede() != null ? u.getSede().getNombre() : null)

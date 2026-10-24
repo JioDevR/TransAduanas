@@ -1,8 +1,10 @@
 package pe.sga.dto.request;
 
+import com.fasterxml.jackson.annotation.JsonSetter;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Size;
 import lombok.*;
+import pe.sga.entity.enums.RolUsuario;
 
 @Getter
 @Setter
@@ -11,7 +13,22 @@ import lombok.*;
 @Builder
 public class UsuarioUpdateDTO {
 
-    private Integer idRol;
+    private RolUsuario rol;
+
+    @JsonSetter("idRol")
+    public void setIdRol(Object val) {
+        if (val instanceof Number n) {
+            RolUsuario[] vals = RolUsuario.values();
+            int idx = n.intValue() - 1;
+            if (idx >= 0 && idx < vals.length) {
+                this.rol = vals[idx];
+            }
+        } else if (val instanceof String s && !s.isBlank()) {
+            try {
+                this.rol = RolUsuario.valueOf(s);
+            } catch (IllegalArgumentException ignored) {}
+        }
+    }
 
     private Integer idSede;
 

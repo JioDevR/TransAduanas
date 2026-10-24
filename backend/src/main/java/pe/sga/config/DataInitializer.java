@@ -6,13 +6,11 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import pe.sga.entity.CatalogoPuerto;
 import pe.sga.entity.CatalogoTipoCarga;
-import pe.sga.entity.Rol;
 import pe.sga.entity.Sede;
 import pe.sga.entity.Usuario;
 import pe.sga.entity.enums.RolUsuario;
 import pe.sga.repository.CatalogoPuertoRepository;
 import pe.sga.repository.CatalogoTipoCargaRepository;
-import pe.sga.repository.RolRepository;
 import pe.sga.repository.SedeRepository;
 import pe.sga.repository.UsuarioRepository;
 
@@ -20,7 +18,6 @@ import pe.sga.repository.UsuarioRepository;
 @Slf4j
 public class DataInitializer implements CommandLineRunner {
 
-    private final RolRepository rolRepository;
     private final SedeRepository sedeRepository;
     private final UsuarioRepository usuarioRepository;
     private final CatalogoPuertoRepository puertoRepository;
@@ -28,13 +25,11 @@ public class DataInitializer implements CommandLineRunner {
     private final PasswordEncoder passwordEncoder;
 
     public DataInitializer(
-            RolRepository rolRepository,
             SedeRepository sedeRepository,
             UsuarioRepository usuarioRepository,
             CatalogoPuertoRepository puertoRepository,
             CatalogoTipoCargaRepository tipoCargaRepository,
             PasswordEncoder passwordEncoder) {
-        this.rolRepository = rolRepository;
         this.sedeRepository = sedeRepository;
         this.usuarioRepository = usuarioRepository;
         this.puertoRepository = puertoRepository;
@@ -46,19 +41,7 @@ public class DataInitializer implements CommandLineRunner {
     public void run(String... args) {
         log.info("Iniciando verificación e inicialización mínima del sistema SGA...");
 
-        // 1. Roles del sistema según enum RolUsuario (con sus nombres y etiquetas normativas)
-        for (RolUsuario rolEnum : RolUsuario.values()) {
-            if (!rolRepository.existsByNombreRol(rolEnum)) {
-                rolRepository.save(Rol.builder()
-                        .nombreRol(rolEnum)
-                        .descripcion(rolEnum.getEtiqueta())
-                        .estadoActivo(true)
-                        .build());
-            }
-        }
-        log.info("Roles del sistema verificados.");
-
-        // 2. Sede única de prueba
+        // 1. Sede única de prueba si no existen sedes
         Sede sedePrueba = sedeRepository.findAll().stream().findFirst().orElseGet(() -> {
             Sede nueva = Sede.builder()
                     .codigoSede("SED-PRUEBA")
@@ -73,7 +56,7 @@ public class DataInitializer implements CommandLineRunner {
             return sedeRepository.save(nueva);
         });
 
-        // 3. Catálogo de puertos: un único puerto de prueba
+        // 2. Catálogo de puertos: un único puerto de prueba si no existen
         if (puertoRepository.count() == 0) {
             puertoRepository.save(CatalogoPuerto.builder()
                     .codigoPuerto("PRUEBA")
@@ -85,7 +68,7 @@ public class DataInitializer implements CommandLineRunner {
             log.info("Catálogo de puertos: registrado puerto 'Prueba'.");
         }
 
-        // 4. Catálogo de tipos de carga: un único tipo de carga de prueba
+        // 3. Catálogo de tipos de carga: un único tipo de carga de prueba si no existen
         if (tipoCargaRepository.count() == 0) {
             tipoCargaRepository.save(CatalogoTipoCarga.builder()
                     .codigo("PRUEBA")
@@ -95,13 +78,10 @@ public class DataInitializer implements CommandLineRunner {
             log.info("Catálogo de tipos de carga: registrado tipo 'Prueba'.");
         }
 
-        // 5. Usuario Administrador único (admin)
+        // 4. Usuario Administrador único (admin)
         if (!usuarioRepository.existsByUsername("admin")) {
-            Rol rolAdminTi = rolRepository.findByNombreRol(RolUsuario.ADMINISTRADOR_TI)
-                    .orElseThrow(() -> new IllegalStateException("El rol ADMINISTRADOR_TI no fue encontrado en la base de datos"));
-
             usuarioRepository.save(Usuario.builder()
-                    .rol(rolAdminTi)
+                    .rol(RolUsuario.ADMINISTRADOR_TI)
                     .sede(sedePrueba)
                     .username("admin")
                     .passwordHash(passwordEncoder.encode("Password123!"))

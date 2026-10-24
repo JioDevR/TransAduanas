@@ -13,6 +13,8 @@ public interface CotizacionPagoRepository extends JpaRepository<CotizacionPago, 
 
     List<CotizacionPago> findByCotizacion_IdCotizacionOrderByFechaRegistroDesc(Integer idCotizacion);
 
+    List<CotizacionPago> findByCotizacion_Cliente_IdClienteOrderByFechaRegistroDesc(Integer idCliente);
+
     List<CotizacionPago> findByEstadoPagoOrderByFechaRegistroDesc(EstadoPagoCotizacion estadoPago);
 
     boolean existsByCotizacion_IdCotizacionAndEstadoPago(Integer idCotizacion, EstadoPagoCotizacion estadoPago);

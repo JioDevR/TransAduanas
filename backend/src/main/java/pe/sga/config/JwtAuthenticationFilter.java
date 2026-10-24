@@ -1,5 +1,6 @@
 package pe.sga.config;
 
+import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -12,6 +13,7 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
+import pe.sga.repository.UsuarioClienteRepository;
 import pe.sga.repository.UsuarioRepository;
 
 import java.io.IOException;
@@ -23,6 +25,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtTokenProvider tokenProvider;
     private final UsuarioRepository usuarioRepository;
+    private final UsuarioClienteRepository usuarioClienteRepository;
 
     @Override
     protected void doFilterInternal(
@@ -34,21 +37,38 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         if (StringUtils.hasText(jwt) && tokenProvider.validateToken(jwt)) {
             String username = tokenProvider.getUsernameFromToken(jwt);
+            Claims claims = tokenProvider.getClaimsFromToken(jwt);
+            String tipoUsuario = claims.get("tipoUsuario", String.class);
 
-            usuarioRepository.findByUsername(username).ifPresent(usuario -> {
-                if (Boolean.TRUE.equals(usuario.getEstadoActivo())) {
-                    String roleName = "ROLE_" + usuario.getRol().name();
-                    SimpleGrantedAuthority authority = new SimpleGrantedAuthority(roleName);
+            if ("CLIENTE_PORTAL".equals(tipoUsuario)) {
+                usuarioClienteRepository.findByUsername(username).ifPresent(uc -> {
+                    if (Boolean.TRUE.equals(uc.getEstadoActivo()) && uc.getCliente() != null && Boolean.TRUE.equals(uc.getCliente().getEstadoActivo())) {
+                        SimpleGrantedAuthority authority = new SimpleGrantedAuthority("ROLE_CLIENTE_PORTAL");
+                        UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                                uc,
+                                null,
+                                Collections.singletonList(authority)
+                        );
+                        authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                        SecurityContextHolder.getContext().setAuthentication(authentication);
+                    }
+                });
+            } else {
+                usuarioRepository.findByUsername(username).ifPresent(usuario -> {
+                    if (Boolean.TRUE.equals(usuario.getEstadoActivo())) {
+                        String roleName = "ROLE_" + usuario.getRol().name();
+                        SimpleGrantedAuthority authority = new SimpleGrantedAuthority(roleName);
 
-                    UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                            usuario,
-                            null,
-                            Collections.singletonList(authority)
-                    );
-                    authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                    SecurityContextHolder.getContext().setAuthentication(authentication);
-                }
-            });
+                        UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                                usuario,
+                                null,
+                                Collections.singletonList(authority)
+                        );
+                        authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                        SecurityContextHolder.getContext().setAuthentication(authentication);
+                    }
+                });
+            }
         }
 
         filterChain.doFilter(request, response);

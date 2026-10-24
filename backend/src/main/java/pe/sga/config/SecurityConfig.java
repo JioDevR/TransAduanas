@@ -65,6 +65,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // Rutas públicas de autenticación y salud
                         .requestMatchers("/api/v1/auth/**").permitAll()
+                        .requestMatchers("/api/v1/portal/auth/**").permitAll()
                         .requestMatchers("/api/v1/health/**").permitAll()
                         // Catálogos públicos de solo lectura
                         .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/v1/catalogos/**").permitAll()

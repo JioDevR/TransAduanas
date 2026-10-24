@@ -1,0 +1,177 @@
+package pe.sga.controller;
+
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.*;
+import pe.sga.dto.portal.*;
+import pe.sga.dto.request.LoginRequestDTO;
+import pe.sga.dto.response.ApiResponseDTO;
+import pe.sga.entity.UsuarioCliente;
+import pe.sga.exception.BadRequestException;
+import pe.sga.service.IPortalService;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/v1/portal")
+@RequiredArgsConstructor
+@Slf4j
+public class PortalController {
+
+    private final IPortalService portalService;
+
+    // =========================================================================
+    // 1. AUTENTICACIÓN INDEPENDIENTE DEL PORTAL DE CLIENTES B2B
+    // =========================================================================
+
+    @PostMapping("/auth/login")
+    public ResponseEntity<ApiResponseDTO<PortalAuthResponseDTO>> login(
+            @Valid @RequestBody LoginRequestDTO loginRequest) {
+        PortalAuthResponseDTO authResponse = portalService.autenticarCliente(loginRequest);
+        return ResponseEntity.ok(ApiResponseDTO.ok("Autenticación B2B exitosa", authResponse));
+    }
+
+    // =========================================================================
+    // 2. PERFIL EMPRESARIAL B2B
+    // =========================================================================
+
+    @GetMapping("/perfil")
+    @PreAuthorize("hasRole('CLIENTE_PORTAL')")
+    public ResponseEntity<ApiResponseDTO<PortalPerfilDTO>> obtenerPerfil(
+            @AuthenticationPrincipal UsuarioCliente usuarioCliente) {
+        validarUsuarioCliente(usuarioCliente);
+        PortalPerfilDTO perfil = portalService.obtenerPerfil(usuarioCliente);
+        return ResponseEntity.ok(ApiResponseDTO.ok("Perfil empresarial obtenido", perfil));
+    }
+
+    // =========================================================================
+    // 3. COTIZACIONES DEL CLIENTE
+    // =========================================================================
+
+    @GetMapping("/cotizaciones")
+    @PreAuthorize("hasRole('CLIENTE_PORTAL')")
+    public ResponseEntity<ApiResponseDTO<List<PortalCotizacionDTO>>> listarCotizaciones(
+            @AuthenticationPrincipal UsuarioCliente usuarioCliente) {
+        Integer idCliente = resolverIdCliente(usuarioCliente);
+        List<PortalCotizacionDTO> cotizaciones = portalService.listarCotizaciones(idCliente);
+        return ResponseEntity.ok(ApiResponseDTO.ok("Cotizaciones recuperadas exitosamente", cotizaciones));
+    }
+
+    @GetMapping("/cotizaciones/{id}")
+    @PreAuthorize("hasRole('CLIENTE_PORTAL')")
+    public ResponseEntity<ApiResponseDTO<PortalCotizacionDTO>> buscarCotizacionPorId(
+            @PathVariable Integer id,
+            @AuthenticationPrincipal UsuarioCliente usuarioCliente) {
+        Integer idCliente = resolverIdCliente(usuarioCliente);
+        PortalCotizacionDTO cotizacion = portalService.buscarCotizacionPorId(idCliente, id);
+        return ResponseEntity.ok(ApiResponseDTO.ok("Detalle de cotización recuperado", cotizacion));
+    }
+
+    @PostMapping("/cotizaciones/solicitar")
+    @PreAuthorize("hasRole('CLIENTE_PORTAL')")
+    public ResponseEntity<ApiResponseDTO<PortalCotizacionDTO>> solicitarCotizacion(
+            @Valid @RequestBody PortalCotizacionSolicitudDTO dto,
+            @AuthenticationPrincipal UsuarioCliente usuarioCliente) {
+        Integer idCliente = resolverIdCliente(usuarioCliente);
+        Integer idUsuarioCliente = usuarioCliente.getIdUsuarioCliente();
+        PortalCotizacionDTO creada = portalService.solicitarCotizacion(idCliente, dto, idUsuarioCliente);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponseDTO.ok("Solicitud de cotización enviada a evaluación técnica", creada));
+    }
+
+    @PatchMapping("/cotizaciones/{id}/aceptar")
+    @PreAuthorize("hasRole('CLIENTE_PORTAL')")
+    public ResponseEntity<ApiResponseDTO<PortalCotizacionDTO>> aceptarCotizacion(
+            @PathVariable Integer id,
+            @AuthenticationPrincipal UsuarioCliente usuarioCliente) {
+        Integer idCliente = resolverIdCliente(usuarioCliente);
+        PortalCotizacionDTO aceptada = portalService.aceptarCotizacion(idCliente, id);
+        return ResponseEntity.ok(ApiResponseDTO.ok("Cotización aceptada por el cliente", aceptada));
+    }
+
+    // =========================================================================
+    // 4. EXPEDIENTES Y SEGUIMIENTO ADUANERO (TRACKING DAM)
+    // =========================================================================
+
+    @GetMapping("/expedientes")
+    @PreAuthorize("hasRole('CLIENTE_PORTAL')")
+    public ResponseEntity<ApiResponseDTO<List<PortalExpedienteDTO>>> listarExpedientes(
+            @AuthenticationPrincipal UsuarioCliente usuarioCliente) {
+        Integer idCliente = resolverIdCliente(usuarioCliente);
+        List<PortalExpedienteDTO> expedientes = portalService.listarExpedientes(idCliente);
+        return ResponseEntity.ok(ApiResponseDTO.ok("Expedientes aduaneros recuperados exitosamente", expedientes));
+    }
+
+    @GetMapping("/expedientes/{id}")
+    @PreAuthorize("hasRole('CLIENTE_PORTAL')")
+    public ResponseEntity<ApiResponseDTO<PortalExpedienteDTO>> buscarExpedientePorId(
+            @PathVariable Integer id,
+            @AuthenticationPrincipal UsuarioCliente usuarioCliente) {
+        Integer idCliente = resolverIdCliente(usuarioCliente);
+        PortalExpedienteDTO expediente = portalService.buscarExpedientePorId(idCliente, id);
+        return ResponseEntity.ok(ApiResponseDTO.ok("Detalle de tracking de expediente recuperado", expediente));
+    }
+
+    // =========================================================================
+    // 5. COBROS, PAGOS Y LIQUIDACIONES
+    // =========================================================================
+
+    @GetMapping("/pagos/resumen")
+    @PreAuthorize("hasRole('CLIENTE_PORTAL')")
+    public ResponseEntity<ApiResponseDTO<PortalResumenFinancieroDTO>> obtenerResumenFinanciero(
+            @AuthenticationPrincipal UsuarioCliente usuarioCliente) {
+        Integer idCliente = resolverIdCliente(usuarioCliente);
+        PortalResumenFinancieroDTO resumen = portalService.obtenerResumenFinanciero(idCliente);
+        return ResponseEntity.ok(ApiResponseDTO.ok("Resumen financiero consolidado", resumen));
+    }
+
+    @GetMapping("/pagos/anticipos")
+    @PreAuthorize("hasRole('CLIENTE_PORTAL')")
+    public ResponseEntity<ApiResponseDTO<List<PortalPagoAnticipoDTO>>> listarAnticipos(
+            @AuthenticationPrincipal UsuarioCliente usuarioCliente) {
+        Integer idCliente = resolverIdCliente(usuarioCliente);
+        List<PortalPagoAnticipoDTO> anticipos = portalService.listarAnticipos(idCliente);
+        return ResponseEntity.ok(ApiResponseDTO.ok("Historial de anticipos de cotización recuperado", anticipos));
+    }
+
+    @GetMapping("/pagos/liquidaciones")
+    @PreAuthorize("hasRole('CLIENTE_PORTAL')")
+    public ResponseEntity<ApiResponseDTO<List<PortalLiquidacionDTO>>> listarLiquidaciones(
+            @AuthenticationPrincipal UsuarioCliente usuarioCliente) {
+        Integer idCliente = resolverIdCliente(usuarioCliente);
+        List<PortalLiquidacionDTO> liquidaciones = portalService.listarLiquidaciones(idCliente);
+        return ResponseEntity.ok(ApiResponseDTO.ok("Liquidaciones de despacho recuperadas", liquidaciones));
+    }
+
+    @PostMapping("/pagos/registrar-voucher")
+    @PreAuthorize("hasRole('CLIENTE_PORTAL')")
+    public ResponseEntity<ApiResponseDTO<PortalPagoAnticipoDTO>> registrarVoucher(
+            @Valid @RequestBody PortalRegistroVoucherDTO dto,
+            @AuthenticationPrincipal UsuarioCliente usuarioCliente) {
+        Integer idCliente = resolverIdCliente(usuarioCliente);
+        Integer idUsuarioCliente = usuarioCliente.getIdUsuarioCliente();
+        PortalPagoAnticipoDTO registrado = portalService.registrarVoucherPago(idCliente, dto, idUsuarioCliente);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponseDTO.ok("Comprobante de pago registrado y enviado a validación contable", registrado));
+    }
+
+    // =========================================================================
+    // AUXILIARES
+    // =========================================================================
+
+    private void validarUsuarioCliente(UsuarioCliente uc) {
+        if (uc == null || uc.getCliente() == null) {
+            throw new BadRequestException("Acceso exclusivo para usuarios del portal empresarial de clientes");
+        }
+    }
+
+    private Integer resolverIdCliente(UsuarioCliente uc) {
+        validarUsuarioCliente(uc);
+        return uc.getCliente().getIdCliente();
+    }
+}

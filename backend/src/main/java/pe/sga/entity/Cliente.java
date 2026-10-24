@@ -46,4 +46,11 @@ public class Cliente {
     @Column(name = "estado_activo", nullable = false)
     @Builder.Default
     private Boolean estadoActivo = true;
+
+    @Column(name = "acceso_portal", nullable = false)
+    @Builder.Default
+    private Boolean accesoPortal = false;
+
+    @Column(name = "fecha_alta_portal")
+    private java.time.LocalDateTime fechaAltaPortal;
 }

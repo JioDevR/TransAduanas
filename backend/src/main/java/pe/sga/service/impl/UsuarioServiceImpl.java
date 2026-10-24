@@ -34,7 +34,9 @@ public class UsuarioServiceImpl implements IUsuarioService {
     @Override
     @Transactional
     public AuthResponseDTO autenticar(LoginRequestDTO loginRequest) {
-        Usuario usuario = usuarioRepository.findByUsername(loginRequest.getUsername())
+        String identifier = loginRequest.getUsername() != null ? loginRequest.getUsername().trim() : "";
+        Usuario usuario = usuarioRepository.findByUsername(identifier)
+                .or(() -> usuarioRepository.findByCorreoInstitucional(identifier))
                 .orElseThrow(() -> new BadCredentialsException("Credenciales incorrectas"));
 
         if (!Boolean.TRUE.equals(usuario.getEstadoActivo())) {

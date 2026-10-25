@@ -12,6 +12,10 @@ SET FOREIGN_KEY_CHECKS = 0;
 -- Limpieza preventiva de tablas existentes
 DROP TABLE IF EXISTS cotizacion_pago;
 
+DROP TABLE IF EXISTS notificacion_cliente;
+
+DROP TABLE IF EXISTS usuario_cliente;
+
 DROP TABLE IF EXISTS documento_adjunto;
 
 DROP TABLE IF EXISTS liquidacion_financiera;
@@ -149,40 +153,45 @@ CREATE TABLE cliente (
     direccion_fiscal VARCHAR(200) NULL,
     correo_contacto VARCHAR(100) NOT NULL,
     telefono_contacto VARCHAR(20) NULL,
-    -- Control y estado comercial
-    es_prospecto BOOLEAN NOT NULL DEFAULT TRUE,
+    -- Control y estado comercial (PROSPECTO, CLIENTE)
+    estado_cliente VARCHAR(30) NOT NULL DEFAULT 'PROSPECTO',
     estado_activo BOOLEAN NOT NULL DEFAULT TRUE,
-    acceso_portal BOOLEAN NOT NULL DEFAULT FALSE,
-    fecha_alta_portal DATETIME NULL,
     -- Llave primaria y restricciones
     PRIMARY KEY (id_cliente),
     CONSTRAINT uq_cliente_num_doc UNIQUE (numero_documento)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 CREATE TABLE usuario_cliente (
-    -- Identificador y relación con la empresa cliente
+    -- Identificador y relación 1:1 con la empresa cliente
     id_usuario_cliente INT NOT NULL AUTO_INCREMENT,
     id_cliente INT NOT NULL,
-    -- Credenciales de acceso al portal B2B
+    -- Credenciales de acceso al portal B2B para la empresa
     username VARCHAR(100) NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
-    -- Información del representante o delegado
-    nombres VARCHAR(100) NOT NULL,
-    apellidos VARCHAR(100) NOT NULL,
-    correo_electronico VARCHAR(150) NOT NULL,
-    telefono_contacto VARCHAR(30) NULL,
-    cargo_empresa VARCHAR(100) NULL,
-    rol_portal VARCHAR(50) NOT NULL DEFAULT 'ADMIN_EMPRESA',
     -- Auditoría y estado
     estado_activo BOOLEAN NOT NULL DEFAULT TRUE,
     debe_cambiar_password BOOLEAN NOT NULL DEFAULT FALSE,
     ultimo_acceso DATETIME NULL,
     fecha_creacion DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     fecha_actualizacion DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    -- Llave primaria y restricciones
+    -- Llave primaria y restricciones (1 usuario general por empresa)
     PRIMARY KEY (id_usuario_cliente),
+    CONSTRAINT uq_usrcli_cliente UNIQUE (id_cliente),
     CONSTRAINT uq_usrcli_username UNIQUE (username),
-    CONSTRAINT fk_usrcli_cliente FOREIGN KEY (id_cliente) REFERENCES cliente (id_cliente) ON UPDATE CASCADE ON DELETE RESTRICT
+    CONSTRAINT fk_usrcli_cliente FOREIGN KEY (id_cliente) REFERENCES cliente (id_cliente) ON UPDATE CASCADE ON DELETE CASCADE
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+
+CREATE TABLE notificacion_cliente (
+    id_notificacion INT NOT NULL AUTO_INCREMENT,
+    id_cliente INT NOT NULL,
+    titulo VARCHAR(150) NOT NULL,
+    mensaje TEXT NOT NULL,
+    tipo VARCHAR(50) NOT NULL DEFAULT 'SISTEMA',
+    leido BOOLEAN NOT NULL DEFAULT FALSE,
+    enlace VARCHAR(255) NULL,
+    fecha_creacion DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id_notificacion),
+    CONSTRAINT fk_notifcli_cliente FOREIGN KEY (id_cliente) REFERENCES cliente (id_cliente) ON UPDATE CASCADE ON DELETE CASCADE
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 
@@ -543,10 +552,10 @@ CREATE INDEX idx_usuario_sede ON usuario (id_sede);
 
 CREATE INDEX idx_usuario_estado ON usuario (estado_activo);
 
--- Portal B2B de Clientes
-CREATE INDEX idx_usrcli_empresa ON usuario_cliente (id_cliente);
+-- Portal B2B de Clientes y Cartera Comercial
+CREATE INDEX idx_cliente_estado ON cliente (estado_cliente);
 
-CREATE INDEX idx_usrcli_correo ON usuario_cliente (correo_electronico);
+CREATE INDEX idx_usrcli_empresa ON usuario_cliente (id_cliente);
 
 CREATE INDEX idx_usrcli_estado ON usuario_cliente (estado_activo);
 
@@ -623,6 +632,10 @@ CREATE INDEX idx_doc_entidad ON documento_adjunto (
 CREATE INDEX idx_doc_categoria ON documento_adjunto (categoria);
 
 CREATE INDEX idx_doc_activo ON documento_adjunto (activo);
+
+-- Notificaciones del Portal Cliente B2B
+CREATE INDEX idx_notifcli_cliente ON notificacion_cliente (id_cliente);
+CREATE INDEX idx_notifcli_leido ON notificacion_cliente (id_cliente, leido);
 
 -- Rehabilitación de validación de claves foráneas
 SET FOREIGN_KEY_CHECKS = 1;

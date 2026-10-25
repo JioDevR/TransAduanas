@@ -39,18 +39,23 @@ public class Cliente {
     @Column(name = "telefono_contacto", length = 20)
     private String telefonoContacto;
 
-    @Column(name = "es_prospecto", nullable = false)
+    @Column(name = "estado_cliente", nullable = false, length = 30)
     @Builder.Default
-    private Boolean esProspecto = true;
+    private String estadoCliente = "PROSPECTO";
 
     @Column(name = "estado_activo", nullable = false)
     @Builder.Default
     private Boolean estadoActivo = true;
 
-    @Column(name = "acceso_portal", nullable = false)
-    @Builder.Default
-    private Boolean accesoPortal = false;
+    public Boolean getEsProspecto() {
+        return "PROSPECTO".equalsIgnoreCase(this.estadoCliente);
+    }
 
-    @Column(name = "fecha_alta_portal")
-    private java.time.LocalDateTime fechaAltaPortal;
+    public void setEsProspecto(Boolean esProspecto) {
+        this.estadoCliente = Boolean.TRUE.equals(esProspecto) ? "PROSPECTO" : "CLIENTE";
+    }
+
+    public boolean isProspecto() {
+        return "PROSPECTO".equalsIgnoreCase(this.estadoCliente);
+    }
 }

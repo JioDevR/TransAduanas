@@ -28,7 +28,7 @@
           </div>
         </div>
 
-        <!-- Acciones: Tema y Usuario -->
+        <!-- Acciones: Tema, Notificaciones y Usuario -->
         <div class="header-actions">
           <button 
             type="button" 
@@ -39,6 +39,17 @@
           >
             <i :class="theme.isDark.value ? 'pi pi-sun' : 'pi pi-moon'"></i>
           </button>
+
+          <!-- Botón de Notificaciones con Badge -->
+          <router-link 
+            to="/notificaciones" 
+            class="action-btn notif-btn" 
+            title="Centro de Notificaciones"
+            aria-label="Ver Notificaciones"
+          >
+            <i class="pi pi-bell"></i>
+            <span v-if="unreadCount > 0" class="badge-unread">{{ unreadCount > 99 ? '99+' : unreadCount }}</span>
+          </router-link>
 
           <div class="user-profile">
             <div class="user-avatar" :title="authStore.usuarioNombre">
@@ -79,6 +90,12 @@
             <i class="pi pi-wallet"></i>
             <span>Cobros y Pagos</span>
           </router-link>
+
+          <router-link to="/notificaciones" class="nav-item" active-class="active">
+            <i class="pi pi-bell"></i>
+            <span>Notificaciones</span>
+            <span v-if="unreadCount > 0" class="nav-badge">{{ unreadCount > 99 ? '99+' : unreadCount }}</span>
+          </router-link>
         </div>
       </nav>
     </header>
@@ -108,18 +125,41 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, computed, onMounted, watch } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/core/stores/authStore'
 import { useTheme } from '@/shared/composables/useTheme'
+import { portalNotificationService } from '@/features/notificaciones/services/portalNotificationService'
 
 const router = useRouter()
+const route = useRoute()
 const authStore = useAuthStore()
 const theme = useTheme()
+
+const unreadCount = ref(0)
 
 const userInitial = computed(() => {
   const name = authStore.usuarioNombre || 'C'
   return name.charAt(0).toUpperCase()
+})
+
+async function cargarResumenNotificaciones() {
+  if (!authStore.isAuthenticated) return
+  try {
+    const count = await portalNotificationService.getResumenNoLeidas()
+    unreadCount.value = typeof count === 'number' ? count : 0
+  } catch (error) {
+    // Silently ignore or set 0 if network fails
+    console.debug('Error al obtener resumen de notificaciones:', error)
+  }
+}
+
+watch(() => route.path, () => {
+  cargarResumenNotificaciones()
+})
+
+onMounted(() => {
+  cargarResumenNotificaciones()
 })
 
 function handleLogout() {
@@ -273,6 +313,39 @@ function handleLogout() {
 .action-btn:hover {
   background: var(--color-bg-subtle, #f2ebe1);
   border-color: var(--color-border-strong, #d5c8b6);
+}
+
+.notif-btn {
+  position: relative;
+  text-decoration: none;
+}
+
+.badge-unread {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: var(--color-danger, #b23b3b);
+  color: #ffffff;
+  font-size: 0.65rem;
+  font-weight: 700;
+  height: 18px;
+  min-width: 18px;
+  padding: 0 4px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--color-bg-surface, #ffffff);
+}
+
+.nav-badge {
+  background: var(--color-danger, #b23b3b);
+  color: #ffffff;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 0.1rem 0.45rem;
+  border-radius: 10px;
+  line-height: 1;
 }
 
 .logout-btn:hover {

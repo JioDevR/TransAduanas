@@ -253,59 +253,6 @@
             </div>
           </div>
         </section>
-
-        <!-- BLOQUE 03: CLASIFICACIÓN COMERCIAL (GESTIÓN AUTOMÁTICA DEL SISTEMA) -->
-        <section class="form-block-card">
-          <div class="block-header">
-            <div class="block-idx">03</div>
-            <div class="block-header-info">
-              <h3 class="block-title">Clasificación en Cartera Comercial (Automática)</h3>
-              <p class="block-sub">El estado de la cuenta se gestiona automáticamente por el ciclo de cotización y aprobación.</p>
-            </div>
-          </div>
-
-          <div class="block-body">
-            <!-- Si es nuevo registro -->
-            <div v-if="!isEditMode" class="classification-auto-banner prospect-banner">
-              <div class="auto-banner-icon prospect-icon">
-                <i class="pi pi-clock"></i>
-              </div>
-              <div class="auto-banner-content">
-                <div class="auto-banner-header">
-                  <h4 class="auto-banner-title">Prospecto Comercial (Lead en Evaluación)</h4>
-                  <span class="auto-banner-badge badge-prospect">ASIGNACIÓN INICIAL AUTOMÁTICA</span>
-                </div>
-                <p class="auto-banner-desc">
-                  Todo nuevo registro ingresa al sistema como <strong>Prospecto Comercial</strong>.
-                  Una vez emitida y <strong>aprobada su primera cotización aduanera</strong>, el sistema lo promoverá de forma automática a <strong>Cliente Efectivo</strong>.
-                </p>
-              </div>
-            </div>
-
-            <!-- Si es modo edición -->
-            <div v-else class="classification-auto-banner" :class="form.esProspecto ? 'prospect-banner' : 'client-banner'">
-              <div class="auto-banner-icon" :class="form.esProspecto ? 'prospect-icon' : 'client-icon'">
-                <i :class="form.esProspecto ? 'pi pi-clock' : 'pi pi-check-circle'"></i>
-              </div>
-              <div class="auto-banner-content">
-                <div class="auto-banner-header">
-                  <h4 class="auto-banner-title">
-                    {{ form.esProspecto ? 'Prospecto Comercial (Lead en Evaluación)' : 'Cliente Efectivo (Cuenta Formalizada)' }}
-                  </h4>
-                  <span :class="['auto-banner-badge', form.esProspecto ? 'badge-prospect' : 'badge-client']">
-                    {{ form.esProspecto ? 'EN PROCESO DE FORMALIZACIÓN' : 'CUENTA FORMALIZADA' }}
-                  </span>
-                </div>
-                <p class="auto-banner-desc" v-if="form.esProspecto">
-                  Este registro se encuentra clasificado como <strong>Prospecto Comercial</strong>. Se promoverá automáticamente a <strong>Cliente Efectivo</strong> tan pronto como se apruebe una cotización comercial asociada.
-                </p>
-                <p class="auto-banner-desc" v-else>
-                  Esta cuenta ha sido promovida a <strong>Cliente Efectivo</strong> tras la aprobación de propuestas aduaneras. Posee historial comercial formalizado.
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
       </div>
 
       <!-- Columna Lateral Sticky: Previsualización en Vivo de Ficha de Cliente -->
@@ -349,10 +296,8 @@
             </div>
 
             <div class="card-detail-item">
-              <span class="detail-label">Clasificación:</span>
-              <span :class="['status-pill-badge', form.esProspecto ? 'badge-prospect' : 'badge-client']">
-                {{ form.esProspecto ? 'PROSPECTO' : 'CLIENTE EFECTIVO' }}
-              </span>
+              <span class="detail-label">Dirección:</span>
+              <span class="detail-val text-muted">{{ form.direccionFiscal || 'No especificada' }}</span>
             </div>
           </div>
 
@@ -412,7 +357,7 @@ const defaultForm = () => ({
   direccionFiscal: '',
   correoContacto: '',
   telefonoContacto: '',
-  esProspecto: true
+  estadoCliente: 'PROSPECTO'
 })
 
 const form = ref(defaultForm())
@@ -432,7 +377,7 @@ watch(
         direccionFiscal: newVal.direccionFiscal || '',
         correoContacto: newVal.correoContacto || '',
         telefonoContacto: newVal.telefonoContacto || '',
-        esProspecto: newVal.esProspecto ?? true
+        estadoCliente: newVal.estadoCliente || 'PROSPECTO'
       }
     } else {
       form.value = defaultForm()
@@ -481,10 +426,16 @@ const handleSubmit = () => {
   }
 
   submitting.value = true
+  const payload = {
+    ...form.value,
+    estadoCliente: form.value.estadoCliente || 'PROSPECTO',
+    esProspecto: (form.value.estadoCliente || 'PROSPECTO') === 'PROSPECTO'
+  }
+
   emit('saved', {
     isEdit: isEditMode.value,
     clienteId: props.clienteToEdit?.idCliente,
-    payload: { ...form.value },
+    payload,
     done: () => {
       submitting.value = false
     }

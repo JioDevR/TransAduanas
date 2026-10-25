@@ -13,7 +13,7 @@ export const useAuthStore = defineStore('auth', () => {
   const ruc = computed(() => user.value?.ruc || '')
   const usuarioNombre = computed(() => {
     if (!user.value) return ''
-    return `${user.value.nombres || ''} ${user.value.apellidos || ''}`.trim() || user.value.username
+    return user.value.contactoRepresentante || user.value.nombres || user.value.username
   })
 
   async function login(usernameOrRuc, password) {
@@ -34,11 +34,9 @@ export const useAuthStore = defineStore('auth', () => {
       user.value = {
         idUsuarioCliente: data.idUsuarioCliente,
         username: data.username,
+        contactoRepresentante: data.contactoRepresentante || data.nombres,
         nombres: data.nombres,
-        apellidos: data.apellidos,
         correoElectronico: data.correoElectronico,
-        cargoEmpresa: data.cargoEmpresa,
-        rolPortal: data.rolPortal,
         idCliente: data.idCliente,
         ruc: data.ruc,
         razonSocial: data.razonSocial,
@@ -72,6 +70,28 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  async function cambiarPassword(passwordActual, nuevaPassword) {
+    loading.value = true
+    error.value = null
+    try {
+      const response = await apiClient.post('/portal/auth/cambiar-password', {
+        passwordActual,
+        nuevaPassword
+      })
+      if (user.value) {
+        user.value.debeCambiarPassword = false
+        localStorage.setItem('sga_portal_user', JSON.stringify(user.value))
+      }
+      return { success: true, message: response.data?.message || 'Contraseña actualizada' }
+    } catch (err) {
+      const msg = err.response?.data?.message || err.message || 'Error al actualizar contraseña'
+      error.value = msg
+      return { success: false, message: msg }
+    } finally {
+      loading.value = false
+    }
+  }
+
   function logout() {
     token.value = null
     user.value = null
@@ -90,6 +110,7 @@ export const useAuthStore = defineStore('auth', () => {
     usuarioNombre,
     login,
     fetchPerfil,
+    cambiarPassword,
     logout
   }
 })

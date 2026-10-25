@@ -95,6 +95,8 @@ router.beforeEach(async (to, from, next) => {
     }
     if (to.path.includes('dashboard')) {
       navStore.setAdministracionTiSubOption('dashboard')
+    } else if (to.path.includes('usuarios-portal')) {
+      navStore.setAdministracionTiSubOption('portal-users')
     } else if (to.path.includes('usuarios')) {
       navStore.setAdministracionTiSubOption('users')
     } else if (to.path.includes('logs')) {

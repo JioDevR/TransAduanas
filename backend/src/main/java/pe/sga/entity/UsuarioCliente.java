@@ -19,8 +19,8 @@ public class UsuarioCliente {
     @Column(name = "id_usuario_cliente")
     private Integer idUsuarioCliente;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "id_cliente", nullable = false)
+    @OneToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "id_cliente", nullable = false, unique = true)
     private Cliente cliente;
 
     @Column(name = "username", nullable = false, unique = true, length = 100)
@@ -28,25 +28,6 @@ public class UsuarioCliente {
 
     @Column(name = "password_hash", nullable = false, length = 255)
     private String passwordHash;
-
-    @Column(name = "nombres", nullable = false, length = 100)
-    private String nombres;
-
-    @Column(name = "apellidos", nullable = false, length = 100)
-    private String apellidos;
-
-    @Column(name = "correo_electronico", nullable = false, length = 150)
-    private String correoElectronico;
-
-    @Column(name = "telefono_contacto", length = 30)
-    private String telefonoContacto;
-
-    @Column(name = "cargo_empresa", length = 100)
-    private String cargoEmpresa;
-
-    @Builder.Default
-    @Column(name = "rol_portal", nullable = false, length = 50)
-    private String rolPortal = "ADMIN_EMPRESA";
 
     @Builder.Default
     @Column(name = "estado_activo", nullable = false)
@@ -70,6 +51,9 @@ public class UsuarioCliente {
         if (fechaCreacion == null) {
             fechaCreacion = LocalDateTime.now();
         }
+        if (fechaActualizacion == null) {
+            fechaActualizacion = LocalDateTime.now();
+        }
     }
 
     @PreUpdate
@@ -77,7 +61,31 @@ public class UsuarioCliente {
         fechaActualizacion = LocalDateTime.now();
     }
 
+    // Métodos delegados a Cliente para normalización 3NF sin duplicación
     public String getNombreCompleto() {
-        return (nombres != null ? nombres : "") + (apellidos != null ? " " + apellidos : "");
+        if (cliente == null) return username;
+        return cliente.getContactoRepresentante() != null && !cliente.getContactoRepresentante().isBlank()
+                ? cliente.getContactoRepresentante()
+                : cliente.getRazonSocial();
+    }
+
+    public String getNombres() {
+        return cliente != null ? cliente.getContactoRepresentante() : null;
+    }
+
+    public String getApellidos() {
+        return "";
+    }
+
+    public String getCorreoElectronico() {
+        return cliente != null ? cliente.getCorreoContacto() : null;
+    }
+
+    public String getTelefonoContacto() {
+        return cliente != null ? cliente.getTelefonoContacto() : null;
+    }
+
+    public String getContactoRepresentante() {
+        return cliente != null ? cliente.getContactoRepresentante() : null;
     }
 }

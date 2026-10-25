@@ -19,7 +19,12 @@
 
         <button type="button" class="btn-outline-warm" @click="navigateTo('users')">
           <i class="pi pi-users"></i>
-          <span>Usuarios</span>
+          <span>Personal</span>
+        </button>
+
+        <button type="button" class="btn-outline-warm" @click="navigateTo('portal-users')">
+          <i class="pi pi-id-card"></i>
+          <span>Usuarios Portal</span>
         </button>
 
         <button type="button" class="btn-outline-warm" @click="navigateTo('logs')">
@@ -468,6 +473,7 @@ const navigateTo = (subOption) => {
   navigationStore.setAdministracionTiSubOption(subOption)
   const pathMap = {
     users: '/administracion-ti/usuarios',
+    'portal-users': '/administracion-ti/usuarios-portal',
     logs: '/administracion-ti/logs',
     about: '/administracion-ti/acerca-de'
   }

@@ -26,10 +26,14 @@ public class ClienteController {
     public ResponseEntity<ApiResponseDTO<List<ClienteResponseDTO>>> listar(
             @RequestParam(required = false, defaultValue = "false") boolean soloActivos,
             @RequestParam(required = false) Boolean prospecto,
+            @RequestParam(required = false) String estadoCliente,
             @RequestParam(required = false) String buscar) {
         List<ClienteResponseDTO> clientes;
         if (buscar != null && !buscar.trim().isEmpty()) {
             clientes = clienteService.buscarPorTermino(buscar, soloActivos);
+        } else if (estadoCliente != null && !estadoCliente.trim().isEmpty() && !"TODOS".equalsIgnoreCase(estadoCliente.trim())) {
+            boolean esP = "PROSPECTO".equalsIgnoreCase(estadoCliente.trim());
+            clientes = clienteService.listarPorTipoProspecto(esP, soloActivos);
         } else if (prospecto != null) {
             clientes = clienteService.listarPorTipoProspecto(prospecto, soloActivos);
         } else if (soloActivos) {

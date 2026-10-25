@@ -14,11 +14,10 @@ public class PortalAuthResponseDTO {
     private String tokenType = "Bearer";
     private Integer idUsuarioCliente;
     private String username;
+    private String contactoRepresentante;
     private String nombres;
     private String apellidos;
     private String correoElectronico;
-    private String cargoEmpresa;
-    private String rolPortal;
     private Integer idCliente;
     private String ruc;
     private String razonSocial;

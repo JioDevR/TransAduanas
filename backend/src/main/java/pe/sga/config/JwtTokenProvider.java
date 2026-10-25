@@ -57,7 +57,6 @@ public class JwtTokenProvider {
                 .claim("idCliente", usuarioCliente.getCliente().getIdCliente())
                 .claim("ruc", usuarioCliente.getCliente().getNumeroDocumento())
                 .claim("razonSocial", usuarioCliente.getCliente().getRazonSocial())
-                .claim("rolPortal", usuarioCliente.getRolPortal())
                 .claim("correo", usuarioCliente.getCorreoElectronico())
                 .issuedAt(now)
                 .expiration(expiryDate)

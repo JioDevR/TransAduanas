@@ -1,6 +1,7 @@
 package pe.sga.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pe.sga.dto.request.ClienteRequestDTO;
@@ -15,6 +16,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ClienteServiceImpl implements IClienteService {
 
     private final ClienteRepository clienteRepository;
@@ -90,6 +92,10 @@ public class ClienteServiceImpl implements IClienteService {
             throw new BadRequestException("Ya existe un cliente registrado con el número de documento: " + dto.getNumeroDocumento());
         }
 
+        String estadoInicial = dto.getEstadoCliente() != null && !dto.getEstadoCliente().isBlank()
+                ? dto.getEstadoCliente().trim().toUpperCase()
+                : "PROSPECTO";
+
         Cliente cliente = Cliente.builder()
                 .tipoDocumento(dto.getTipoDocumento() != null ? dto.getTipoDocumento().toUpperCase() : "RUC")
                 .numeroDocumento(dto.getNumeroDocumento().trim())
@@ -98,11 +104,15 @@ public class ClienteServiceImpl implements IClienteService {
                 .direccionFiscal(dto.getDireccionFiscal() != null ? dto.getDireccionFiscal().trim() : null)
                 .correoContacto(dto.getCorreoContacto().trim())
                 .telefonoContacto(dto.getTelefonoContacto() != null ? dto.getTelefonoContacto().trim() : null)
-                .esProspecto(true) // Regla de negocio: Todo cliente nuevo se registra como Prospecto Comercial
+                .estadoCliente(estadoInicial)
                 .estadoActivo(dto.getEstadoActivo() != null ? dto.getEstadoActivo() : true)
                 .build();
 
-        return mapToResponse(clienteRepository.save(cliente));
+        Cliente guardado = clienteRepository.save(cliente);
+        log.info("Empresa registrada exitosamente: id={}, ruc={}, razonSocial={}, estado={}",
+                guardado.getIdCliente(), guardado.getNumeroDocumento(), guardado.getRazonSocial(), guardado.getEstadoCliente());
+
+        return mapToResponse(guardado);
     }
 
     @Override
@@ -124,7 +134,11 @@ public class ClienteServiceImpl implements IClienteService {
         cliente.setDireccionFiscal(dto.getDireccionFiscal() != null ? dto.getDireccionFiscal().trim() : null);
         cliente.setCorreoContacto(dto.getCorreoContacto().trim());
         cliente.setTelefonoContacto(dto.getTelefonoContacto() != null ? dto.getTelefonoContacto().trim() : null);
-        // El estado 'esProspecto' es inmutable manualmente: solo se promueve automáticamente al aprobar una cotización
+
+        if (dto.getEstadoCliente() != null && !dto.getEstadoCliente().isBlank()) {
+            cliente.setEstadoCliente(dto.getEstadoCliente().trim().toUpperCase());
+        }
+
         if (dto.getEstadoActivo() != null) {
             cliente.setEstadoActivo(dto.getEstadoActivo());
         }
@@ -156,7 +170,7 @@ public class ClienteServiceImpl implements IClienteService {
     public ClienteResponseDTO convertirEnCliente(Integer id) {
         Cliente cliente = clienteRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Cliente no encontrado con id: " + id));
-        cliente.setEsProspecto(false);
+        cliente.setEstadoCliente("CLIENTE");
         return mapToResponse(clienteRepository.save(cliente));
     }
 
@@ -171,6 +185,7 @@ public class ClienteServiceImpl implements IClienteService {
                 .direccionFiscal(c.getDireccionFiscal())
                 .correoContacto(c.getCorreoContacto())
                 .telefonoContacto(c.getTelefonoContacto())
+                .estadoCliente(c.getEstadoCliente())
                 .esProspecto(c.getEsProspecto())
                 .estadoActivo(c.getEstadoActivo())
                 .build();

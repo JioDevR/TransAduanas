@@ -2,9 +2,11 @@ import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/core/stores/authStore'
 import PortalLayout from '@/core/layouts/PortalLayout.vue'
 import PortalLoginView from '@/features/auth/views/PortalLoginView.vue'
+import PortalCambioPasswordObligatorioView from '@/features/auth/views/PortalCambioPasswordObligatorioView.vue'
 import CotizacionesListView from '@/features/cotizaciones/views/CotizacionesListView.vue'
 import ExpedientesTrackingView from '@/features/expedientes/views/ExpedientesTrackingView.vue'
 import CobrosPagosView from '@/features/pagos/views/CobrosPagosView.vue'
+import PortalNotificacionesView from '@/features/notificaciones/views/PortalNotificacionesView.vue'
 
 const routes = [
   {
@@ -12,6 +14,12 @@ const routes = [
     name: 'Login',
     component: PortalLoginView,
     meta: { title: 'Iniciar Sesión — Portal TransAduanas', public: true }
+  },
+  {
+    path: '/cambiar-password-obligatorio',
+    name: 'CambioPasswordObligatorio',
+    component: PortalCambioPasswordObligatorioView,
+    meta: { title: 'Actualización Obligatoria de Contraseña — Portal TransAduanas', requiresAuth: true }
   },
   {
     path: '/',
@@ -39,6 +47,12 @@ const routes = [
         name: 'Pagos',
         component: CobrosPagosView,
         meta: { title: 'Cobros y Pagos — Portal TransAduanas' }
+      },
+      {
+        path: 'notificaciones',
+        name: 'Notificaciones',
+        component: PortalNotificacionesView,
+        meta: { title: 'Notificaciones & Avisos — Portal TransAduanas' }
       }
     ]
   },
@@ -61,12 +75,27 @@ router.beforeEach((to, from, next) => {
     document.title = to.meta.title
   }
 
-  if (to.path === '/login' && isAuth) {
-    return next('/cotizaciones')
-  }
-
+  // Si no está autenticado y la ruta requiere autenticación
   if (to.matched.some(record => record.meta?.requiresAuth) && !isAuth) {
     return next('/login')
+  }
+
+  // Si está autenticado
+  if (isAuth) {
+    const debeCambiar = authStore.user?.debeCambiarPassword === true
+
+    // Si debe cambiar contraseña por ser primer acceso
+    if (debeCambiar) {
+      if (to.path !== '/cambiar-password-obligatorio') {
+        return next('/cambiar-password-obligatorio')
+      }
+      return next()
+    }
+
+    // Si ya cambió la contraseña e intenta ir a pantalla de cambio obligatorio o login
+    if (!debeCambiar && (to.path === '/cambiar-password-obligatorio' || to.path === '/login')) {
+      return next('/cotizaciones')
+    }
   }
 
   next()

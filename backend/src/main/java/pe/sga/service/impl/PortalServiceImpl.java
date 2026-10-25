@@ -42,6 +42,7 @@ public class PortalServiceImpl implements IPortalService {
     private final CatalogoMercanciaRepository mercanciaRepository;
     private final CatalogoTipoCargaRepository tipoCargaRepository;
     private final CatalogoPuertoRepository puertoRepository;
+    private final NotificacionClienteRepository notificacionClienteRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider tokenProvider;
 
@@ -76,11 +77,10 @@ public class PortalServiceImpl implements IPortalService {
                 .tokenType("Bearer")
                 .idUsuarioCliente(uc.getIdUsuarioCliente())
                 .username(uc.getUsername())
+                .contactoRepresentante(uc.getContactoRepresentante())
                 .nombres(uc.getNombres())
                 .apellidos(uc.getApellidos())
                 .correoElectronico(uc.getCorreoElectronico())
-                .cargoEmpresa(uc.getCargoEmpresa())
-                .rolPortal(uc.getRolPortal())
                 .idCliente(uc.getCliente().getIdCliente())
                 .ruc(uc.getCliente().getNumeroDocumento())
                 .razonSocial(uc.getCliente().getRazonSocial())
@@ -98,7 +98,7 @@ public class PortalServiceImpl implements IPortalService {
                 .nombres(uc.getNombres())
                 .apellidos(uc.getApellidos())
                 .correoInstitucional(uc.getCorreoElectronico())
-                .cargoTitulo(uc.getCargoEmpresa())
+                .cargoTitulo(null)
                 .telefono(uc.getTelefonoContacto())
                 .debeCambiarPassword(Boolean.TRUE.equals(uc.getDebeCambiarPassword()))
                 .idCliente(c.getIdCliente())
@@ -589,5 +589,96 @@ public class PortalServiceImpl implements IPortalService {
             count++;
         } while (cotizacionRepository.existsByCodigoCotizacion(codigo));
         return codigo;
+    }
+
+    @Override
+    @Transactional
+    public void cambiarPassword(UsuarioCliente usuarioCliente, PortalCambioPasswordDTO dto) {
+        if (!passwordEncoder.matches(dto.getPasswordActual(), usuarioCliente.getPasswordHash())) {
+            throw new BadRequestException("La contraseña actual ingresada es incorrecta");
+        }
+        if (passwordEncoder.matches(dto.getNuevaPassword(), usuarioCliente.getPasswordHash())) {
+            throw new BadRequestException("La nueva contraseña no puede ser idéntica a la anterior");
+        }
+
+        usuarioCliente.setPasswordHash(passwordEncoder.encode(dto.getNuevaPassword()));
+        usuarioCliente.setDebeCambiarPassword(false);
+        usuarioCliente.setFechaActualizacion(LocalDateTime.now());
+        usuarioClienteRepository.save(usuarioCliente);
+
+        crearNotificacion(
+                usuarioCliente.getCliente().getIdCliente(),
+                "Contraseña Actualizada Exitosamente",
+                "Su contraseña de acceso al portal B2B ha sido cambiada. Su cuenta corporativa se encuentra regularizada.",
+                "SEGURIDAD",
+                "/cotizaciones"
+        );
+        log.info("Contraseña actualizada exitosamente para usuario cliente: id={}, username={}",
+                usuarioCliente.getIdUsuarioCliente(), usuarioCliente.getUsername());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<NotificacionClienteDTO> listarNotificaciones(Integer idCliente) {
+        validarCliente(idCliente);
+        return notificacionClienteRepository.findByCliente_IdClienteOrderByFechaCreacionDesc(idCliente).stream()
+                .map(this::mapToNotificacionDTO)
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public long contarNotificacionesNoLeidas(Integer idCliente) {
+        validarCliente(idCliente);
+        return notificacionClienteRepository.countByCliente_IdClienteAndLeidoFalse(idCliente);
+    }
+
+    @Override
+    @Transactional
+    public void marcarNotificacionLeida(Integer idCliente, Integer idNotificacion) {
+        validarCliente(idCliente);
+        NotificacionCliente notif = notificacionClienteRepository.findByCliente_IdClienteAndIdNotificacion(idCliente, idNotificacion)
+                .orElseThrow(() -> new ResourceNotFoundException("Notificación no encontrada"));
+        notif.setLeido(true);
+        notificacionClienteRepository.save(notif);
+    }
+
+    @Override
+    @Transactional
+    public void marcarTodasNotificacionesLeidas(Integer idCliente) {
+        validarCliente(idCliente);
+        notificacionClienteRepository.marcarTodasLeidasPorCliente(idCliente);
+    }
+
+    @Override
+    @Transactional
+    public void crearNotificacion(Integer idCliente, String titulo, String mensaje, String tipo, String enlace) {
+        Cliente cliente = clienteRepository.findById(idCliente)
+                .orElseThrow(() -> new ResourceNotFoundException("Cliente no encontrado con ID: " + idCliente));
+
+        NotificacionCliente notif = NotificacionCliente.builder()
+                .cliente(cliente)
+                .titulo(titulo)
+                .mensaje(mensaje)
+                .tipo(tipo != null ? tipo : "SISTEMA")
+                .leido(false)
+                .enlace(enlace)
+                .fechaCreacion(LocalDateTime.now())
+                .build();
+
+        notificacionClienteRepository.save(notif);
+    }
+
+    private NotificacionClienteDTO mapToNotificacionDTO(NotificacionCliente n) {
+        return NotificacionClienteDTO.builder()
+                .idNotificacion(n.getIdNotificacion())
+                .idCliente(n.getCliente().getIdCliente())
+                .titulo(n.getTitulo())
+                .mensaje(n.getMensaje())
+                .tipo(n.getTipo())
+                .leido(n.getLeido())
+                .enlace(n.getEnlace())
+                .fechaCreacion(n.getFechaCreacion())
+                .build();
     }
 }

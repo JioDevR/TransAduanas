@@ -75,20 +75,33 @@
           </button>
         </li>
 
-        <!-- Sub-opción 02: Usuarios -->
+        <!-- Sub-opción 02: Personal Interno -->
         <li class="nav-item">
           <button
             type="button"
             :class="['nav-sub-btn', { active: navigationStore.administracionTiSubOption === 'users' || navigationStore.administracionTiSubOption === 'create-user' }]"
             @click="handleAdminSubClick('users')"
-            :title="isCollapsed ? 'Gestión de Usuarios' : ''"
+            :title="isCollapsed ? 'Personal Interno' : ''"
           >
             <span class="nav-num">02</span>
-            <span v-if="!isCollapsed" class="nav-label">Usuarios</span>
+            <span v-if="!isCollapsed" class="nav-label">Personal Interno</span>
           </button>
         </li>
 
-        <!-- Sub-opción 03: Logs del Sistema -->
+        <!-- Sub-opción 03: Usuarios Portal Clientes B2B -->
+        <li class="nav-item">
+          <button
+            type="button"
+            :class="['nav-sub-btn', { active: navigationStore.administracionTiSubOption === 'portal-users' || navigationStore.administracionTiSubOption === 'create-portal-user' }]"
+            @click="handleAdminSubClick('portal-users')"
+            :title="isCollapsed ? 'Usuarios Portal Clientes B2B' : ''"
+          >
+            <span class="nav-num">03</span>
+            <span v-if="!isCollapsed" class="nav-label">Usuarios Portal</span>
+          </button>
+        </li>
+
+        <!-- Sub-opción 04: Logs del Sistema -->
         <li class="nav-item">
           <button
             type="button"
@@ -96,12 +109,12 @@
             @click="handleAdminSubClick('logs')"
             :title="isCollapsed ? 'Consola de Logs TI' : ''"
           >
-            <span class="nav-num">03</span>
+            <span class="nav-num">04</span>
             <span v-if="!isCollapsed" class="nav-label">Logs TI</span>
           </button>
         </li>
 
-        <!-- Sub-opción 04: Acerca de -->
+        <!-- Sub-opción 05: Acerca de -->
         <li class="nav-item">
           <button
             type="button"
@@ -109,7 +122,7 @@
             @click="handleAdminSubClick('about')"
             :title="isCollapsed ? 'Acerca de SGA' : ''"
           >
-            <span class="nav-num">04</span>
+            <span class="nav-num">05</span>
             <span v-if="!isCollapsed" class="nav-label">Acerca de</span>
           </button>
         </li>
@@ -653,6 +666,7 @@ const handleAdminSubClick = (subOption) => {
   const pathMap = {
     dashboard: '/administracion-ti/dashboard',
     users: '/administracion-ti/usuarios',
+    'portal-users': '/administracion-ti/usuarios-portal',
     logs: '/administracion-ti/logs',
     about: '/administracion-ti/acerca-de'
   }

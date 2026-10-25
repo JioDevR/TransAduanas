@@ -36,6 +36,16 @@ public class PortalController {
         return ResponseEntity.ok(ApiResponseDTO.ok("Autenticación B2B exitosa", authResponse));
     }
 
+    @PostMapping("/auth/cambiar-password")
+    @PreAuthorize("hasRole('CLIENTE_PORTAL')")
+    public ResponseEntity<ApiResponseDTO<Void>> cambiarPassword(
+            @Valid @RequestBody PortalCambioPasswordDTO dto,
+            @AuthenticationPrincipal UsuarioCliente usuarioCliente) {
+        validarUsuarioCliente(usuarioCliente);
+        portalService.cambiarPassword(usuarioCliente, dto);
+        return ResponseEntity.ok(ApiResponseDTO.ok("Contraseña actualizada exitosamente", null));
+    }
+
     // =========================================================================
     // 2. PERFIL EMPRESARIAL B2B
     // =========================================================================
@@ -158,6 +168,47 @@ public class PortalController {
         PortalPagoAnticipoDTO registrado = portalService.registrarVoucherPago(idCliente, dto, idUsuarioCliente);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponseDTO.ok("Comprobante de pago registrado y enviado a validación contable", registrado));
+    }
+
+    // =========================================================================
+    // 6. NOTIFICACIONES DEL CLIENTE B2B
+    // =========================================================================
+
+    @GetMapping("/notificaciones")
+    @PreAuthorize("hasRole('CLIENTE_PORTAL')")
+    public ResponseEntity<ApiResponseDTO<List<NotificacionClienteDTO>>> listarNotificaciones(
+            @AuthenticationPrincipal UsuarioCliente usuarioCliente) {
+        Integer idCliente = resolverIdCliente(usuarioCliente);
+        List<NotificacionClienteDTO> notificaciones = portalService.listarNotificaciones(idCliente);
+        return ResponseEntity.ok(ApiResponseDTO.ok("Notificaciones recuperadas exitosamente", notificaciones));
+    }
+
+    @GetMapping("/notificaciones/resumen")
+    @PreAuthorize("hasRole('CLIENTE_PORTAL')")
+    public ResponseEntity<ApiResponseDTO<Long>> contarNotificacionesNoLeidas(
+            @AuthenticationPrincipal UsuarioCliente usuarioCliente) {
+        Integer idCliente = resolverIdCliente(usuarioCliente);
+        long noLeidas = portalService.contarNotificacionesNoLeidas(idCliente);
+        return ResponseEntity.ok(ApiResponseDTO.ok("Total no leídas", noLeidas));
+    }
+
+    @PatchMapping("/notificaciones/{id}/leer")
+    @PreAuthorize("hasRole('CLIENTE_PORTAL')")
+    public ResponseEntity<ApiResponseDTO<Void>> marcarNotificacionLeida(
+            @PathVariable Integer id,
+            @AuthenticationPrincipal UsuarioCliente usuarioCliente) {
+        Integer idCliente = resolverIdCliente(usuarioCliente);
+        portalService.marcarNotificacionLeida(idCliente, id);
+        return ResponseEntity.ok(ApiResponseDTO.ok("Notificación marcada como leída", null));
+    }
+
+    @PatchMapping("/notificaciones/marcar-todas-leidas")
+    @PreAuthorize("hasRole('CLIENTE_PORTAL')")
+    public ResponseEntity<ApiResponseDTO<Void>> marcarTodasNotificacionesLeidas(
+            @AuthenticationPrincipal UsuarioCliente usuarioCliente) {
+        Integer idCliente = resolverIdCliente(usuarioCliente);
+        portalService.marcarTodasNotificacionesLeidas(idCliente);
+        return ResponseEntity.ok(ApiResponseDTO.ok("Todas las notificaciones marcadas como leídas", null));
     }
 
     // =========================================================================

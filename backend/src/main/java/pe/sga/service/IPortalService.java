@@ -33,4 +33,16 @@ public interface IPortalService {
     List<PortalLiquidacionDTO> listarLiquidaciones(Integer idCliente);
 
     PortalPagoAnticipoDTO registrarVoucherPago(Integer idCliente, PortalRegistroVoucherDTO dto, Integer idUsuarioCliente);
+
+    void cambiarPassword(UsuarioCliente usuarioCliente, PortalCambioPasswordDTO dto);
+
+    List<NotificacionClienteDTO> listarNotificaciones(Integer idCliente);
+
+    long contarNotificacionesNoLeidas(Integer idCliente);
+
+    void marcarNotificacionLeida(Integer idCliente, Integer idNotificacion);
+
+    void marcarTodasNotificacionesLeidas(Integer idCliente);
+
+    void crearNotificacion(Integer idCliente, String titulo, String mensaje, String tipo, String enlace);
 }

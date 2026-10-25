@@ -18,6 +18,7 @@ public class ClienteResponseDTO {
     private String direccionFiscal;
     private String correoContacto;
     private String telefonoContacto;
+    private String estadoCliente;
     private Boolean esProspecto;
     private Boolean estadoActivo;
 

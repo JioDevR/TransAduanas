@@ -297,7 +297,7 @@
                   v-for="reg in regimenOptions"
                   :key="reg.value"
                   :class="['regimen-card', { selected: form.regimenAduanero === reg.value }]"
-                  @click="form.regimenAduanero = reg.value"
+                  @click="handleSelectRegimen(reg.value)"
                 >
                   <div class="regimen-header">
                     <span class="regimen-code-badge">{{ reg.codigo }}</span>
@@ -312,80 +312,177 @@
               </div>
             </div>
 
-            <!-- 2. Ruta y Puertos (Origen & Destino desde API) -->
-            <div class="field-row-grid">
-              <div class="field-group">
-                <label for="cot-puerto-envio" class="field-label">Puerto de Origen / Envío</label>
-                <Select
-                  id="cot-puerto-envio"
-                  v-model="form.idPuertoEnvio"
-                  :options="puertos"
-                  optionLabel="nombre"
-                  optionValue="idPuerto"
-                  filter
-                  filterMatchMode="smart"
-                  :filterFields="['searchCorpus', 'codigoPuerto', 'nombre', 'pais', 'tipo']"
-                  filterPlaceholder="Buscar por puerto, país o código..."
-                  placeholder="Seleccione puerto de embarque..."
-                  class="sga-custom-select"
-                  :disabled="submitting || loadingCatalogos"
+            <!-- 2. Modalidad de Transporte Internacional (2 Botones Simples: Aéreo / Marítimo) -->
+            <div class="field-group modalidad-selector-box">
+              <div class="label-with-badge">
+                <label class="field-label">Modalidad de Transporte Internacional *</label>
+                <span class="kicker-mini-badge">{{ modalidadTransporte === 'AEREO' ? 'VÍA AÉREA' : 'VÍA MARÍTIMA' }}</span>
+              </div>
+              <p class="field-helper-text">Seleccione el modo de tráfico para filtrar los terminales portuarios o aeropuertos correspondientes.</p>
+
+              <div class="modalidad-toggle-grid">
+                <button
+                  type="button"
+                  :class="['btn-modalidad-card', { active: modalidadTransporte === 'MARITIMO' }]"
+                  @click="setModalidad('MARITIMO')"
                 >
-                  <template #value="slotProps">
-                    <div v-if="selectedPuertoEnvio" class="select-val-row">
-                      <span class="badge-code-select">{{ selectedPuertoEnvio.codigoPuerto }}</span>
-                      <span class="select-label-text">{{ selectedPuertoEnvio.nombre }} ({{ selectedPuertoEnvio.pais }})</span>
-                      <span class="badge-type-pill">{{ selectedPuertoEnvio.tipo }}</span>
-                    </div>
-                    <span v-else class="select-placeholder-text">{{ slotProps.placeholder }}</span>
-                  </template>
-                  <template #option="slotProps">
-                    <div class="select-opt-row">
-                      <div class="opt-left">
-                        <span class="badge-code-select">{{ slotProps.option.codigoPuerto }}</span>
-                        <span class="opt-text">{{ slotProps.option.nombre }} ({{ slotProps.option.pais }})</span>
-                      </div>
-                      <span class="badge-type-pill">{{ slotProps.option.tipo }}</span>
-                    </div>
-                  </template>
-                </Select>
-                <span class="field-hint-mini">Terminal o puerto internacional de salida</span>
+                  <div class="modalidad-icon">
+                    <i class="pi pi-compass"></i>
+                  </div>
+                  <div class="modalidad-info">
+                    <span class="modalidad-title">Carga Marítima</span>
+                    <span class="modalidad-sub">Puertos oceánicos, terminales y muelles de atraque</span>
+                  </div>
+                  <i v-if="modalidadTransporte === 'MARITIMO'" class="pi pi-check-circle modalidad-active-check"></i>
+                </button>
+
+                <button
+                  type="button"
+                  :class="['btn-modalidad-card', { active: modalidadTransporte === 'AEREO' }]"
+                  @click="setModalidad('AEREO')"
+                >
+                  <div class="modalidad-icon">
+                    <i class="pi pi-send"></i>
+                  </div>
+                  <div class="modalidad-info">
+                    <span class="modalidad-title">Carga Aérea</span>
+                    <span class="modalidad-sub">Aeropuertos internacionales y terminales de carga aérea</span>
+                  </div>
+                  <i v-if="modalidadTransporte === 'AEREO'" class="pi pi-check-circle modalidad-active-check"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- 3. Ruta Logística: Cascada País -> Terminal (Origen & Destino) -->
+            <div class="ruta-logistica-grid">
+              <!-- Bloque Origen -->
+              <div class="ruta-card-block">
+                <div class="ruta-block-header">
+                  <span class="ruta-badge-badge">ORIGEN / SALIDA</span>
+                  <span v-if="form.regimenAduanero === 'EXPORTACION_DEFINITIVA'" class="badge-peru-default">Default Perú</span>
+                </div>
+
+                <div class="ruta-fields-stack">
+                  <!-- País de Origen -->
+                  <div class="field-group">
+                    <label for="cot-pais-envio" class="field-label">País de Origen *</label>
+                    <Select
+                      id="cot-pais-envio"
+                      v-model="paisOrigen"
+                      :options="paisesOrigenDisponibles"
+                      filter
+                      filterPlaceholder="Buscar país de salida..."
+                      placeholder="Seleccione país de salida..."
+                      class="sga-custom-select"
+                      :disabled="submitting || loadingCatalogos"
+                      @change="handlePaisOrigenChange"
+                    />
+                    <span class="field-hint-mini">País donde se ubica el terminal de despacho</span>
+                  </div>
+
+                  <!-- Terminal de Origen -->
+                  <div class="field-group">
+                    <label for="cot-puerto-envio" class="field-label">{{ modalidadTransporte === 'AEREO' ? 'Aeropuerto de Origen' : 'Puerto de Origen' }} *</label>
+                    <Select
+                      id="cot-puerto-envio"
+                      v-model="form.idPuertoEnvio"
+                      :options="puertosOrigenFiltrados"
+                      optionLabel="nombre"
+                      optionValue="idPuerto"
+                      filter
+                      filterMatchMode="smart"
+                      :filterFields="['searchCorpus', 'codigoPuerto', 'nombre']"
+                      :filterPlaceholder="modalidadTransporte === 'AEREO' ? 'Buscar aeropuerto o código...' : 'Buscar puerto o código...'"
+                      :placeholder="!paisOrigen ? 'Primero seleccione país de salida' : (modalidadTransporte === 'AEREO' ? 'Seleccione aeropuerto de salida...' : 'Seleccione puerto de salida...')"
+                      class="sga-custom-select"
+                      :disabled="submitting || loadingCatalogos || !paisOrigen"
+                    >
+                      <template #value="slotProps">
+                        <div v-if="selectedPuertoEnvio" class="select-val-row">
+                          <span class="badge-code-select">{{ selectedPuertoEnvio.codigoPuerto }}</span>
+                          <span class="select-label-text">{{ selectedPuertoEnvio.nombre }} ({{ selectedPuertoEnvio.pais }})</span>
+                          <span class="badge-type-pill">{{ selectedPuertoEnvio.tipo }}</span>
+                        </div>
+                        <span v-else class="select-placeholder-text">{{ slotProps.placeholder }}</span>
+                      </template>
+                      <template #option="slotProps">
+                        <div class="select-opt-row">
+                          <div class="opt-left">
+                            <span class="badge-code-select">{{ slotProps.option.codigoPuerto }}</span>
+                            <span class="opt-text">{{ slotProps.option.nombre }} ({{ slotProps.option.pais }})</span>
+                          </div>
+                          <span class="badge-type-pill">{{ slotProps.option.tipo }}</span>
+                        </div>
+                      </template>
+                    </Select>
+                    <span class="field-hint-mini">{{ modalidadTransporte === 'AEREO' ? 'Aeropuerto internacional de salida' : 'Terminal marítimo o muelle de salida' }}</span>
+                  </div>
+                </div>
               </div>
 
-              <div class="field-group">
-                <label for="cot-puerto-destino" class="field-label">Puerto de Destino / Arribo</label>
-                <Select
-                  id="cot-puerto-destino"
-                  v-model="form.idPuertoDestino"
-                  :options="puertos"
-                  optionLabel="nombre"
-                  optionValue="idPuerto"
-                  filter
-                  filterMatchMode="smart"
-                  :filterFields="['searchCorpus', 'codigoPuerto', 'nombre', 'pais', 'tipo']"
-                  filterPlaceholder="Buscar por puerto, país o código..."
-                  placeholder="Seleccione puerto de arribo..."
-                  class="sga-custom-select"
-                  :disabled="submitting || loadingCatalogos"
-                >
-                  <template #value="slotProps">
-                    <div v-if="selectedPuertoDestino" class="select-val-row">
-                      <span class="badge-code-select">{{ selectedPuertoDestino.codigoPuerto }}</span>
-                      <span class="select-label-text">{{ selectedPuertoDestino.nombre }} ({{ selectedPuertoDestino.pais }})</span>
-                      <span class="badge-type-pill">{{ selectedPuertoDestino.tipo }}</span>
-                    </div>
-                    <span v-else class="select-placeholder-text">{{ slotProps.placeholder }}</span>
-                  </template>
-                  <template #option="slotProps">
-                    <div class="select-opt-row">
-                      <div class="opt-left">
-                        <span class="badge-code-select">{{ slotProps.option.codigoPuerto }}</span>
-                        <span class="opt-text">{{ slotProps.option.nombre }} ({{ slotProps.option.pais }})</span>
-                      </div>
-                      <span class="badge-type-pill">{{ slotProps.option.tipo }}</span>
-                    </div>
-                  </template>
-                </Select>
-                <span class="field-hint-mini">Aduana o terminal de arribo nacional</span>
+              <!-- Bloque Destino -->
+              <div class="ruta-card-block destination">
+                <div class="ruta-block-header">
+                  <span class="ruta-badge-badge destination">DESTINO / ARRIBO</span>
+                  <span v-if="form.regimenAduanero === 'IMPORTACION_DEFINITIVA'" class="badge-peru-default">Default Perú</span>
+                </div>
+
+                <div class="ruta-fields-stack">
+                  <!-- País de Destino -->
+                  <div class="field-group">
+                    <label for="cot-pais-destino" class="field-label">País de Destino *</label>
+                    <Select
+                      id="cot-pais-destino"
+                      v-model="paisDestino"
+                      :options="paisesDestinoDisponibles"
+                      filter
+                      filterPlaceholder="Buscar país de arribo..."
+                      placeholder="Seleccione país de arribo..."
+                      class="sga-custom-select"
+                      :disabled="submitting || loadingCatalogos"
+                      @change="handlePaisDestinoChange"
+                    />
+                    <span class="field-hint-mini">País de la aduana o terminal de llegada</span>
+                  </div>
+
+                  <!-- Terminal de Destino -->
+                  <div class="field-group">
+                    <label for="cot-puerto-destino" class="field-label">{{ modalidadTransporte === 'AEREO' ? 'Aeropuerto de Destino' : 'Puerto de Destino' }} *</label>
+                    <Select
+                      id="cot-puerto-destino"
+                      v-model="form.idPuertoDestino"
+                      :options="puertosDestinoFiltrados"
+                      optionLabel="nombre"
+                      optionValue="idPuerto"
+                      filter
+                      filterMatchMode="smart"
+                      :filterFields="['searchCorpus', 'codigoPuerto', 'nombre']"
+                      :filterPlaceholder="modalidadTransporte === 'AEREO' ? 'Buscar aeropuerto o código...' : 'Buscar puerto o código...'"
+                      :placeholder="!paisDestino ? 'Primero seleccione país de arribo' : (modalidadTransporte === 'AEREO' ? 'Seleccione aeropuerto de arribo...' : 'Seleccione puerto de arribo...')"
+                      class="sga-custom-select"
+                      :disabled="submitting || loadingCatalogos || !paisDestino"
+                    >
+                      <template #value="slotProps">
+                        <div v-if="selectedPuertoDestino" class="select-val-row">
+                          <span class="badge-code-select">{{ selectedPuertoDestino.codigoPuerto }}</span>
+                          <span class="select-label-text">{{ selectedPuertoDestino.nombre }} ({{ selectedPuertoDestino.pais }})</span>
+                          <span class="badge-type-pill">{{ selectedPuertoDestino.tipo }}</span>
+                        </div>
+                        <span v-else class="select-placeholder-text">{{ slotProps.placeholder }}</span>
+                      </template>
+                      <template #option="slotProps">
+                        <div class="select-opt-row">
+                          <div class="opt-left">
+                            <span class="badge-code-select">{{ slotProps.option.codigoPuerto }}</span>
+                            <span class="opt-text">{{ slotProps.option.nombre }} ({{ slotProps.option.pais }})</span>
+                          </div>
+                          <span class="badge-type-pill">{{ slotProps.option.tipo }}</span>
+                        </div>
+                      </template>
+                    </Select>
+                    <span class="field-hint-mini">{{ modalidadTransporte === 'AEREO' ? 'Terminal aéreo internacional de llegada' : 'Aduana o muelle de arribo nacional' }}</span>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -1138,6 +1235,7 @@ import {
   calcularMontoPercepcion,
   calcularLiquidacionIntegral
 } from '@/features/comercial/composables/useCotizacionCalculator'
+import { useModalidadPuertos } from '@/features/comercial/composables/useModalidadPuertos'
 
 const props = defineProps({
   cotizacionToEdit: {
@@ -1308,6 +1406,11 @@ const loadCatalogos = async () => {
         ...p,
         searchCorpus: `${p.codigoPuerto || ''} ${p.nombre || ''} ${p.pais || ''} ${p.tipo || ''}`
       }))
+      if (props.cotizacionToEdit && props.cotizacionToEdit.idCotizacion) {
+        inferirDesdePuertos()
+      } else {
+        aplicarReglasRegimen()
+      }
     }
     if (tiposCargaRes.status === 'fulfilled') {
       tiposCarga.value = unwrapList(tiposCargaRes.value).map((t) => ({
@@ -1325,6 +1428,48 @@ const loadCatalogos = async () => {
     console.error('Error cargando catálogos para cotización:', err)
   } finally {
     loadingCatalogos.value = false
+  }
+}
+
+// Integración de Modalidad y Cascada de Puertos
+const regimenAduaneroComputed = computed(() => form.value.regimenAduanero)
+const {
+  modalidadTransporte,
+  paisOrigen,
+  paisDestino,
+  paisesOrigenDisponibles,
+  paisesDestinoDisponibles,
+  puertosOrigenFiltrados,
+  puertosDestinoFiltrados,
+  setModalidad,
+  aplicarReglasRegimen,
+  inferirDesdePuertos
+} = useModalidadPuertos({
+  puertos,
+  regimen: regimenAduaneroComputed,
+  form
+})
+
+const handleSelectRegimen = (regValue) => {
+  form.value.regimenAduanero = regValue
+  aplicarReglasRegimen(regValue)
+}
+
+const handlePaisOrigenChange = () => {
+  if (form.value.idPuertoEnvio) {
+    const valid = puertosOrigenFiltrados.value.some((p) => p.idPuerto === form.value.idPuertoEnvio)
+    if (!valid) {
+      form.value.idPuertoEnvio = null
+    }
+  }
+}
+
+const handlePaisDestinoChange = () => {
+  if (form.value.idPuertoDestino) {
+    const valid = puertosDestinoFiltrados.value.some((p) => p.idPuerto === form.value.idPuertoDestino)
+    if (!valid) {
+      form.value.idPuertoDestino = null
+    }
   }
 }
 
@@ -1371,6 +1516,10 @@ watch(
         seguroManual.value = true
       }
 
+      if (puertos.value.length > 0) {
+        inferirDesdePuertos()
+      }
+
       try {
         const docs = await documentoService.getDocumentos({
           entidadTipo: 'COTIZACION',
@@ -1383,6 +1532,7 @@ watch(
     } else {
       form.value = defaultForm()
       existingDocsCount.value = 0
+      aplicarReglasRegimen()
     }
   },
   { immediate: true }
@@ -3694,8 +3844,152 @@ defineExpose({
   .field-row-grid,
   .costs-two-cols,
   .transport-toggle-grid,
+  .modalidad-toggle-grid,
+  .ruta-logistica-grid,
   .tributos-inputs-grid {
     grid-template-columns: 1fr !important;
   }
+}
+
+/* ========================================================================= */
+/* ESTILOS: SELECTOR DE MODALIDAD Y CASCADA DE PUERTOS                       */
+/* ========================================================================= */
+.modalidad-selector-box {
+  margin-top: var(--space-4, 1rem);
+  margin-bottom: var(--space-3, 0.75rem);
+}
+
+.modalidad-toggle-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3, 0.75rem);
+  margin-top: var(--space-2, 0.5rem);
+}
+
+.btn-modalidad-card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3, 0.75rem);
+  padding: var(--space-4, 1rem);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-lg, 0.75rem);
+  background: var(--color-bg-surface);
+  cursor: pointer;
+  text-align: left;
+  transition: all var(--transition-fast);
+  position: relative;
+}
+
+.btn-modalidad-card:hover {
+  border-color: var(--color-border-strong);
+  background: var(--color-bg-subtle);
+  transform: translateY(-1px);
+}
+
+.btn-modalidad-card.active {
+  border-color: var(--color-primary);
+  background: var(--color-primary-subtle);
+  box-shadow: 0 0 0 1px var(--color-primary);
+}
+
+.modalidad-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: var(--radius-md, 0.5rem);
+  background: var(--color-bg-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  color: var(--color-primary);
+  flex-shrink: 0;
+}
+
+.btn-modalidad-card.active .modalidad-icon {
+  background: var(--color-primary);
+  color: #ffffff;
+}
+
+.modalidad-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  flex: 1;
+}
+
+.modalidad-title {
+  font-size: var(--font-size-sm, 0.875rem);
+  font-weight: 800;
+  color: var(--color-text-main);
+}
+
+.modalidad-sub {
+  font-size: var(--font-size-xs, 0.75rem);
+  color: var(--color-text-muted);
+  line-height: 1.3;
+}
+
+.modalidad-active-check {
+  font-size: 1.15rem;
+  color: var(--color-primary);
+  margin-left: auto;
+}
+
+/* Grid de Ruta Logística (Origen y Destino) */
+.ruta-logistica-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4, 1rem);
+  margin-top: var(--space-2, 0.5rem);
+}
+
+.ruta-card-block {
+  padding: var(--space-4, 1rem);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg, 0.75rem);
+  background: var(--color-bg-subtle);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3, 0.75rem);
+}
+
+.ruta-block-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: var(--space-2, 0.5rem);
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.ruta-badge-badge {
+  font-family: monospace;
+  font-size: var(--font-size-2xs, 0.65rem);
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  padding: 0.2rem 0.5rem;
+  border-radius: var(--radius-sm, 0.25rem);
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-primary);
+}
+
+.ruta-badge-badge.destination {
+  color: var(--color-accent, #c97a3e);
+}
+
+.badge-peru-default {
+  font-size: var(--font-size-2xs, 0.65rem);
+  font-weight: 700;
+  color: var(--color-success-text);
+  background: var(--color-success-bg);
+  border: 1px solid var(--color-success-border);
+  padding: 0.15rem 0.45rem;
+  border-radius: var(--radius-sm, 0.25rem);
+}
+
+.ruta-fields-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3, 0.75rem);
 }
 </style>

@@ -517,7 +517,7 @@
                         <span class="badge-code-select">{{ slotProps.option.codigo }}</span>
                         <div class="opt-text-col">
                           <span class="opt-title-text">{{ slotProps.option.nombre }}</span>
-                          <span v-if="slotProps.option.descripcion" class="opt-category-sub">{{ slotProps.option.descripcion }}</span>
+                          <span v-if="slotProps.option.descripcion || getDescripcionFallback(slotProps.option.codigo)" class="opt-category-sub">{{ slotProps.option.descripcion || getDescripcionFallback(slotProps.option.codigo) }}</span>
                         </div>
                       </div>
                     </div>
@@ -527,7 +527,7 @@
 
                 <!-- Tarjeta Callout con Descripción visible del Tipo de Carga seleccionado -->
                 <transition name="fade">
-                  <div v-if="selectedTipoCarga && selectedTipoCarga.descripcion" class="tipo-carga-desc-callout">
+                  <div v-if="selectedTipoCarga && (selectedTipoCarga.descripcion || getDescripcionFallback(selectedTipoCarga.codigo))" class="tipo-carga-desc-callout">
                     <div class="callout-icon-box">
                       <i class="pi pi-box"></i>
                     </div>
@@ -536,7 +536,7 @@
                         <span class="callout-tag font-mono">{{ selectedTipoCarga.codigo }}</span>
                         <span class="callout-kicker">ESPECIFICACIÓN OPERATIVA</span>
                       </div>
-                      <p class="callout-desc">{{ selectedTipoCarga.descripcion }}</p>
+                      <p class="callout-desc">{{ selectedTipoCarga.descripcion || getDescripcionFallback(selectedTipoCarga.codigo) }}</p>
                     </div>
                   </div>
                 </transition>
@@ -1408,9 +1408,36 @@ const selectedPuertoDestino = computed(() => {
   return puertos.value.find((p) => p.idPuerto === form.value.idPuertoDestino) || null
 })
 
+const DESCRIPCIONES_TIPO_CARGA_FALLBACK = {
+  CARGA_FCL: 'Contenedor exclusivo de 20 o 40 pies para un único consignatario',
+  CARGA_LCL: 'Carga agrupada en contenedor compartido para múltiples importadores',
+  CARGA_REEFER: 'Mercancías con cadena de frío continua y atmósfera controlada',
+  CARGA_RO_RO: 'Vehículos y maquinaria autopropulsada embarcada por rampas',
+  CARGA_PROYECTO: 'Bienes sobredimensionados o con peso extrapesado fuera de estándar',
+  CARGA_GRANEL_SOLIDO: 'Sólidos transportados a granel en bodegas sin empaque unitario',
+  CARGA_GRANEL_LIQUIDO: 'Líquidos transportados en buques tanque o tanques cisterna ISO',
+  CARGA_PELIGROSA_IMO: 'Sustancias peligrosas reguladas según código marítimo internacional IMO',
+  CARGA_VALORADA: 'Carga de alto valor comercial sujeta a protocolo de seguridad y custodia',
+  CARGA_AEREA_SUELTA: 'Bultos y cajas sueltas estibadas en bodegas inferiores del avión (belly cargo)',
+  CARGA_AEREA_ULD_PALLET: 'Pallet aeronáutico de aluminio estandarizado IATA con red de sujeción',
+  CARGA_AEREA_ULD_CONT: 'Contenedor liviano adaptado a la curvatura del fuselaje de la aeronave',
+  CARGA_AEREA_COURIER: 'Envíos de entrega rápida y comercio electrónico internacional',
+  CARGA_AEREA_PERECIBLE: 'Fármacos y perecibles en contenedor activo refrigerado con monitoreo continuo',
+  CARGA_AEREA_DGR_IATA: 'Mercancías peligrosas reguladas bajo la estricta normativa técnica IATA DGR',
+  CARGA_AEREA_VALORADA: 'Metales preciosos, joyas y divisas en bóveda blindada aeroportuaria con escolta',
+  CARGA_AEREA_AVI: 'Transporte aéreo de mascotas y animales vivos en cabina o bodega presurizada'
+}
+
+const getDescripcionFallback = (codigo) => {
+  return (codigo && DESCRIPCIONES_TIPO_CARGA_FALLBACK[codigo]) || ''
+}
+
 const selectedTipoCarga = computed(() => {
   if (!form.value.idTipoCarga) return null
-  return tiposCarga.value.find((tc) => tc.idTipoCarga === form.value.idTipoCarga) || null
+  const found = tiposCarga.value.find((tc) => tc.idTipoCarga === form.value.idTipoCarga)
+  if (!found) return null
+  const desc = found.descripcion || getDescripcionFallback(found.codigo)
+  return { ...found, descripcion: desc }
 })
 
 // Cargar catálogos desde backend con desenvolvimiento seguro
@@ -1434,10 +1461,14 @@ const loadCatalogos = async () => {
       }
     }
     if (tiposCargaRes.status === 'fulfilled') {
-      tiposCarga.value = unwrapList(tiposCargaRes.value).map((t) => ({
-        ...t,
-        searchCorpus: `${t.codigo || ''} ${t.nombre || ''} ${t.descripcion || ''}`
-      }))
+      tiposCarga.value = unwrapList(tiposCargaRes.value).map((t) => {
+        const desc = t.descripcion || getDescripcionFallback(t.codigo)
+        return {
+          ...t,
+          descripcion: desc,
+          searchCorpus: `${t.codigo || ''} ${t.nombre || ''} ${desc}`
+        }
+      })
     }
     if (mercanciasRes.status === 'fulfilled') {
       mercancias.value = unwrapList(mercanciasRes.value).map((m) => ({

@@ -513,8 +513,13 @@
                   </template>
                   <template #option="slotProps">
                     <div class="select-opt-row">
-                      <span class="badge-code-select">{{ slotProps.option.codigo }}</span>
-                      <span class="opt-text">{{ slotProps.option.nombre }}</span>
+                      <div class="opt-left">
+                        <span class="badge-code-select">{{ slotProps.option.codigo }}</span>
+                        <div class="opt-text-col">
+                          <span class="opt-title-text">{{ slotProps.option.nombre }}</span>
+                          <span v-if="slotProps.option.descripcion" class="opt-category-sub">{{ slotProps.option.descripcion }}</span>
+                        </div>
+                      </div>
                     </div>
                   </template>
                 </Select>

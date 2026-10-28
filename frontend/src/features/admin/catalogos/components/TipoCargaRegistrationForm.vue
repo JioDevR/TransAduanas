@@ -143,7 +143,7 @@
               </div>
             </div>
 
-            <!-- Nombre / Descripción de la Carga -->
+            <!-- Nombre / Denominación de la Carga -->
             <div class="field-group">
               <label for="tc-nombre" class="field-label">Nombre Descriptivo de la Mercancía o Tipo de Carga *</label>
               <div class="input-icon-box">
@@ -161,6 +161,26 @@
               </div>
               <p class="field-helper-text">
                 Denominación clara del tipo de carga para los oficiales de aforo y vistas aduaneros.
+              </p>
+            </div>
+
+            <!-- Descripción Operativa / Alcance -->
+            <div class="field-group">
+              <label for="tc-descripcion" class="field-label">Descripción Operativa / Alcance</label>
+              <div class="input-icon-box">
+                <i class="pi pi-align-left input-icon"></i>
+                <input
+                  id="tc-descripcion"
+                  v-model.trim="form.descripcion"
+                  type="text"
+                  placeholder="Ej. Bultos en bodega aérea inferior, o contenedor exclusivo de 20/40 pies"
+                  class="form-input"
+                  maxlength="255"
+                  :disabled="submitting"
+                />
+              </div>
+              <p class="field-helper-text">
+                Detalle técnico o alcance de la modalidad de estiba (opcional).
               </p>
             </div>
           </div>
@@ -433,6 +453,7 @@ const errorMessage = ref('')
 const defaultForm = () => ({
   codigo: '',
   nombre: '',
+  descripcion: '',
   tipoContenedorSugerido: "20' Dry Standard",
   taraSugeridaKg: 2200,
   estado: 'ACTIVO'
@@ -472,6 +493,13 @@ const containerOptions = [
     icon: 'pi pi-truck'
   },
   {
+    value: 'Pallet / Contenedor ULD Aéreo',
+    label: 'Pallet / Contenedor ULD Aéreo',
+    desc: 'Elemento unitario aéreo IATA (PMC / AKE) para aeronaves',
+    tara: 120,
+    icon: 'pi pi-send'
+  },
+  {
     value: 'Tanque Cisterna / ISO Tank',
     label: 'Tanque Cisterna / ISO Tank',
     desc: 'Líquidos a granel y productos químicos',
@@ -495,6 +523,7 @@ watch(
       form.value = {
         codigo: newVal.codigo || '',
         nombre: newVal.nombre || '',
+        descripcion: newVal.descripcion || '',
         tipoContenedorSugerido: newVal.tipoContenedorSugerido || '',
         taraSugeridaKg: newVal.taraSugeridaKg !== undefined && newVal.taraSugeridaKg !== null ? newVal.taraSugeridaKg : 0,
         estado: newVal.estado || 'ACTIVO'
@@ -552,6 +581,7 @@ const handleSubmit = async () => {
     const payload = {
       codigo: form.value.codigo,
       nombre: form.value.nombre,
+      descripcion: form.value.descripcion ? form.value.descripcion.trim() : null,
       estado: form.value.estado
     }
 

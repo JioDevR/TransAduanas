@@ -70,6 +70,7 @@ CREATE TABLE catalogo_tipo_carga (
     id_tipo_carga INT NOT NULL AUTO_INCREMENT,
     codigo VARCHAR(30) NOT NULL,
     nombre VARCHAR(100) NOT NULL,
+    descripcion VARCHAR(255) NULL,
     estado VARCHAR(20) NOT NULL DEFAULT 'ACTIVO',
     -- Llave primaria y restricciones
     PRIMARY KEY (id_tipo_carga),

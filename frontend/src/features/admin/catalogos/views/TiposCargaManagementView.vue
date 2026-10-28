@@ -231,6 +231,7 @@
             <template #body="{ data: tipo }">
               <div class="port-name-cell">
                 <span class="port-name">{{ tipo.nombre }}</span>
+                <span v-if="tipo.descripcion" class="port-desc-sub">{{ tipo.descripcion }}</span>
                 <span class="port-id-sub font-mono">Clasificación Técnica #{{ tipo.idTipoCarga }}</span>
               </div>
             </template>
@@ -913,6 +914,12 @@ onMounted(() => {
   font-weight: 600;
   color: var(--color-text-main);
   font-size: 0.85rem;
+}
+
+.port-desc-sub {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  line-height: 1.3;
 }
 
 .port-id-sub {

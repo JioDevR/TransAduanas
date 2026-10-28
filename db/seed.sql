@@ -156,26 +156,40 @@ INSERT INTO catalogo_puerto (id_puerto, codigo_puerto, nombre, pais, tipo, estad
 -- =============================================================================
 -- 3. CATÁLOGO DE TIPOS DE CARGA
 -- =============================================================================
-INSERT INTO catalogo_tipo_carga (id_tipo_carga, codigo, nombre, estado) VALUES
+INSERT INTO catalogo_tipo_carga (id_tipo_carga, codigo, nombre, descripcion, estado) VALUES
 
+    -- Modalidad Marítima / Multimodal
     -- 1. Carga en Contenedores (La más frecuente en DP World / APM Terminals)
-    (1, 'CARGA_FCL', 'Carga Contenedorizada Completa (FCL / Dry & HC)', 'ACTIVO'),
-    (2, 'CARGA_LCL', 'Carga Consolidada / Carga Suelta en Contenedor (LCL)', 'ACTIVO'),
+    (1, 'CARGA_FCL', 'Carga Contenedorizada Completa (FCL / Dry & HC)', 'Contenedor exclusivo de 20 o 40 pies para un único consignatario', 'ACTIVO'),
+    (2, 'CARGA_LCL', 'Carga Consolidada / Carga Suelta en Contenedor (LCL)', 'Carga agrupada en contenedor compartido para múltiples importadores', 'ACTIVO'),
 
     -- 2. Carga con Temperatura Controlada (Agroexportación / Farmacéutica)
-    (3, 'CARGA_REEFER', 'Carga Perecible Refrigerada (Contenedor Reefer)', 'ACTIVO'),
+    (3, 'CARGA_REEFER', 'Carga Perecible Refrigerada (Contenedor Reefer)', 'Mercancías con cadena de frío continua y atmósfera controlada', 'ACTIVO'),
 
     -- 3. Vehículos y Carga sobre Ruedas (Autos, camiones, maquinaria)
-    (4, 'CARGA_RO_RO', 'Carga Rodante / Vehicular (Ro-Ro - Autos y Maquinaria)', 'ACTIVO'),
+    (4, 'CARGA_RO_RO', 'Carga Rodante / Vehicular (Ro-Ro - Autos y Maquinaria)', 'Vehículos y maquinaria autopropulsada embarcada por rampas', 'ACTIVO'),
 
     -- 4. Grandes Volúmenes y Proyectos Mineros / Industriales
-    (5, 'CARGA_PROYECTO', 'Carga Proyecto / Sobredimensionada (Breakbulk / OOG)', 'ACTIVO'),
-    (6, 'CARGA_GRANEL_SOLIDO', 'Carga a Granel Solido (Minerales, Granos, Fertilizantes)', 'ACTIVO'),
-    (7, 'CARGA_GRANEL_LIQUIDO', 'Carga a Granel Liquido (Quimicos, Aceites, Combustibles)', 'ACTIVO'),
+    (5, 'CARGA_PROYECTO', 'Carga Proyecto / Sobredimensionada (Breakbulk / OOG)', 'Bienes sobredimensionados o con peso extrapesado fuera de estándar', 'ACTIVO'),
+    (6, 'CARGA_GRANEL_SOLIDO', 'Carga a Granel Solido (Minerales, Granos, Fertilizantes)', 'Sólidos transportados a granel en bodegas sin empaque unitario', 'ACTIVO'),
+    (7, 'CARGA_GRANEL_LIQUIDO', 'Carga a Granel Liquido (Quimicos, Aceites, Combustibles)', 'Líquidos transportados en buques tanque o tanques cisterna ISO', 'ACTIVO'),
 
     -- 5. Cargas Reguladas y de Alta Seguridad
-    (8, 'CARGA_PELIGROSA_IMO', 'Carga Peligrosa Clasificada IMO (Materiales Peligrosos)', 'ACTIVO'),
-    (9, 'CARGA_VALORADA', 'Carga Valiosa / Alta Tecnologia (Requiere Custodia / Escolta)', 'ACTIVO');
+    (8, 'CARGA_PELIGROSA_IMO', 'Carga Peligrosa Clasificada IMO (Materiales Peligrosos)', 'Sustancias peligrosas reguladas según código marítimo internacional IMO', 'ACTIVO'),
+    (9, 'CARGA_VALORADA', 'Carga Valiosa / Alta Tecnologia (Requiere Custodia / Escolta)', 'Carga de alto valor comercial sujeta a protocolo de seguridad y custodia', 'ACTIVO'),
+
+    -- Modalidad Aérea (Estándar IATA)
+    -- 6. Carga Aérea General y Unidades de Carga ULD
+    (10, 'CARGA_AEREA_SUELTA', 'Carga Aérea Suelta / General (Loose Cargo / Bultos)', 'Bultos y cajas sueltas estibadas en bodegas inferiores del avión (belly cargo)', 'ACTIVO'),
+    (11, 'CARGA_AEREA_ULD_PALLET', 'Pallet Aéreo ULD (PMC / PAG con Red de Sujeción)', 'Pallet aeronáutico de aluminio estandarizado IATA con red de sujeción', 'ACTIVO'),
+    (12, 'CARGA_AEREA_ULD_CONT', 'Contenedor Aéreo ULD (AKE / LD3 / DQF)', 'Contenedor liviano adaptado a la curvatura del fuselaje de la aeronave', 'ACTIVO'),
+
+    -- 7. Envíos Rápidos, Perecibles y Cargas Especializadas Aéreas
+    (13, 'CARGA_AEREA_COURIER', 'Envíos de Entrega Rápida / Courier Aéreo (Express)', 'Paquetería y valijas bajo régimen de entrega rápida y comercio electrónico', 'ACTIVO'),
+    (14, 'CARGA_AEREA_PERECIBLE', 'Carga Aérea Perecible / Farma (Temp. Controlada / Envirotainer)', 'Fármacos y perecibles en contenedor activo refrigerado con monitoreo continuo', 'ACTIVO'),
+    (15, 'CARGA_AEREA_DGR_IATA', 'Mercancías Peligrosas IATA (DGR / Baterías de Litio / Químicos)', 'Mercancías peligrosas reguladas bajo la estricta normativa técnica IATA DGR', 'ACTIVO'),
+    (16, 'CARGA_AEREA_VALORADA', 'Carga Aérea Valorada IATA (VAL - Bóveda y Escolta)', 'Metales preciosos, joyas y divisas en bóveda blindada aeroportuaria con escolta', 'ACTIVO'),
+    (17, 'CARGA_AEREA_AVI', 'Animales Vivos IATA (AVI - Mascotas y Reproductores)', 'Transporte aéreo de mascotas y animales vivos en cabina o bodega presurizada', 'ACTIVO');
 
 -- =============================================================================
 -- 4. CATÁLOGO DE MERCANCÍAS Y SUBPARTIDAS ARANCELARIAS (NANDINA)

@@ -637,13 +637,22 @@ public class ExpedienteServiceImpl implements IExpedienteService {
 
     private ExpedienteResponseDTO mapToResponse(Expediente e) {
         var despachoOpt = despachoRepository.findByExpediente_IdExpediente(e.getIdExpediente());
+        var cot = e.getCotizacion();
+        var merc = cot != null ? cot.getMercancia() : null;
+        var tc = cot != null ? cot.getTipoCarga() : null;
+        var pe = cot != null ? cot.getPuertoEnvio() : null;
+        var pd = cot != null ? cot.getPuertoDestino() : null;
+        var uc = cot != null ? cot.getUsuarioComercial() : null;
+
+        String mod = pe != null && pe.getTipo() != null ? pe.getTipo()
+                : (pd != null && pd.getTipo() != null ? pd.getTipo() : "MARITIMO");
 
         return ExpedienteResponseDTO.builder()
                 .idExpediente(e.getIdExpediente())
                 .codigoExpediente(e.getCodigoExpediente())
-                .idCotizacion(e.getCotizacion() != null ? e.getCotizacion().getIdCotizacion() : null)
-                .codigoCotizacion(e.getCotizacion() != null ? e.getCotizacion().getCodigoCotizacion() : null)
-                .regimenAduanero(e.getCotizacion() != null ? e.getCotizacion().getRegimenAduanero() : null)
+                .idCotizacion(cot != null ? cot.getIdCotizacion() : null)
+                .codigoCotizacion(cot != null ? cot.getCodigoCotizacion() : null)
+                .regimenAduanero(cot != null ? cot.getRegimenAduanero() : null)
                 .idCliente(e.getCliente() != null ? e.getCliente().getIdCliente() : null)
                 .clienteRazonSocial(e.getCliente() != null ? e.getCliente().getRazonSocial() : null)
                 .clienteNumeroDocumento(e.getCliente() != null ? e.getCliente().getNumeroDocumento() : null)
@@ -670,7 +679,53 @@ public class ExpedienteServiceImpl implements IExpedienteService {
                 .fechaApertura(e.getFechaApertura())
                 .fechaCierre(e.getFechaCierre())
                 .observaciones(e.getObservaciones())
-                .servicioTransporte(e.getCotizacion() != null && Boolean.TRUE.equals(e.getCotizacion().getServicioTransporte()))
+
+                // Mercancía y Carga
+                .idMercancia(merc != null ? merc.getIdMercancia() : null)
+                .mercanciaCodigo(merc != null ? merc.getCodigo() : null)
+                .mercanciaNombre(merc != null ? merc.getNombre() : null)
+                .idTipoCarga(tc != null ? tc.getIdTipoCarga() : null)
+                .tipoCargaNombre(tc != null ? tc.getNombre() : null)
+                .tipoCargaDescripcion(tc != null ? tc.getDescripcion() : null)
+
+                // Modalidad y Puertos
+                .modalidad(mod)
+                .idPuertoEnvio(pe != null ? pe.getIdPuerto() : null)
+                .puertoEnvioNombre(pe != null ? pe.getNombre() : null)
+                .puertoEnvioCodigo(pe != null ? pe.getCodigoPuerto() : null)
+                .puertoEnvioPais(pe != null ? pe.getPais() : null)
+                .puertoEnvioTipo(pe != null ? pe.getTipo() : null)
+                .idPuertoDestino(pd != null ? pd.getIdPuerto() : null)
+                .puertoDestinoNombre(pd != null ? pd.getNombre() : null)
+                .puertoDestinoCodigo(pd != null ? pd.getCodigoPuerto() : null)
+                .puertoDestinoPais(pd != null ? pd.getPais() : null)
+                .puertoDestinoTipo(pd != null ? pd.getTipo() : null)
+
+                // Logística y Ruta Terrestre
+                .origenDepartamento(cot != null ? cot.getOrigenDepartamento() : null)
+                .origenProvincia(cot != null ? cot.getOrigenProvincia() : null)
+                .destinoDepartamento(cot != null ? cot.getDestinoDepartamento() : null)
+                .destinoProvincia(cot != null ? cot.getDestinoProvincia() : null)
+                .costoTransporteInterno(cot != null ? cot.getCostoTransporteInterno() : null)
+
+                // Valoración Económica y Tributos
+                .valorFob(cot != null ? cot.getValorFob() : null)
+                .montoFleteEstimado(cot != null ? cot.getMontoFleteEstimado() : null)
+                .montoSeguroEstimado(cot != null ? cot.getMontoSeguroEstimado() : null)
+                .montoHonorariosEstimado(cot != null ? cot.getMontoHonorariosEstimado() : null)
+                .tasaAdValorem(cot != null ? cot.getTasaAdValorem() : null)
+                .tasaPercepcion(cot != null ? cot.getTasaPercepcion() : null)
+                .montoTributosEstimado(cot != null ? cot.getMontoTributosEstimado() : null)
+                .totalCotizado(cot != null ? cot.getTotalCotizado() : null)
+
+                // Control Financiero Pre-Expediente
+                .estadoPago(cot != null ? cot.getEstadoPago() : null)
+                .totalAbonado(cot != null ? cot.getTotalAbonado() : null)
+                .saldoPendiente(cot != null ? cot.getSaldoPendiente() : null)
+                .usuarioComercialNombre(uc != null ? uc.getNombreCompleto() : null)
+
+                // Transporte y Despacho
+                .servicioTransporte(cot != null && Boolean.TRUE.equals(cot.getServicioTransporte()))
                 .idDespachoTransporte(despachoOpt.map(DespachoTransporte::getIdDespachoTransporte).orElse(null))
                 .codigoTrackingTransporte(despachoOpt.map(DespachoTransporte::getCodigoTracking).orElse(null))
                 .estadoTransporte(despachoOpt.map(DespachoTransporte::getEstadoTransporte).orElse(null))

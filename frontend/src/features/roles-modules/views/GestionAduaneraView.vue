@@ -4,10 +4,11 @@
     <!-- VISTA COMPLETA: AUDITORÍA TÉCNICA DEL EXPEDIENTE / COTIZACIÓN   -->
     <!-- ============================================================== -->
     <AuditoriaExpedienteModal
-      v-if="showAuditoriaCompleta && inspectedCotizacion"
+      v-if="showAuditoriaCompleta && (inspectedCotizacion || inspectedExpediente)"
       :cotizacion="inspectedCotizacion"
+      :expediente="inspectedExpediente"
       :processing="processingAction"
-      @back="showAuditoriaCompleta = false"
+      @back="closeAuditoriaCompleta"
       @approve="handleApproveFromAuditoria"
       @observe="handleObserveFromAuditoria"
       @reject="handleRejectFromAuditoria"
@@ -28,20 +29,19 @@
         <div class="toolbar-actions-group">
           <button
             type="button"
-            class="btn-espresso"
-            @click="openAperturaModal(null)"
-            title="Aperturar un nuevo expediente aduanero formal"
-          >
-            <i class="pi pi-plus"></i>
-            <span>+ Aperturar Expediente</span>
-          </button>
-          <button
-            type="button"
             :class="['btn-outline-warm', { active: activeTab === 'cotizaciones' }]"
             @click="switchTab('cotizaciones')"
           >
             <i class="pi pi-inbox"></i>
             <span>Bandeja Cotizaciones ({{ cotizaciones.length }})</span>
+          </button>
+          <button
+            type="button"
+            :class="['btn-outline-warm', { active: activeTab === 'apertura' }]"
+            @click="switchTab('apertura')"
+          >
+            <i class="pi pi-folder-plus"></i>
+            <span>Apertura de Expedientes ({{ cotizacionesAprobadasSinExpediente.length }})</span>
           </button>
           <button
             type="button"
@@ -199,7 +199,7 @@
         </div>
       </div>
 
-      <!-- 3. Barra de Pestañas Numeradas (01, 02) -->
+      <!-- 3. Barra de Pestañas Numeradas (01, 02, 03) -->
       <div class="tabs-nav-bar">
         <button
           type="button"
@@ -213,10 +213,20 @@
 
         <button
           type="button"
+          :class="['tab-btn', { active: activeTab === 'apertura' }]"
+          @click="switchTab('apertura')"
+        >
+          <span class="tab-idx">02</span>
+          <i class="pi pi-folder-plus"></i>
+          <span>Apertura de Expedientes ({{ cotizacionesAprobadasSinExpediente.length }})</span>
+        </button>
+
+        <button
+          type="button"
           :class="['tab-btn', { active: activeTab === 'expedientes' }]"
           @click="switchTab('expedientes')"
         >
-          <span class="tab-idx">02</span>
+          <span class="tab-idx">03</span>
           <i class="pi pi-folder-open"></i>
           <span>Gestión Integral de Expedientes ({{ expedientes.length }})</span>
         </button>
@@ -430,7 +440,7 @@
                       class="action-btn-outline"
                       style="border-color: var(--color-accent-kicker); color: var(--color-accent-kicker); font-weight: 700;"
                       title="Aperturar Expediente Aduanero para esta cotización"
-                      @click="openAperturaModal(c)"
+                      @click="goToApertura(c)"
                     >
                       <i class="pi pi-folder-open"></i>
                       <span>+ Expediente</span>
@@ -456,7 +466,18 @@
       </div>
 
       <!-- ============================================================== -->
-      <!-- PESTAÑA 02: GESTIÓN INTEGRAL DE EXPEDIENTES ADUANEROS          -->
+      <!-- PESTAÑA 02: APERTURA FORMAL DE EXPEDIENTES ADUANEROS           -->
+      <!-- ============================================================== -->
+      <div v-else-if="activeTab === 'apertura'" class="tab-content-section fade-in">
+        <AperturaExpedienteView
+          :cotizacion-preseleccionada="selectedCotizacionParaExpediente"
+          @created="onExpedienteCreado"
+          @cancel="switchTab('cotizaciones')"
+        />
+      </div>
+
+      <!-- ============================================================== -->
+      <!-- PESTAÑA 03: GESTIÓN INTEGRAL DE EXPEDIENTES ADUANEROS          -->
       <!-- ============================================================== -->
       <div v-else-if="activeTab === 'expedientes'" class="tab-content-section fade-in">
         <!-- Alerta de Cotizaciones Aprobadas Pendientes de Apertura -->
@@ -471,7 +492,7 @@
           <button
             type="button"
             class="btn-alert-action"
-            @click="openAperturaModal(null)"
+            @click="goToApertura(null)"
           >
             <i class="pi pi-plus-circle"></i>
             <span>Aperturar Expediente Ahora</span>
@@ -528,17 +549,6 @@
               <i :class="['pi pi-sync', { 'pi-spin': loading }]"></i>
               <span>Actualizar</span>
             </button>
-
-            <!-- Botón Principal: + Aperturar Expediente -->
-            <button
-              type="button"
-              class="btn-espresso"
-              @click="openAperturaModal(null)"
-              title="Aperturar un nuevo expediente aduanero a partir de una cotización aprobada"
-            >
-              <i class="pi pi-plus"></i>
-              <span>+ Aperturar Expediente</span>
-            </button>
           </div>
         </div>
 
@@ -568,7 +578,7 @@
 
             <Column header="Código Expediente">
               <template #body="{ data: exp }">
-                <div class="exp-code-badge" @click="openDetalleExpediente(exp)" title="Clic para ver ficha completa">
+                <div class="exp-code-badge" @click="openAuditarExpediente(exp)" title="Clic para ver auditoría integral">
                   <i class="pi pi-folder"></i>
                   <span class="font-bold font-mono">{{ exp.codigoExpediente }}</span>
                 </div>
@@ -640,11 +650,11 @@
                   <button
                     type="button"
                     class="action-btn-primary"
-                    title="Ver Ficha y Auditoría Completa del Expediente"
-                    @click="openDetalleExpediente(exp)"
+                    title="Ver Ficha y Auditoría Integral del Expediente"
+                    @click="openAuditarExpediente(exp)"
                   >
                     <i class="pi pi-eye"></i>
-                    <span>Detalle</span>
+                    <span>Auditar</span>
                   </button>
 
                   <button
@@ -871,6 +881,7 @@ import { useNavigationStore } from '@/core/stores/navigationStore'
 import { useNotification } from '@/shared/composables/useNotification'
 import { useConfirmation } from '@/shared/composables/useConfirmation'
 import AperturaExpedienteModal from '../components/AperturaExpedienteModal.vue'
+import AperturaExpedienteView from '../components/AperturaExpedienteView.vue'
 import DetalleExpedienteModal from '../components/DetalleExpedienteModal.vue'
 import CanalLevanteModal from '../components/CanalLevanteModal.vue'
 import RetiroDirectoModal from '../components/RetiroDirectoModal.vue'
@@ -888,7 +899,7 @@ const { showSuccess, showError, showInfo } = useNotification()
 const { confirmAction } = useConfirmation()
 
 const loading = ref(false)
-const activeTab = ref('cotizaciones') // 'cotizaciones' | 'expedientes'
+const activeTab = ref('cotizaciones') // 'cotizaciones' | 'apertura' | 'expedientes'
 const cotizaciones = ref([])
 const expedientes = ref([])
 
@@ -903,6 +914,7 @@ const searchExpedienteQuery = ref('')
 // Vista Completa de Auditoría
 const showAuditoriaCompleta = ref(false)
 const inspectedCotizacion = ref(null)
+const inspectedExpediente = ref(null)
 
 // Modales Operativos Auxiliares
 const showAperturaModal = ref(false)
@@ -962,7 +974,7 @@ const switchTab = (tabName) => {
 watch(
   () => route.query.tab,
   (newTab) => {
-    if (newTab && ['cotizaciones', 'expedientes'].includes(newTab)) {
+    if (newTab && ['cotizaciones', 'apertura', 'expedientes'].includes(newTab)) {
       activeTab.value = newTab
       if (navigationStore.gestionAduaneraSubOption !== newTab) {
         navigationStore.setGestionAduaneraSubOption(newTab)
@@ -975,7 +987,7 @@ watch(
 watch(
   () => [navigationStore.gestionAduaneraSubOption, navigationStore.navTick],
   ([newSub]) => {
-    if (newSub && ['cotizaciones', 'expedientes'].includes(newSub)) {
+    if (newSub && ['cotizaciones', 'apertura', 'expedientes'].includes(newSub)) {
       if (activeTab.value !== newSub) {
         activeTab.value = newSub
       }
@@ -1079,15 +1091,24 @@ const filteredExpedientes = computed(() => {
   })
 })
 
-const openAperturaModal = (cotizacion = null) => {
+const goToApertura = (cotizacion = null) => {
   selectedCotizacionParaExpediente.value = cotizacion
-  showAperturaModal.value = true
+  switchTab('apertura')
+}
+
+const onExpedienteCreado = (expedienteCreado) => {
+  showSuccess(`¡Expediente ${expedienteCreado.codigoExpediente} aperturado exitosamente!`)
+  loadData()
+  selectedCotizacionParaExpediente.value = null
+  switchTab('expedientes')
+}
+
+const openAperturaModal = (cotizacion = null) => {
+  goToApertura(cotizacion)
 }
 
 const onExpedienteAperturado = (expedienteCreado) => {
-  showAperturaModal.value = false
-  showSuccess(`¡Expediente ${expedienteCreado.codigoExpediente} aperturado exitosamente!`)
-  loadData()
+  onExpedienteCreado(expedienteCreado)
 }
 
 const openDetalleExpediente = (exp) => {
@@ -1179,8 +1200,22 @@ onMounted(() => {
 // ==========================================
 const openInspectModal = (cotizacion) => {
   inspectedCotizacion.value = cotizacion
+  inspectedExpediente.value = null
   showAuditoriaCompleta.value = true
   window.scrollTo({ top: 0, behavior: 'smooth' })
+}
+
+const openAuditarExpediente = (exp) => {
+  inspectedExpediente.value = exp
+  inspectedCotizacion.value = null
+  showAuditoriaCompleta.value = true
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+}
+
+const closeAuditoriaCompleta = () => {
+  showAuditoriaCompleta.value = false
+  inspectedCotizacion.value = null
+  inspectedExpediente.value = null
 }
 
 const handleApproveFromAuditoria = async (cotizacion) => {
@@ -1201,7 +1236,7 @@ const handleObserveFromAuditoria = async ({ cotizacion, reason }) => {
       observaciones: 'Observaciones emitidas en auditoría técnica aduanera.'
     })
     showInfo(`Cotización ${cotizacion.codigoCotizacion} devuelta como Observada para corrección por Ventas.`)
-    showAuditoriaCompleta.value = false
+    closeAuditoriaCompleta()
     await loadData()
   } catch (err) {
     showError(err.response?.data?.message || 'Error al solicitar corrección.')
@@ -1220,7 +1255,7 @@ const handleRejectFromAuditoria = async ({ cotizacion, reason }) => {
       observaciones: 'Rechazo técnico formal emitido en auditoría aduanera.'
     })
     showInfo(`Cotización ${cotizacion.codigoCotizacion} marcada como Rechazada.`)
-    showAuditoriaCompleta.value = false
+    closeAuditoriaCompleta()
     await loadData()
   } catch (err) {
     showError(err.response?.data?.message || 'Error al rechazar cotización.')
@@ -1230,8 +1265,8 @@ const handleRejectFromAuditoria = async ({ cotizacion, reason }) => {
 }
 
 const handleAperturaFromAuditoria = (cotizacion) => {
-  showAuditoriaCompleta.value = false
-  openAperturaModal(cotizacion)
+  closeAuditoriaCompleta()
+  goToApertura(cotizacion)
 }
 
 // Acciones rápidas desde la tabla

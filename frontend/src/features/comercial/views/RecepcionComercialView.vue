@@ -1,9 +1,18 @@
 <template>
   <div class="ventas-view">
 
+    <!-- Vista Completa: Corrección Unificada de Cotización Observada -->
+    <CotizacionCorrectionView
+      v-if="showCorrectionView"
+      :cotizacion="selectedCotizacion"
+      :clientes="clientes"
+      @cancel="closeAllForms"
+      @saved="handleCotizacionSaved"
+    />
+
     <!-- Vista Completa: Formulario Maestro de Cotización Comercial (en Pasos) -->
     <CotizacionRegistrationForm
-      v-if="showCotizacionForm"
+      v-else-if="showCotizacionForm"
       :cotizacion-to-edit="selectedCotizacion"
       :clientes="clientes"
       @cancel="closeAllForms"
@@ -560,7 +569,7 @@
                   type="button"
                   class="action-btn-outline observe-fix"
                   title="Corregir observaciones y enviar nuevamente"
-                  @click="openEditCotizacion(c)"
+                  @click="openCorrectionCotizacion(c)"
                 >
                   <i class="pi pi-file-edit"></i>
                   <span>Corregir</span>
@@ -1004,6 +1013,7 @@ import { useNotification } from '@/shared/composables/useNotification'
 import { useConfirmation } from '@/shared/composables/useConfirmation'
 import ClienteRegistrationForm from '../components/ClienteRegistrationForm.vue'
 import CotizacionRegistrationForm from '../components/CotizacionRegistrationForm.vue'
+import CotizacionCorrectionView from '../components/CotizacionCorrectionView.vue'
 import DocumentosManagerModal from '@/shared/components/DocumentosManagerModal.vue'
 
 const route = useRoute()
@@ -1020,6 +1030,7 @@ const showClienteForm = ref(false)
 const selectedCliente = ref(null)
 
 const showCotizacionForm = ref(false)
+const showCorrectionView = ref(false)
 const selectedCotizacion = ref(null)
 
 const navigateTo = (subOption) => {
@@ -1081,12 +1092,13 @@ const openEditFromObservation = () => {
   if (selectedObservationCotizacion.value) {
     const c = selectedObservationCotizacion.value
     showObservationDialog.value = false
-    openEditCotizacion(c)
+    openCorrectionCotizacion(c)
   }
 }
 
 // Cerrar todos los formularios de vista completa y volver a los listados
 const closeAllForms = () => {
+  showCorrectionView.value = false
   showCotizacionForm.value = false
   showClienteForm.value = false
   selectedCotizacion.value = null
@@ -1510,7 +1522,19 @@ const openCreateCotizacion = () => {
   showCotizacionForm.value = true
 }
 
+const openCorrectionCotizacion = (cotizacion) => {
+  selectedCotizacion.value = { ...cotizacion }
+  showCorrectionView.value = true
+  showCotizacionForm.value = false
+  showClienteForm.value = false
+  showObservationDialog.value = false
+}
+
 const openEditCotizacion = (cotizacion) => {
+  if (cotizacion?.estado === 'REVISION' || cotizacion?.estado === 'OBSERVADA') {
+    openCorrectionCotizacion(cotizacion)
+    return
+  }
   selectedCotizacion.value = { ...cotizacion }
   showCotizacionForm.value = true
 }
@@ -1523,7 +1547,22 @@ const handleCotizacionSaved = async ({ isEdit, cotizacionId, payload, documentos
   try {
     if (isEdit) {
       await comercialService.updateCotizacion(cotizacionId, payload)
-      showToast('Cotización actualizada exitosamente.')
+      if (cotizacionId && documentos && documentos.length > 0) {
+        for (const doc of documentos) {
+          try {
+            await documentoService.upload([doc.file], {
+              categoria: doc.categoria,
+              descripcion: doc.descripcion || '',
+              entidadTipo: 'COTIZACION',
+              idEntidad: cotizacionId,
+              idUsuario: authStore.user?.idUsuario || 1
+            })
+          } catch (docErr) {
+            console.error('Error al subir documento sustentatorio en edición:', docErr)
+          }
+        }
+      }
+      showToast('Cotización actualizada y enviada a Supervisión exitosamente.')
     } else {
       const created = await comercialService.createCotizacion(payload)
       const newId = created?.idCotizacion
@@ -1549,7 +1588,7 @@ const handleCotizacionSaved = async ({ isEdit, cotizacionId, payload, documentos
         showToast('Cotización registrada exitosamente.')
       }
     }
-    showCotizacionForm.value = false
+    closeAllForms()
     await loadData()
   } catch (err) {
     showToast(err.response?.data?.message || 'Error al guardar cotización.', 'error')

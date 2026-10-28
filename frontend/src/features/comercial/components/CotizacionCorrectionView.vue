@@ -635,8 +635,8 @@
 import { ref, onMounted, toRef } from 'vue'
 import Select from 'primevue/select'
 import { useCotizacionCorrection } from '../composables/useCotizacionCorrection'
-import { catalogoService } from '@/features/comercial/services/catalogoService'
-import { documentoService } from '@/features/comercial/services/documentoService'
+import { catalogoService } from '@/features/admin/catalogos/services/catalogoService'
+import { documentoService } from '@/features/documentos/services/documentoService'
 import { formatMoney } from '../composables/useCotizacionCalculator'
 
 const props = defineProps({

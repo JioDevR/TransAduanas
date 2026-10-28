@@ -524,6 +524,22 @@
                   </template>
                 </Select>
                 <span class="field-hint-mini">Modalidad de estiba y transporte de la mercancía</span>
+
+                <!-- Tarjeta Callout con Descripción visible del Tipo de Carga seleccionado -->
+                <transition name="fade">
+                  <div v-if="selectedTipoCarga && selectedTipoCarga.descripcion" class="tipo-carga-desc-callout">
+                    <div class="callout-icon-box">
+                      <i class="pi pi-box"></i>
+                    </div>
+                    <div class="callout-body">
+                      <div class="callout-header-row">
+                        <span class="callout-tag font-mono">{{ selectedTipoCarga.codigo }}</span>
+                        <span class="callout-kicker">ESPECIFICACIÓN OPERATIVA</span>
+                      </div>
+                      <p class="callout-desc">{{ selectedTipoCarga.descripcion }}</p>
+                    </div>
+                  </div>
+                </transition>
               </div>
 
               <div class="field-group">
@@ -3996,5 +4012,71 @@ defineExpose({
   display: flex;
   flex-direction: column;
   gap: var(--space-3, 0.75rem);
+}
+
+/* Callout con Descripción del Tipo de Carga Seleccionado */
+.tipo-carga-desc-callout {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3, 0.75rem);
+  padding: var(--space-3, 0.75rem) var(--space-4, 1rem);
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-left: 3px solid var(--color-primary);
+  border-radius: var(--radius-md, 0.5rem);
+  margin-top: var(--space-2, 0.5rem);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.callout-icon-box {
+  width: 2rem;
+  height: 2rem;
+  border-radius: var(--radius-sm, 0.25rem);
+  background: var(--color-primary-subtle);
+  color: var(--color-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  flex-shrink: 0;
+  margin-top: 0.15rem;
+}
+
+.callout-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.callout-header-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2, 0.5rem);
+}
+
+.callout-tag {
+  font-size: var(--font-size-2xs, 0.65rem);
+  font-weight: 800;
+  background: var(--color-bg-muted);
+  border: 1px solid var(--color-border);
+  padding: 0.1rem 0.4rem;
+  border-radius: var(--radius-xs, 0.2rem);
+  color: var(--color-primary);
+}
+
+.callout-kicker {
+  font-size: var(--font-size-2xs, 0.65rem);
+  font-weight: 700;
+  color: var(--color-text-subtle);
+  letter-spacing: 0.04em;
+}
+
+.callout-desc {
+  font-size: var(--font-size-xs, 0.75rem);
+  color: var(--color-text-main);
+  line-height: 1.4;
+  margin: 0;
+  font-weight: 500;
 }
 </style>

@@ -379,6 +379,11 @@
               <span class="detail-val">{{ form.tipoContenedorSugerido || 'No especificado' }}</span>
             </div>
 
+            <div v-if="form.descripcion" class="card-detail-item">
+              <span class="detail-label">Alcance:</span>
+              <span class="detail-val">{{ form.descripcion }}</span>
+            </div>
+
             <div class="card-detail-item">
               <span class="detail-label">Tara de Referencia:</span>
               <span class="detail-val highlight-val">{{ formatNumber(form.taraSugeridaKg) }} kg</span>

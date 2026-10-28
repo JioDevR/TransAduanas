@@ -216,6 +216,7 @@ const currentTitle = computed(() => {
   if (navigationStore.currentModule === 'gestion-aduanera') {
     const sMap = {
       cotizaciones: 'Bandeja de Cotizaciones para Revisión Técnica',
+      apertura: 'Apertura de Expedientes Aduaneros',
       expedientes: 'Gestión Integral de Expedientes Aduaneros',
       declaraciones: 'Declaraciones DAM (Liquidación)',
       clasificacion: 'Clasificación Arancelaria NANDINA',
@@ -346,6 +347,7 @@ const currentSubtitle = computed(() => {
   if (navigationStore.currentModule === 'gestion-aduanera') {
     const sMap = {
       cotizaciones: 'Auditoría técnica de propuestas comerciales, control de partidas arancelarias y validación normativa.',
+      apertura: 'Formalización y apertura operativa de expedientes aduaneros para cotizaciones con pago verificado.',
       expedientes: 'Gestión integral de expedientes aduaneros, asignación de canales SUNAT y autorización de levante.'
     }
     return sMap[navigationStore.gestionAduaneraSubOption] || 'Auditoría técnica de propuestas, control de partidas, apertura de expedientes aduaneros y seguimiento SUNAT.'

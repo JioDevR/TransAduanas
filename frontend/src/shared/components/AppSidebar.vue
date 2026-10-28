@@ -272,7 +272,20 @@
           </button>
         </li>
 
-        <!-- Sub-opción 02: Gestión de Expedientes -->
+        <!-- Sub-opción 02: Apertura de Expedientes -->
+        <li class="nav-item">
+          <button
+            type="button"
+            :class="['nav-sub-btn', { active: navigationStore.gestionAduaneraSubOption === 'apertura' }]"
+            @click="handleGestionAduaneraSubClick('apertura')"
+            :title="isCollapsed ? 'Apertura de Expedientes Aduaneros' : ''"
+          >
+            <span class="nav-num">02</span>
+            <span v-if="!isCollapsed" class="nav-label">Apertura Expedientes</span>
+          </button>
+        </li>
+
+        <!-- Sub-opción 03: Gestión de Expedientes -->
         <li class="nav-item">
           <button
             type="button"
@@ -280,12 +293,12 @@
             @click="handleGestionAduaneraSubClick('expedientes')"
             :title="isCollapsed ? 'Gestión de Expedientes' : ''"
           >
-            <span class="nav-num">02</span>
+            <span class="nav-num">03</span>
             <span v-if="!isCollapsed" class="nav-label">Gestión de Expedientes</span>
           </button>
         </li>
 
-        <!-- Sub-opción 03: Declaraciones DAM (Liquidación) -->
+        <!-- Sub-opción 04: Declaraciones DAM (Liquidación) -->
         <li class="nav-item">
           <button
             type="button"
@@ -293,12 +306,12 @@
             @click="handleGestionAduaneraSubClick('declaraciones')"
             :title="isCollapsed ? 'Declaraciones DAM' : ''"
           >
-            <span class="nav-num">03</span>
+            <span class="nav-num">04</span>
             <span v-if="!isCollapsed" class="nav-label">Declaraciones DAM</span>
           </button>
         </li>
 
-        <!-- Sub-opción 04: Clasificación Arancelaria -->
+        <!-- Sub-opción 05: Clasificación Arancelaria -->
         <li class="nav-item">
           <button
             type="button"
@@ -306,12 +319,12 @@
             @click="handleGestionAduaneraSubClick('clasificacion')"
             :title="isCollapsed ? 'Clasificación Arancelaria' : ''"
           >
-            <span class="nav-num">04</span>
+            <span class="nav-num">05</span>
             <span v-if="!isCollapsed" class="nav-label">Clasificación Arancelaria</span>
           </button>
         </li>
 
-        <!-- Sub-opción 05: Cálculo de Tributos -->
+        <!-- Sub-opción 06: Cálculo de Tributos -->
         <li class="nav-item">
           <button
             type="button"
@@ -319,7 +332,7 @@
             @click="handleGestionAduaneraSubClick('tributos')"
             :title="isCollapsed ? 'Cálculo de Tributos' : ''"
           >
-            <span class="nav-num">05</span>
+            <span class="nav-num">06</span>
             <span v-if="!isCollapsed" class="nav-label">Cálculo de Tributos</span>
           </button>
         </li>

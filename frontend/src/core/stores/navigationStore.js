@@ -12,7 +12,7 @@ export const useNavigationStore = defineStore('navigation', {
     gerenciaGeneralSubOption: 'dashboard',
     // Sub-opciones en Recepción Comercial: 'dashboard' | 'cotizaciones' | 'clientes' | 'ordenes'
     comercialSubOption: 'dashboard',
-    // Sub-opciones en Gestión Aduanera: 'cotizaciones' | 'expedientes' | 'declaraciones' | 'clasificacion' | 'tributos'
+    // Sub-opciones en Gestión Aduanera: 'cotizaciones' | 'apertura' | 'expedientes' | 'declaraciones' | 'clasificacion' | 'tributos'
     gestionAduaneraSubOption: 'cotizaciones',
     // Sub-opciones en Agente Aduanero: 'almacen' | 'expedientes' | 'despacho'
     agenteAduaneroSubOption: 'almacen',

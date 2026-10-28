@@ -157,7 +157,36 @@
             </div>
           </div>
         </div>
+
+        <!-- 5. Despacho Terrestre & Entrega a Destino -->
+        <div class="detail-card">
+          <div class="card-header">
+            <i class="pi pi-truck"></i>
+            <span>5. Tramo Terrestre & Entrega Final</span>
+          </div>
+          <div class="card-content">
+            <div class="info-row">
+              <span class="info-label">Servicio de Transporte SGA:</span>
+              <span :class="['font-bold', expediente.servicioTransporte ? 'text-success' : 'text-muted-dash']">
+                {{ expediente.servicioTransporte ? 'Contratado (Flota Propia)' : 'No Contratado (Retiro Directo Terminal)' }}
+              </span>
+            </div>
+            <div v-if="expediente.codigoTrackingTransporte" class="info-row">
+              <span class="info-label">Código Tracking Terrestre:</span>
+              <span class="info-val font-mono strong">{{ expediente.codigoTrackingTransporte }}</span>
+            </div>
+            <div v-if="expediente.estadoTransporte" class="info-row">
+              <span class="info-label">Estado Traslado Terrestre:</span>
+              <Tag
+                :value="expediente.estadoTransporte"
+                :severity="expediente.estadoTransporte === 'ENTREGADO' ? 'success' : 'info'"
+                rounded
+              />
+            </div>
+          </div>
+        </div>
       </div>
+
 
       <!-- Observaciones e Instrucciones -->
       <div v-if="expediente.observaciones" class="obs-card">

@@ -61,4 +61,11 @@ public class ExpedienteResponseDTO {
     private LocalDateTime fechaApertura;
     private LocalDateTime fechaCierre;
     private String observaciones;
+
+    // Transporte y Despacho
+    private Boolean servicioTransporte;
+    private Integer idDespachoTransporte;
+    private String codigoTrackingTransporte;
+    private String estadoTransporte;
 }
+

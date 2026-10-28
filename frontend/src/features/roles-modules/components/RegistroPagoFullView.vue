@@ -896,6 +896,18 @@ watch(
   { immediate: true }
 )
 
+watch(
+  () => props.cotizaciones,
+  (list) => {
+    if (list && list.length > 0) {
+      cotizacionesDisponibles.value = list.filter(
+        c => c.estado === 'APROBADA' && c.estadoPago !== 'PAGADO_TOTAL'
+      )
+    }
+  },
+  { immediate: true }
+)
+
 async function loadCotizacionesAprobadas() {
   loadingCotizaciones.value = true
   try {

@@ -34,6 +34,8 @@ public interface IPortalService {
 
     PortalPagoAnticipoDTO registrarVoucherPago(Integer idCliente, PortalRegistroVoucherDTO dto, Integer idUsuarioCliente);
 
+    PortalPagoAnticipoDTO corregirPagoAnticipo(Integer idCliente, Integer idPago, PortalCorreccionPagoDTO dto, Integer idUsuarioCliente);
+
     void cambiarPassword(UsuarioCliente usuarioCliente, PortalCambioPasswordDTO dto);
 
     List<NotificacionClienteDTO> listarNotificaciones(Integer idCliente);

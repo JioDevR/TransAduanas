@@ -256,6 +256,21 @@
             </div>
           </div>
 
+          <!-- Banner de Observación Técnica de Aduanas -->
+          <div v-if="cotizacionSeleccionada.estado === 'OBSERVADA'" class="alert-box-observation">
+            <div class="alert-obs-header">
+              <i class="pi pi-exclamation-triangle"></i>
+              <strong>Observación Técnica de Aduanas Emitida</strong>
+            </div>
+            <p class="alert-obs-message">
+              {{ cotizacionSeleccionada.motivoObservacion || 'Se requieren correcciones técnicas o precisiones documentarias en la propuesta comercial.' }}
+            </p>
+            <div class="alert-obs-footer">
+              <i class="pi pi-info-circle"></i>
+              <span>Su asesor comercial asignado se encuentra coordinando con usted la subsanación de estos requisitos antes del reingreso a supervisión.</span>
+            </div>
+          </div>
+
           <!-- Observaciones -->
           <div v-if="cotizacionSeleccionada.observaciones" class="observations-box">
             <i class="pi pi-info-circle"></i>
@@ -456,7 +471,7 @@ function getStatusClass(st) {
   switch (st) {
     case 'APROBADA': return 'success'
     case 'PENDIENTE': return 'warning'
-    case 'OBSERVADA': return 'info'
+    case 'OBSERVADA': return 'danger'
     case 'RECHAZADA': return 'danger'
     default: return 'neutral'
   }
@@ -1091,4 +1106,40 @@ async function enviarSolicitud() {
 .text-center { text-align: center; }
 .font-mono { font-family: var(--font-mono); }
 .font-bold { font-weight: 700; }
+
+.alert-box-observation {
+  background: rgba(220, 38, 38, 0.08);
+  border: 1px solid rgba(220, 38, 38, 0.25);
+  border-radius: 6px;
+  padding: 0.85rem 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.alert-obs-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #dc2626;
+  font-size: 0.875rem;
+  margin-bottom: 0.4rem;
+}
+
+.alert-obs-message {
+  font-size: 0.8125rem;
+  color: var(--color-text-main, #2c251e);
+  line-height: 1.45;
+  margin: 0 0 0.5rem 0;
+  padding-left: 1.35rem;
+}
+
+.alert-obs-footer {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.75rem;
+  color: var(--color-text-muted, #6f6356);
+  border-top: 1px dashed rgba(220, 38, 38, 0.2);
+  padding-top: 0.4rem;
+  padding-left: 1.35rem;
+}
 </style>

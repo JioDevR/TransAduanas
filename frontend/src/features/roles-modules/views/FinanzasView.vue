@@ -2696,11 +2696,11 @@ watch(
   { immediate: true }
 )
 
-// Escuchar cambios de subopción desde el menú lateral si aplica
+// Escuchar cambios de subopción desde el menú lateral
 watch(
-  () => [navigationStore.finanzasSubOption, navigationStore.navTick],
-  ([val]) => {
-    // Si no es un disparador de acción directa, cerrar el formulario completo para ver la vista
+  () => navigationStore.finanzasSubOption,
+  (val) => {
+    // Si no es un disparador de acción directa, cerrar el formulario completo para ver la vista de tabla
     if (!navigationStore.finanzasActionTrigger) {
       showRegistroPagoFullView.value = false
       selectedCotizacionForPago.value = null
@@ -2722,20 +2722,48 @@ watch(
   }
 )
 
+function handleAccionFinanzas(act) {
+  if (act === 'registrar-anticipo' || act === 'registrar-abono') {
+    activeTab.value = 'pre-expedientes'
+    vistaPreExpedientes.value = 'cotizaciones'
+    openRegistrarPagoModal(null)
+    setTimeout(() => {
+      if (navigationStore.finanzasActionTrigger === act) {
+        navigationStore.finanzasActionTrigger = null
+      }
+    }, 50)
+  }
+}
+
 // Escuchar disparadores de acciones desde el Sidebar
 watch(
   () => [navigationStore.finanzasActionTrigger, navigationStore.navTick],
   ([act]) => {
-    if (act === 'registrar-anticipo') {
-      activeTab.value = 'pre-expedientes'
-      navigationStore.finanzasActionTrigger = null
-      openRegistrarPagoModal(null)
+    if (act) {
+      handleAccionFinanzas(act)
     }
-  }
+  },
+  { immediate: true }
+)
+
+// Escuchar acciones pasadas por query param de ruta
+watch(
+  () => route.query.action,
+  (actionQuery) => {
+    if (actionQuery) {
+      handleAccionFinanzas(actionQuery)
+    }
+  },
+  { immediate: true }
 )
 
 onMounted(() => {
   loadAllData()
+  if (navigationStore.finanzasActionTrigger) {
+    handleAccionFinanzas(navigationStore.finanzasActionTrigger)
+  } else if (route.query.action) {
+    handleAccionFinanzas(route.query.action)
+  }
 })
 </script>
 

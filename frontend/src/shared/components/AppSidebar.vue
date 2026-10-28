@@ -745,11 +745,13 @@ const handleFinanzasSubClick = (subOption) => {
   }
 }
 
-// Disparador de acciones rápidas de Finanzas (modales)
+// Disparador de acciones rápidas de Finanzas (modales y vistas completas)
 const handleFinanzasAction = (action) => {
   navigationStore.setActiveModule('finanzas')
   if (route.path !== '/finanzas') {
-    router.push('/finanzas')
+    router.push({ path: '/finanzas', query: { tab: 'pre-expedientes', action } })
+  } else {
+    router.replace({ query: { ...route.query, tab: 'pre-expedientes', action } })
   }
   navigationStore.triggerFinanzasAction(action)
 }

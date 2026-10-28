@@ -23,6 +23,14 @@
             <i class="pi pi-folder"></i>
             <span>EXPEDIENTE: {{ cotizacion.codigoExpediente }}</span>
           </span>
+          <span v-if="cotizacion.clienteTieneUsuario" class="user-portal-status-badge active" title="Empresa cuenta con usuario activo en el Portal B2B">
+            <i class="pi pi-id-card"></i>
+            <span>Portal B2B Activo</span>
+          </span>
+          <span v-else class="user-portal-status-badge prospect" title="Al aprobarse, el sistema generará automáticamente el primer usuario B2B para la empresa">
+            <i class="pi pi-user-plus"></i>
+            <span>Primer Trámite (Crea Usuario B2B al Aprobar)</span>
+          </span>
         </div>
 
         <h1 class="form-main-title">
@@ -119,6 +127,15 @@
       <p class="panel-desc">
         Especifique con precisión las observaciones técnicas o arancelarias para que el asesor comercial rectifique la cotización <strong>{{ cotizacion.codigoCotizacion }}</strong>. Una vez corregida por Ventas, volverá a esta bandeja para su reevaluación.
       </p>
+      <div class="panel-channel-info">
+        <i class="pi pi-info-circle"></i>
+        <span v-if="cotizacion.clienteTieneUsuario">
+          La empresa cuenta con usuario activo en el Portal B2B; se emitirá notificación digital a su cuenta en la plataforma.
+        </span>
+        <span v-else>
+          La empresa aún no tiene usuario en el portal (se crea tras la primera aprobación); la observación será coordinada presencialmente por el asesor comercial y no podrá reingresar a supervisión hasta que ventas registre la corrección.
+        </span>
+      </div>
       <div class="panel-input-box">
         <label class="panel-label">Detalle de Observación / Motivo de Revisión *</label>
         <textarea
@@ -1419,5 +1436,46 @@ const getStatusIcon = (estado) => {
 .checklist-audit-stamp i {
   font-size: 1.25rem;
   color: var(--color-primary);
+}
+
+.user-portal-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.2rem 0.55rem;
+  border-radius: var(--radius-sm, 4px);
+}
+
+.user-portal-status-badge.active {
+  background: rgba(37, 99, 235, 0.12);
+  color: #2563eb;
+  border: 1px solid rgba(37, 99, 235, 0.25);
+}
+
+.user-portal-status-badge.prospect {
+  background: rgba(217, 119, 6, 0.12);
+  color: #b45309;
+  border: 1px solid rgba(217, 119, 6, 0.25);
+}
+
+.panel-channel-info {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  background: rgba(217, 119, 6, 0.08);
+  border: 1px solid rgba(217, 119, 6, 0.2);
+  border-radius: var(--radius-sm, 4px);
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 0.85rem;
+  font-size: 0.785rem;
+  color: var(--color-text-main);
+  line-height: 1.4;
+}
+
+.panel-channel-info i {
+  color: #d97706;
+  margin-top: 0.1rem;
 }
 </style>

@@ -8,14 +8,16 @@ services:
       - --collation-server=utf8mb4_unicode_ci
       - --default-time-zone=-05:00
     environment:
-      MYSQL_ROOT_PASSWORD: [PASSWORD]
+      MYSQL_ROOT_PASSWORD: 123gato456
       MYSQL_DATABASE: SGAdb
       MYSQL_USER: admin
-      MYSQL_PASSWORD: [PASSWORD]
+      MYSQL_PASSWORD: 123gato456
     ports:
       - "3306:3306"
     volumes:
       - sga-mysql-data:/var/lib/mysql
+      - ./schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./seed.sql:/docker-entrypoint-initdb.d/02-seed.sql:ro
 
 volumes:
   sga-mysql-data:

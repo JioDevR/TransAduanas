@@ -45,4 +45,6 @@ public class PortalRegistroVoucherDTO {
     private LocalDate fechaOperacion;
 
     private String observaciones;
+
+    private Integer idDocumentoComprobante;
 }

@@ -107,10 +107,11 @@
               <th class="font-mono">N° OPERACIÓN</th>
               <th>FECHA OPERACIÓN</th>
               <th class="text-center">ESTADO FINANZAS</th>
+              <th class="text-center">ACCIONES</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="p in anticipos" :key="p.idPago">
+            <tr v-for="p in anticipos" :key="p.idPago" :class="{ 'row-observed': p.estadoPago === 'OBSERVADO' || p.estadoPago === 'RECHAZADO' }">
               <td class="font-mono font-bold">{{ p.codigoPago }}</td>
               <td class="font-mono">{{ p.codigoCotizacion }}</td>
               <td>
@@ -132,6 +133,33 @@
                 <span class="status-pill" :class="getPagoStatusClass(p.estadoPago)">
                   {{ formatEstadoPago(p.estadoPago) }}
                 </span>
+                <div v-if="(p.estadoPago === 'OBSERVADO' || p.estadoPago === 'RECHAZADO') && p.observacionFinanzas" class="obs-inline-callout">
+                  <i class="pi pi-exclamation-triangle"></i>
+                  <span>{{ p.observacionFinanzas }}</span>
+                </div>
+              </td>
+              <td class="text-center">
+                <div class="action-btn-group">
+                  <button 
+                    v-if="p.estadoPago === 'OBSERVADO' || p.estadoPago === 'RECHAZADO'"
+                    type="button" 
+                    class="btn-action-correct" 
+                    @click="abrirModalCorreccion(p)"
+                    title="Subsanar Voucher o Corregir Pago"
+                  >
+                    <i class="pi pi-pencil"></i>
+                    <span>Subsanar</span>
+                  </button>
+                  <a 
+                    v-if="p.documentoComprobanteUrl" 
+                    :href="p.documentoComprobanteUrl" 
+                    target="_blank" 
+                    class="btn-action-view"
+                    title="Ver Comprobante Adjunto"
+                  >
+                    <i class="pi pi-file"></i>
+                  </a>
+                </div>
               </td>
             </tr>
           </tbody>
@@ -288,6 +316,26 @@
             </div>
 
             <div class="form-field full">
+              <label>Adjuntar Comprobante Bancario (Voucher PDF o Imagen):</label>
+              <div class="file-dropzone">
+                <input 
+                  type="file" 
+                  id="voucher-file-input"
+                  accept="application/pdf,image/png,image/jpeg,image/webp" 
+                  @change="onVoucherFileSelected"
+                  class="file-input-hidden"
+                />
+                <label for="voucher-file-input" class="file-dropzone-label">
+                  <i class="pi pi-upload"></i>
+                  <span v-if="!voucherArchivoSeleccionado">Haga clic para adjuntar voucher (PDF, JPG, PNG)</span>
+                  <span v-else class="file-selected-name">
+                    <i class="pi pi-file"></i> {{ voucherArchivoSeleccionado.name }} ({{ (voucherArchivoSeleccionado.size / 1024).toFixed(1) }} KB)
+                  </span>
+                </label>
+              </div>
+            </div>
+
+            <div class="form-field full">
               <label>Observaciones de Pago:</label>
               <textarea 
                 v-model="voucherForm.observaciones" 
@@ -310,6 +358,134 @@
         </form>
       </div>
     </div>
+
+    <!-- Modal para Subsanar / Corregir Pago Observado -->
+    <div v-if="modalCorreccionVisible" class="modal-backdrop" @click.self="modalCorreccionVisible = false">
+      <div class="modal-card">
+        <div class="modal-header">
+          <div class="modal-title-box">
+            <span class="modal-kicker text-danger">SUBSANACIÓN DE PAGO OBSERVADO</span>
+            <h2 class="modal-title">Corregir Registro de Pago ({{ pagoSeleccionadoParaCorreccion?.codigoPago }})</h2>
+          </div>
+          <button class="close-btn" @click="modalCorreccionVisible = false">
+            <i class="pi pi-times"></i>
+          </button>
+        </div>
+
+        <form @submit.prevent="enviarCorreccion" class="modal-body">
+          <div class="alert-box-obs mb-3" v-if="pagoSeleccionadoParaCorreccion?.observacionFinanzas">
+            <i class="pi pi-exclamation-triangle"></i>
+            <div>
+              <strong>Observación emitida por Finanzas:</strong>
+              <p>{{ pagoSeleccionadoParaCorreccion.observacionFinanzas }}</p>
+            </div>
+          </div>
+
+          <div class="form-grid">
+            <div class="form-field">
+              <label>Monto Real Abonado *</label>
+              <input 
+                v-model.number="correccionForm.montoAbonado" 
+                type="number" 
+                step="0.01" 
+                min="0.01" 
+                required 
+                class="custom-input font-mono"
+              />
+            </div>
+
+            <div class="form-field">
+              <label>Moneda *</label>
+              <select v-model="correccionForm.moneda" required class="custom-select">
+                <option value="USD">Dólares Americanos (USD)</option>
+                <option value="PEN">Soles Peruanos (PEN)</option>
+              </select>
+            </div>
+
+            <div class="form-field">
+              <label>Banco Emisor (Su Banco):</label>
+              <select v-model="correccionForm.bancoOrigen" class="custom-select">
+                <option value="BCP">Banco de Crédito del Perú (BCP)</option>
+                <option value="BBVA">BBVA Continental</option>
+                <option value="INTERBANK">Interbank</option>
+                <option value="SCOTIABANK">Scotiabank</option>
+                <option value="BANCO_NACION">Banco de la Nación</option>
+              </select>
+            </div>
+
+            <div class="form-field">
+              <label>Cuenta Receptora TransAduanas *</label>
+              <select v-model="correccionForm.bancoDestino" required class="custom-select">
+                <option value="BCP Dolares TransAduanas">BCP Dólares (Cta: 191-289381-1-09)</option>
+                <option value="BCP Soles TransAduanas">BCP Soles (Cta: 191-289381-0-08)</option>
+                <option value="BBVA Dolares TransAduanas">BBVA Dólares (Cta: 0011-0182-0100)</option>
+                <option value="Banco Nacion SPOT">Banco de la Nación SPOT (Cta: 00-000-12891)</option>
+              </select>
+            </div>
+
+            <div class="form-field">
+              <label>Número de Operación Bancaria *</label>
+              <input 
+                v-model.trim="correccionForm.numeroOperacion" 
+                type="text" 
+                required 
+                class="custom-input font-mono"
+              />
+            </div>
+
+            <div class="form-field">
+              <label>Fecha de Operación *</label>
+              <input 
+                v-model="correccionForm.fechaOperacion" 
+                type="date" 
+                required 
+                class="custom-input"
+              />
+            </div>
+
+            <div class="form-field full">
+              <label>Reemplazar Voucher Bancario (Nuevo PDF o Imagen):</label>
+              <div class="file-dropzone">
+                <input 
+                  type="file" 
+                  id="correccion-file-input"
+                  accept="application/pdf,image/png,image/jpeg,image/webp" 
+                  @change="onCorreccionFileSelected"
+                  class="file-input-hidden"
+                />
+                <label for="correccion-file-input" class="file-dropzone-label">
+                  <i class="pi pi-upload"></i>
+                  <span v-if="!correccionArchivoSeleccionado">Haga clic para adjuntar comprobante corregido (opcional)</span>
+                  <span v-else class="file-selected-name">
+                    <i class="pi pi-file"></i> {{ correccionArchivoSeleccionado.name }} ({{ (correccionArchivoSeleccionado.size / 1024).toFixed(1) }} KB)
+                  </span>
+                </label>
+              </div>
+            </div>
+
+            <div class="form-field full">
+              <label>Explicación de la Subsanación:</label>
+              <textarea 
+                v-model="correccionForm.observaciones" 
+                rows="2" 
+                placeholder="Indique las correcciones realizadas o aclaraciones para el Contador..."
+                class="custom-textarea"
+              ></textarea>
+            </div>
+          </div>
+
+          <div class="modal-footer" style="padding: 1rem 0 0 0; margin-top: 1rem;">
+            <button type="button" class="btn-secondary" @click="modalCorreccionVisible = false">
+              Cancelar
+            </button>
+            <button type="submit" class="btn-primary" :disabled="enviandoCorreccion">
+              <i v-if="enviandoCorreccion" class="pi pi-spin pi-spinner"></i>
+              <span v-else>Re-enviar a Revisión de Finanzas</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -327,6 +503,26 @@ const loading = ref(true)
 const modalVoucherVisible = ref(false)
 const enviandoVoucher = ref(false)
 const opcionesReferencia = ref([])
+const voucherArchivoSeleccionado = ref(null)
+
+// Variables para Subsanación / Corrección de Pago
+const modalCorreccionVisible = ref(false)
+const enviandoCorreccion = ref(false)
+const pagoSeleccionadoParaCorreccion = ref(null)
+const correccionArchivoSeleccionado = ref(null)
+
+const correccionForm = ref({
+  idPago: null,
+  montoAbonado: null,
+  moneda: 'USD',
+  metodoPago: 'TRANSFERENCIA_BANCARIA',
+  bancoOrigen: 'BCP',
+  bancoDestino: 'BCP Dolares TransAduanas',
+  numeroOperacion: '',
+  fechaOperacion: new Date().toISOString().substring(0, 10),
+  observaciones: '',
+  idDocumentoComprobante: null
+})
 
 const voucherForm = ref({
   tipoObligacion: 'ANTICIPO_COTIZACION',
@@ -338,7 +534,8 @@ const voucherForm = ref({
   bancoDestino: 'BCP Dolares TransAduanas',
   numeroOperacion: '',
   fechaOperacion: new Date().toISOString().substring(0, 10),
-  observaciones: ''
+  observaciones: '',
+  idDocumentoComprobante: null
 })
 
 onMounted(() => {
@@ -385,6 +582,7 @@ function getPagoStatusClass(st) {
     case 'PENDIENTE_REVISION':
     case 'EN_CONCILIACION':
       return 'warning'
+    case 'OBSERVADO':
     case 'RECHAZADO':
       return 'danger'
     default:
@@ -394,7 +592,49 @@ function getPagoStatusClass(st) {
 
 function openVoucherModal() {
   actualizarReferencias()
+  voucherArchivoSeleccionado.value = null
   modalVoucherVisible.value = true
+}
+
+function onVoucherFileSelected(event) {
+  const file = event.target.files?.[0]
+  if (file) {
+    voucherArchivoSeleccionado.value = file
+  }
+}
+
+function onCorreccionFileSelected(event) {
+  const file = event.target.files?.[0]
+  if (file) {
+    correccionArchivoSeleccionado.value = file
+  }
+}
+
+function abrirModalCorreccion(pago) {
+  pagoSeleccionadoParaCorreccion.value = pago
+  correccionArchivoSeleccionado.value = null
+  correccionForm.value = {
+    idPago: pago.idPago,
+    montoAbonado: pago.montoAbonado,
+    moneda: pago.moneda || 'USD',
+    metodoPago: pago.metodoPago || 'TRANSFERENCIA_BANCARIA',
+    bancoOrigen: pago.bancoOrigen || 'BCP',
+    bancoDestino: pago.bancoDestino || 'BCP Dolares TransAduanas',
+    numeroOperacion: pago.numeroOperacion || '',
+    fechaOperacion: pago.fechaOperacion || new Date().toISOString().substring(0, 10),
+    observaciones: '',
+    idDocumentoComprobante: pago.idDocumentoComprobante || null
+  }
+  modalCorreccionVisible.value = true
+}
+
+async function subirComprobante(file) {
+  const formData = new FormData()
+  formData.append('file', file)
+  const res = await apiClient.post('/portal/pagos/upload-comprobante', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  })
+  return res.data?.data?.idDocumento
 }
 
 function actualizarReferencias() {
@@ -426,6 +666,11 @@ function actualizarReferencias() {
 async function enviarVoucher() {
   enviandoVoucher.value = true
   try {
+    if (voucherArchivoSeleccionado.value) {
+      const docId = await subirComprobante(voucherArchivoSeleccionado.value)
+      voucherForm.value.idDocumentoComprobante = docId
+    }
+
     const res = await apiClient.post('/portal/pagos/registrar-voucher', voucherForm.value)
     if (res.data?.data) {
       modalVoucherVisible.value = false
@@ -436,6 +681,28 @@ async function enviarVoucher() {
     alert(err.response?.data?.message || 'Error al registrar voucher')
   } finally {
     enviandoVoucher.value = false
+  }
+}
+
+async function enviarCorreccion() {
+  enviandoCorreccion.value = true
+  try {
+    if (correccionArchivoSeleccionado.value) {
+      const docId = await subirComprobante(correccionArchivoSeleccionado.value)
+      correccionForm.value.idDocumentoComprobante = docId
+    }
+
+    const idPago = correccionForm.value.idPago
+    const res = await apiClient.put(`/portal/pagos/anticipos/${idPago}/corregir`, correccionForm.value)
+    if (res.data?.data) {
+      modalCorreccionVisible.value = false
+      cargarTodo()
+      alert('Pago corregido exitosamente. Ha retornado a la bandeja de Finanzas para su revisión.')
+    }
+  } catch (err) {
+    alert(err.response?.data?.message || 'Error al corregir pago')
+  } finally {
+    enviandoCorreccion.value = false
   }
 }
 </script>
@@ -842,4 +1109,140 @@ async function enviarVoucher() {
 .font-mono { font-family: var(--font-mono); }
 .font-bold { font-weight: 700; }
 .highlight-cell { color: var(--color-primary, #352f2a); }
+
+/* Observaciones y Correcciones */
+.row-observed {
+  background-color: rgba(220, 38, 38, 0.04) !important;
+}
+
+.obs-inline-callout {
+  margin-top: 0.35rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  font-size: 0.72rem;
+  color: #b91c1c;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  max-width: 220px;
+  text-align: left;
+}
+
+.action-btn-group {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+}
+
+.btn-action-correct {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: #dc2626;
+  color: #ffffff;
+  border: none;
+  border-radius: 4px;
+  padding: 0.35rem 0.65rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-action-correct:hover {
+  background: #b91c1c;
+  transform: translateY(-1px);
+}
+
+.btn-action-view {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  background: var(--color-bg-subtle, #f4eee5);
+  color: var(--color-text-main, #2b2520);
+  border: 1px solid var(--color-border, #e4dacb);
+  font-size: 0.85rem;
+  transition: all 0.2s ease;
+}
+
+.btn-action-view:hover {
+  background: #e2d9cd;
+}
+
+/* File Dropzone */
+.file-dropzone {
+  position: relative;
+  width: 100%;
+}
+
+.file-input-hidden {
+  display: none;
+}
+
+.file-dropzone-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  border: 2px dashed var(--color-border, #e4dacb);
+  border-radius: 6px;
+  background: var(--color-bg-subtle, #faf8f5);
+  color: var(--color-text-muted, #6f6356);
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+  text-align: center;
+}
+
+.file-dropzone-label:hover {
+  border-color: var(--color-primary, #b45309);
+  background: #fffdf9;
+}
+
+.file-selected-name {
+  color: #15803d;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.alert-box-obs {
+  display: flex;
+  gap: 0.75rem;
+  background: #fef2f2;
+  border: 1px solid #f87171;
+  border-radius: 6px;
+  padding: 0.75rem 1rem;
+  color: #991b1b;
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
+.alert-box-obs i {
+  font-size: 1.25rem;
+  color: #dc2626;
+  margin-top: 0.1rem;
+}
+
+.alert-box-obs p {
+  margin: 0.25rem 0 0 0;
+  font-weight: 500;
+}
+
+.text-danger {
+  color: #dc2626 !important;
+}
+
+.mb-3 {
+  margin-bottom: 0.75rem;
+}
 </style>

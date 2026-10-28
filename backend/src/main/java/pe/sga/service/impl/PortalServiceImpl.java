@@ -42,6 +42,7 @@ public class PortalServiceImpl implements IPortalService {
     private final CatalogoMercanciaRepository mercanciaRepository;
     private final CatalogoTipoCargaRepository tipoCargaRepository;
     private final CatalogoPuertoRepository puertoRepository;
+    private final IDocumentoAdjuntoRepository documentoRepository;
     private final NotificacionClienteRepository notificacionClienteRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider tokenProvider;
@@ -386,6 +387,11 @@ public class PortalServiceImpl implements IPortalService {
                 ? dto.getMontoAbonado().multiply(tipoCambio).setScale(2, RoundingMode.HALF_UP)
                 : dto.getMontoAbonado();
 
+        DocumentoAdjunto comprobante = null;
+        if (dto.getIdDocumentoComprobante() != null) {
+            comprobante = documentoRepository.findById(dto.getIdDocumentoComprobante()).orElse(null);
+        }
+
         CotizacionPago pago = CotizacionPago.builder()
                 .cotizacion(cotizacion)
                 .codigoPago(codigoPago)
@@ -399,12 +405,75 @@ public class PortalServiceImpl implements IPortalService {
                 .bancoDestino(dto.getBancoDestino())
                 .numeroOperacion(dto.getNumeroOperacion())
                 .fechaOperacion(dto.getFechaOperacion())
+                .documentoComprobante(comprobante)
                 .estadoPago(EstadoPagoCotizacion.PENDIENTE_REVISION)
                 .usuarioRegistro(null)
                 .fechaRegistro(LocalDateTime.now())
                 .build();
 
         CotizacionPago guardado = cotizacionPagoRepository.save(pago);
+
+        if (!"ADELANTO_APROBADO".equals(cotizacion.getEstadoPago()) && !"PAGADO_TOTAL".equals(cotizacion.getEstadoPago())) {
+            cotizacion.setEstadoPago("PENDIENTE_REVISION");
+            cotizacionRepository.save(cotizacion);
+        }
+
+        return mapToPortalPagoAnticipo(guardado);
+    }
+
+    @Override
+    @Transactional
+    public PortalPagoAnticipoDTO corregirPagoAnticipo(Integer idCliente, Integer idPago, PortalCorreccionPagoDTO dto, Integer idUsuarioCliente) {
+        CotizacionPago pago = cotizacionPagoRepository.findById(idPago)
+                .orElseThrow(() -> new ResourceNotFoundException("Pago no encontrado con ID: " + idPago));
+
+        Cotizacion cotizacion = pago.getCotizacion();
+        if (cotizacion == null || cotizacion.getCliente() == null || !cotizacion.getCliente().getIdCliente().equals(idCliente)) {
+            throw new BadRequestException("El registro de pago no corresponde a su empresa");
+        }
+
+        if (pago.getEstadoPago() != EstadoPagoCotizacion.OBSERVADO && pago.getEstadoPago() != EstadoPagoCotizacion.RECHAZADO && pago.getEstadoPago() != EstadoPagoCotizacion.PENDIENTE_REVISION) {
+            throw new BadRequestException("Solo se pueden subsanar o corregir pagos que se encuentran observados o pendientes de revisión. Estado actual: " + pago.getEstadoPago());
+        }
+
+        BigDecimal tipoCambio = new BigDecimal("3.7500");
+        BigDecimal montoPen = "USD".equalsIgnoreCase(dto.getMoneda())
+                ? dto.getMontoAbonado().multiply(tipoCambio).setScale(2, RoundingMode.HALF_UP)
+                : dto.getMontoAbonado();
+
+        pago.setMontoAbonado(dto.getMontoAbonado());
+        pago.setMoneda(dto.getMoneda() != null ? dto.getMoneda().trim().toUpperCase() : "USD");
+        pago.setTipoCambio(tipoCambio);
+        pago.setMontoEquivalentePen(montoPen);
+        pago.setMetodoPago(dto.getMetodoPago());
+        pago.setBancoOrigen(dto.getBancoOrigen());
+        pago.setBancoDestino(dto.getBancoDestino());
+        pago.setNumeroOperacion(dto.getNumeroOperacion());
+        pago.setFechaOperacion(dto.getFechaOperacion());
+
+        if (dto.getIdDocumentoComprobante() != null) {
+            DocumentoAdjunto nuevoDoc = documentoRepository.findById(dto.getIdDocumentoComprobante()).orElse(null);
+            if (nuevoDoc != null) {
+                pago.setDocumentoComprobante(nuevoDoc);
+            }
+        }
+
+        // Subsanación del pago: regresa a la bandeja de pendientes de revisión del Contador
+        pago.setEstadoPago(EstadoPagoCotizacion.PENDIENTE_REVISION);
+        String notaSubsanacion = "Subsanado por cliente el " + LocalDate.now()
+                + (dto.getObservaciones() != null && !dto.getObservaciones().isBlank() ? ": " + dto.getObservaciones().trim() : "");
+        pago.setObservacionFinanzas(notaSubsanacion);
+
+        CotizacionPago guardado = cotizacionPagoRepository.save(pago);
+
+        if (!"ADELANTO_APROBADO".equals(cotizacion.getEstadoPago()) && !"PAGADO_TOTAL".equals(cotizacion.getEstadoPago())) {
+            cotizacion.setEstadoPago("PENDIENTE_REVISION");
+            cotizacionRepository.save(cotizacion);
+        }
+
+        log.info("Pago subsanado y reenviado a revisión contable: idPago={}, clienteId={}, cotizacion={}",
+                pago.getIdPago(), idCliente, cotizacion.getCodigoCotizacion());
+
         return mapToPortalPagoAnticipo(guardado);
     }
 
@@ -446,6 +515,7 @@ public class PortalServiceImpl implements IPortalService {
                 .fechaEmision(c.getFechaEmision())
                 .estado(c.getEstado() != null ? c.getEstado().name() : null)
                 .fechaRevision(c.getFechaRevision())
+                .motivoObservacion(c.getMotivoObservacion())
                 .observaciones(c.getObservaciones())
                 .estadoPago(c.getEstadoPago())
                 .totalAbonado(c.getTotalAbonado())
@@ -538,6 +608,9 @@ public class PortalServiceImpl implements IPortalService {
                 .fechaOperacion(p.getFechaOperacion())
                 .estadoPago(p.getEstadoPago() != null ? p.getEstadoPago().name() : null)
                 .observacionFinanzas(p.getObservacionFinanzas())
+                .idDocumentoComprobante(p.getDocumentoComprobante() != null ? p.getDocumentoComprobante().getIdDocumento() : null)
+                .documentoComprobanteNombre(p.getDocumentoComprobante() != null ? p.getDocumentoComprobante().getNombreOriginal() : null)
+                .documentoComprobanteUrl(p.getDocumentoComprobante() != null ? p.getDocumentoComprobante().getRutaAlmacenamiento() : null)
                 .fechaRegistro(p.getFechaRegistro())
                 .build();
     }

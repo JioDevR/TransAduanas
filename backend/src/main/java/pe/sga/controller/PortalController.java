@@ -15,6 +15,13 @@ import pe.sga.entity.UsuarioCliente;
 import pe.sga.exception.BadRequestException;
 import pe.sga.service.IPortalService;
 
+import org.springframework.http.MediaType;
+import org.springframework.web.multipart.MultipartFile;
+import pe.sga.dto.response.DocumentoResponseDTO;
+import pe.sga.entity.enums.CategoriaDocumento;
+import pe.sga.entity.enums.EntidadDocumento;
+import pe.sga.service.IDocumentoService;
+
 import java.util.List;
 
 @RestController
@@ -24,6 +31,7 @@ import java.util.List;
 public class PortalController {
 
     private final IPortalService portalService;
+    private final IDocumentoService documentoService;
 
     // =========================================================================
     // 1. AUTENTICACIÓN INDEPENDIENTE DEL PORTAL DE CLIENTES B2B
@@ -168,6 +176,36 @@ public class PortalController {
         PortalPagoAnticipoDTO registrado = portalService.registrarVoucherPago(idCliente, dto, idUsuarioCliente);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponseDTO.ok("Comprobante de pago registrado y enviado a validación contable", registrado));
+    }
+
+    @PostMapping(value = "/pagos/upload-comprobante", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasRole('CLIENTE_PORTAL')")
+    public ResponseEntity<ApiResponseDTO<DocumentoResponseDTO>> subirComprobanteVoucher(
+            @RequestParam("file") MultipartFile file,
+            @AuthenticationPrincipal UsuarioCliente usuarioCliente) {
+        Integer idCliente = resolverIdCliente(usuarioCliente);
+        List<DocumentoResponseDTO> docs = documentoService.subirDocumentos(
+                List.of(file),
+                CategoriaDocumento.GENERAL,
+                "Voucher de abono bancario registrado por cliente en portal B2B",
+                EntidadDocumento.CLIENTE,
+                idCliente,
+                1
+        );
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponseDTO.ok("Voucher almacenado exitosamente", docs.get(0)));
+    }
+
+    @PutMapping("/pagos/anticipos/{idPago}/corregir")
+    @PreAuthorize("hasRole('CLIENTE_PORTAL')")
+    public ResponseEntity<ApiResponseDTO<PortalPagoAnticipoDTO>> corregirVoucher(
+            @PathVariable Integer idPago,
+            @Valid @RequestBody PortalCorreccionPagoDTO dto,
+            @AuthenticationPrincipal UsuarioCliente usuarioCliente) {
+        Integer idCliente = resolverIdCliente(usuarioCliente);
+        Integer idUsuarioCliente = usuarioCliente.getIdUsuarioCliente();
+        PortalPagoAnticipoDTO corregido = portalService.corregirPagoAnticipo(idCliente, idPago, dto, idUsuarioCliente);
+        return ResponseEntity.ok(ApiResponseDTO.ok("Registro de pago subsanado exitosamente y devuelto a revisión contable", corregido));
     }
 
     // =========================================================================

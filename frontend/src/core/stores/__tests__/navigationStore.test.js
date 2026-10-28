@@ -68,4 +68,13 @@ describe('navigationStore', () => {
     store.setActiveModule('transporte')
     expect(store.activeModule).toBe('transporte-flota')
   })
+
+  it('debe disparar la acción de finanzas e incrementar navTick', () => {
+    const store = useNavigationStore()
+    expect(store.finanzasActionTrigger).toBeNull()
+
+    store.triggerFinanzasAction('registrar-anticipo')
+    expect(store.finanzasActionTrigger).toBe('registrar-anticipo')
+    expect(store.navTick).toBe(1)
+  })
 })

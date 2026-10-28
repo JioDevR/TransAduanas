@@ -26,7 +26,10 @@ public class PortalPagoAnticipoDTO {
     private String bancoDestino;
     private String numeroOperacion;
     private LocalDate fechaOperacion;
-    private String estadoPago; // PENDIENTE_REVISION, VALIDADO, RECHAZADO
+    private String estadoPago; // PENDIENTE_REVISION, VALIDADO, RECHAZADO, OBSERVADO
     private String observacionFinanzas;
+    private Integer idDocumentoComprobante;
+    private String documentoComprobanteUrl;
+    private String documentoComprobanteNombre;
     private LocalDateTime fechaRegistro;
 }

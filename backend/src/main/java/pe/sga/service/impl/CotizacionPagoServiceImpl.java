@@ -14,9 +14,11 @@ import pe.sga.entity.enums.EstadoCotizacion;
 import pe.sga.entity.enums.EstadoPagoCotizacion;
 import pe.sga.exception.BadRequestException;
 import pe.sga.exception.ResourceNotFoundException;
+import pe.sga.entity.NotificacionCliente;
 import pe.sga.repository.CotizacionPagoRepository;
 import pe.sga.repository.CotizacionRepository;
 import pe.sga.repository.IDocumentoAdjuntoRepository;
+import pe.sga.repository.NotificacionClienteRepository;
 import pe.sga.repository.UsuarioRepository;
 import pe.sga.service.ICotizacionPagoService;
 
@@ -34,6 +36,7 @@ public class CotizacionPagoServiceImpl implements ICotizacionPagoService {
     private final CotizacionRepository cotizacionRepository;
     private final UsuarioRepository usuarioRepository;
     private final IDocumentoAdjuntoRepository documentoRepository;
+    private final NotificacionClienteRepository notificacionClienteRepository;
 
     @Override
     @Transactional
@@ -141,6 +144,23 @@ public class CotizacionPagoServiceImpl implements ICotizacionPagoService {
 
             // Recalcular saldo y totales de cotización
             recalcularFinanzasCotizacion(cotizacion);
+
+            // Notificación al portal de clientes B2B (Diagrama: Pago Aprobado / Habilitado para apertura de expediente)
+            if (cotizacion != null && cotizacion.getCliente() != null) {
+                NotificacionCliente notif = NotificacionCliente.builder()
+                        .cliente(cotizacion.getCliente())
+                        .titulo("Anticipo de Pago Validado: " + pago.getCodigoPago())
+                        .mensaje("Su abono de " + pago.getMoneda() + " " + pago.getMontoAbonado()
+                                + " (Operación N° " + pago.getNumeroOperacion() + ") para la cotización "
+                                + cotizacion.getCodigoCotizacion()
+                                + " ha sido verificado y aprobado por Finanzas. Su servicio queda expedito para la apertura del expediente aduanero.")
+                        .tipo("PAGO")
+                        .leido(false)
+                        .enlace("/pagos")
+                        .fechaCreacion(LocalDateTime.now())
+                        .build();
+                notificacionClienteRepository.save(notif);
+            }
         } else if ("OBSERVAR".equals(accion) || "OBSERVADO".equals(accion)) {
             pago.setEstadoPago(EstadoPagoCotizacion.OBSERVADO);
             pago.setUsuarioFinanzas(finanzas);
@@ -149,6 +169,25 @@ public class CotizacionPagoServiceImpl implements ICotizacionPagoService {
             cotizacionPagoRepository.save(pago);
 
             recalcularFinanzasCotizacion(cotizacion);
+
+            // Notificación al portal de clientes B2B (Diagrama BPMN: "Not. pago invalido")
+            if (cotizacion != null && cotizacion.getCliente() != null) {
+                String motivo = dto.getObservacionFinanzas() != null && !dto.getObservacionFinanzas().isBlank()
+                        ? dto.getObservacionFinanzas()
+                        : "El comprobante o datos de operación no coinciden con extractos bancarios.";
+                NotificacionCliente notif = NotificacionCliente.builder()
+                        .cliente(cotizacion.getCliente())
+                        .titulo("Abono Bancario Observado por Finanzas: " + pago.getCodigoPago())
+                        .mensaje("Su abono de " + pago.getMoneda() + " " + pago.getMontoAbonado()
+                                + " (Operación N° " + pago.getNumeroOperacion() + ") ha sido observado por el área de Finanzas. "
+                                + "Motivo: " + motivo + ". Ingrese a la sección de Cobros y Pagos para subsanar el voucher o corregir los datos.")
+                        .tipo("PAGO")
+                        .leido(false)
+                        .enlace("/pagos")
+                        .fechaCreacion(LocalDateTime.now())
+                        .build();
+                notificacionClienteRepository.save(notif);
+            }
         } else if ("RECHAZAR".equals(accion) || "RECHAZADO".equals(accion)) {
             pago.setEstadoPago(EstadoPagoCotizacion.RECHAZADO);
             pago.setUsuarioFinanzas(finanzas);
@@ -157,6 +196,23 @@ public class CotizacionPagoServiceImpl implements ICotizacionPagoService {
             cotizacionPagoRepository.save(pago);
 
             recalcularFinanzasCotizacion(cotizacion);
+
+            if (cotizacion != null && cotizacion.getCliente() != null) {
+                String motivo = dto.getObservacionFinanzas() != null && !dto.getObservacionFinanzas().isBlank()
+                        ? dto.getObservacionFinanzas()
+                        : "Comprobante rechazado por Finanzas.";
+                NotificacionCliente notif = NotificacionCliente.builder()
+                        .cliente(cotizacion.getCliente())
+                        .titulo("Abono Rechazado por Finanzas: " + pago.getCodigoPago())
+                        .mensaje("Su comprobante de abono (Operación N° " + pago.getNumeroOperacion()
+                                + ") fue rechazado. Motivo: " + motivo + ". Ingrese al portal para regularizar su pago.")
+                        .tipo("PAGO")
+                        .leido(false)
+                        .enlace("/pagos")
+                        .fechaCreacion(LocalDateTime.now())
+                        .build();
+                notificacionClienteRepository.save(notif);
+            }
         } else {
             throw new BadRequestException("Acción no válida: " + dto.getAccion() + ". Las opciones son APROBAR, OBSERVAR o RECHAZAR.");
         }

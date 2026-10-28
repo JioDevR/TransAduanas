@@ -485,6 +485,13 @@
           </div>
 
           <div class="section-controls">
+            <!-- Filtro por Régimen Aduanero -->
+            <select v-model="filterRegimenExpediente" class="filter-select">
+              <option value="">Todos los Regímenes</option>
+              <option value="IMPORTACION">Importación para el Consumo</option>
+              <option value="EXPORTACION">Exportación Definitiva</option>
+            </select>
+
             <!-- Filtro por Canal SUNAT -->
             <select v-model="filterCanalExpediente" class="filter-select">
               <option value="">Todos los Canales SUNAT</option>
@@ -670,9 +677,34 @@
                     <i class="pi pi-shield"></i>
                     <span>Levante</span>
                   </button>
+
+                  <!-- Retiro Directo en Terminal (Si no contrató transporte TransAduanas) -->
+                  <button
+                    v-if="exp.estadoExpediente === 'LEVANTE_AUTORIZADO' && !exp.servicioTransporte"
+                    type="button"
+                    class="action-btn-outline"
+                    title="Registrar Acta de Retiro en Terminal por el Cliente"
+                    @click="openRetiroDirectoModal(exp)"
+                  >
+                    <i class="pi pi-building"></i>
+                    <span>Retiro</span>
+                  </button>
+
+                  <!-- Cierre de Expediente / Conformidad Final -->
+                  <button
+                    v-if="exp.estadoExpediente === 'LEVANTE_AUTORIZADO'"
+                    type="button"
+                    class="action-btn-outline approve"
+                    title="Revisión de Conformidad y Cierre Final del Expediente Aduanero"
+                    @click="openCierreModal(exp)"
+                  >
+                    <i class="pi pi-lock"></i>
+                    <span>Cerrar</span>
+                  </button>
                 </div>
               </template>
             </Column>
+
           </DataTable>
         </div>
       </div>
@@ -804,6 +836,23 @@
       :titulo-entidad="selectedDocTituloEntidad"
       @close="showDocumentosModal = false"
     />
+
+    <!-- Modal: Registro de Retiro Directo en Terminal -->
+    <RetiroDirectoModal
+      :visible="showRetiroDirectoModal"
+      :expediente="selectedExpedienteParaAccion"
+      @close="showRetiroDirectoModal = false"
+      @saved="onRetiroDirectoSaved"
+    />
+
+
+    <!-- Modal: Conformidad y Cierre Definitivo de Expediente -->
+    <CierreExpedienteModal
+      :visible="showCierreExpedienteModal"
+      :expediente="selectedExpedienteParaAccion"
+      @close="showCierreExpedienteModal = false"
+      @saved="onCierreExpedienteSaved"
+    />
   </div>
 </template>
 
@@ -824,8 +873,11 @@ import { useConfirmation } from '@/shared/composables/useConfirmation'
 import AperturaExpedienteModal from '../components/AperturaExpedienteModal.vue'
 import DetalleExpedienteModal from '../components/DetalleExpedienteModal.vue'
 import CanalLevanteModal from '../components/CanalLevanteModal.vue'
+import RetiroDirectoModal from '../components/RetiroDirectoModal.vue'
+import CierreExpedienteModal from '../components/CierreExpedienteModal.vue'
 import DocumentosManagerModal from '@/shared/components/DocumentosManagerModal.vue'
 import AuditoriaExpedienteModal from '../components/AuditoriaExpedienteModal.vue'
+
 
 const route = useRoute()
 const router = useRouter()
@@ -843,6 +895,7 @@ const expedientes = ref([])
 // Filtros y Búsqueda
 const filterEstado = ref('')
 const searchQuery = ref('')
+const filterRegimenExpediente = ref('')
 const filterCanalExpediente = ref('')
 const filterEstadoExpediente = ref('')
 const searchExpedienteQuery = ref('')
@@ -991,6 +1044,12 @@ const filteredCotizaciones = computed(() => {
 // Filtrado de Expedientes Aduaneros
 const filteredExpedientes = computed(() => {
   return expedientes.value.filter((e) => {
+    if (filterRegimenExpediente.value) {
+      const reg = (e.regimenAduanero || '').toUpperCase()
+      if (filterRegimenExpediente.value === 'EXPORTACION' && !reg.includes('EXPORT')) return false
+      if (filterRegimenExpediente.value === 'IMPORTACION' && !reg.includes('IMPORT')) return false
+    }
+
     if (filterCanalExpediente.value) {
       if (filterCanalExpediente.value === 'PENDIENTE') {
         if (e.canalSunat && e.canalSunat !== 'PENDIENTE') return false
@@ -1053,6 +1112,34 @@ const onCanalLevanteSaved = (actualizado) => {
   showSuccess(`Expediente ${actualizado.codigoExpediente} actualizado conforme.`)
   loadData()
 }
+
+// Retiro Directo en Terminal y Cierre Final
+const showRetiroDirectoModal = ref(false)
+const showCierreExpedienteModal = ref(false)
+const selectedExpedienteParaAccion = ref(null)
+
+const openRetiroDirectoModal = (exp) => {
+  selectedExpedienteParaAccion.value = exp
+  showRetiroDirectoModal.value = true
+}
+
+const onRetiroDirectoSaved = () => {
+  showRetiroDirectoModal.value = false
+  showSuccess('Acta de retiro directo en terminal registrada exitosamente.')
+  loadData()
+}
+
+const openCierreModal = (exp) => {
+  selectedExpedienteParaAccion.value = exp
+  showCierreExpedienteModal.value = true
+}
+
+const onCierreExpedienteSaved = () => {
+  showCierreExpedienteModal.value = false
+  showSuccess('Expediente aduanero cerrado formalmente con conformidad.')
+  loadData()
+}
+
 
 // Cargar Datos
 const loadData = async () => {

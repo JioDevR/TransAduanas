@@ -214,6 +214,17 @@ public class CotizacionServiceImpl implements ICotizacionService {
         if (dto.getValidezDias() != null) cotizacion.setValidezDias(dto.getValidezDias());
         if (dto.getObservaciones() != null) cotizacion.setObservaciones(dto.getObservaciones());
 
+        // Regla de Negocio BPMN: Si una cotización estaba OBSERVADA y el asesor comercial realiza la corrección,
+        // se restablece automáticamente a PENDIENTE para que reingrese a la bandeja de supervisión aduanera.
+        if (cotizacion.getEstado() == EstadoCotizacion.OBSERVADA) {
+            cotizacion.setEstado(EstadoCotizacion.PENDIENTE);
+            String notaCorreccion = "Corrección subsanada por ventas el " + LocalDate.now() + ". Reingresada a bandeja de supervisión aduanera.";
+            cotizacion.setObservaciones(cotizacion.getObservaciones() != null 
+                    ? cotizacion.getObservaciones() + " | " + notaCorreccion 
+                    : notaCorreccion);
+            log.info("Cotización {} corregida por el área comercial y reingresada a PENDIENTE para supervisión", cotizacion.getCodigoCotizacion());
+        }
+
         calcularValoresEconomicos(cotizacion, dto);
 
         Cotizacion guardada = cotizacionRepository.save(cotizacion);
@@ -254,6 +265,30 @@ public class CotizacionServiceImpl implements ICotizacionService {
         Cotizacion guardada = cotizacionRepository.save(cotizacion);
         if (guardada.getEstado() == EstadoCotizacion.APROBADA) {
             autoFormalizarCliente(guardada.getCliente(), guardada);
+        } else if (guardada.getEstado() == EstadoCotizacion.OBSERVADA) {
+            // Regla de Negocio BPMN: ¿Tiene Usuario?
+            // El usuario solo se crea cuando la primera cotización se aprueba.
+            // Si ya cuenta con usuario, se emite Not. observ. cotiz. al portal B2B.
+            // Si NO tiene usuario, no se emite al portal: la comunicación y subsanación es presencial/directa con el vendedor.
+            if (guardada.getCliente() != null) {
+                Optional<UsuarioCliente> usuarioOpt = usuarioClienteRepository.findByCliente_IdCliente(guardada.getCliente().getIdCliente());
+                if (usuarioOpt.isPresent()) {
+                    NotificacionCliente notifObservada = NotificacionCliente.builder()
+                            .cliente(guardada.getCliente())
+                            .titulo("Cotización Observada: " + guardada.getCodigoCotizacion())
+                            .mensaje("Su cotización presenta observaciones de supervisión técnica aduanera: \"" + dto.getMotivoObservacion() + "\". Su asesor comercial asignado le contactará para coordinar la rectificación.")
+                            .tipo("COTIZACION_OBSERVADA")
+                            .leido(false)
+                            .enlace("/cotizaciones")
+                            .fechaCreacion(LocalDateTime.now())
+                            .build();
+                    notificacionClienteRepository.save(notifObservada);
+                    log.info("Notificación de cotización observada emitida al portal B2B para cliente ID {}", guardada.getCliente().getIdCliente());
+                } else {
+                    log.info("Cotización {} observada para cliente sin usuario B2B (ID: {}). Atención y subsanación presencial con el vendedor.",
+                            guardada.getCodigoCotizacion(), guardada.getCliente().getIdCliente());
+                }
+            }
         }
 
         return mapToResponse(guardada);
@@ -273,6 +308,22 @@ public class CotizacionServiceImpl implements ICotizacionService {
         Cotizacion guardada = cotizacionRepository.save(cotizacion);
         if (guardada.getEstado() == EstadoCotizacion.APROBADA) {
             autoFormalizarCliente(guardada.getCliente(), guardada);
+        } else if (guardada.getEstado() == EstadoCotizacion.OBSERVADA) {
+            if (guardada.getCliente() != null) {
+                Optional<UsuarioCliente> usuarioOpt = usuarioClienteRepository.findByCliente_IdCliente(guardada.getCliente().getIdCliente());
+                if (usuarioOpt.isPresent()) {
+                    NotificacionCliente notifObservada = NotificacionCliente.builder()
+                            .cliente(guardada.getCliente())
+                            .titulo("Cotización Observada: " + guardada.getCodigoCotizacion())
+                            .mensaje("Su cotización presenta observaciones técnicas: \"" + (motivoObservacion != null ? motivoObservacion : "Requiere rectificación documentaria") + "\".")
+                            .tipo("COTIZACION_OBSERVADA")
+                            .leido(false)
+                            .enlace("/cotizaciones")
+                            .fechaCreacion(LocalDateTime.now())
+                            .build();
+                    notificacionClienteRepository.save(notifObservada);
+                }
+            }
         }
 
         return mapToResponse(guardada);
@@ -398,12 +449,17 @@ public class CotizacionServiceImpl implements ICotizacionService {
 
         boolean habilitadoParaExpediente = c.getEstado() == EstadoCotizacion.APROBADA && tienePagoAprobado && !tieneExpediente;
 
+        boolean tieneUsuario = c.getCliente() != null && usuarioClienteRepository.findByCliente_IdCliente(c.getCliente().getIdCliente()).isPresent();
+
         return CotizacionResponseDTO.builder()
                 .idCotizacion(c.getIdCotizacion())
                 .codigoCotizacion(c.getCodigoCotizacion())
                 .idCliente(c.getCliente() != null ? c.getCliente().getIdCliente() : null)
                 .clienteRazonSocial(c.getCliente() != null ? c.getCliente().getRazonSocial() : null)
                 .clienteNumeroDocumento(c.getCliente() != null ? c.getCliente().getNumeroDocumento() : null)
+                .clienteTelefono(c.getCliente() != null ? c.getCliente().getTelefonoContacto() : null)
+                .clienteCorreo(c.getCliente() != null ? c.getCliente().getCorreoContacto() : null)
+                .clienteTieneUsuario(tieneUsuario)
                 .idUsuarioComercial(c.getUsuarioComercial() != null ? c.getUsuarioComercial().getIdUsuario() : null)
                 .usuarioComercialNombre(c.getUsuarioComercial() != null ? c.getUsuarioComercial().getNombreCompleto() : null)
                 .idMercancia(c.getMercancia() != null ? c.getMercancia().getIdMercancia() : null)

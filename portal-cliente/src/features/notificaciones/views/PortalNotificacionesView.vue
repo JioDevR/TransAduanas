@@ -101,6 +101,7 @@
           <option value="">Todas las categorías</option>
           <option value="ACCESO_CREADO">Accesos & Cuenta</option>
           <option value="COTIZACION_APROBADA">Cotizaciones Aprobadas</option>
+          <option value="COTIZACION_OBSERVADA">Cotizaciones Observadas</option>
           <option value="DAM">Despacho Aduanero DAM</option>
           <option value="PAGO">Cobros y Facturación</option>
           <option value="SISTEMA">Avisos del Sistema</option>
@@ -272,6 +273,8 @@ function getTipoIcon(tipo) {
       return 'pi pi-key'
     case 'COTIZACION_APROBADA':
       return 'pi pi-check-circle'
+    case 'COTIZACION_OBSERVADA':
+      return 'pi pi-exclamation-triangle'
     case 'DAM':
       return 'pi pi-box'
     case 'PAGO':
@@ -290,6 +293,8 @@ function getTipoColorClass(tipo) {
       return 'accent'
     case 'COTIZACION_APROBADA':
       return 'success'
+    case 'COTIZACION_OBSERVADA':
+      return 'danger'
     case 'DAM':
       return 'info'
     case 'PAGO':
@@ -305,6 +310,8 @@ function getTipoLabel(tipo) {
       return 'Credencial de Acceso'
     case 'COTIZACION_APROBADA':
       return 'Cotización Aprobada'
+    case 'COTIZACION_OBSERVADA':
+      return 'Cotización Observada'
     case 'DAM':
       return 'Despacho DAM'
     case 'PAGO':
@@ -686,6 +693,11 @@ onMounted(() => {
   color: #b26c00;
 }
 
+.notif-avatar.danger {
+  background: #fdf2f2;
+  color: #dc2626;
+}
+
 .notif-content-col {
   flex: 1;
   display: flex;
@@ -732,6 +744,11 @@ onMounted(() => {
 .notif-type-tag.warning {
   background: #fff8e6;
   color: #b26c00;
+}
+
+.notif-type-tag.danger {
+  background: #fdf2f2;
+  color: #dc2626;
 }
 
 .notif-date {

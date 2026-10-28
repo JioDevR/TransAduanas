@@ -100,4 +100,5 @@ database/*.tmp
 database/*.bak
 backup*.sql
 *.sql.bak
+**/superpowers/
 .$Diagrama de procesos.drawio.bkp

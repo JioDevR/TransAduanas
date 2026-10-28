@@ -290,43 +290,183 @@
               </div>
             </div>
 
-            <!-- Días de Validez y Días Libres -->
-            <div class="two-fields-row mt-2">
-              <div class="field-group">
-                <label class="form-label">Días de Validez de Oferta</label>
+            <!-- Panel de Alerta Regulatoria de Mercancía -->
+            <div v-if="selectedMercancia" class="mercancia-status-panel mt-3">
+              <div v-if="selectedMercancia.requierePermiso" class="regulatory-warning-banner">
+                <i class="pi pi-exclamation-triangle reg-icon"></i>
+                <div class="reg-content">
+                  <div class="reg-kicker">MERCANCÍA RESTRINGIDA / SUJETA A CONTROL SECTORIAL</div>
+                  <strong class="reg-title">Requiere Permiso y Visto Bueno previo de: {{ selectedMercancia.entidadReguladora || 'Entidad Competente' }}</strong>
+                  <p class="reg-desc">Sector: {{ selectedMercancia.categoria || 'N/A' }} • Arancel Ad-Valórem Base: {{ selectedMercancia.arancelBasePct }}%</p>
+                </div>
+              </div>
+              <div v-else class="free-goods-banner">
+                <i class="pi pi-check-circle free-icon"></i>
+                <span><strong>Libre Trámite:</strong> No requiere autorizaciones sectoriales previas para numeración aduanera. Arancel Base: {{ selectedMercancia.arancelBasePct }}%.</span>
+              </div>
+            </div>
+
+            <!-- Servicio de Transporte Terrestre Local SGA -->
+            <div class="field-group mt-4 transport-config-section">
+              <div class="label-with-badge">
+                <label class="form-label">Servicio de Transporte Terrestre Local SGA *</label>
+                <span class="kicker-mini-badge">FLOTA TERRESTRE</span>
+              </div>
+              <p class="transport-helper">¿El cliente contratará el servicio de transporte terrestre interno de SGA o retirará con transporte externo?</p>
+
+              <div class="transport-toggle-grid">
+                <div
+                  :class="['transport-card-opt', { selected: form.servicioTransporte === true }]"
+                  @click="form.servicioTransporte = true"
+                >
+                  <div class="opt-icon"><i class="pi pi-truck"></i></div>
+                  <div class="opt-info">
+                    <h4 class="opt-title">Sí, Transporte Interno SGA</h4>
+                    <p class="opt-desc">Traslado desde puerto/aeropuerto hasta almacén del cliente con unidades monitoreadas por GPS de SGA.</p>
+                  </div>
+                  <i v-if="form.servicioTransporte === true" class="pi pi-check-circle check-active"></i>
+                </div>
+
+                <div
+                  :class="['transport-card-opt', { selected: form.servicioTransporte === false }]"
+                  @click="form.servicioTransporte = false"
+                >
+                  <div class="opt-icon"><i class="pi pi-building"></i></div>
+                  <div class="opt-info">
+                    <h4 class="opt-title">No, Transporte Externo por Cliente</h4>
+                    <p class="opt-desc">El cliente gestionará el retiro y flete terrestre con sus propios transportistas o unidades de terceros.</p>
+                  </div>
+                  <i v-if="form.servicioTransporte === false" class="pi pi-check-circle check-active"></i>
+                </div>
+              </div>
+
+              <!-- Configuración Condicional de Ruta de Transporte Interno SGA -->
+              <div v-if="form.servicioTransporte" class="transport-route-config-panel mt-3">
+                <div class="route-panel-header">
+                  <div class="route-badge-icon"><i class="pi pi-map"></i></div>
+                  <div>
+                    <h4 class="route-panel-title">Ruta Nacional & Tarifa de Flete Local SGA</h4>
+                    <p class="route-panel-desc">Especifique el origen y destino departamental/provincial en Perú y la tarifa cotizada.</p>
+                  </div>
+                </div>
+
+                <div class="route-inputs-grid">
+                  <!-- ORIGEN -->
+                  <div class="route-location-card">
+                    <div class="loc-card-tag loc-origin">
+                      <i class="pi pi-compass"></i>
+                      <span>PUNTO DE PARTIDA (ORIGEN)</span>
+                    </div>
+                    <div class="loc-fields-row">
+                      <div class="field-subgroup">
+                        <label class="loc-label">Departamento *</label>
+                        <select
+                          v-model="form.origenDepartamento"
+                          class="sga-select-native"
+                          @change="onOrigenDepartamentoChange"
+                        >
+                          <option v-for="dep in departamentosList" :key="'orig-' + dep" :value="dep">
+                            {{ dep }}
+                          </option>
+                        </select>
+                      </div>
+
+                      <div class="field-subgroup">
+                        <label class="loc-label">Provincia *</label>
+                        <select
+                          v-model="form.origenProvincia"
+                          class="sga-select-native"
+                          :disabled="!form.origenDepartamento"
+                        >
+                          <option v-for="prov in provinciasOrigenList" :key="'orig-prov-' + prov" :value="prov">
+                            {{ prov }}
+                          </option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- DESTINO -->
+                  <div class="route-location-card">
+                    <div class="loc-card-tag loc-dest">
+                      <i class="pi pi-map-marker"></i>
+                      <span>PUNTO DE LLEGADA (DESTINO)</span>
+                    </div>
+                    <div class="loc-fields-row">
+                      <div class="field-subgroup">
+                        <label class="loc-label">Departamento *</label>
+                        <select
+                          v-model="form.destinoDepartamento"
+                          class="sga-select-native"
+                          @change="onDestinoDepartamentoChange"
+                        >
+                          <option v-for="dep in departamentosList" :key="'dest-' + dep" :value="dep">
+                            {{ dep }}
+                          </option>
+                        </select>
+                      </div>
+
+                      <div class="field-subgroup">
+                        <label class="loc-label">Provincia *</label>
+                        <select
+                          v-model="form.destinoProvincia"
+                          class="sga-select-native"
+                          :disabled="!form.destinoDepartamento"
+                        >
+                          <option v-for="prov in provinciasDestinoList" :key="'dest-prov-' + prov" :value="prov">
+                            {{ prov }}
+                          </option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- TARIFA DE TRANSPORTE LOCAL -->
+                <div class="route-cost-row mt-3">
+                  <div class="route-cost-info">
+                    <div class="cost-title-box">
+                      <i class="pi pi-dollar"></i>
+                      <label class="route-cost-label">Tarifa Flete Transporte Terrestre SGA (USD) *</label>
+                    </div>
+                    <span class="route-cost-sub">Importe que se sumará a los conceptos a liquidar de esta cotización comercial.</span>
+                  </div>
+                  <div class="input-money-wrapper route-cost-input-wrap">
+                    <span class="currency-prefix">$</span>
+                    <input
+                      v-model.number="form.costoTransporteInterno"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      class="sga-input money-input"
+                      placeholder="0.00"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Validez de la Propuesta (Días) con Atajos -->
+            <div class="field-group mt-4">
+              <label class="form-label">Validez de la Oferta Comercial (Días Calendario) *</label>
+              <div class="input-icon-box">
                 <input
                   v-model.number="form.validezDias"
                   type="number"
                   min="1"
                   max="90"
                   class="sga-input"
+                  style="max-width: 140px;"
                 />
+                <span class="input-suffix-tag">DÍAS</span>
               </div>
-
-              <div class="field-group">
-                <label class="form-label">Transporte Interno Terrestre</label>
-                <div class="checkbox-box">
-                  <input
-                    id="chk-transporte"
-                    v-model="form.servicioTransporte"
-                    type="checkbox"
-                    class="sga-checkbox"
-                  />
-                  <label for="chk-transporte" class="chk-label">Incluir flete terrestre local</label>
-                </div>
+              <div class="quick-shortcuts-row mt-2">
+                <span class="shortcuts-label">Plazos estándar:</span>
+                <button type="button" :class="['shortcut-chip', { active: form.validezDias === 15 }]" @click="form.validezDias = 15">15 Días</button>
+                <button type="button" :class="['shortcut-chip', { active: form.validezDias === 30 }]" @click="form.validezDias = 30">30 Días</button>
+                <button type="button" :class="['shortcut-chip', { active: form.validezDias === 45 }]" @click="form.validezDias = 45">45 Días</button>
+                <button type="button" :class="['shortcut-chip', { active: form.validezDias === 60 }]" @click="form.validezDias = 60">60 Días</button>
               </div>
-            </div>
-
-            <!-- Si incluye transporte interno, mostrar costo -->
-            <div v-if="form.servicioTransporte" class="field-group mt-2">
-              <label class="form-label">Costo Transporte Interno (USD)</label>
-              <input
-                v-model.number="form.costoTransporteInterno"
-                type="number"
-                step="0.01"
-                min="0"
-                class="sga-input"
-              />
             </div>
           </div>
         </div>
@@ -420,6 +560,22 @@
                   />
                 </div>
               </div>
+
+              <!-- Si incluye transporte local, mostrar también el campo aquí para acceso directo -->
+              <div v-if="form.servicioTransporte" class="field-group">
+                <label class="form-label">Flete Terrestre Local SGA (USD)</label>
+                <div class="input-money-wrapper">
+                  <span class="currency-prefix">$</span>
+                  <input
+                    v-model.number="form.costoTransporteInterno"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="0.00"
+                    class="sga-input money-input"
+                  />
+                </div>
+              </div>
             </div>
 
             <!-- Tasas Arancelarias -->
@@ -479,6 +635,16 @@
                   <div class="liq-row liq-subtotal-tributos">
                     <span class="liq-label">Total Tributos de Importación:</span>
                     <strong class="liq-val">${{ formatMoney(form.montoTributosEstimado) }} USD</strong>
+                  </div>
+
+                  <div v-if="form.servicioTransporte && form.costoTransporteInterno > 0" class="liq-row">
+                    <span class="liq-label">Transporte Terrestre Local (SGA):</span>
+                    <span class="liq-val">${{ formatMoney(form.costoTransporteInterno) }} USD</span>
+                  </div>
+
+                  <div v-if="form.montoHonorariosEstimado > 0" class="liq-row">
+                    <span class="liq-label">Comisión Agenciamiento / Honorarios:</span>
+                    <span class="liq-val">${{ formatMoney(form.montoHonorariosEstimado) }} USD</span>
                   </div>
                 </template>
                 <div v-else class="liq-row export-exempt-badge">
@@ -632,12 +798,14 @@
 </template>
 
 <script setup>
-import { ref, onMounted, toRef } from 'vue'
+import { ref, computed, onMounted, toRef } from 'vue'
 import Select from 'primevue/select'
+import Tag from 'primevue/tag'
 import { useCotizacionCorrection } from '../composables/useCotizacionCorrection'
 import { catalogoService } from '@/features/admin/catalogos/services/catalogoService'
 import { documentoService } from '@/features/documentos/services/documentoService'
 import { formatMoney } from '../composables/useCotizacionCalculator'
+import { getDepartamentosPeru, getProvinciasPorDepartamento } from '../data/peruUbigeo'
 
 const props = defineProps({
   cotizacion: {
@@ -714,6 +882,26 @@ const {
 } = useCotizacionCorrection({
   cotizacion: cotizacionRef,
   puertos
+})
+
+// Catálogo de Ubigeo y Cascada de Provincias
+const departamentosList = computed(() => getDepartamentosPeru())
+const provinciasOrigenList = computed(() => getProvinciasPorDepartamento(form.value.origenDepartamento))
+const provinciasDestinoList = computed(() => getProvinciasPorDepartamento(form.value.destinoDepartamento))
+
+const onOrigenDepartamentoChange = () => {
+  const provs = getProvinciasPorDepartamento(form.value.origenDepartamento)
+  form.value.origenProvincia = provs.length > 0 ? provs[0] : ''
+}
+
+const onDestinoDepartamentoChange = () => {
+  const provs = getProvinciasPorDepartamento(form.value.destinoDepartamento)
+  form.value.destinoProvincia = provs.length > 0 ? provs[0] : ''
+}
+
+const selectedMercancia = computed(() => {
+  if (!form.value.idMercancia || !mercancias.value) return null
+  return mercancias.value.find((m) => m.idMercancia === form.value.idMercancia) || null
 })
 
 // Desenvolver respuestas de API
@@ -1702,6 +1890,367 @@ onMounted(() => {
   display: flex;
   justify-content: flex-end;
   gap: 0.75rem;
+}
+
+/* ======================================================== */
+/* ESTILOS DE TRANSPORTE LOCAL, UBIGEO Y MERCANCÍA          */
+/* ======================================================== */
+.label-with-badge {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.25rem;
+}
+
+.kicker-mini-badge {
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  padding: 0.15rem 0.45rem;
+  background: #f1f5f9;
+  color: #475569;
+  border-radius: 0.35rem;
+}
+
+.transport-helper {
+  margin: 0 0 0.75rem 0;
+  font-size: 0.8rem;
+  color: #64748b;
+  line-height: 1.4;
+}
+
+.transport-toggle-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+@media (max-width: 640px) {
+  .transport-toggle-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.transport-card-opt {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.85rem;
+  padding: 0.9rem 1rem;
+  background: #ffffff;
+  border: 2px solid #e2e8f0;
+  border-radius: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.transport-card-opt:hover {
+  border-color: #cbd5e1;
+  background: #fafafa;
+}
+
+.transport-card-opt.selected {
+  border-color: #3b2a1a;
+  background: #fffcf8;
+  box-shadow: 0 2px 8px rgba(59, 42, 26, 0.08);
+}
+
+.transport-card-opt .opt-icon {
+  width: 2.3rem;
+  height: 2.3rem;
+  border-radius: 0.5rem;
+  background: #f1f5f9;
+  color: #334155;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.15rem;
+  flex-shrink: 0;
+}
+
+.transport-card-opt.selected .opt-icon {
+  background: #3b2a1a;
+  color: #f7d399;
+}
+
+.transport-card-opt .opt-info {
+  flex: 1;
+}
+
+.transport-card-opt .opt-title {
+  margin: 0;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.transport-card-opt.selected .opt-title {
+  color: #3b2a1a;
+}
+
+.transport-card-opt .opt-desc {
+  margin: 0.2rem 0 0 0;
+  font-size: 0.75rem;
+  color: #64748b;
+  line-height: 1.35;
+}
+
+.transport-card-opt .check-active {
+  color: #059669;
+  font-size: 1.15rem;
+  margin-top: 0.15rem;
+}
+
+/* Panel de Ruta de Transporte */
+.transport-route-config-panel {
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.75rem;
+  padding: 1.1rem;
+}
+
+.route-panel-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding-bottom: 0.85rem;
+  margin-bottom: 0.85rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.route-badge-icon {
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: 0.5rem;
+  background: #0284c7;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+}
+
+.route-panel-title {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.route-panel-desc {
+  margin: 0.1rem 0 0 0;
+  font-size: 0.76rem;
+  color: #64748b;
+}
+
+.route-inputs-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.85rem;
+}
+
+@media (max-width: 640px) {
+  .route-inputs-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.route-location-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.6rem;
+  padding: 0.85rem;
+}
+
+.loc-card-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.65rem;
+}
+
+.loc-origin {
+  color: #0369a1;
+}
+
+.loc-dest {
+  color: #b45309;
+}
+
+.loc-fields-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+}
+
+.field-subgroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.loc-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #475569;
+}
+
+.sga-select-native {
+  width: 100%;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.45rem;
+  font-size: 0.85rem;
+  background: #ffffff;
+  color: #0f172a;
+  outline: none;
+}
+
+.sga-select-native:focus {
+  border-color: #3b2a1a;
+}
+
+.route-cost-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.85rem;
+  background: #ffffff;
+  border: 1px dashed #cbd5e1;
+  border-radius: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.cost-title-box {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.route-cost-label {
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.route-cost-sub {
+  font-size: 0.74rem;
+  color: #64748b;
+  display: block;
+}
+
+.route-cost-input-wrap {
+  width: 170px;
+}
+
+/* Alerta de Mercancía Restringida / Libre */
+.mercancia-status-panel {
+  width: 100%;
+}
+
+.regulatory-warning-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.85rem;
+  padding: 0.85rem 1rem;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-left: 4px solid #f59e0b;
+  border-radius: 0.5rem;
+}
+
+.reg-icon {
+  font-size: 1.35rem;
+  color: #d97706;
+  margin-top: 0.15rem;
+}
+
+.reg-kicker {
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: #b45309;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.15rem;
+}
+
+.reg-title {
+  font-size: 0.88rem;
+  color: #78350f;
+}
+
+.reg-desc {
+  margin: 0.2rem 0 0 0;
+  font-size: 0.78rem;
+  color: #92400e;
+}
+
+.free-goods-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.65rem 0.85rem;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 0.5rem;
+  font-size: 0.82rem;
+  color: #166534;
+}
+
+.free-icon {
+  font-size: 1.1rem;
+  color: #16a34a;
+}
+
+/* Atajos de Validez */
+.input-icon-box {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.input-suffix-tag {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #64748b;
+}
+
+.quick-shortcuts-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.shortcuts-label {
+  font-size: 0.75rem;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.shortcut-chip {
+  padding: 0.25rem 0.6rem;
+  font-size: 0.76rem;
+  font-weight: 600;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.4rem;
+  color: #334155;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.shortcut-chip:hover {
+  background: #e2e8f0;
+}
+
+.shortcut-chip.active {
+  background: #3b2a1a;
+  border-color: #3b2a1a;
+  color: #f7d399;
 }
 
 .mt-2 { margin-top: 0.5rem; }

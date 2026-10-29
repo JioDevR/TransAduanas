@@ -1,785 +1,215 @@
-# Documentación Técnica del Backend — TransAduanas (SGA Backend API)
+# Documentación Técnica del Backend — Sistema de Gestión Aduanera - Transaduanas
 
-**Sistema de Gestión Aduanera y Logística Internacional**  
-*Documento de Especificación de Arquitectura, Tecnologías, Patrones, Seguridad y Catálogo de Servicios REST*
-
----
-
-## Índice General
-
-1. [Visión General del Sistema](#1-visión-general-del-sistema)
-2. [Arquitectura de Software](#2-arquitectura-de-software)
-   - [2.1 Arquitectura en Capas (Layered Architecture)](#21-arquitectura-en-capas-layered-architecture)
-   - [2.2 Diagrama de Flujo de Datos y Capas](#22-diagrama-de-flujo-de-datos-y-capas)
-   - [2.3 Subsistemas Especializados](#23-subsistemas-especializados)
-3. [Patrones de Diseño Implementados](#3-patrones-de-diseño-implementados)
-4. [Tecnologías y Stack de Dependencias](#4-tecnologías-y-stack-de-dependencias)
-   - [4.1 Matriz de Tecnologías Centrales](#41-matriz-de-tecnologías-centrales)
-   - [4.2 Inventario de Dependencias (pom.xml)](#42-inventario-de-dependencias-pomxml)
-5. [Estructura del Proyecto Backend](#5-estructura-del-proyecto-backend)
-6. [Modelo de Seguridad y Control de Acceso (RBAC)](#6-modelo-de-seguridad-y-control-de-acceso-rbac)
-   - [6.1 Mecanismo de Autenticación Stateless JWT](#61-mecanismo-de-autenticación-stateless-jwt)
-   - [6.2 Matriz de los 8 Roles Institucionales](#62-matriz-de-los-8-roles-institucionales)
-   - [6.3 Matriz de Autorización con SpEL (SecurityRoles)](#63-matriz-de-autorización-con-spel-securityroles)
-7. [Módulos de Negocio y Reglas de Dominio](#7-módulos-de-negocio-y-reglas-de-dominio)
-   - [7.1 Compuerta Financiera Pre-Expediente (Financial Payment Gate)](#71-compuerta-financiera-pre-expediente-financial-payment-gate)
-   - [7.2 Política Estricta de Soft Delete (Tolerancia Cero a Borrado Físico)](#72-política-estricta-de-soft-delete-tolerancia-cero-a-borrado-físico)
-   - [7.3 Generación Determinista de Códigos Correlativos](#73-generación-determinista-de-códigos-correlativos)
-   - [7.4 Motor de Cálculo Financiero y Detracción SPOT](#74-motor-de-cálculo-financiero-y-detracción-spot)
-8. [Catálogo de Endpoints RESTful (API Reference)](#8-catálogo-de-endpoints-restful-api-reference)
-9. [Manejo Centralizado de Excepciones y Respuestas HTTP](#9-manejo-centralizado-de-excepciones-y-respuestas-http)
-10. [Configuración, Perfiles y Puesta en Marcha](#10-configuración-perfiles-y-puesta-en-marcha)
+**Sistema de Gestión Aduanera - Transaduanas (SGA Backend API)**  
+*Documento Maestro de Arquitectura, Tecnologías, Patrones, Seguridad y Catálogo de Servicios REST*
 
 ---
 
-## 1. Visión General del Sistema
+## 📚 Estructura de la Documentación Modular del Backend
 
-El backend **sga-backend** es el motor central de la plataforma **TransAduanas (SGA)**, una solución corporativa de alto rendimiento desarrollada para gobernar, automatizar y auditar integralmente las operaciones de agenciamiento aduanero, depósito temporal, transporte de carga pesada y liquidación financiera en el Perú, en estricta conformidad con las directivas de la **SUNAT** (Superintendencia Nacional de Aduanas y de Administración Tributaria) y el **MTC** (Ministerio de Transportes y Comunicaciones).
+Para facilitar la lectura tanto a perfiles de negocio como a ingenieros de software, la documentación técnica del backend se encuentra desglosada en **6 capítulos especializados** dentro del directorio [`docs/backend/`](file:///home/jiodev/Documents/Proyects/TransAduanas/docs/backend):
 
-### Principios Fundamentales del Backend:
-1. **API RESTful Stateless:** Toda comunicación cliente-servidor se realiza mediante protocolos HTTP seguros, utilizando tokens JSON Web Token (JWT) para mantener la sesión desacoplada del servidor de aplicaciones.
-2. **Desacoplamiento Estricto DTO / Entidad:** Las entidades de base de datos (JPA Entities) jamás se exponen directamente a las capas externas, asegurando que la estructura interna de la base de datos no se filtre ni genere acoplamientos no deseados con clientes frontend o APIs externas.
-3. **Auditoría y Trazabilidad Total:** Registro persistente de cambios de estado, fechas de modificación, usuarios responsables y un sistema de logging particionado diario.
-4. **Compuertas de Negocio (Business Gates):** Imposibilidad de avanzar entre fases operativas (de Cotización a Expediente DAM, de Almacén a Despacho, de Levante a Liquidación) sin el cumplimiento estricto de condiciones operativas y financieras previas.
-
----
-
-## 2. Arquitectura de Software
-
-### 2.1 Arquitectura en Capas (Layered Architecture)
-
-El backend está estructurado sobre el patrón arquitectónico clásico de **Capas Lógicas Multonivel (N-Tier Layered Architecture)** con orientación a dominios de negocio, garantizando alta cohesión y bajo acoplamiento:
-
-1. **Capa de Configuración y Seguridad (`pe.sga.config`):**  
-   Gestiona la infraestructura transversal del framework: ciclo de vida de beans, cadena de filtros de Spring Security, configuración CORS para clientes web, generador y validador de tokens criptográficos JWT y el inicializador de datos de arranque (*seed data*).
-2. **Capa de Controladores / Presentación REST (`pe.sga.controller`):**  
-   Expone los contratos de comunicación HTTP mediante anotaciones `@RestController`. Es responsable de:
-   - Recibir las solicitudes HTTP e interpretar parámetros de ruta, cabeceras y cuerpos JSON.
-   - Aplicar autorización declarativa a nivel de método con `@PreAuthorize`.
-   - Activar la validación de contratos de entrada con `@Valid`.
-   - Delegar inmediatamente la lógica a la capa de servicios y encapsular la respuesta en un envoltorio estandarizado `ApiResponseDTO<T>`.
-3. **Capa de Servicios y Reglas de Negocio (`pe.sga.service` / `pe.sga.service.impl`):**  
-   Implementa el núcleo de la lógica corporativa. Define contratos de interfaz (`IService`) y sus implementaciones concretas (`ServiceImpl`). Gestiona:
-   - Límites transaccionales mediante `@Transactional` (con soporte para lecturas optimizadas `readOnly = true`).
-   - Verificación de compuertas y transiciones de estado de negocio.
-   - Mapeo bidireccional entre DTOs de transporte y Entidades JPA.
-   - Generación de reportes PDF vectoriales y control de almacenamiento de archivos.
-4. **Capa de Acceso a Datos / Repositorios (`pe.sga.repository`):**  
-   Extiende `JpaRepository<T, ID>` de Spring Data JPA. Abstrae la persistencia SQL mediante métodos derivados de convención, consultas `JPQL` y filtrado por claves compuestas.
-5. **Capa de Entidades y Modelo Relacional (`pe.sga.entity`):**  
-   Representa las 17 tablas relacionales normalizadas de la base de datos MySQL InnoDB, mapeadas con anotaciones de JPA (`@Entity`, `@Table`, `@ManyToOne`, `@JoinColumn`, etc.).
-
----
-
-### 2.2 Diagrama de Flujo de Datos y Capas
-
-```
-[ Petición HTTP entrante (SPA / Frontend) ]
-                   │
-                   ▼
-       ┌────────────────────────┐
-       │     Filtro CORS        │  (CorsConfig) Permite cabeceras, orígenes y métodos seguros
-       └───────────┬────────────┘
-                   │
-                   ▼
-       ┌────────────────────────┐
-       │ JwtAuthenticationFilter│  Interpreta 'Authorization: Bearer <jwt>'
-       └───────────┬────────────┘  Carga SecurityContextHolder con Usuario y Rol
-                   │
-                   ▼
-       ┌────────────────────────┐
-       │   Spring Security      │  Evalúa @PreAuthorize con SpEL (SecurityRoles)
-       └───────────┬────────────┘  Rechaza no autorizados (401 / 403)
-                   │
-                   ▼
-┌────────────────────────────────────────────────────────┐
-│                   CONTROLLER LAYER                     │
-│  - Endpoint @RestController                            │
-│  - Validación de DTOs de entrada (@Valid)              │
-│  - Respuesta uniforme ApiResponseDTO<T>                │
-└──────────────────────────┬─────────────────────────────┘
-                           │
-                           ▼
-┌────────────────────────────────────────────────────────┐
-│                    SERVICE LAYER                       │
-│  - Interfaces (I...Service) e Implementaciones         │
-│  - Transacciones (@Transactional)                      │
-│  - Compuertas financieras y operativas                 │
-│  - JasperReports / LocalStorageService                 │
-└──────────────────────────┬─────────────────────────────┘
-                           │
-                           ▼
-┌────────────────────────────────────────────────────────┐
-│                   REPOSITORY LAYER                     │
-│  - Spring Data JPA (JpaRepository)                     │
-│  - Filtros de estado activo (Soft Delete)              │
-└──────────────────────────┬─────────────────────────────┘
-                           │
-                           ▼
-┌────────────────────────────────────────────────────────┐
-│                    DATABASE LAYER                      │
-│  - MySQL 8.4 InnoDB (ACID / Claves Foráneas)           │
-└────────────────────────────────────────────────────────┘
-```
-
----
-
-### 2.3 Subsistemas Especializados
-
-#### A. Almacenamiento Seguro de Documentos (`LocalStorageServiceImpl`)
-- Provee almacenamiento desacoplado mediante la interfaz `IStorageService`.
-- **Prevención de Ataques Path Traversal:** Limpia el nombre del archivo recibido (`StringUtils.cleanPath`) y rechaza secuencias maliciosas (`..`).
-- **Nombres Criptográficos Únicos:** Cada archivo persistido en disco recibe un nombre UUID v4 preservando la extensión original en minúsculas, evitando colisiones y sobreescrituras en el sistema de archivos del servidor.
-- **Acceso mediante Resource Streaming:** Los endpoints de descarga y vista previa (`/api/v1/documentos/{id}/descargar` y `/api/v1/documentos/{id}/preview`) transmiten los archivos mediante `UrlResource` con cabeceras `Content-Type` dinámicas (MIME) y nombres codificados en UTF-8 (`URLEncoder`).
-
-#### B. Motor de Reportes PDF Híbrido (`ReporteJasperServiceImpl`)
-El backend cuenta con una arquitectura de reportería dual optimizada:
-1. **JasperReports 7.0.8 (Reporte de Personal y Usuarios):**
-   - Generación dinámica de reportes vectoriales de alta fidelidad compilados directamente en memoria sin requerir archivos `.jrxml` en disco.
-   - Diseña las plantillas en tiempo de ejecución utilizando la API fluida `JasperDesign` (`JRDesignBand`, `JRDesignTextField`, `JRDesignStaticText`).
-   - Compilador JDT Eclipse integrado para evaluar expresiones Java (`UsuarioReporteItemDTO`).
-   - **Patrón Singleton y Cache en Memoria:** Utiliza variable volátil con sincronización de doble verificación (*double-checked locking*) para compilar la plantilla una sola vez.
-2. **Thymeleaf + OpenHTMLtoPDF (Reportes de Catálogos y Sedes):**
-   - Renderizado moderno a partir de plantillas HTML5 semánticas estilizadas con tokens corporativos, convertidas a documentos PDF vectoriales mediante OpenHTMLtoPDF.
-   - Aplica a: Sedes territoriales (`reports/reporte-sedes`), Puertos y terminales (`reports/reporte-puertos`), Tipos de carga (`reports/reporte-tipos-carga`) y Mercancías (`reports/reporte-mercancias`).
-   - Todos los reportes retornan un flujo binario en memoria (`ByteArrayInputStream`), evitando el I/O en disco.
-
-#### C. Subsistema de Logging y Auditoría (`logback-spring.xml` & `AdminLogsServiceImpl`)
-- Configuración con rotación temporal y por tamaño (`SizeAndTimeBasedRollingPolicy`).
-- **Partición en Dos Archivos Centrales:**
-  - `sga-backend.log`: Registro general diario (límite 50MB por archivo, historial de 30 días, tope total 2GB).
-  - `sga-backend-error.log`: Registro filtrado exclusivo de severidad `WARN` y `ERROR` (historial de 60 días, tope 1GB).
-- La consola expone el servicio `IAdminLogsService` que permite a los usuarios con rol `ADMINISTRADOR_TI` inspeccionar las últimas N líneas en vivo, descargar el archivo de log o vaciarlo directamente desde la API.
-
----
-
-## 3. Patrones de Diseño Implementados
-
-| Categoría | Patrón | Implementación en el Proyecto | Beneficio Técnico |
-| :--- | :--- | :--- | :--- |
-| **Creacional** | **Builder Pattern** | Implementado con la anotación `@Builder` de Lombok en entidades JPA y DTOs (`ApiResponseDTO`, `Expediente`, `Cotizacion`, etc.). | Permite construir objetos complejos con múltiples parámetros de forma legible, inmutable y sin sobrecargar constructores. |
-| **Creacional** | **Singleton** | Gestionado nativamente por el contenedor IoC de Spring Boot para todos los componentes anotados con `@Service`, `@Component`, `@Repository` y `@Configuration`. | Garantiza una única instancia eficiente por servicio durante el ciclo de vida de la aplicación. |
-| **Estructural** | **Data Transfer Object (DTO)** | Paquete `pe.sga.dto.*` (Request, Response, Reporte). | Oculta la estructura interna de la base de datos, optimiza el payload de red y valida contratos de entrada sin contaminar entidades. |
-| **Estructural** | **Adapter / Wrapper** | Clase genérica `ApiResponseDTO<T>`. | Normaliza el contrato de respuesta JSON hacia el frontend con campos predecibles (`success`, `message`, `data`, `timestamp`). |
-| **Estructural** | **Filter / Pipeline** | `JwtAuthenticationFilter` que extiende `OncePerRequestFilter`. | Intercepta cada solicitud HTTP antes del despachador de Spring Security para validar la firma del token y poblar el contexto de seguridad. |
-| **Comportamiento** | **Strategy Pattern** | Interfaces de servicio (`IExpedienteService`, `IStorageService`, `ICotizacionService`, etc.) desacopladas de sus implementaciones. | Facilita la intercambiabilidad de implementaciones (e.g., sustituir `LocalStorageServiceImpl` por `S3StorageServiceImpl` sin alterar clientes). |
-| **Comportamiento** | **Template Method / Interceptor** | `GlobalExceptionHandler` con `@RestControllerAdvice` y métodos `@ExceptionHandler`. | Intercepta excepciones de cualquier controlador y las transforma en respuestas HTTP estructuradas con códigos de estado semánticos. |
-| **Dominio / Persistencia** | **Repository Pattern** | Interfaces en `pe.sga.repository.*` que heredan de `JpaRepository`. | Encapsula el acceso y manipulación de datos, separando las reglas de negocio de las operaciones SQL de bajo nivel. |
-| **Dominio** | **State Machine / Guarded Transitions** | Enums `EstadoCotizacion`, `EstadoExpediente`, `EstadoPagoCotizacion`. | Controla las transiciones válidas de estados de negocio (e.g., una cotización no pasa a expediente sin pago aprobado). |
-| **Persistencia** | **Soft Delete Pattern** | Banderas booleanas (`estadoActivo = false`) o transiciones de estado a `ANULADO` / `INACTIVO`. | Garantiza el cumplimiento de normativas fiscales y auditorías SUNAT al evitar el borrado físico de registros históricos. |
-
----
-
-## 4. Tecnologías y Stack de Dependencias
-
-### 4.1 Matriz de Tecnologías Centrales
-
-- **Lenguaje de Programación:** Java 21 (Long-Term Support - LTS).
-- **Framework Principal:** Spring Boot 4.1.2 (Spring Framework 6.x / Jakarta EE 10).
-- **Motor de Persistencia:** Spring Data JPA con Hibernate ORM.
-- **Mecanismo de Seguridad:** Spring Security 6.x + JJWT (Java JWT) 0.13.0.
-- **Motor de Base de Datos:** MySQL 8.4 LTS InnoDB.
-- **Motor de Reportes Vectoriales:** JasperReports 7.0.8 (PDF Engine + Eclipse JDT Compiler) + Thymeleaf & OpenHTMLtoPDF.
-- **Gestor de Compilación y Dependencias:** Apache Maven 3.9+.
-
----
-
-### 4.2 Inventario de Dependencias (`pom.xml`)
-
-A continuación se detalla cada dependencia configurada en el archivo `backend/pom.xml`, su versión y su justificación funcional:
-
-```xml
-<properties>
-    <java.version>21</java.version>
-    <jasperreports.version>7.0.8</jasperreports.version>
-    <jjwt.version>0.13.0</jjwt.version>
-</properties>
-```
-
-| Grupo / Artefacto | Versión | Ámbito (Scope) | Función y Justificación Técnica |
-| :--- | :---: | :---: | :--- |
-| `org.springframework.boot:spring-boot-starter-data-jpa` | 4.1.2 | Compile | Capa de abstracción de datos relacionales. Incluye Hibernate como proveedor JPA, HikariCP como pool de conexiones de alto rendimiento y soporte de transacciones `@Transactional`. |
-| `org.springframework.boot:spring-boot-starter-security` | 4.1.2 | Compile | Motor de seguridad integral para control de acceso, protección de endpoints mediante SpEL, encoders de cifrado de contraseñas (BCrypt) y gestión de sesiones. |
-| `org.springframework.boot:spring-boot-starter-validation` | 4.1.2 | Compile | Validador declarativo de modelos de datos mediante anotaciones Jakarta Bean Validation (`@NotNull`, `@NotBlank`, `@Size`, `@Positive`, etc.). |
-| `org.springframework.boot:spring-boot-starter-webmvc` | 4.1.2 | Compile | Servidor web incrustado (Apache Tomcat) y soporte completo para arquitectura MVC y APIs REST con serializador Jackson JSON. |
-| `com.mysql:mysql-connector-j` | Runtime | Runtime | Controlador oficial JDBC para la comunicación y ejecución de sentencias sobre bases de datos MySQL 8.x InnoDB. |
-| `org.projectlombok:lombok` | 1.18.x | Optional / Provided | Generador de código en tiempo de compilación para reducir código repetitivo (getters, setters, constructores, `toString`, `equals`, `@Builder`, `@Slf4j`). |
-| `net.sf.jasperreports:jasperreports` | 7.0.8 | Compile | Biblioteca central de JasperReports para compilación de diseños, inyección de parámetros y llenado de fuentes de datos basadas en JavaBeans (`JRBeanCollectionDataSource`). |
-| `net.sf.jasperreports:jasperreports-pdf` | 7.0.8 | Compile | Extensión especializada para renderizar y exportar documentos de JasperReports a formato Adobe PDF con soporte tipográfico y tablas vectoriales. |
-| `net.sf.jasperreports:jasperreports-jdt` | 7.0.8 | Compile | Compilador JDT integrado basado en Eclipse para evaluar expresiones en tiempo de generación de reportes en entornos sin un JDK completo en tiempo de ejecución. |
-| `io.jsonwebtoken:jjwt-api` | 0.13.0 | Compile | Interfaz y especificación de API estándar para la creación, firma y lectura de tokens JWT. |
-| `io.jsonwebtoken:jjwt-impl` | 0.13.0 | Runtime | Implementación interna de JJWT para codificación y decodificación criptográfica HMAC-SHA256. |
-| `io.jsonwebtoken:jjwt-jackson` | 0.13.0 | Runtime | Serializador y deserializador basado en Jackson para el manejo eficiente de payloads y claims dentro del token JWT. |
-
----
-
-## 5. Estructura del Proyecto Backend
-
-La estructura del código fuente está organizada bajo el paquete raíz `pe.sga`:
-
-```
-backend/
-├── pom.xml                                      # Configuración Maven de dependencias y plugins
-└── src/
-    └── main/
-        ├── java/
-        │   └── pe/
-        │       └── sga/
-        │           ├── SgaApplication.java      # Clase principal con @SpringBootApplication y main()
-        │           ├── config/                  # Clases de infraestructura y seguridad
-        │           │   ├── CorsConfig.java               # Configuración de políticas CORS globales
-        │           │   ├── DataInitializer.java          # Carga de datos base en arranque (CommandLineRunner)
-        │           │   ├── JwtAuthenticationFilter.java  # Filtro OncePerRequestFilter para validar tokens JWT
-        │           │   ├── JwtTokenProvider.java         # Generación, firma y parseo de tokens JWT (JJWT)
-        │           │   ├── SecurityConfig.java           # SecurityFilterChain, filtros y políticas de acceso
-        │           │   └── SecurityRoles.java            # Constantes de roles y expresiones SpEL (@PreAuthorize)
-        │           ├── controller/              # Controladores REST expuestos en /api/v1/* (21 Controladores)
-        │           │   ├── AdminLogsController.java           # Gestión e inspección en vivo de logs del sistema
-        │           │   ├── AuthController.java                # Inicio de sesión (/login) y perfil (/me)
-        │           │   ├── CatalogoMercanciaController.java   # Mantenimiento de mercancías y partidas
-        │           │   ├── CatalogoPuertoController.java      # Mantenimiento de terminales portuarios
-        │           │   ├── CatalogoTipoCargaController.java   # Mantenimiento de tipos de carga (FCL, LCL, etc.)
-        │           │   ├── ClienteController.java             # Registro y gestión de importadores/exportadores
-        │           │   ├── ConductorController.java           # Padrón de choferes con licencia MTC
-        │           │   ├── ControlAlmacenController.java      # Custodia, pesaje balanza VGM y retiro
-        │           │   ├── CotizacionController.java          # Cotizaciones comerciales de importación/exportación
-        │           │   ├── CotizacionPagoController.java      # Registro y validación financiera de anticipos
-        │           │   ├── DespachoTransporteController.java  # Despachos, asignación de tractos y tracking
-        │           │   ├── DocumentoController.java           # Carga, descarga y preview de archivos adjuntos
-        │           │   ├── ExpedienteController.java          # Expedientes aduaneros, DAM y levante SUNAT
-        │           │   ├── HealthController.java              # Monitor de estado y salud del servicio REST
-        │           │   ├── LiquidacionFinancieraController.java # Liquidaciones finales, gastos y métricas
-        │           │   ├── PortalController.java              # API B2B del Portal del Cliente (/api/v1/portal/**)
-        │           │   ├── RolController.java                 # Consulta y administración de roles
-        │           │   ├── SedeController.java                # Sedes operativas territoriales y reporte PDF
-        │           │   ├── UnidadTransporteController.java    # Flota de camiones y tractos aduaneros
-        │           │   ├── UsuarioClienteAdminController.java # Gestión admin de usuarios del portal (/api/v1/admin/usuarios-portal/**)
-        │           │   └── UsuarioController.java             # Cuentas de usuarios y reporte PDF de personal
-        │           ├── dto/                     # Objetos de Transferencia de Datos
-        │           │   ├── reporte/             # DTOs proyectados para JasperReports (UsuarioReporteItemDTO)
-        │           │   ├── request/             # DTOs de entrada con anotaciones Jakarta Validation
-        │           │   └── response/            # DTOs de respuesta JSON y ApiResponseDTO<T>
-        │           ├── entity/                  # Entidades JPA (17 Tablas relacionales MySQL InnoDB)
-        │           │   ├── CatalogoMercancia.java
-        │           │   ├── CatalogoPuerto.java
-        │           │   ├── CatalogoTipoCarga.java
-        │           │   ├── Cliente.java
-        │           │   ├── Conductor.java
-        │           │   ├── ControlAlmacen.java
-        │           │   ├── Cotizacion.java
-        │           │   ├── CotizacionPago.java
-        │           │   ├── DespachoTransporte.java
-        │           │   ├── DocumentoAdjunto.java
-        │           │   ├── Expediente.java
-        │           │   ├── LiquidacionFinanciera.java
-        │           │   ├── NotificacionCliente.java
-        │           │   ├── Sede.java
-        │           │   ├── UnidadTransporte.java
-        │           │   ├── UsuarioCliente.java
-        │           │   ├── Usuario.java
-        │           │   └── enums/               # Enumeraciones de dominio (Canal, Estados, RolUsuario)
-        │           ├── exception/               # Manejo de Excepciones de Negocio
-        │           │   ├── BadRequestException.java       # Errores de validación de negocio (HTTP 400)
-        │           │   ├── GlobalExceptionHandler.java    # Interceptor central @RestControllerAdvice
-        │           │   └── ResourceNotFoundException.java # Recursos inexistentes (HTTP 404)
-        │           ├── repository/              # Repositorios JPA que extienden JpaRepository
-        │           └── service/                 # Interfaces de Servicios
-        │               └── impl/                # Implementaciones de Servicios con @Transactional
-        └── resources/
-            ├── application.properties           # Configuración principal de la aplicación
-            └── logback-spring.xml               # Configuración de appenders y rotación de logs
-```
-
-> [!NOTE]
-> Para el arranque inicial del aplicativo, se requiere la clase de arranque estándar en `pe.sga.SgaApplication`:
-> ```java
-> package pe.sga;
-> import org.springframework.boot.SpringApplication;
-> import org.springframework.boot.autoconfigure.SpringBootApplication;
-> 
-> @SpringBootApplication
-> public class SgaApplication {
->     public static void main(String[] args) {
->         SpringApplication.run(SgaApplication.class, args);
->     }
-> }
-> ```
-
----
-
-## 6. Modelo de Seguridad y Control de Acceso (RBAC)
-
-### 6.1 Mecanismo de Autenticación Stateless JWT
-
-1. **Flujo de Login:** El cliente envía sus credenciales al endpoint `/api/v1/auth/login`.  
-   `UsuarioServiceImpl` valida el usuario mediante `usuarioRepository.findByUsername(request.getUsername())` y verifica la contraseña utilizando `BCryptPasswordEncoder.matches()`. Si la cuenta se encuentra activa, delega en `JwtTokenProvider` la creación del token.
-2. **Estructura y Claims del Token:**  
-   El token se firma criptográficamente con algoritmo **HMAC-SHA256** utilizando una clave simétrica de al menos 256 bits (`jwt.secret`). Incluye en su payload los siguientes claims:
-   - `sub`: Nombre de usuario (`username`).
-   - `idUsuario`: Clave primaria del usuario autenticado.
-   - `rol`: Código normativo del rol (e.g. `ADMINISTRADOR_TI`).
-   - `correo`: Correo electrónico institucional.
-   - `iat`: Timestamp de emisión (*Issued At*).
-   - `exp`: Timestamp de expiración (*Expiration Date*, 24 horas por defecto).
-3. **Filtro de Peticiones (`JwtAuthenticationFilter`):**  
-   En cada solicitud entrante, extrae la cabecera `Authorization: Bearer <token>`, valida su integridad y vigencia, y registra en el `SecurityContextHolder` una instancia de `UsernamePasswordAuthenticationToken` con la autoridad `ROLE_<NOMBRE_ROL>`, permitiendo a Spring Security evaluar los accesos de forma inmediata.
-
----
-
-### 6.2 Matriz de los 8 Roles Institucionales
-
-El sistema implementa una segregación estricta de funciones dividida en ocho perfiles:
-
-```
-                                ┌─────────────────────────┐
-                                │     ADMINISTRADOR TI    │
-                                │   (Gobernanza Total)    │
-                                └────────────┬────────────┘
-                                             │
-                                ┌────────────▼────────────┐
-                                │     GERENTE GENERAL     │
-                                │ (Cuadros de Mando/KPIs) │
-                                └────────────┬────────────┘
-                                             │
-          ┌───────────────────┬──────────────┼───────────────────┬───────────────────┐
-          ▼                   ▼              ▼                   ▼                   ▼
- ┌─────────────────┐ ┌─────────────────┐ ┌─────────┐ ┌─────────────────┐ ┌─────────────────┐
- │ AGENTE COMERCIAL│ │ SUPERVISOR ADU. │ │ AGENTE  │ │ SUPERVISOR TRASP│ │    CONTADOR     │
- │ (Cotizaciones)  │ │(Expedientes/DAM)│ │ ADUAN.  │ │(Flota/Despachos)│ │(Finanzas/Cobros)│
- └─────────────────┘ └─────────────────┘ └─────────┘ └─────────────────┘ └─────────────────┘
-                                             │
-                                             ▼
-                                 ┌───────────────────────┐
-                                 │     ASESOR LEGAL      │
-                                 │ (Auditoría Normativa) │
-                                 └───────────────────────┘
-```
-
-1. **`ADMINISTRADOR_TI`:** Gobernanza de cuentas, sedes, catálogos maestros y visor en vivo de logs del sistema.
-2. **`GERENTE_GENERAL`:** Supervisión ejecutiva, cuadros de mando, padrón de flota y choferes MTC.
-3. **`AGENTE_COMERCIAL`:** Creación y gestión de clientes y formulación de cotizaciones aduaneras.
-4. **`SUPERVISOR_ADUANERO`:** Auditoría de cotizaciones, apertura formal de expedientes y asignación de canal SUNAT.
-5. **`AGENTE_ADUANERO`:** Verificación de pesaje VGM en almacén, recepción documental y trámite de levante aduanero.
-6. **`SUPERVISOR_TRANSPORTE`:** Asignación de unidades de transporte y choferes con licencia MTC, despacho y tracking en ruta.
-7. **`CONTADOR`:** Validación de anticipos pre-expediente, cálculo de detracciones SPOT y emisión de liquidaciones financieras.
-8. **`ASESOR_LEGAL`:** Auditoría jurídica de expedientes, permisos sectoriales (DIGEMID, SENASA, SUCAMEC) y contratos.
-
----
-
-### 6.3 Matriz de Autorización con SpEL (`SecurityRoles`)
-
-Todas las restricciones de seguridad están centralizadas en la clase `SecurityRoles.java` mediante constantes reutilizables con Spring Expression Language (SpEL):
-
-| Expresión en `SecurityRoles` | Roles Autorizados | Ámbito de Aplicación |
+| Capítulo | Enlace | Contenido Principal |
 | :--- | :--- | :--- |
-| `ACCESS_USUARIOS_READ` | `ADMINISTRADOR_TI`, `GERENTE_GENERAL` | Listado y consulta de cuentas de usuario. |
-| `ACCESS_USUARIOS_WRITE` | `ADMINISTRADOR_TI` | Creación, actualización y desactivación de usuarios. |
-| `ACCESS_ROLES_READ` | `ADMINISTRADOR_TI`, `GERENTE_GENERAL` | Lectura del catálogo de roles. |
-| `ACCESS_LOGS_READ` | `ADMINISTRADOR_TI` | Consulta en vivo, descarga y vaciado de logs. |
-| `ACCESS_SEDES_CATALOGOS_READ` | Usuarios autenticados (`isAuthenticated()`) | Consulta de sedes y catálogos (rutas GET públicas también disponibles). |
-| `ACCESS_SEDES_CATALOGOS_WRITE`| `ADMINISTRADOR_TI`, `GERENTE_GENERAL` | Modificación de sedes y catálogos auxiliares. |
-| `ACCESS_CLIENTE_COTIZACION_READ`| `ADMINISTRADOR_TI`, `GERENTE_GENERAL`, `AGENTE_COMERCIAL`, `SUPERVISOR_ADUANERO`, `AGENTE_ADUANERO`, `CONTADOR`, `ASESOR_LEGAL` | Lectura de cartera de clientes y cotizaciones. |
-| `ACCESS_CLIENTE_COTIZACION_WRITE`| `ADMINISTRADOR_TI`, `GERENTE_GENERAL`, `AGENTE_COMERCIAL` | Registro y edición de clientes y cotizaciones. |
-| `ACCESS_COTIZACION_APROBACION`| `ADMINISTRADOR_TI`, `GERENTE_GENERAL`, `SUPERVISOR_ADUANERO`, `AGENTE_ADUANERO` | Revisión técnica y aprobación formal de cotizaciones. |
-| `ACCESS_EXPEDIENTE_ALMACEN_READ`| `ADMINISTRADOR_TI`, `GERENTE_GENERAL`, `SUPERVISOR_ADUANERO`, `AGENTE_ADUANERO`, `ASESOR_LEGAL`, `SUPERVISOR_TRANSPORTE`, `CONTADOR` | Lectura de expedientes DAM y control de almacén. |
-| `ACCESS_EXPEDIENTE_ALMACEN_WRITE`| `ADMINISTRADOR_TI`, `GERENTE_GENERAL`, `SUPERVISOR_ADUANERO`, `AGENTE_ADUANERO` | Apertura de expedientes, registro de canal SUNAT, levante y almacén. |
-| `ACCESS_TRANSPORTE_READ` | `ADMINISTRADOR_TI`, `GERENTE_GENERAL`, `SUPERVISOR_TRANSPORTE`, `SUPERVISOR_ADUANERO`, `AGENTE_ADUANERO` | Consulta de flota, choferes y estados de despacho. |
-| `ACCESS_TRANSPORTE_WRITE` | `ADMINISTRADOR_TI`, `GERENTE_GENERAL`, `SUPERVISOR_TRANSPORTE` | Programación de despacho, asignación de chofer/unidad, inicio de ruta y entrega. |
-| `ACCESS_LIQUIDACION_READ` | `ADMINISTRADOR_TI`, `GERENTE_GENERAL`, `CONTADOR`, `SUPERVISOR_ADUANERO`, `ASESOR_LEGAL` | Consulta de anticipos y liquidaciones financieras. |
-| `ACCESS_LIQUIDACION_WRITE` | `ADMINISTRADOR_TI`, `GERENTE_GENERAL`, `CONTADOR`, `SUPERVISOR_ADUANERO` | Validación de pagos, cálculo y emisión de liquidación final. |
-| `ACCESS_DOCUMENTOS_READ/WRITE` | Usuarios autenticados (`isAuthenticated()`) | Carga y descarga de archivos de sustento. |
+| **01. Introducción y Arquitectura** | [`docs/backend/01_introduccion_y_arquitectura.md`](file:///home/jiodev/Documents/Proyects/TransAduanas/docs/backend/01_introduccion_y_arquitectura.md) | Visión para no técnicos (analogías), principios rectores, arquitectura multicapa N-Tier, ciclo de vida de una petición HTTP, patrones de diseño (Builder, DTO, Wrapper, Global Handler) y árbol del código. |
+| **02. Dependencias y Librerías** | [`docs/backend/02_dependencias_y_librerias.md`](file:///home/jiodev/Documents/Proyects/TransAduanas/docs/backend/02_dependencias_y_librerias.md) | Inventario exhaustivo del `pom.xml`, versiones de Spring Boot 4.1.2, Java 21 LTS, JJWT 0.13.0, Lombok, JasperReports, Thymeleaf, OpenHTMLtoPDF y plugins del compilador. |
+| **03. Seguridad, JWT y Roles** | [`docs/backend/03_seguridad_jwt_y_roles.md`](file:///home/jiodev/Documents/Proyects/TransAduanas/docs/backend/03_seguridad_jwt_y_roles.md) | Modelo stateless JWT (HMAC-SHA256), cadena de filtros `SecurityConfig`, matriz de los 8 roles institucionales + Portal B2B, expresiones SpEL en `SecurityRoles` y resolución segura del usuario autenticado. |
+| **04. Reglas de Negocio y Flujos** | [`docs/backend/04_reglas_de_negocio_y_flujos.md`](file:///home/jiodev/Documents/Proyects/TransAduanas/docs/backend/04_reglas_de_negocio_y_flujos.md) | Cotizador de 4 pasos, fórmulas de flete y aranceles NANDINA, Compuerta Financiera Pre-Expediente (*Payment Gate*), pagos y deuda heredada, canales SUNAT (DAM), pesaje VGM, flota MTC, liquidación SPOT (12%) y Soft Delete. |
+| **05. Catálogo de la API REST** | [`docs/backend/05_catalogo_completo_api_rest.md`](file:///home/jiodev/Documents/Proyects/TransAduanas/docs/backend/05_catalogo_completo_api_rest.md) | Inventario completo de los **21 Controladores REST** con sus rutas, verbos HTTP (`GET`, `POST`, `PUT`, `PATCH`, `DELETE`), seguridad requerida y descripción funcional de cada servicio. |
+| **06. Reportes PDF y Archivos** | [`docs/backend/06_reportes_pdf_y_archivos.md`](file:///home/jiodev/Documents/Proyects/TransAduanas/docs/backend/06_reportes_pdf_y_archivos.md) | Motor híbrido de reportería (JasperReports 7.0.8 y plantillas HTML con OpenHTMLtoPDF), almacenamiento seguro de archivos multipart (25 MB) y logging rotativo con `logback-spring.xml`. |
 
 ---
 
-## 7. Módulos de Negocio y Reglas de Dominio
+## Índice General del Documento Maestro
 
-### 7.1 Compuerta Financiera Pre-Expediente (Financial Payment Gate)
+1. [Visión General del Sistema Backend](#1-visión-general-del-sistema-backend)
+2. [Arquitectura de Software en Capas](#2-arquitectura-de-software-en-capas)
+3. [Resumen del Stack Tecnológico y Dependencias](#3-resumen-del-stack-tecnológico-y-dependencias)
+4. [Modelo de Seguridad y Roles Institucionales](#4-modelo-de-seguridad-y-roles-institucionales)
+5. [Puntos Críticos y Reglas de Negocio Centrales](#5-puntos-críticos-y-reglas-de-negocio-centrales)
+6. [Resumen del Catálogo de 21 Controladores REST](#6-resumen-del-catálogo-de-21-controladores-rest)
+7. [Motor Híbrido de Reportes PDF](#7-motor-híbrido-de-reportes-pdf)
 
-Es la regla de negocio más crítica de la plataforma. Evita que la agencia incurra en costos operativos y aduaneros sin respaldo financiero previo del importador/exportador:
+---
+
+## 1. Visión General del Sistema Backend
+
+El backend **sga-backend** es el motor central del **Sistema de Gestión Aduanera - Transaduanas**, una solución corporativa de alto rendimiento desarrollada en **Java 21 LTS** sobre **Spring Boot 4.1.2** para gobernar, automatizar y auditar integralmente las operaciones de agenciamiento aduanero, depósito temporal, transporte de carga pesada y liquidación financiera en el Perú, en estricta conformidad con las normativas de la **SUNAT** (Superintendencia Nacional de Aduanas y de Administración Tributaria) y el **MTC** (Ministerio de Transportes y Comunicaciones).
+
+### ¿Qué hace en lenguaje sencillo?
+- **Evita pérdidas financieras:** No permite iniciar ningún trámite aduanero costoso si el cliente no ha depositado el anticipo y este ha sido formalmente validado por el contador (*Compuerta Financiera*).
+- **Controla el peso en báscula:** Exige el pesaje obligatorio en balanza certificada VGM según la enmienda internacional SOLAS antes de autorizar la salida de camiones.
+- **Auditoría fiscal inmutable (*Soft Delete*):** Nunca borra datos físicos de la base de datos; preserva el historial completo para auditorías de SUNAT.
+- **Conecta a los clientes en tiempo real:** Ofrece una API específica para el **Portal del Cliente B2B**, donde los importadores/exportadores pueden consultar el tracking de sus expedientes (canal Verde, Naranja, Rojo), ver sus cuotas pendientes y subir sus comprobantes de pago.
+
+---
+
+## 2. Arquitectura de Software en Capas
+
+El backend adopta un diseño multicapa desacoplado (*N-Tier Architecture*) que aísla estrictamente la presentación HTTP, la lógica de negocio y el acceso a la base de datos relacional:
 
 ```
-[ Cotización Comercial Registrada ]
-                │
-                ▼
-   [ Revisión Técnica Aprobada ]
-   (Estado: APROBADA)
-                │
-                ▼
-┌────────────────────────────────────────────────────────┐
-│             COMPUERTA FINANCIERA (PAYMENT GATE)        │
-│                                                        │
-│ ¿La cotización tiene un pago o anticipo con estado     │
-│  APROBADO validado por el área contable/Finanzas?      │
-└───────────────────────────┬────────────────────────────┘
-                            │
-               ┌────────────┴────────────┐
-               │ NO                      │ SÍ
-               ▼                         ▼
-   [ RECHAZO DE OPERACIÓN ]   [ APERTURA DE EXPEDIENTE ]
-   HTTP 400 Bad Request       Código: EXP-YYYYMM-XXXX
-   "Se requiere un pago       Estado: ASIGNADO
-    aprobado por Finanzas"
+[ Petición HTTP / JSON ] ──▶ [ JwtAuthenticationFilter ] (Valida firma HMAC-SHA256)
+                                      │
+                                      ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│ 1. CAPA DE CONTROLADORES (@RestController)                              │
+│    - Validación declarativa de DTOs con @Valid (Jakarta Validation)    │
+│    - Autorización por Roles mediante SpEL (@PreAuthorize)              │
+│    - Envoltorio estándar: ApiResponseDTO<T> { success, message, data } │
+└─────────────────────────────────────┬──────────────────────────────────┘
+                                      │
+                                      ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│ 2. CAPA DE SERVICIOS (Interfaces @Service)                             │
+│    - Reglas de negocio del dominio y compuertas financieras            │
+│    - Control transaccional ACID (@Transactional)                       │
+│    - Resolución dinámica del usuario autenticado (sin IDs fijos)       │
+│    - Fórmulas de flete, tributos aduaneros, IGV y SPOT (12%)           │
+└─────────────────────────────────────┬──────────────────────────────────┘
+                                      │
+                                      ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│ 3. CAPA DE REPOSITORIOS (Spring Data JPA)                              │
+│    - Consultas derivadas automáticas y consultas JPQL personalizadas   │
+│    - Filtros automáticos de Soft Delete (estado_activo = true)         │
+└─────────────────────────────────────┬──────────────────────────────────┘
+                                      │
+                                      ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│ 4. BASE DE DATOS RELACIONAL (MySQL 8.4 LTS InnoDB)                     │
+│    - 17 tablas normalizadas, llaves foráneas y codificación utf8mb4    │
+└────────────────────────────────────────────────────────────────────────┘
 ```
 
-Implementación en `ExpedienteServiceImpl.java`:
-```java
-// Verificación obligatoria de compuerta financiera
-boolean tienePagoAprobado = "ADELANTO_APROBADO".equals(cotizacion.getEstadoPago())
-        || "PAGADO_TOTAL".equals(cotizacion.getEstadoPago())
-        || cotizacionPagoRepository.existsByCotizacion_IdCotizacionAndEstadoPago(
-                cotizacion.getIdCotizacion(), EstadoPagoCotizacion.APROBADO);
-
-if (!tienePagoAprobado) {
-    throw new BadRequestException("No es posible aperturar el expediente aduanero. Se requiere un pago o adelanto validado y aprobado por el área de Finanzas.");
-}
-```
+👉 *Para conocer en detalle cada capa, diagramas de secuencia y patrones de diseño, consulta:*  
+**[Capítulo 01: Introducción y Arquitectura (`docs/backend/01_introduccion_y_arquitectura.md`)](file:///home/jiodev/Documents/Proyects/TransAduanas/docs/backend/01_introduccion_y_arquitectura.md)**.
 
 ---
 
-### 7.2 Política Estricta de Soft Delete (Tolerancia Cero a Borrado Físico)
+## 3. Resumen del Stack Tecnológico y Dependencias
 
-En conformidad con las auditorías de SUNAT, **ninguna entidad transaccional o maestra es eliminada físicamente de la base de datos**.
+Todas las librerías son gestionadas a través de **Apache Maven** en [`backend/pom.xml`](file:///home/jiodev/Documents/Proyects/TransAduanas/backend/pom.xml):
 
-1. **Entidades Maestras (`Cliente`, `Usuario`, `Sede`, `Conductor`, `UnidadTransporte`, `Catalogo*`):**  
-   Se desactivan mediante su bandera lógica:
-   ```java
-   entidad.setEstadoActivo(false); // o estado = "INACTIVO"
-   ```
-2. **Entidades Transaccionales (`Cotizacion`, `Expediente`, `DespachoTransporte`, `LiquidacionFinanciera`):**  
-   Transicionan a su estado terminal de anulación:
-   - `Cotizacion`: `estado = EstadoCotizacion.RECHAZADA` o `ANULADA`.
-   - `Expediente`: `estadoExpediente = EstadoExpediente.ANULADO`.
-   - `DespachoTransporte`: `estado = "CANCELADO"`, liberando simultáneamente el conductor y la unidad asignada.
-   - `LiquidacionFinanciera`: `estadoPago = "ANULADO"`.
-
----
-
-### 7.3 Generación Determinista de Códigos Correlativos
-
-Los identificadores de negocio son correlativos estructurados generados en los servicios mediante el formato: `PREFIJO-YYYY-XXXX` (4 dígitos de año y 4 correlativos secuenciales):
-
-- **Cotizaciones:** `COT-2026-0001`
-- **Expedientes Aduaneros:** `EXP-2026-0001`
-- **Despachos de Transporte (Tracking):** `TRK-2026-0001`
-- **Liquidaciones Financieras:** `LIQ-2026-0001`
-- **Comprobantes de Pago / Anticipos:** `PAG-COT-2026-0001`
-
----
-
-### 7.4 Motor de Cálculo Financiero y Detracción SPOT
-
-El servicio `LiquidacionFinancieraServiceImpl` incorpora la formulación contable estándar peruana:
-
-1. **Base Imponible de Servicios:**  
-   $$\text{Subtotal} = \text{Honorarios de Agenciamiento} + \text{Gastos de Almacenaje} + \text{Flete Local}$$
-2. **Impuesto General a las Ventas (IGV 18%):**  
-   $$\text{IGV} = \text{Subtotal} \times 0.18$$
-3. **Total en Moneda Nacional (PEN):**  
-   $$\text{Total PEN} = \text{Tributos Aduaneros (Ad-Valórem + IGV SUNAT)} + \text{Subtotal} + \text{IGV Servicios}$$
-4. **Conversión Cambiaria a USD:**  
-   $$\text{Total USD} = \frac{\text{Total PEN}}{\text{Tipo de Cambio Oficial (3.7500)}}$$
-5. **Cálculo de Detracción SPOT (Sistema de Pago de Obligaciones Tributarias - 12%):**  
-   Aplica sobre los servicios gravados con IGV cuando el monto total en moneda nacional iguala o supera el umbral legal de S/ 700.00 (`totalPen.compareTo(new BigDecimal("700.00")) >= 0`):
-   $$\text{Monto Detracción} = (\text{Subtotal} + \text{IGV}) \times 0.12$$
-   Si el total en moneda nacional es inferior a S/ 700.00 (`totalPen < 700.00`), el importe de detracción es S/ 0.00 y no se retiene SPOT.
-
----
-
-## 8. Catálogo de Endpoints RESTful (API Reference)
-
-Todos los endpoints están prefijados bajo la versión de API `/api/v1`.
-
-### 8.1 Autenticación y Perfil (`/api/v1/auth`)
-
-| Método | Endpoint | Permiso SpEL | Descripción |
-| :---: | :--- | :--- | :--- |
-| `POST` | `/api/v1/auth/login` | Público | Autentica usuario y retorna token JWT Bearer. |
-| `GET` | `/api/v1/auth/me` | Autenticado | Retorna los datos y rol del usuario autenticado. |
-
----
-
-### 8.2 Catálogos Auxiliares (`/api/v1/catalogos/*`)
-
-| Método | Endpoint | Permiso SpEL | Descripción |
-| :---: | :--- | :--- | :--- |
-| `GET` | `/api/v1/catalogos/puertos` | Público / `permitAll()` | Lista terminales portuarios (soporta filtro `tipo`). |
-| `POST` | `/api/v1/catalogos/puertos` | `ACCESS_SEDES_CATALOGOS_WRITE` | Registra un nuevo puerto o terminal. |
-| `GET` | `/api/v1/catalogos/tipos-carga` | Público / `permitAll()` | Lista tipos de carga (FCL, LCL, Granel, etc.). |
-| `POST` | `/api/v1/catalogos/tipos-carga` | `ACCESS_SEDES_CATALOGOS_WRITE` | Registra un nuevo tipo de carga. |
-| `GET` | `/api/v1/catalogos/mercancias` | Público / `permitAll()` | Lista catálogo de mercancías y subpartidas arancelarias. |
-| `POST` | `/api/v1/catalogos/mercancias` | `ACCESS_SEDES_CATALOGOS_WRITE` | Registra una nueva mercancía y partida. |
-
----
-
-### 8.3 Gestión de Clientes (`/api/v1/clientes`)
-
-| Método | Endpoint | Permiso SpEL | Descripción |
-| :---: | :--- | :--- | :--- |
-| `GET` | `/api/v1/clientes` | `ACCESS_CLIENTE_COTIZACION_READ` | Lista clientes activos (soporta filtro `q` por RUC o Razón Social). |
-| `GET` | `/api/v1/clientes/{id}` | `ACCESS_CLIENTE_COTIZACION_READ` | Obtiene un cliente por su ID primario. |
-| `POST` | `/api/v1/clientes` | `ACCESS_CLIENTE_COTIZACION_WRITE` | Registra un nuevo cliente importador/exportador con RUC. |
-| `PUT` | `/api/v1/clientes/{id}` | `ACCESS_CLIENTE_COTIZACION_WRITE` | Actualiza la información y contacto del cliente. |
-| `DELETE` | `/api/v1/clientes/{id}` | `ACCESS_CLIENTE_COTIZACION_WRITE` | Desactiva lógicamente al cliente (`estadoActivo = false`). |
-
----
-
-### 8.4 Gestión de Cotizaciones Comerciales (`/api/v1/cotizaciones`)
-
-| Método | Endpoint | Permiso SpEL | Descripción |
-| :---: | :--- | :--- | :--- |
-| `GET` | `/api/v1/cotizaciones` | `ACCESS_CLIENTE_COTIZACION_READ` | Lista cotizaciones con filtros opcionales (`estado`, `idCliente`, `soloActivas`). |
-| `GET` | `/api/v1/cotizaciones/{id}` | `ACCESS_CLIENTE_COTIZACION_READ` | Consulta detalle completo de cotización por ID. |
-| `GET` | `/api/v1/cotizaciones/codigo/{codigo}` | `ACCESS_CLIENTE_COTIZACION_READ` | Consulta cotización por su código correlativo (`COT-YYYYMM-XXXX`). |
-| `POST` | `/api/v1/cotizaciones` | `ACCESS_CLIENTE_COTIZACION_WRITE` | Registra una nueva cotización comercial. |
-| `PUT` | `/api/v1/cotizaciones/{id}` | `ACCESS_CLIENTE_COTIZACION_WRITE` | Modifica cotización (restringido si ya está aprobada o facturada). |
-| `PATCH` | `/api/v1/cotizaciones/{id}/revision` | `ACCESS_COTIZACION_APROBACION` | Registra la revisión técnica aduanera (Ad-Valórem y viabilidad). |
-| `PATCH` | `/api/v1/cotizaciones/{id}/estado` | `ACCESS_COTIZACION_APROBACION` | Actualiza el estado (`APROBADA`, `OBSERVADA`, `RECHAZADA`). |
-| `DELETE` | `/api/v1/cotizaciones/{id}` | `ACCESS_CLIENTE_COTIZACION_WRITE` | Anula la cotización (borrado lógico de estado). |
-
----
-
-### 8.5 Anticipos y Pagos de Cotizaciones
-
-| Método | Endpoint | Permiso SpEL | Descripción |
-| :---: | :--- | :--- | :--- |
-| `POST` | `/api/v1/cotizaciones/{id}/pagos` | `ACCESS_CLIENTE_COTIZACION_WRITE` | Registra el voucher de anticipo y lo remite a validación contable. |
-| `GET` | `/api/v1/cotizaciones/{id}/pagos` | `ACCESS_CLIENTE_COTIZACION_READ` | Lista el historial de abonos y anticipos de la cotización. |
-| `GET` | `/api/v1/finanzas/anticipos` | `ACCESS_LIQUIDACION_READ` | Lista general de anticipos (filtro por estado: pendiente, aprobado). |
-| `GET` | `/api/v1/finanzas/anticipos/pendientes` | `ACCESS_LIQUIDACION_READ` | Bandeja de anticipos pendientes de validación contable. |
-| `PATCH` | `/api/v1/finanzas/anticipos/{id}/validar` | `ACCESS_LIQUIDACION_WRITE` | Valida y aprueba el abono financiero (desbloquea la apertura del expediente). |
-
----
-
-### 8.6 Expedientes Aduaneros y SUNAT DAM (`/api/v1/expedientes`)
-
-| Método | Endpoint | Permiso SpEL | Descripción |
-| :---: | :--- | :--- | :--- |
-| `GET` | `/api/v1/expedientes` | `ACCESS_EXPEDIENTE_ALMACEN_READ` | Lista expedientes con filtros (`canal`, `estado`, `idAgente`, `idCliente`). |
-| `GET` | `/api/v1/expedientes/{id}` | `ACCESS_EXPEDIENTE_ALMACEN_READ` | Obtiene expediente aduanero por ID. |
-| `GET` | `/api/v1/expedientes/codigo/{codigo}` | `ACCESS_EXPEDIENTE_ALMACEN_READ` | Consulta expediente por código (`EXP-YYYYMM-XXXX`). |
-| `GET` | `/api/v1/expedientes/cotizacion/{id}` | `ACCESS_EXPEDIENTE_ALMACEN_READ` | Obtiene expediente vinculado a una cotización específica. |
-| `POST` | `/api/v1/expedientes` | `ACCESS_EXPEDIENTE_ALMACEN_WRITE` | Apertura formal de expediente aduanero (aplica compuerta financiera). |
-| `PUT` | `/api/v1/expedientes/{id}` | `ACCESS_EXPEDIENTE_ALMACEN_WRITE` | Actualiza datos de navegación, zarpe, contenedor y contacto en origen. |
-| `PATCH` | `/api/v1/expedientes/{id}/canal` | `ACCESS_EXPEDIENTE_ALMACEN_WRITE` | Asigna número oficial de DAM y Canal SUNAT (`VERDE`, `NARANJA`, `ROJO`). |
-| `PATCH` | `/api/v1/expedientes/{id}/levante` | `ACCESS_EXPEDIENTE_ALMACEN_WRITE` | Registra autorización de levante aduanero oficial. |
-| `DELETE` | `/api/v1/expedientes/{id}` | `ACCESS_EXPEDIENTE_ALMACEN_WRITE` | Anula el expediente aduanero (borrado lógico). |
-
----
-
-### 8.7 Depósito Temporal y Control de Almacén (`/api/v1/almacen`)
-
-| Método | Endpoint | Permiso SpEL | Descripción |
-| :---: | :--- | :--- | :--- |
-| `GET` | `/api/v1/almacen` | `ACCESS_EXPEDIENTE_ALMACEN_READ` | Lista registros de custodia y almacenamiento. |
-| `GET` | `/api/v1/almacen/expediente/{id}` | `ACCESS_EXPEDIENTE_ALMACEN_READ` | Consulta el estado de almacén de un expediente. |
-| `POST` | `/api/v1/almacen` | `ACCESS_EXPEDIENTE_ALMACEN_WRITE` | Registra ingreso de carga a depósito temporal y pesaje VGM. |
-| `PATCH` | `/api/v1/almacen/{id}/autorizar-salida` | `ACCESS_EXPEDIENTE_ALMACEN_WRITE` | Autoriza la salida de carga tras verificar levante aduanero. |
-
----
-
-### 8.8 Transporte, Flota y Despachos (`/api/v1/transporte/*`)
-
-| Método | Endpoint | Permiso SpEL | Descripción |
-| :---: | :--- | :--- | :--- |
-| `GET` | `/api/v1/transporte/conductores` | `ACCESS_TRANSPORTE_READ` | Lista padrón de choferes con licencia MTC y récord. |
-| `POST` | `/api/v1/transporte/conductores` | `ACCESS_TRANSPORTE_WRITE` | Registra un nuevo conductor en el padrón de transporte. |
-| `GET` | `/api/v1/transporte/unidades` | `ACCESS_TRANSPORTE_READ` | Lista flota de camiones, tractos y plataformas. |
-| `POST` | `/api/v1/transporte/unidades` | `ACCESS_TRANSPORTE_WRITE` | Registra una nueva unidad de transporte con placa MTC. |
-| `GET` | `/api/v1/transporte/despachos` | `ACCESS_TRANSPORTE_READ` | Lista órdenes de despacho terrestre y asignaciones. |
-| `GET` | `/api/v1/transporte/despachos/tracking/{tracking}` | `ACCESS_TRANSPORTE_READ` | Consulta pública/privada de despacho por código de tracking. |
-| `POST` | `/api/v1/transporte/despachos` | `ACCESS_TRANSPORTE_WRITE` | Programa un nuevo despacho de carga. |
-| `PATCH` | `/api/v1/transporte/despachos/{id}/asignar-recursos` | `ACCESS_TRANSPORTE_WRITE` | Asigna chofer y tracto disponible al despacho. |
-| `PATCH` | `/api/v1/transporte/despachos/{id}/iniciar-ruta` | `ACCESS_TRANSPORTE_WRITE` | Marca la salida del depósito temporal e inicio de ruta terrestre. |
-| `PATCH` | `/api/v1/transporte/despachos/{id}/confirmar-entrega` | `ACCESS_TRANSPORTE_WRITE` | Registra entrega conforme y libera chofer y unidad. |
-| `POST` | `/api/v1/transporte/despachos/{id}/incidencia` | Autenticado | Reporta incidencia en ruta con notificación inmediata. |
-
----
-
-### 8.9 Liquidación Financiera (`/api/v1/finanzas/liquidaciones`)
-
-| Método | Endpoint | Permiso SpEL | Descripción |
-| :---: | :--- | :--- | :--- |
-| `GET` | `/api/v1/finanzas/liquidaciones` | `ACCESS_LIQUIDACION_READ` | Lista liquidaciones financieras emitidas. |
-| `GET` | `/api/v1/finanzas/liquidaciones/metricas` | `ACCESS_LIQUIDACION_READ` | Métricas consolidadas (monto liquidado, pendiente, recaudación). |
-| `GET` | `/api/v1/finanzas/liquidaciones/calcular-estimado/{idExp}` | `ACCESS_LIQUIDACION_READ` | Calcula liquidación estimada previa (honorarios, almacenaje, IGV, detracción). |
-| `POST` | `/api/v1/finanzas/liquidaciones` | `ACCESS_LIQUIDACION_WRITE` | Emite la liquidación financiera final de la operación. |
-| `PATCH` | `/api/v1/finanzas/liquidaciones/{id}/pago` | `ACCESS_LIQUIDACION_WRITE` | Registra el pago final y cancela la liquidación financiera. |
-
----
-
-### 8.10 Archivo Documental Digital (`/api/v1/documentos`)
-
-| Método | Endpoint | Permiso SpEL | Descripción |
-| :---: | :--- | :--- | :--- |
-| `POST` | `/api/v1/documentos/upload` | Autenticado | Sube uno o múltiples archivos (Multipart) asociados a una entidad. |
-| `GET` | `/api/v1/documentos` | Autenticado | Lista documentos con filtros polimórficos (`entidadTipo`, `idCotizacion`, etc.). |
-| `GET` | `/api/v1/documentos/{id}/descargar` | Autenticado | Descarga el archivo en su formato original (`attachment`). |
-| `GET` | `/api/v1/documentos/{id}/preview` | Autenticado | Visualización directa en el navegador (`inline`). |
-| `DELETE` | `/api/v1/documentos/{id}` | Autenticado | Elimina el registro del documento y su archivo físico. |
-
----
-
-### 8.11 Administración TI, Infraestructura y Logs
-
-| Método | Endpoint | Permiso SpEL | Descripción |
-| :---: | :--- | :--- | :--- |
-| `GET` | `/api/v1/sedes` | `ACCESS_SEDES_CATALOGOS_READ` | Lista todas las sedes operativas. |
-| `GET` | `/api/v1/sedes/exportar-pdf` | `ACCESS_SEDES_CATALOGOS_READ` | Genera y descarga reporte en PDF oficial (Thymeleaf + OpenHTMLtoPDF). |
-| `GET` | `/api/v1/usuarios` | `ACCESS_USUARIOS_READ` | Lista cuentas de usuario del sistema. |
-| `GET` | `/api/v1/usuarios/exportar-pdf` | `ACCESS_USUARIOS_READ` | Exporta padrón oficial de personal en PDF con JasperReports 7.0.8. |
-| `GET` | `/api/v1/roles` | `ACCESS_ROLES_READ` | Consulta catálogo de los 8 roles del sistema (`RolUsuario`). |
-| `GET` | `/api/v1/admin/logs` | `ACCESS_LOGS_READ` | Inspección de las últimas N líneas del archivo de log. |
-| `GET` | `/api/v1/admin/logs/download` | `ACCESS_LOGS_READ` | Descarga el archivo `sga-backend.log`. |
-| `POST` | `/api/v1/admin/logs/clear` | `ACCESS_LOGS_READ` | Vacia el archivo de log en el servidor. |
-| `GET` | `/api/v1/health` | Público | Monitor de estado del servicio (UP, versión, timestamp). |
-
----
-
-### 8.12 Portal del Cliente B2B (`/api/v1/portal/**` — `PortalController.java`)
-
-Controlador especializado para empresas importadoras/exportadoras y clientes corporativos con autenticación mediante `UsuarioCliente`:
-
-| Método | Endpoint | Permiso SpEL | Descripción |
-| :---: | :--- | :--- | :--- |
-| `POST` | `/api/v1/portal/auth/login` | Público | Autenticación B2B con credenciales (RUC/username) y entrega de JWT. |
-| `POST` | `/api/v1/portal/auth/cambiar-password` | Autenticado Portal | Cambio obligatorio o voluntario de contraseña del cliente. |
-| `GET` | `/api/v1/portal/perfil` | Autenticado Portal | Información corporativa y representante legal del cliente en sesión. |
-| `GET` | `/api/v1/portal/cotizaciones` | Autenticado Portal | Bandeja de cotizaciones emitidas a nombre de la empresa. |
-| `GET` | `/api/v1/portal/cotizaciones/{id}` | Autenticado Portal | Detalle completo de cotización (desglose arancelario y flete). |
-| `POST` | `/api/v1/portal/cotizaciones/solicitar` | Autenticado Portal | Formulación y solicitud de nueva proforma aduanera. |
-| `PATCH` | `/api/v1/portal/cotizaciones/{id}/aceptar` | Autenticado Portal | Aceptación formal de la propuesta comercial aprobada técnicamente. |
-| `GET` | `/api/v1/portal/expedientes` | Autenticado Portal | Listado de expedientes aduaneros activos y concluidos. |
-| `GET` | `/api/v1/portal/expedientes/{id}` | Autenticado Portal | Detalle y tracking integral del expediente (DAM, canal SUNAT, hitos). |
-| `GET` | `/api/v1/portal/expedientes/{id}/documentos` | Autenticado Portal | Visualización y descarga de sustentos digitales asociados. |
-| `GET` | `/api/v1/portal/pagos/resumen` | Autenticado Portal | Resumen financiero (saldo pendiente, total abonado, liquidaciones). |
-| `GET` | `/api/v1/portal/pagos/obligaciones-pendientes` | Autenticado Portal | Obligaciones financieras listas para abonar (anticipos y balances). |
-| `GET` | `/api/v1/portal/pagos/anticipos` | Autenticado Portal | Historial y estado de validación de anticipos registrados. |
-| `GET` | `/api/v1/portal/pagos/liquidaciones` | Autenticado Portal | Historial de liquidaciones finales tributarias de la empresa. |
-| `POST` | `/api/v1/portal/pagos/registrar-voucher` | Autenticado Portal | Registro formal de comprobante de pago bancario. |
-| `POST` | `/api/v1/portal/pagos/upload-comprobante` | Autenticado Portal | Carga multipart del archivo digital del voucher bancario. |
-| `PUT` | `/api/v1/portal/pagos/anticipos/{idPago}/corregir` | Autenticado Portal | Subsanación y recarga de comprobante observado por Finanzas. |
-| `GET` | `/api/v1/portal/notificaciones` | Autenticado Portal | Bandeja de avisos y alertas operativas de expedientes y pagos. |
-| `GET` | `/api/v1/portal/notificaciones/resumen` | Autenticado Portal | Conteo de avisos y notificaciones no leídas. |
-| `PATCH` | `/api/v1/portal/notificaciones/{id}/leer` | Autenticado Portal | Marca una notificación específica como leída. |
-| `PATCH` | `/api/v1/portal/notificaciones/marcar-todas-leidas` | Autenticado Portal | Marca todo el historial de notificaciones como leído. |
-
----
-
-### 8.13 Administración de Usuarios del Portal B2B (`/api/v1/admin/usuarios-portal/**` — `UsuarioClienteAdminController.java`)
-
-Control administrativo exclusivo para la gobernanza de accesos de clientes externos:
-
-| Método | Endpoint | Permiso SpEL | Descripción |
-| :---: | :--- | :--- | :--- |
-| `GET` | `/api/v1/admin/usuarios-portal` | `ACCESS_USUARIOS_READ` | Directorio de usuarios de empresas clientes con búsqueda y filtros. |
-| `GET` | `/api/v1/admin/usuarios-portal/{id}` | `ACCESS_USUARIOS_READ` | Detalle del usuario del portal y empresa vinculada. |
-| `POST` | `/api/v1/admin/usuarios-portal` | `ACCESS_USUARIOS_WRITE` | Creación y provisión de credenciales de acceso para clientes. |
-| `PUT` | `/api/v1/admin/usuarios-portal/{id}` | `ACCESS_USUARIOS_WRITE` | Actualización de datos, nombres y correo de notificación. |
-| `DELETE` | `/api/v1/admin/usuarios-portal/{id}` | `ACCESS_USUARIOS_WRITE` | Desactivación lógica de la cuenta del portal (`estadoActivo = false`). |
-| `PATCH` | `/api/v1/admin/usuarios-portal/{id}/reactivar` | `ACCESS_USUARIOS_WRITE` | Reactivación formal de la cuenta del cliente. |
-| `PATCH` | `/api/v1/admin/usuarios-portal/{id}/reset-password` | `ACCESS_USUARIOS_WRITE` | Reseteo temporal y asignación de nueva contraseña de acceso. |
-
----
-
-## 9. Manejo Centralizado de Excepciones y Respuestas HTTP
-
-Todas las respuestas del sistema se estandarizan a través de `ApiResponseDTO<T>`:
-
-```json
-{
-  "success": true,
-  "message": "Operación ejecutada exitosamente",
-  "data": { ... },
-  "timestamp": "2026-10-21T16:00:00.000"
-}
-```
-
-La clase `GlobalExceptionHandler` (`@RestControllerAdvice`) traduce las anomalías a respuestas con el código HTTP semántico correspondiente:
-
-| Excepción Java | Código HTTP | Mensaje de Error Emitido |
+| Dependencia | Versión | Rol en el Sistema |
 | :--- | :---: | :--- |
-| `ResourceNotFoundException` | `404 Not Found` | Mensaje descriptivo del recurso faltante con su ID o código. |
-| `BadRequestException` | `400 Bad Request` | Violación de regla de negocio o compuerta operativa/financiera. |
-| `BadCredentialsException` | `401 Unauthorized` | "Credenciales inválidas: usuario o contraseña incorrectos". |
-| `AccessDeniedException` | `403 Forbidden` | "Acceso denegado: no cuenta con permisos suficientes para esta operación". |
-| `MethodArgumentNotValidException` | `400 Bad Request` | Mapa clave-valor con cada campo que no superó la validación Jakarta. |
-| `Exception` (Genérica no controlada) | `500 Internal Server Error` | "Error interno del servidor: [descripción técnica]". |
+| **Java JDK** | **21 LTS** | Plataforma base con hilos virtuales, records y alto rendimiento. |
+| **Spring Boot WebMVC** | **4.1.2** | Exposición de endpoints RESTful con servidor Tomcat y serialización Jackson. |
+| **Spring Boot Data JPA** | **4.1.2** | Mapeo Objeto-Relacional con Hibernate ORM y transacciones `@Transactional`. |
+| **Spring Boot Security** | **4.1.2** | Motor de seguridad con hashing BCrypt y evaluación de expresiones SpEL. |
+| **Spring Boot Validation** | **4.1.2** | Validación declarativa de DTOs (`@NotNull`, `@NotBlank`, `@Positive`). |
+| **MySQL Connector/J** | Runtime | Conector JDBC nativo para MySQL 8.4 InnoDB. |
+| **JJWT (API, Impl, Jackson)** | **0.13.0** | Generación y verificación criptográfica de tokens Bearer HMAC-SHA256. |
+| **Project Lombok** | **1.18.x** | Eliminación de boilerplate con anotaciones `@Builder`, `@Getter`, `@Setter`. |
+| **JasperReports (Engine, PDF, JDT)**| **7.0.8** | Motor de compilación en memoria y renderizado de padrones vectoriales en PDF. |
+| **Thymeleaf + OpenHTMLtoPDF** | **1.0.10** | Motor de plantillas HTML5/CSS3 para diseño de reportes corporativos en PDF. |
+
+👉 *Para conocer para qué sirve cada librería y qué pasaría si no estuviera, consulta:*  
+**[Capítulo 02: Dependencias y Librerías (`docs/backend/02_dependencias_y_librerias.md`)](file:///home/jiodev/Documents/Proyects/TransAduanas/docs/backend/02_dependencias_y_librerias.md)**.
 
 ---
 
-## 10. Configuración, Perfiles y Puesta en Marcha
+## 4. Modelo de Seguridad y Roles Institucionales
 
-### 10.1 Variables de Configuración (`application.properties`)
+El sistema implementa seguridad **Stateless** basada en tokens JWT con una vigencia de 24 horas y soporte para **8 roles institucionales internos** más el **acceso corporativo B2B**:
 
-El backend soporta inyección por variables de entorno con valores por defecto seguros para desarrollo:
-
-```properties
-spring.application.name=sga-backend
-server.port=${SERVER_PORT:8085}
-
-# Conexión MySQL InnoDB
-spring.datasource.url=${DB_URL:jdbc:mysql://localhost:3306/SGAdb?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true}
-spring.datasource.username=${DB_USERNAME:root}
-spring.datasource.password=${DB_PASSWORD:}
-spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
-
-# Configuración Hibernate / JPA
-spring.jpa.hibernate.ddl-auto=${JPA_DDL_AUTO:update}
-spring.jpa.show-sql=${JPA_SHOW_SQL:true}
-spring.jpa.properties.hibernate.format_sql=true
-
-# Seguridad y Criptografía JWT
-jwt.secret=${JWT_SECRET:sga_platform_secret_key_super_segura_2026_jwt_token_auth}
-jwt.expiration-ms=${JWT_EXPIRATION_MS:86400000}
-
-# Almacenamiento de Archivos y Documentos
-spring.servlet.multipart.enabled=true
-spring.servlet.multipart.max-file-size=25MB
-spring.servlet.multipart.max-request-size=100MB
-app.storage.upload-dir=${STORAGE_DIR:./uploads/documentos}
+```
+                               ┌─────────────────────────┐
+                               │     ADMINISTRADOR TI    │
+                               │  (Gobernanza Total TI)  │
+                               └────────────┬────────────┘
+                                            │
+                               ┌────────────▼────────────┐
+                               │     GERENTE GENERAL     │
+                               │  (Visión Global & KPIs) │
+                               └────────────┬────────────┘
+                                            │
+         ┌───────────────────┬──────────────┼───────────────────┬───────────────────┐
+         ▼                   ▼              ▼                   ▼                   ▼
+┌─────────────────┐ ┌─────────────────┐ ┌─────────┐ ┌─────────────────┐ ┌─────────────────┐
+│ AGENTE COMERCIAL│ │ SUPERVISOR ADU. │ │ AGENTE  │ │ SUPERVISOR TRASP│ │    CONTADOR     │
+│ (Cotizaciones)  │ │(Expedientes/DAM)│ │ ADUAN.  │ │(Flota/Despachos)│ │(Finanzas/Cobros)│
+└─────────────────┘ └─────────────────┘ └─────────┘ └─────────────────┘ └─────────────────┘
+                                            │
+                                            ▼
+                                ┌───────────────────────┐
+                                │     ASESOR LEGAL      │
+                                │ (Auditoría Normativa) │
+                                └───────────────────────┘
+                                            ▲
+                                            │ Extranet
+                                ┌───────────────────────┐
+                                │      CLIENTE B2B      │
+                                │  (RUC / Portal Web)   │
+                                └───────────────────────┘
 ```
 
----
+- **Expresiones SpEL Centralizadas:** La clase [`SecurityRoles.java`](file:///home/jiodev/Documents/Proyects/TransAduanas/backend/src/main/java/pe/sga/config/SecurityRoles.java) concentra todas las reglas de autorización para `@PreAuthorize`.
+- **Resolución Segura del Usuario:** En todas las operaciones de pago, validación y cambios de estado se obtiene la identidad del usuario directamente desde el `SecurityContextHolder`, eliminando IDs hardcodeados.
 
-### 10.2 Inicializador de Datos de Arranque (`DataInitializer`)
-
-Al arrancar la aplicación por primera vez, `DataInitializer` verifica la existencia de registros esenciales y auto-aprovisiona:
-
-1. **Los 8 Roles Normativos:** Gobernados íntegramente a través del enum de dominio `pe.sga.entity.enums.RolUsuario` (sin tabla relacional `rol`), mapeando descripciones y cargos normativos.
-2. **Sede Central Base:** Crea la sede inicial `SED-PRUEBA` (Callao, OPERATIVO).
-3. **Catálogos Mínimos:** Registra terminal portuario (APM Terminals Callao) y tipos de carga marítima/aérea por defecto.
-4. **Superusuario Administrador:**
-   - **Username:** `admin`
-   - **Password inicial:** `Password123!` (almacenado con hash BCrypt)
-   - **Rol:** `ADMINISTRADOR_TI` (acceso y dashboard en `/administracion-ti/dashboard`)
-5. **Cuentas Demo para el Portal del Cliente B2B:**
-   - **Camposol S.A.:** RUC `20370146994` / Contraseña `Password123!`
-   - **LG Electronics Peru S.A.:** RUC `20511894520` / Contraseña `Password123!`
+👉 *Para revisar la matriz de permisos y el ciclo de vida del token JWT, consulta:*  
+**[Capítulo 03: Seguridad, JWT y Roles (`docs/backend/03_seguridad_jwt_y_roles.md`)](file:///home/jiodev/Documents/Proyects/TransAduanas/docs/backend/03_seguridad_jwt_y_roles.md)**.
 
 ---
 
-### 10.3 Instrucciones de Compilación y Ejecución
+## 5. Puntos Críticos y Reglas de Negocio Centrales
 
-#### Requisitos del Entorno:
-- Java JDK 21 instalado (`java -version`).
-- Apache Maven 3.9+ instalado (`mvn -version`).
-- Instancia activa de MySQL 8.4 escuchando en el puerto `3306` con la base de datos `SGAdb`.
+1. **Compuerta Financiera Pre-Expediente (*Financial Payment Gate*):** Bloqueo en la creación de expedientes aduaneros si la cotización previa no cuenta con un pago en estado `VALIDADO` por el Contador.
+2. **Deuda Heredada (`/api/v1/portal/obligaciones-pendientes`):** Cálculo consolidado de cuotas pendientes de cotizaciones y facturas de liquidación con saldo por pagar.
+3. **Trámite DAM y Canales SUNAT:** Asignación de canal aleatorio Verde (levante inmediato), Naranja (revisión documental) o Rojo (aforo físico) y aprovisionamiento automático de credenciales para clientes nuevos.
+4. **Almacén y Báscula VGM:** Verificación de masa bruta según SOLAS y retención de carga ante discrepancias de peso.
+5. **Transporte TMS y Brevete MTC:** Despacho con choferes profesionales (A-IIIa/b/c) y unidades con CITV vigente.
+6. **Liquidación y Detracción SPOT (12%):** Conciliación final de gastos reales y retención de detracción obligatoria para el Banco de la Nación.
+7. **Tolerancia Cero a Borrado Físico (*Soft Delete*):** Mantenimiento histórico de registros mediante banderas lógicas para auditorías fiscales.
 
-#### Comandos de Construcción y Ejecución:
+👉 *Para profundizar en las fórmulas matemáticas, cálculos de tributos y compuertas, consulta:*  
+**[Capítulo 04: Reglas de Negocio y Flujos (`docs/backend/04_reglas_de_negocio_y_flujos.md`)](file:///home/jiodev/Documents/Proyects/TransAduanas/docs/backend/04_reglas_de_negocio_y_flujos.md)**.
 
-```bash
-# Navegar al directorio del backend
-cd backend
+---
 
-# Compilar el proyecto y descargar dependencias
-mvn clean compile
+## 6. Resumen del Catálogo de 21 Controladores REST
 
-# Empaquetar el artefacto JAR omitiendo pruebas unitarias si aplica
-mvn clean package -DskipTests
+El backend expone sus servicios organizados en 21 controladores RESTful:
 
-# Ejecutar el servidor Spring Boot en el puerto configurado (8085)
-mvn spring-boot:run
-```
+| Controlador | Ruta Base | Funcionalidad Principal |
+| :--- | :--- | :--- |
+| [`AuthController`](file:///home/jiodev/Documents/Proyects/TransAduanas/backend/src/main/java/pe/sga/controller/AuthController.java) | `/api/v1/auth` | Inicio de sesión (`/login`), verificación de credenciales y consulta de perfil (`/me`). |
+| [`PortalController`](file:///home/jiodev/Documents/Proyects/TransAduanas/backend/src/main/java/pe/sga/controller/PortalController.java) | `/api/v1/portal` | **Portal B2B:** Dashboard, expedientes, cotizaciones, obligaciones pendientes, pagos con voucher y tracking. |
+| [`UsuarioClienteAdminController`](file:///home/jiodev/Documents/Proyects/TransAduanas/backend/src/main/java/pe/sga/controller/UsuarioClienteAdminController.java) | `/api/v1/admin/usuarios-cliente` | Gobernanza de cuentas B2B (creación, reseteo de claves y activación). |
+| [`AdminLogsController`](file:///home/jiodev/Documents/Proyects/TransAduanas/backend/src/main/java/pe/sga/controller/AdminLogsController.java) | `/api/v1/admin/logs` | Consola de logs en tiempo real (`/tail`) y descarga de bitácora comprimida. |
+| [`UsuarioController`](file:///home/jiodev/Documents/Proyects/TransAduanas/backend/src/main/java/pe/sga/controller/UsuarioController.java) | `/api/v1/usuarios` | Gestión de cuentas y personal interno de los 8 roles institucionales. |
+| [`SedeController`](file:///home/jiodev/Documents/Proyects/TransAduanas/backend/src/main/java/pe/sga/controller/SedeController.java) | `/api/v1/sedes` | Administración de sedes corporativas y terminales portuarios con reporte PDF. |
+| [`RolController`](file:///home/jiodev/Documents/Proyects/TransAduanas/backend/src/main/java/pe/sga/controller/RolController.java) | `/api/v1/roles` | Catálogo maestro de roles y permisos del sistema. |
+| [`CatalogoPuertoController`](file:///home/jiodev/Documents/Proyects/TransAduanas/backend/src/main/java/pe/sga/controller/CatalogoPuertoController.java) | `/api/v1/catalogos/puertos` | Catálogo de 80 puertos y aeropuertos nacionales y mundiales con reporte PDF. |
+| [`CatalogoTipoCargaController`](file:///home/jiodev/Documents/Proyects/TransAduanas/backend/src/main/java/pe/sga/controller/CatalogoTipoCargaController.java) | `/api/v1/catalogos/tipos-carga` | Catálogo de 17 tipologías de carga (FCL, LCL, Reefer, IMO) con reporte PDF. |
+| [`CatalogoMercanciaController`](file:///home/jiodev/Documents/Proyects/TransAduanas/backend/src/main/java/pe/sga/controller/CatalogoMercanciaController.java) | `/api/v1/catalogos/mercancias` | Catálogo de 52 subpartidas NANDINA, aranceles y permisos sectoriales. |
+| [`CotizacionController`](file:///home/jiodev/Documents/Proyects/TransAduanas/backend/src/main/java/pe/sga/controller/CotizacionController.java) | `/api/v1/cotizaciones` | Calculadora comercial de 4 pasos, desglose de costos y proforma en PDF. |
+| [`CotizacionPagoController`](file:///home/jiodev/Documents/Proyects/TransAduanas/backend/src/main/java/pe/sga/controller/CotizacionPagoController.java) | `/api/v1/pagos` | Registro de anticipos y validación contable para liberar la compuerta financiera. |
+| [`ExpedienteController`](file:///home/jiodev/Documents/Proyects/TransAduanas/backend/src/main/java/pe/sga/controller/ExpedienteController.java) | `/api/v1/expedientes` | Apertura de expediente aduanero, numeración DAM, canal SUNAT y levante. |
+| [`ControlAlmacenController`](file:///home/jiodev/Documents/Proyects/TransAduanas/backend/src/main/java/pe/sga/controller/ControlAlmacenController.java) | `/api/v1/almacen` | Recepción de carga en depósito temporal, balanza certificada VGM y salida. |
+| [`DespachoTransporteController`](file:///home/jiodev/Documents/Proyects/TransAduanas/backend/src/main/java/pe/sga/controller/DespachoTransporteController.java) | `/api/v1/despachos` | Asignación de flota pesada, emisión de guía de remisión y tracking en ruta. |
+| [`ConductorController`](file:///home/jiodev/Documents/Proyects/TransAduanas/backend/src/main/java/pe/sga/controller/ConductorController.java) | `/api/v1/conductores` | Padrón de choferes con brevete profesional MTC y control de vigencias. |
+| [`UnidadTransporteController`](file:///home/jiodev/Documents/Proyects/TransAduanas/backend/src/main/java/pe/sga/controller/UnidadTransporteController.java) | `/api/v1/unidades` | Padrón de tractos, camiones y semirremolques con CITV y póliza de seguro. |
+| [`LiquidacionFinancieraController`](file:///home/jiodev/Documents/Proyects/TransAduanas/backend/src/main/java/pe/sga/controller/LiquidacionFinancieraController.java) | `/api/v1/liquidaciones` | Liquidación de tributos, gastos operativos, IGV y SPOT (12%) con hoja PDF. |
+| [`ClienteController`](file:///home/jiodev/Documents/Proyects/TransAduanas/backend/src/main/java/pe/sga/controller/ClienteController.java) | `/api/v1/clientes` | Padrón maestro de clientes importadores/exportadores y prospectos. |
+| [`DocumentoController`](file:///home/jiodev/Documents/Proyects/TransAduanas/backend/src/main/java/pe/sga/controller/DocumentoController.java) | `/api/v1/documentos` | Carga multipart y descarga protegida de archivos digitales (BL, factura, packing). |
+| [`HealthController`](file:///home/jiodev/Documents/Proyects/TransAduanas/backend/src/main/java/pe/sga/controller/HealthController.java) | `/api/v1/health` | Verificación de salud y estado operativo (*liveness probe* para Docker). |
 
-Una vez iniciado el backend, el monitor de salud responderá en:  
-`http://localhost:8085/api/v1/health`
+👉 *Para consultar los parámetros JSON, métodos HTTP y respuestas de cada endpoint, consulta:*  
+**[Capítulo 05: Catálogo Completo de la API REST (`docs/backend/05_catalogo_completo_api_rest.md`)](file:///home/jiodev/Documents/Proyects/TransAduanas/docs/backend/05_catalogo_completo_api_rest.md)**.
+
+---
+
+## 7. Motor Híbrido de Reportes PDF
+
+El backend dispone de dos mecanismos complementarios para generar documentos PDF en memoria:
+
+1. **JasperReports 7.0.8:** Para padrones masivos con tablas vectoriales matemáticas estrictas.
+2. **Thymeleaf + OpenHTMLtoPDF (1.0.10):** Para documentos corporativos de alta calidad visual diseñados en HTML5/CSS3 con el sistema *Warm Editorial* (ubicados en `templates/reports/`):
+   - [`reporte-sedes.html`](file:///home/jiodev/Documents/Proyects/TransAduanas/backend/src/main/resources/templates/reports/reporte-sedes.html)
+   - [`reporte-puertos.html`](file:///home/jiodev/Documents/Proyects/TransAduanas/backend/src/main/resources/templates/reports/reporte-puertos.html)
+   - [`reporte-tipos-carga.html`](file:///home/jiodev/Documents/Proyects/TransAduanas/backend/src/main/resources/templates/reports/reporte-tipos-carga.html)
+   - [`reporte-mercancias.html`](file:///home/jiodev/Documents/Proyects/TransAduanas/backend/src/main/resources/templates/reports/reporte-mercancias.html)
+
+👉 *Para revisar la implementación del motor de PDFs, la bóveda multipart y la bitácora rotativa, consulta:*  
+**[Capítulo 06: Reportes PDF y Archivos (`docs/backend/06_reportes_pdf_y_archivos.md`)](file:///home/jiodev/Documents/Proyects/TransAduanas/docs/backend/06_reportes_pdf_y_archivos.md)**.

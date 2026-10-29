@@ -11,7 +11,7 @@
 2. [Documentación Técnica Detallada (Docs)](#2-documentación-técnica-detallada-docs)
 3. [Puntos Críticos y Reglas de Negocio del Dominio](#3-puntos-críticos-y-reglas-de-negocio-del-dominio)
 4. [Tecnologías y Stack del Proyecto](#4-tecnologías-y-stack-del-proyecto)
-   - [4.1 Backend: Java 21 & Spring Boot 4.1.x](#41-backend-java-21--spring-boot-41x)
+   - [4.1 Backend: Java 21 & Spring Boot 4.1.2](#41-backend-java-21--spring-boot-412)
    - [4.2 Frontend: Vue 3 & Vite 8](#42-frontend-vue-3--vite-8)
    - [4.3 Base de Datos: MySQL 8.4 InnoDB](#43-base-de-datos-mysql-84-innodb)
 5. [Arquitectura de Software del Sistema](#5-arquitectura-de-software-del-sistema)
@@ -22,8 +22,9 @@
 8. [Guía de Inicio Rápido y Ejecución Local](#8-guía-de-inicio-rápido-y-ejecución-local)
    - [8.1 Requisitos Previos](#81-requisitos-previos)
    - [8.2 Puesta en Marcha del Backend](#82-puesta-en-marcha-del-backend)
-   - [8.3 Puesta en Marcha del Frontend](#83-puesta-en-marcha-del-frontend)
-   - [8.4 Credenciales de Arranque del Sistema](#84-credenciales-de-arranque-del-sistema)
+   - [8.3 Puesta en Marcha del Frontend Interno](#83-puesta-en-marcha-del-frontend-interno)
+   - [8.4 Puesta en Marcha del Portal del Cliente B2B](#84-puesta-en-marcha-del-portal-del-cliente-b2b)
+   - [8.5 Credenciales de Arranque y Rutas de Inicio](#85-credenciales-de-arranque-y-rutas-de-inicio)
 
 ---
 
@@ -41,7 +42,7 @@ El repositorio cuenta con especificaciones técnicas completas y exhaustivas ubi
 
 | Documento | Enlace | Descripción y Contenido Clave |
 | :--- | :--- | :--- |
-| **Documentación Técnica del Backend** | [`docs/backend.md`](file:///home/jiodev/Documents/Proyects/TransAduanas/docs/backend.md) | Arquitectura N-Tier, patrones de diseño (Builder, Strategy, Wrapper, Soft Delete), dependencias `pom.xml`, modelo de seguridad RBAC con SpEL, catálogo de 19 controladores REST, motor de cálculo contable (IGV y SPOT 12%), JasperReports en memoria y logging rotativo. |
+| **Documentación Técnica del Backend** | [`docs/backend.md`](file:///home/jiodev/Documents/Proyects/TransAduanas/docs/backend.md) | Arquitectura N-Tier, patrones de diseño (Builder, Strategy, Wrapper, Soft Delete), dependencias `pom.xml`, modelo de seguridad RBAC con SpEL, catálogo de 21 controladores REST, motor de cálculo contable (IGV y SPOT 12%), motor de reportes PDF híbrido (JasperReports + Thymeleaf / OpenHTMLtoPDF) y logging rotativo. |
 | **Documentación Técnica del Frontend** | [`docs/frontend.md`](file:///home/jiodev/Documents/Proyects/TransAduanas/docs/frontend.md) | Arquitectura por características (*Feature-Based*), Pinia Stores (`authStore`, `navigationStore`), Vue Router con Navigation Guards, integración Axios con Bearer y logout en 401, catálogo de componentes y modales de los 8 módulos operativos. |
 | **Especificación de Lenguaje de Diseño** | [`docs/lenguaje_diseño.md`](file:///home/jiodev/Documents/Proyects/TransAduanas/docs/lenguaje_dise%C3%B1o.md) | Sistema de diseño **Warm Editorial**, tokens CSS de color (arena, latte, espresso), tipografía dual (Inter y JetBrains Mono), rejilla de 4px, preset de PrimeVue Aura y guía de implementación de Modo Claro / Modo Oscuro. |
 
@@ -68,15 +69,15 @@ El repositorio cuenta con especificaciones técnicas completas y exhaustivas ubi
 
 El sistema adopta una arquitectura desacoplada y moderna, utilizando componentes probados de grado empresarial:
 
-### 4.1 Backend: Java 21 & Spring Boot 4.1.x
+### 4.1 Backend: Java 21 & Spring Boot 4.1.2
 Gestionado a través de **Apache Maven** ([`backend/pom.xml`](file:///home/jiodev/Documents/Proyects/TransAduanas/backend/pom.xml)):
 
 | Grupo / Artefacto | Versión | Propósito Técnico y Justificación |
 | :--- | :---: | :--- |
-| `org.springframework.boot:spring-boot-starter-data-jpa` | 4.1.1 | Capa de persistencia relacional ORM con Hibernate, soporte transaccional `@Transactional` y repositorios Spring Data JPA. |
-| `org.springframework.boot:spring-boot-starter-security` | 4.1.1 | Motor de seguridad corporativo; control de filtros HTTP, cifrado de contraseñas con BCrypt y autorización por roles mediante SpEL. |
-| `org.springframework.boot:spring-boot-starter-validation` | 4.1.1 | Validaciones declarativas de contratos de entrada en DTOs con Jakarta Validation (`@NotNull`, `@NotBlank`, `@Size`, `@Positive`). |
-| `org.springframework.boot:spring-boot-starter-webmvc` | 4.1.1 | Framework web para la exposición de endpoints RESTful con serialización y deserialización JSON vía Jackson. |
+| `org.springframework.boot:spring-boot-starter-data-jpa` | 4.1.2 | Capa de persistencia relacional ORM con Hibernate, soporte transaccional `@Transactional` y repositorios Spring Data JPA. |
+| `org.springframework.boot:spring-boot-starter-security` | 4.1.2 | Motor de seguridad corporativo; control de filtros HTTP, cifrado de contraseñas con BCrypt y autorización por roles mediante SpEL. |
+| `org.springframework.boot:spring-boot-starter-validation` | 4.1.2 | Validaciones declarativas de contratos de entrada en DTOs con Jakarta Validation (`@NotNull`, `@NotBlank`, `@Size`, `@Positive`). |
+| `org.springframework.boot:spring-boot-starter-webmvc` | 4.1.2 | Framework web para la exposición de endpoints RESTful con serialización y deserialización JSON vía Jackson. |
 | `com.mysql:mysql-connector-j` | Runtime | Driver JDBC oficial para comunicación de alto rendimiento con el motor MySQL 8.4 InnoDB. |
 | `org.projectlombok:lombok` | 1.18.x | Reducción de código repetitivo (Boilerplate) para getters, setters, constructores y patrones Builder en DTOs y entidades. |
 | `net.sf.jasperreports:jasperreports` | 7.0.8 | Motor central de compilación y renderizado de plantillas de reportes dinámicos empresariales. |
@@ -142,7 +143,7 @@ El backend implementa un diseño multicapa desacoplado donde ninguna capa superi
                    │
                    ▼
 ┌───────────────────────────────────────┐
-│            DATABASE LAYER             │  MySQL 8.4 InnoDB (16 tablas relacionales normalizadas)
+│            DATABASE LAYER             │  MySQL 8.4 InnoDB (17 tablas relacionales normalizadas)
 └───────────────────────────────────────┘
 ```
 
@@ -168,13 +169,16 @@ frontend/src/
 │   └── stores/                            # Estado global Pinia (authStore, navigationStore)
 │
 ├── features/                              # Módulos verticales por dominio de negocio
-│   ├── admin/                             # Administración TI: Usuarios, Sedes, Catálogos y Logs
+│   ├── admin/                             # Administración TI: Usuarios, Sedes, Catálogos, Logs y Usuarios Portal
 │   ├── auth/                              # Autenticación: LoginView.vue
-│   ├── gerencia/                          # Gerencia General: Padrón de Flota y Choferes MTC
-│   ├── roles-modules/                     # Módulos Operativos Centrales:
-│   │   ├── services/                      # Servicios HTTP de dominio (comercial, aduanas, finanzas)
-│   │   ├── components/                    # Modales y formularios de alta densidad (Cotizacion, DAM, Pagos)
-│   │   └── views/                         # Vistas de módulo (Comercial, Aduanas, Transporte, Finanzas)
+│   ├── gerencia/                          # Gerencia General: Dashboard Ejecutivo, Flota y Choferes
+│   ├── comercial/                         # Recepción Comercial: Clientes, Calculadora y Cotizaciones
+│   ├── aduanas/                           # Gestión Aduanera: Apertura, Expedientes, Canal DAM y Cierre
+│   ├── almacen/                           # Depósito Temporal: Ingreso de Carga y Balanza VGM
+│   ├── transporte/                        # Despachos en Ruta: Flota Tractos, Choferes MTC y Tracking
+│   ├── finanzas/                          # Validación Financiera: Anticipos y Detracciones SPOT
+│   ├── liquidacion/                       # Liquidaciones Finales: Tributos SUNAT, Gastos y Actas
+│   ├── legal/                             # Asesoría Legal: Auditoría Regulatoria y Normativa
 │   └── documentos/                        # Servicios y componentes de archivo documental
 │
 └── shared/                                # Biblioteca de componentes reutilizables
@@ -231,14 +235,19 @@ frontend/src/
 
 ```
 TransAduanas/
-├── backend/                             # Código fuente del Backend (Spring Boot 4.1.x / Java 21)
+├── backend/                             # Código fuente del Backend (Spring Boot 4.1.2 / Java 21)
 │   ├── pom.xml                          # Configuración Maven de dependencias y plugins
 │   └── src/main/                        # Fuentes Java y recursos de configuración
 │
-├── frontend/                            # Código fuente del Frontend (Vue 3 / Vite 8 / PrimeVue)
+├── frontend/                            # Código fuente del Frontend Interno (Vue 3 / Vite 8 / PrimeVue)
 │   ├── package.json                     # Manifiesto de dependencias npm y scripts
 │   ├── vite.config.js                   # Configuración del servidor Vite y proxy inverso
 │   └── src/                             # Componentes, vistas, stores y estilos Warm Editorial
+│
+├── portal-cliente/                      # Portal del Cliente B2B (Vue 3 / Vite / PrimeVue Aura / Warm Editorial)
+│   ├── package.json                     # SPA corporativa para clientes importadores/exportadores
+│   ├── vite.config.js                   # Configuración de puerto dev (5174) y proxy inverso
+│   └── src/                             # Vistas de tracking, cotizaciones, pagos y notificaciones B2B
 │
 ├── docs/                                # Documentación Técnica Especializada
 │   ├── backend.md                       # Especificación técnica profunda del Backend
@@ -282,7 +291,7 @@ Verificación de salud: `http://localhost:8085/api/v1/health`
 
 ---
 
-### 8.3 Puesta en Marcha del Frontend
+### 8.3 Puesta en Marcha del Frontend Interno
 
 En otra terminal:
 
@@ -297,18 +306,49 @@ npm install
 npm run dev
 ```
 
-La aplicación web estará disponible en su navegador en:  
+La aplicación web interna estará disponible en:  
 `http://localhost:5180` (o `http://localhost:5173`)
 
 ---
 
-### 8.4 Credenciales de Arranque del Sistema
+### 8.4 Puesta en Marcha del Portal del Cliente B2B
 
-Al iniciarse el backend por primera vez, la clase `DataInitializer` verifica y auto-aprovisiona los roles del sistema, la sede base y la cuenta administrativa inicial:
+En otra terminal:
 
+```bash
+# 1. Ingresar a la carpeta del portal de clientes
+cd portal-cliente
+
+# 2. Instalar dependencias
+npm install
+
+# 3. Iniciar el servidor de desarrollo Vite
+npm run dev
+```
+
+El portal de clientes estará disponible en su navegador en:  
+`http://localhost:5174`
+
+---
+
+### 8.5 Credenciales de Arranque y Rutas de Inicio
+
+Al iniciarse el backend por primera vez, la clase `DataInitializer` verifica y auto-aprovisiona los datos base del sistema:
+
+#### A. Personal Interno (Gestión Operativa):
 - **Usuario:** `admin`
 - **Contraseña:** `Password123!`
-- **Rol:** `ADMINISTRADOR_TI`
+- **Rol:** `ADMINISTRADOR_TI` $\rightarrow$ Inicia en: `/administracion-ti/dashboard`
+- **Rol `GERENTE_GENERAL`:** Inicia en: `/gerencia-general/dashboard`
 
 > [!NOTE]
-> Una vez iniciada la sesión con el usuario `admin`, este puede crear las cuentas adicionales para los demás roles (`GERENTE_GENERAL`, `AGENTE_COMERCIAL`, `SUPERVISOR_ADUANERO`, `CONTADOR`, etc.) directamente desde el **Gestor de Usuarios** en la ruta `/administracion-ti/usuarios`.
+> Desde el **Gestor de Usuarios** (`/administracion-ti/usuarios`), el administrador puede gestionar las cuentas para los demás roles (`GERENTE_GENERAL`, `AGENTE_COMERCIAL`, `SUPERVISOR_ADUANERO`, `CONTADOR`, etc.).
+
+#### B. Clientes Corporativos B2B (Portal del Cliente en `http://localhost:5174`):
+Cuentas demo pre-aprovisionadas en `DataInitializer`:
+- **Empresa 1 (Camposol S.A.):**
+  - RUC: `20370146994`
+  - Contraseña: `Password123!`
+- **Empresa 2 (LG Electronics Peru S.A.):**
+  - RUC: `20511894520`
+  - Contraseña: `Password123!`

@@ -366,7 +366,6 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useNavigationStore } from '@/core/stores/navigationStore'
-import apiClient from '@/core/api/apiClient'
 import userService from '@/features/admin/users/services/userService'
 import logsService from '@/features/admin/services/logsService'
 import { ROLE_LABELS } from '@/core/auth/roles'
@@ -421,7 +420,7 @@ const loadDashboardData = async () => {
   const startTime = performance.now()
   try {
     const [healthRes, usersRes, logsRes] = await Promise.allSettled([
-      apiClient.get('/health'),
+      logsService.getHealth(),
       userService.getUsers(),
       logsService.getLogs({ tipo: 'all', lines: 100 })
     ])
@@ -430,9 +429,9 @@ const loadDashboardData = async () => {
     pingLatency.value = Math.max(8, Math.round(endTime - startTime))
 
     // 1. Salud Backend
-    if (healthRes.status === 'fulfilled' && healthRes.value?.data) {
+    if (healthRes.status === 'fulfilled' && healthRes.value) {
       isBackendHealthy.value = true
-      backendVersion.value = healthRes.value.data.data?.version || '1.0.0-MODULO1'
+      backendVersion.value = healthRes.value.version || healthRes.value?.data?.version || '1.0.0-MODULO1'
     } else {
       isBackendHealthy.value = false
     }

@@ -385,7 +385,7 @@ import { useRouter } from 'vue-router'
 import { useNavigationStore } from '@/core/stores/navigationStore'
 import sedeService from '@/features/admin/sedes/services/sedeService'
 import catalogoService from '@/features/admin/catalogos/services/catalogoService'
-import { transporteFlotaService } from '@/features/roles-modules/services/transporteFlotaService'
+import { transporteFlotaService } from '@/features/transporte/services/transporteFlotaService'
 import { downloadBlob, openBlobInNewTab } from '@/shared/utils/download'
 
 const router = useRouter()

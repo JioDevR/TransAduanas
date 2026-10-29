@@ -304,7 +304,7 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import { expedienteService } from '../services/expedienteService'
-import { gestionAduaneraService } from '@/features/roles-modules/services/gestionAduaneraService'
+import { gestionAduaneraService } from '@/features/aduanas/services/gestionAduaneraService'
 import { userService } from '@/features/admin/users/services/userService'
 import { useAuthStore } from '@/features/auth/stores/authStore'
 

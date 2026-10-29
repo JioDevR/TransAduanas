@@ -2,6 +2,14 @@ import apiClient from '@/core/api/apiClient'
 
 export const logsService = {
   /**
+   * Consulta el estado de salud del backend
+   */
+  async getHealth() {
+    const response = await apiClient.get('/health')
+    return response.data?.data || response.data
+  },
+
+  /**
    * Consulta líneas recientes del archivo de log
    * @param {Object} params { tipo: 'all' | 'error', lines: number }
    */

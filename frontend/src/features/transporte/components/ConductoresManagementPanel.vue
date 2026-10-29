@@ -423,7 +423,7 @@ import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import Tag from 'primevue/tag'
 import Dialog from 'primevue/dialog'
-import { transporteFlotaService } from '@/features/roles-modules/services/transporteFlotaService'
+import { transporteFlotaService } from '@/features/transporte/services/transporteFlotaService'
 import { userService } from '@/features/admin/users/services/userService'
 import { useNotification } from '@/shared/composables/useNotification'
 

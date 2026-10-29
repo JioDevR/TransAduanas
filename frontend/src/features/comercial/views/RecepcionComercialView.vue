@@ -471,7 +471,15 @@
             <template #body="{ data: c }">
               <div class="client-cell">
                 <span class="client-name">{{ c.clienteRazonSocial || 'Cliente N/A' }}</span>
-                <span class="client-sub">{{ c.clienteNumeroDocumento }}</span>
+                <div class="client-sub-meta">
+                  <span class="client-sub">{{ c.clienteNumeroDocumento }}</span>
+                  <span v-if="c.clienteTieneUsuario" class="portal-badge origin-badge origin-portal" title="Empresa formalizada con usuario activo en Portal B2B">
+                    <i class="pi pi-id-card"></i> Portal B2B
+                  </span>
+                  <span v-else class="presencial-badge origin-badge origin-presencial" title="Nuevo prospecto / Sin cuenta B2B (Atención y subsanación presencial con el vendedor)">
+                    <i class="pi pi-user"></i> Presencial
+                  </span>
+                </div>
               </div>
             </template>
           </Column>
@@ -565,10 +573,20 @@
 
 
                 <button
+                  v-if="(c.estado === 'REVISION' || c.estado === 'OBSERVADA') && !c.clienteTieneUsuario && (c.clienteTelefono || getClienteTelefono(c.idCliente))"
+                  type="button"
+                  class="action-btn-outline btn-whatsapp-action btn-whatsapp"
+                  title="Notificar observaciones por WhatsApp (Atención Presencial/Directa)"
+                  @click="notifyObservationViaWhatsApp(c)"
+                >
+                  <i class="pi pi-whatsapp"></i>
+                </button>
+
+                <button
                   v-if="c.estado === 'REVISION' || c.estado === 'OBSERVADA'"
                   type="button"
                   class="action-btn-outline observe-fix"
-                  title="Corregir observaciones y enviar nuevamente"
+                  title="Corregir observaciones y enviar nuevamente a Supervisión"
                   @click="openCorrectionCotizacion(c)"
                 >
                   <i class="pi pi-file-edit"></i>
@@ -721,7 +739,15 @@
             <template #body="{ data: cl }">
               <div class="client-cell">
                 <span class="client-name">{{ cl.razonSocial }}</span>
-                <span class="client-sub" v-if="cl.contactoRepresentante">Rep: {{ cl.contactoRepresentante }}</span>
+                <div class="client-sub-meta">
+                  <span class="client-sub" v-if="cl.contactoRepresentante">Rep: {{ cl.contactoRepresentante }}</span>
+                  <span v-if="clienteTieneUsuarioPortal(cl)" class="portal-badge origin-badge origin-portal" title="Empresa formalizada con usuario activo en Portal B2B">
+                    <i class="pi pi-id-card"></i> Portal B2B
+                  </span>
+                  <span v-else class="presencial-badge origin-badge origin-presencial" title="Nuevo prospecto / Sin cuenta B2B (Atención presencial con el vendedor)">
+                    <i class="pi pi-user"></i> Presencial
+                  </span>
+                </div>
               </div>
             </template>
           </Column>
@@ -954,6 +980,14 @@
         <div class="obs-box-header">
           <span class="badge-kicker">EXPEDIENTE N° {{ selectedObservationCotizacion.codigoCotizacion }}</span>
           <strong class="obs-box-title">{{ selectedObservationCotizacion.clienteRazonSocial || 'Cliente Asignado' }}</strong>
+          <div class="obs-client-status">
+            <span v-if="selectedObservationCotizacion.clienteTieneUsuario" class="portal-badge origin-badge origin-portal">
+              <i class="pi pi-id-card"></i> Cuenta B2B Activa — Notificación enviada al portal del cliente
+            </span>
+            <span v-else class="presencial-badge origin-badge origin-presencial">
+              <i class="pi pi-user"></i> Prospecto sin cuenta B2B — Coordinación presencial o directa con el vendedor
+            </span>
+          </div>
         </div>
         <div class="obs-box-body">
           <i class="pi pi-exclamation-triangle obs-box-icon"></i>
@@ -963,11 +997,20 @@
           </div>
         </div>
         <p class="obs-box-hint">
-          Haga clic en "Corregir Cotización" para realizar los ajustes solicitados. Una vez guardada, volverá automáticamente a Supervisión como Enviada.
+          Subsanar los puntos observados haciendo clic en "Corregir Cotización". Al guardar los cambios, la propuesta volverá automáticamente a la bandeja de Supervisión Aduanera para su reevaluación.
         </p>
       </div>
       <template #footer>
         <div class="dialog-footer-actions">
+          <button
+            v-if="selectedObservationCotizacion && !selectedObservationCotizacion.clienteTieneUsuario && (selectedObservationCotizacion.clienteTelefono || getClienteTelefono(selectedObservationCotizacion.idCliente))"
+            type="button"
+            class="btn-whatsapp-dialog btn-whatsapp-modal"
+            @click="notifyObservationViaWhatsApp(selectedObservationCotizacion)"
+          >
+            <i class="pi pi-whatsapp"></i>
+            <span>Notificar WhatsApp</span>
+          </button>
           <button type="button" class="btn-outline-warm" @click="showObservationDialog = false">
             <span>Cerrar</span>
           </button>
@@ -1094,6 +1137,33 @@ const openEditFromObservation = () => {
     showObservationDialog.value = false
     openCorrectionCotizacion(c)
   }
+}
+
+const clienteTieneUsuarioPortal = (cl) => {
+  if (!cl) return false
+  if (typeof cl.tieneUsuario === 'boolean') return cl.tieneUsuario
+  return cotizaciones.value.some(c => c.idCliente === cl.idCliente && c.clienteTieneUsuario)
+}
+
+const getClienteTelefono = (idCliente) => {
+  if (!idCliente || !clientes.value) return ''
+  const cli = clientes.value.find(item => item.idCliente === idCliente)
+  return cli?.telefonoContacto || ''
+}
+
+const notifyObservationViaWhatsApp = (cotizacion) => {
+  const tel = cotizacion.clienteTelefono || getClienteTelefono(cotizacion.idCliente) || ''
+  const digitsOnly = tel.replace(/[^0-9]/g, '')
+  if (!digitsOnly) {
+    showToast('El cliente no tiene registrado número de teléfono/celular de contacto.', 'warn')
+    return
+  }
+  const phone = digitsOnly.startsWith('51') ? digitsOnly : `51${digitsOnly}`
+  const reason = cotizacion.motivoObservacion || 'Se requieren ajustes documentarios y técnicos en la propuesta comercial.'
+  const msg = `Hola *${cotizacion.clienteRazonSocial || 'Estimado Cliente'}*, le saluda TransAduanas SGA.\n\nLe informamos que su cotización aduanera *${cotizacion.codigoCotizacion}* ha sido revisada por Supervisión Técnica y presenta la siguiente observación:\n\n📌 *Motivo:* ${reason}\n\nPor favor facilítenos los datos o documentos solicitados para subsanar la cotización y continuar con su trámite.\n\nAtentamente,\n*Área Comercial - TransAduanas*`
+
+  const url = `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`
+  window.open(url, '_blank')
 }
 
 // Cerrar todos los formularios de vista completa y volver a los listados
@@ -1562,7 +1632,7 @@ const handleCotizacionSaved = async ({ isEdit, cotizacionId, payload, documentos
           }
         }
       }
-      showToast('Cotización actualizada y enviada a Supervisión exitosamente.')
+      showToast('Cotización actualizada y correcciones enviadas a Supervisión Aduanera.', 'success')
     } else {
       const created = await comercialService.createCotizacion(payload)
       const newId = created?.idCotizacion
@@ -2720,5 +2790,78 @@ onMounted(() => {
   background: var(--color-danger-bg);
   color: var(--color-danger-text);
   border-color: var(--color-danger-border);
+}
+
+.client-sub-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.15rem;
+}
+
+.portal-badge,
+.origin-badge.origin-portal {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 0.1rem 0.4rem;
+  border-radius: var(--radius-sm, 3px);
+  background: var(--color-info-bg);
+  color: var(--color-info-text);
+  border: 1px solid var(--color-info-border);
+}
+
+.presencial-badge,
+.origin-badge.origin-presencial {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 0.1rem 0.4rem;
+  border-radius: var(--radius-sm, 3px);
+  background: var(--color-warning-bg);
+  color: var(--color-warning-text);
+  border: 1px solid var(--color-warning-border);
+}
+
+.obs-client-status {
+  margin-top: 0.4rem;
+}
+
+.btn-whatsapp-action,
+.btn-whatsapp {
+  color: var(--color-success-text) !important;
+  border-color: var(--color-success-border) !important;
+}
+
+.btn-whatsapp-action:hover,
+.btn-whatsapp:hover {
+  background-color: #25d366 !important;
+  color: #ffffff !important;
+  border-color: #25d366 !important;
+}
+
+.btn-whatsapp-dialog,
+.btn-whatsapp-modal {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background-color: #25d366;
+  color: #ffffff;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-md, 4px);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.btn-whatsapp-dialog:hover,
+.btn-whatsapp-modal:hover {
+  background-color: #1ebd56;
 }
 </style>

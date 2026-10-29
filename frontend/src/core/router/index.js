@@ -6,7 +6,7 @@ import AppLayout from '@/core/layouts/AppLayout.vue'
 import authRoutes from '@/features/auth/routes/auth.routes'
 import adminRoutes from '@/features/admin/users/routes/admin.routes'
 import gerenciaRoutes from '@/features/gerencia/routes/gerencia.routes'
-import rolesRoutes from '@/features/roles-modules/routes/roles.routes'
+import rolesRoutes from '@/core/router/roles.routes'
 
 const routes = [
   ...authRoutes,

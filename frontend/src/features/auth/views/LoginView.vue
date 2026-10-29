@@ -89,6 +89,7 @@
 import { reactive, ref, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '../stores/authStore'
+import { getHomeRouteForRole } from '@/core/auth/roles'
 
 const router = useRouter()
 const route = useRoute()
@@ -117,13 +118,13 @@ const handleSubmit = async () => {
       password: form.password
     })
 
-    // Redirección directa según rol
-    const redirectParam = route.query.redirect
-    if (redirectParam && redirectParam !== '/') {
-      router.push(redirectParam)
-    } else {
-      router.push(authStore.homePath)
-    }
+    // Redirección directa según rol sanitizando redirect
+    const redirectParam = typeof route.query.redirect === 'string' && route.query.redirect.startsWith('/') && !route.query.redirect.startsWith('//')
+      ? route.query.redirect
+      : null
+    const defaultHome = getHomeRouteForRole(authStore.userRole) || authStore.homePath
+    const targetPath = redirectParam && redirectParam !== '/login' ? redirectParam : defaultHome
+    await router.push(targetPath)
   } catch (err) {
     errorMessage.value = err.message || 'Credenciales inválidas o servidor no disponible.'
   }

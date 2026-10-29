@@ -47,16 +47,17 @@ router.beforeEach(async (to, from, next) => {
   const authStore = useAuthStore()
 
   // Actualizar título de documento
-  if (to.meta?.title) {
+  if (to?.meta?.title) {
     document.title = to.meta.title
   } else {
     document.title = 'SGA - Sistema de Gestión Aduanera'
   }
 
   const isAuth = authStore.isAuthenticated
+  const toPath = typeof to?.path === 'string' ? to.path : ''
 
   // Si ingresa por defecto a la raíz '/'
-  if (to.path === '/') {
+  if (toPath === '/') {
     if (!isAuth) {
       return next('/login')
     }
@@ -64,22 +65,22 @@ router.beforeEach(async (to, from, next) => {
   }
 
   // Si ya está autenticado e intenta acceder al login
-  if (to.path === '/login' && isAuth) {
+  if (toPath === '/login' && isAuth) {
     return next(authStore.homePath)
   }
 
   // Si cualquier ruta requiere autenticación y no hay sesión activa
-  const requiresAuth = to.matched.some((record) => record.meta?.requiresAuth)
+  const requiresAuth = to?.matched?.some((record) => record.meta?.requiresAuth)
   if (requiresAuth && !isAuth) {
-    return next({ path: '/login', query: to.fullPath !== '/' ? { redirect: to.fullPath } : {} })
+    return next({ path: '/login', query: to.fullPath && to.fullPath !== '/' ? { redirect: to.fullPath } : {} })
   }
 
   // Validación de permisos por rol
-  if (to.meta?.roles && to.meta.roles.length > 0) {
+  if (to?.meta?.roles && to.meta.roles.length > 0) {
     const userRole = authStore.userRole
     if (!to.meta.roles.includes(userRole)) {
       const targetHome = authStore.homePath
-      if (to.path === targetHome || targetHome === '/login') {
+      if (toPath === targetHome || targetHome === '/login') {
         authStore.logout()
         return next('/login')
       }
@@ -87,88 +88,92 @@ router.beforeEach(async (to, from, next) => {
     }
   }
 
-  // Sincronizar activeModule con la ruta actual
+  // Sincronizar activeModule con la ruta actual de manera segura
+  if (!toPath) {
+    return next()
+  }
+
   const navStore = useNavigationStore()
-  if (to.path.startsWith('/administracion-ti')) {
+  if (toPath.startsWith('/administracion-ti')) {
     if (navStore.activeModule !== 'administracion-ti') {
       navStore.setActiveModule('administracion-ti')
     }
-    if (to.path.includes('dashboard')) {
+    if (toPath.includes('dashboard')) {
       navStore.setAdministracionTiSubOption('dashboard')
-    } else if (to.path.includes('usuarios-portal')) {
+    } else if (toPath.includes('usuarios-portal')) {
       navStore.setAdministracionTiSubOption('portal-users')
-    } else if (to.path.includes('usuarios')) {
+    } else if (toPath.includes('usuarios')) {
       navStore.setAdministracionTiSubOption('users')
-    } else if (to.path.includes('logs')) {
+    } else if (toPath.includes('logs')) {
       navStore.setAdministracionTiSubOption('logs')
-    } else if (to.path.includes('acerca-de')) {
+    } else if (toPath.includes('acerca-de')) {
       navStore.setAdministracionTiSubOption('about')
     } else {
       navStore.setAdministracionTiSubOption('dashboard')
     }
-  } else if (to.path.startsWith('/gerencia-general')) {
+  } else if (toPath.startsWith('/gerencia-general')) {
     if (navStore.activeModule !== 'gerencia-general') {
       navStore.setActiveModule('gerencia-general')
     }
-    if (to.path.includes('sedes')) {
+    if (toPath.includes('sedes')) {
       navStore.setGerenciaGeneralSubOption('sedes')
-    } else if (to.path.includes('puertos') || to.path.includes('catalogos')) {
+    } else if (toPath.includes('puertos') || toPath.includes('catalogos')) {
       navStore.setGerenciaGeneralSubOption('puertos')
-    } else if (to.path.includes('tipos-carga')) {
+    } else if (toPath.includes('tipos-carga')) {
       navStore.setGerenciaGeneralSubOption('tipos-carga')
-    } else if (to.path.includes('mercancias')) {
+    } else if (toPath.includes('mercancias')) {
       navStore.setGerenciaGeneralSubOption('mercancias')
-    } else if (to.path.includes('dashboard') || to.path.includes('resumen')) {
+    } else if (toPath.includes('dashboard') || toPath.includes('resumen')) {
       navStore.setGerenciaGeneralSubOption('dashboard')
-    } else if (to.path.includes('flota')) {
+    } else if (toPath.includes('flota')) {
       navStore.setGerenciaGeneralSubOption('flota')
-    } else if (to.path.includes('conductores')) {
+    } else if (toPath.includes('conductores')) {
       navStore.setGerenciaGeneralSubOption('conductores')
     } else {
       navStore.setGerenciaGeneralSubOption('dashboard')
     }
-  } else if (to.path.startsWith('/recepcion-comercial')) {
+  } else if (toPath.startsWith('/recepcion-comercial')) {
     if (navStore.activeModule !== 'comercial') {
       navStore.setActiveModule('comercial')
     }
-    if (to.query?.tab) {
+    if (to?.query?.tab) {
       navStore.setComercialSubOption(to.query.tab)
     }
-  } else if (to.path.startsWith('/gestion-aduanera')) {
+  } else if (toPath.startsWith('/gestion-aduanera')) {
     if (navStore.activeModule !== 'gestion-aduanera') {
       navStore.setActiveModule('gestion-aduanera')
     }
-    if (to.query?.tab) {
+    if (to?.query?.tab) {
       navStore.setGestionAduaneraSubOption(to.query.tab)
-    } else if (to.path.includes('liquidacion')) {
+    } else if (toPath.includes('liquidacion')) {
       navStore.setGestionAduaneraSubOption('declaraciones')
     }
-  } else if (to.path.startsWith('/agente-aduanero')) {
+  } else if (toPath.startsWith('/agente-aduanero')) {
     if (navStore.activeModule !== 'agente-aduanero') {
       navStore.setActiveModule('agente-aduanero')
     }
-    if (to.query?.tab) {
+    if (to?.query?.tab) {
       navStore.setAgenteAduaneroSubOption(to.query.tab)
     }
-  } else if (to.path.startsWith('/transporte-flota')) {
+  } else if (toPath.startsWith('/transporte-flota')) {
     if (navStore.activeModule !== 'transporte-flota') {
       navStore.setActiveModule('transporte-flota')
     }
-    if (to.query?.tab) {
+    if (to?.query?.tab) {
       navStore.setTransporteFlotaSubOption(to.query.tab)
     }
-  } else if (to.path.startsWith('/legal-auditoria')) {
+  } else if (toPath.startsWith('/legal-auditoria')) {
     if (navStore.activeModule !== 'legal-auditoria') {
       navStore.setActiveModule('legal-auditoria')
     }
-    if (to.query?.tab) {
+    if (to?.query?.tab) {
       navStore.setLegalAuditoriaSubOption(to.query.tab)
     }
-  } else if (to.path.startsWith('/finanzas')) {
+  } else if (toPath.startsWith('/finanzas')) {
     if (navStore.activeModule !== 'finanzas') {
       navStore.setActiveModule('finanzas')
     }
-    if (to.query?.tab) {
+    if (to?.query?.tab) {
       navStore.setFinanzasSubOption(to.query.tab)
     }
   }

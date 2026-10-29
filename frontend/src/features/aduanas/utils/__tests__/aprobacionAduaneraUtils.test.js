@@ -9,8 +9,8 @@ describe('aprobacionAduaneraUtils', () => {
     }
     const notif = getCredencialesPostAprobacionNotification(cotizacion)
     expect(notif.title).toBe('Credenciales de Acceso Creadas')
-    expect(notif.message).toContain('20601234567')
-    expect(notif.message).toContain('Password123!')
+    expect(notif.message).toBe('Se aprobó el expediente y se generaron las credenciales de acceso para 20601234567.')
+    expect(notif.message).not.toContain('Password123!')
     expect(notif.life).toBe(8000)
   })
 

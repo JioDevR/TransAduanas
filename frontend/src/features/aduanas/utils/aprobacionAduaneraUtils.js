@@ -11,7 +11,7 @@ export function getCredencialesPostAprobacionNotification(cotizacion = {}) {
   if (!cotizacion?.clienteTieneUsuario) {
     return {
       title: 'Credenciales de Acceso Creadas',
-      message: `Acceso Portal B2B generado — Usuario: ${username} | Contraseña temporal: Password123!`,
+      message: `Se aprobó el expediente y se generaron las credenciales de acceso para ${username}.`,
       life: 8000
     }
   }

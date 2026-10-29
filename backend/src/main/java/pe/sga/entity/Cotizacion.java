@@ -77,7 +77,7 @@ public class Cotizacion {
     @Builder.Default
     private BigDecimal valorFob = BigDecimal.ZERO;
 
-    @Column(name = "monto_flete_estimado", nullable = false, precision = 12, scale = 2)
+    @Column(name = "monto_flete", nullable = false, precision = 12, scale = 2)
     @Builder.Default
     private BigDecimal montoFleteEstimado = BigDecimal.ZERO;
 
@@ -85,7 +85,7 @@ public class Cotizacion {
     @Builder.Default
     private BigDecimal montoSeguroEstimado = BigDecimal.ZERO;
 
-    @Column(name = "monto_honorarios_estimado", nullable = false, precision = 12, scale = 2)
+    @Column(name = "monto_honorarios", nullable = false, precision = 12, scale = 2)
     @Builder.Default
     private BigDecimal montoHonorariosEstimado = BigDecimal.ZERO;
 
@@ -97,7 +97,7 @@ public class Cotizacion {
     @Builder.Default
     private BigDecimal tasaPercepcion = BigDecimal.ZERO;
 
-    @Column(name = "monto_tributos_estimado", nullable = false, precision = 12, scale = 2)
+    @Column(name = "monto_tributos", nullable = false, precision = 12, scale = 2)
     @Builder.Default
     private BigDecimal montoTributosEstimado = BigDecimal.ZERO;
 

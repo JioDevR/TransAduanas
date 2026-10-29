@@ -79,7 +79,7 @@ public class DespachoTransporteController {
     }
 
     @PostMapping("/{id}/incidencia")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize(SecurityRoles.ACCESS_TRANSPORTE_WRITE)
     public ResponseEntity<ApiResponseDTO<DespachoTransporteResponseDTO>> reportarIncidencia(
             @PathVariable Integer id,
             @RequestBody java.util.Map<String, String> body) {
@@ -115,7 +115,7 @@ public class DespachoTransporteController {
     @PreAuthorize(SecurityRoles.ACCESS_TRANSPORTE_WRITE)
     public ResponseEntity<ApiResponseDTO<DespachoTransporteResponseDTO>> iniciarRuta(
             @PathVariable Integer id,
-            @RequestBody DespachoRutaDTO dto) {
+            @Valid @RequestBody DespachoRutaDTO dto) {
         DespachoTransporteResponseDTO actualizado = despachoService.iniciarRuta(id, dto);
         return ResponseEntity.ok(ApiResponseDTO.ok("Ruta de transporte iniciada exitosamente", actualizado));
     }
@@ -124,7 +124,7 @@ public class DespachoTransporteController {
     @PreAuthorize(SecurityRoles.ACCESS_TRANSPORTE_WRITE)
     public ResponseEntity<ApiResponseDTO<DespachoTransporteResponseDTO>> confirmarEntrega(
             @PathVariable Integer id,
-            @RequestBody DespachoEntregaDTO dto) {
+            @Valid @RequestBody DespachoEntregaDTO dto) {
         DespachoTransporteResponseDTO actualizado = despachoService.confirmarEntrega(id, dto);
         return ResponseEntity.ok(ApiResponseDTO.ok("Entrega conforme registrada y unidad liberada", actualizado));
     }

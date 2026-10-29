@@ -6,18 +6,21 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import pe.sga.config.SecurityRoles;
 import pe.sga.dto.response.ApiResponseDTO;
 import pe.sga.dto.response.DocumentoResponseDTO;
 import pe.sga.entity.DocumentoAdjunto;
 import pe.sga.entity.Usuario;
+import pe.sga.entity.UsuarioCliente;
 import pe.sga.entity.enums.CategoriaDocumento;
 import pe.sga.entity.enums.EntidadDocumento;
 import pe.sga.service.IDocumentoService;
 
-import org.springframework.security.access.prepost.PreAuthorize;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -37,11 +40,18 @@ public class DocumentoController {
             @RequestParam(value = "descripcion", required = false) String descripcion,
             @RequestParam(value = "entidadTipo", required = false, defaultValue = "GENERAL") EntidadDocumento entidadTipo,
             @RequestParam(value = "idEntidad", required = false) Integer idEntidad,
-            @AuthenticationPrincipal Usuario usuarioAutenticado
+            @AuthenticationPrincipal Object principal
     ) {
-        Integer idUsuario = (usuarioAutenticado != null && usuarioAutenticado.getIdUsuario() != null)
-                ? usuarioAutenticado.getIdUsuario()
-                : 1;
+        Integer idUsuario;
+        if (principal instanceof Usuario usuarioAutenticado && usuarioAutenticado.getIdUsuario() != null) {
+            idUsuario = usuarioAutenticado.getIdUsuario();
+        } else if (principal instanceof UsuarioCliente uc) {
+            Integer idClienteAutenticado = uc.getCliente() != null ? uc.getCliente().getIdCliente() : null;
+            documentoService.validarPropiedadEntidadCliente(idClienteAutenticado, entidadTipo, idEntidad);
+            idUsuario = null;
+        } else {
+            throw new AccessDeniedException("No cuenta con autorización válida para subir documentos");
+        }
 
         List<DocumentoResponseDTO> guardados = documentoService.subirDocumentos(
                 files, categoria, descripcion, entidadTipo, idEntidad, idUsuario
@@ -56,8 +66,16 @@ public class DocumentoController {
             @RequestParam(required = false) Integer idCotizacion,
             @RequestParam(required = false) Integer idExpediente,
             @RequestParam(required = false) Integer idCliente,
-            @RequestParam(required = false) CategoriaDocumento categoria
+            @RequestParam(required = false) CategoriaDocumento categoria,
+            @AuthenticationPrincipal Object principal
     ) {
+        if (principal instanceof UsuarioCliente uc) {
+            Integer idClienteAutenticado = uc.getCliente() != null ? uc.getCliente().getIdCliente() : null;
+            documentoService.validarPropiedadConsultaCliente(idClienteAutenticado, idCotizacion, idExpediente, idCliente);
+        } else if (!(principal instanceof Usuario)) {
+            throw new AccessDeniedException("No autorizado para listar documentos");
+        }
+
         List<DocumentoResponseDTO> lista = documentoService.listar(
                 entidadTipo, idCotizacion, idExpediente, idCliente, categoria
         );
@@ -65,16 +83,35 @@ public class DocumentoController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponseDTO<DocumentoResponseDTO>> buscarPorId(@PathVariable Integer id) {
+    public ResponseEntity<ApiResponseDTO<DocumentoResponseDTO>> buscarPorId(
+            @PathVariable Integer id,
+            @AuthenticationPrincipal Object principal
+    ) {
+        if (principal instanceof UsuarioCliente uc) {
+            DocumentoAdjunto entidad = documentoService.obtenerEntidad(id);
+            Integer idClienteAutenticado = uc.getCliente() != null ? uc.getCliente().getIdCliente() : null;
+            documentoService.validarPropiedadDocumentoCliente(idClienteAutenticado, entidad);
+        } else if (!(principal instanceof Usuario)) {
+            throw new AccessDeniedException("No autorizado para consultar el documento");
+        }
         DocumentoResponseDTO dto = documentoService.buscarPorId(id);
         return ResponseEntity.ok(ApiResponseDTO.ok(dto));
     }
 
     @GetMapping("/{id}/descargar")
-    public ResponseEntity<Resource> descargar(@PathVariable Integer id) {
+    public ResponseEntity<Resource> descargar(
+            @PathVariable Integer id,
+            @AuthenticationPrincipal Object principal
+    ) {
         DocumentoAdjunto entidad = documentoService.obtenerEntidad(id);
-        Resource resource = documentoService.descargarArchivo(id);
+        if (principal instanceof UsuarioCliente uc) {
+            Integer idClienteAutenticado = uc.getCliente() != null ? uc.getCliente().getIdCliente() : null;
+            documentoService.validarPropiedadDocumentoCliente(idClienteAutenticado, entidad);
+        } else if (!(principal instanceof Usuario)) {
+            throw new AccessDeniedException("No autorizado para descargar el documento");
+        }
 
+        Resource resource = documentoService.descargarArchivo(id);
         String encodedFilename = URLEncoder.encode(entidad.getNombreOriginal(), StandardCharsets.UTF_8).replace("+", "%20");
 
         return ResponseEntity.ok()
@@ -84,10 +121,19 @@ public class DocumentoController {
     }
 
     @GetMapping("/{id}/preview")
-    public ResponseEntity<Resource> previsualizar(@PathVariable Integer id) {
+    public ResponseEntity<Resource> previsualizar(
+            @PathVariable Integer id,
+            @AuthenticationPrincipal Object principal
+    ) {
         DocumentoAdjunto entidad = documentoService.obtenerEntidad(id);
-        Resource resource = documentoService.descargarArchivo(id);
+        if (principal instanceof UsuarioCliente uc) {
+            Integer idClienteAutenticado = uc.getCliente() != null ? uc.getCliente().getIdCliente() : null;
+            documentoService.validarPropiedadDocumentoCliente(idClienteAutenticado, entidad);
+        } else if (!(principal instanceof Usuario)) {
+            throw new AccessDeniedException("No autorizado para previsualizar el documento");
+        }
 
+        Resource resource = documentoService.descargarArchivo(id);
         String encodedFilename = URLEncoder.encode(entidad.getNombreOriginal(), StandardCharsets.UTF_8).replace("+", "%20");
 
         return ResponseEntity.ok()
@@ -97,6 +143,7 @@ public class DocumentoController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize(SecurityRoles.ACCESS_INTERNAL_STAFF)
     public ResponseEntity<ApiResponseDTO<Void>> eliminar(@PathVariable Integer id) {
         documentoService.eliminar(id);
         return ResponseEntity.ok(ApiResponseDTO.ok("Documento eliminado correctamente", null));

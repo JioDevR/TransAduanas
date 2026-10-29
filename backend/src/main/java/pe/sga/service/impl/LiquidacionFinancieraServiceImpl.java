@@ -43,7 +43,7 @@ public class LiquidacionFinancieraServiceImpl implements ILiquidacionFinancieraS
     @Transactional(readOnly = true)
     public List<LiquidacionFinancieraResponseDTO> listarTodas(Boolean soloPendientes) {
         if (soloPendientes != null && soloPendientes) {
-            return liquidacionRepository.findByEstadoPago("PENDIENTE").stream()
+            return liquidacionRepository.findByEstadoPagoIn(List.of("PENDIENTE", "EN_CONCILIACION")).stream()
                     .map(this::mapToResponse)
                     .toList();
         }
@@ -93,9 +93,13 @@ public class LiquidacionFinancieraServiceImpl implements ILiquidacionFinancieraS
         Cotizacion cot = exp.getCotizacion();
         BigDecimal tc = new BigDecimal("3.7500");
 
-        BigDecimal tributos = cot != null && cot.getMontoTributosEstimado() != null ? cot.getMontoTributosEstimado() : BigDecimal.ZERO;
-        BigDecimal honorarios = cot != null && cot.getMontoHonorariosEstimado() != null ? cot.getMontoHonorariosEstimado() : BigDecimal.ZERO;
-        BigDecimal flete = cot != null && cot.getMontoFleteEstimado() != null ? cot.getMontoFleteEstimado() : BigDecimal.ZERO;
+        BigDecimal tributosUsd = cot != null && cot.getMontoTributosEstimado() != null ? cot.getMontoTributosEstimado() : BigDecimal.ZERO;
+        BigDecimal honorariosUsd = cot != null && cot.getMontoHonorariosEstimado() != null ? cot.getMontoHonorariosEstimado() : BigDecimal.ZERO;
+        BigDecimal fleteUsd = cot != null && cot.getMontoFleteEstimado() != null ? cot.getMontoFleteEstimado() : BigDecimal.ZERO;
+
+        BigDecimal tributos = tributosUsd.multiply(tc).setScale(2, RoundingMode.HALF_UP);
+        BigDecimal honorarios = honorariosUsd.multiply(tc).setScale(2, RoundingMode.HALF_UP);
+        BigDecimal flete = fleteUsd.multiply(tc).setScale(2, RoundingMode.HALF_UP);
 
         BigDecimal almacen = BigDecimal.ZERO;
         var almacenOpt = controlAlmacenRepository.findByExpediente_IdExpediente(idExpediente);
@@ -114,7 +118,10 @@ public class LiquidacionFinancieraServiceImpl implements ILiquidacionFinancieraS
         BigDecimal totalUsd = tc.compareTo(BigDecimal.ZERO) > 0 ? totalPen.divide(tc, 2, RoundingMode.HALF_UP) : BigDecimal.ZERO;
 
         BigDecimal pctDetraccion = new BigDecimal("12.00");
-        BigDecimal montoDetraccion = subtotal.add(igv).multiply(pctDetraccion).divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP);
+        boolean superaUmbralSpot = totalPen.compareTo(new BigDecimal("700.00")) >= 0;
+        BigDecimal montoDetraccion = superaUmbralSpot
+                ? subtotal.add(igv).multiply(pctDetraccion).divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP)
+                : BigDecimal.ZERO;
 
         return LiquidacionEstimadoResponseDTO.builder()
                 .idExpediente(exp.getIdExpediente())
@@ -170,7 +177,8 @@ public class LiquidacionFinancieraServiceImpl implements ILiquidacionFinancieraS
 
         boolean aplicaDet = dto.getAplicaDetraccion() == null || dto.getAplicaDetraccion();
         BigDecimal pctDet = dto.getPorcentajeDetraccion() != null ? dto.getPorcentajeDetraccion() : new BigDecimal("12.00");
-        BigDecimal montoDet = aplicaDet
+        boolean superaUmbralSpot = totalPen.compareTo(new BigDecimal("700.00")) >= 0;
+        BigDecimal montoDet = (aplicaDet && superaUmbralSpot)
                 ? subtotal.add(igv).multiply(pctDet).divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP)
                 : BigDecimal.ZERO;
 
@@ -245,7 +253,8 @@ public class LiquidacionFinancieraServiceImpl implements ILiquidacionFinancieraS
         BigDecimal tc = lf.getTipoCambio().compareTo(BigDecimal.ZERO) > 0 ? lf.getTipoCambio() : new BigDecimal("3.7500");
         BigDecimal totalUsd = totalPen.divide(tc, 2, RoundingMode.HALF_UP);
 
-        BigDecimal montoDet = lf.getAplicaDetraccion()
+        boolean superaUmbralSpot = totalPen.compareTo(new BigDecimal("700.00")) >= 0;
+        BigDecimal montoDet = (Boolean.TRUE.equals(lf.getAplicaDetraccion()) && superaUmbralSpot)
                 ? subtotal.add(igv).multiply(lf.getPorcentajeDetraccion()).divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP)
                 : BigDecimal.ZERO;
 
@@ -325,7 +334,7 @@ public class LiquidacionFinancieraServiceImpl implements ILiquidacionFinancieraS
                 cobradoUsd = cobradoUsd.add(lf.getTotalGeneralUsd());
                 tributosSunat = tributosSunat.add(lf.getTotalTributosSunat());
                 detracciones = detracciones.add(lf.getMontoDetraccion());
-            } else if ("PENDIENTE".equalsIgnoreCase(estado)) {
+            } else if ("PENDIENTE".equalsIgnoreCase(estado) || "EN_CONCILIACION".equalsIgnoreCase(estado)) {
                 pendientes++;
                 porCobrarPen = porCobrarPen.add(lf.getTotalGeneralPen());
                 porCobrarUsd = porCobrarUsd.add(lf.getTotalGeneralUsd());

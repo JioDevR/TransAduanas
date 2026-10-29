@@ -135,6 +135,20 @@ public class PortalController {
         return ResponseEntity.ok(ApiResponseDTO.ok("Detalle de tracking de expediente recuperado", expediente));
     }
 
+    @GetMapping("/expedientes/{id}/documentos")
+    @PreAuthorize("hasRole('CLIENTE_PORTAL')")
+    public ResponseEntity<ApiResponseDTO<List<DocumentoResponseDTO>>> listarDocumentosExpediente(
+            @PathVariable Integer id,
+            @AuthenticationPrincipal UsuarioCliente usuarioCliente) {
+        Integer idCliente = resolverIdCliente(usuarioCliente);
+        // Valida que el expediente exista y pertenezca al cliente autenticado
+        portalService.buscarExpedientePorId(idCliente, id);
+        List<DocumentoResponseDTO> documentos = documentoService.listar(
+                EntidadDocumento.EXPEDIENTE, null, id, null, null
+        );
+        return ResponseEntity.ok(ApiResponseDTO.ok("Documentos del expediente recuperados exitosamente", documentos));
+    }
+
     // =========================================================================
     // 5. COBROS, PAGOS Y LIQUIDACIONES
     // =========================================================================

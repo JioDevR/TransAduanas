@@ -54,6 +54,7 @@ public class PortalCotizacionDTO {
     private LocalDateTime fechaRevision;
     private String motivoObservacion;
     private String observaciones;
+    private Boolean aceptadaPorCliente;
 
     // Pagos
     private String estadoPago;

@@ -5,14 +5,19 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import pe.sga.entity.UsuarioCliente;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 public interface UsuarioClienteRepository extends JpaRepository<UsuarioCliente, Integer> {
 
     Optional<UsuarioCliente> findByUsername(String username);
 
     Optional<UsuarioCliente> findByCliente_IdCliente(Integer idCliente);
+
+    @Query("SELECT DISTINCT uc.cliente.idCliente FROM UsuarioCliente uc WHERE uc.cliente.idCliente IN :idsClientes")
+    Set<Integer> findClienteIdsWithUsuario(@Param("idsClientes") Collection<Integer> idsClientes);
 
     List<UsuarioCliente> findByCliente_NumeroDocumento(String ruc);
 

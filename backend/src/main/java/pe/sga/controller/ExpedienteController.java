@@ -177,7 +177,7 @@ public class ExpedienteController {
     @PreAuthorize(SecurityRoles.ACCESS_EXPEDIENTE_ALMACEN_WRITE)
     public ResponseEntity<ApiResponseDTO<ExpedienteResponseDTO>> cerrar(
             @PathVariable Integer id,
-            @RequestBody(required = false) ExpedienteCerrarDTO dto) {
+            @Valid @RequestBody(required = false) ExpedienteCerrarDTO dto) {
         ExpedienteResponseDTO actualizado = expedienteService.cerrar(id, dto);
         return ResponseEntity.ok(ApiResponseDTO.ok("Expediente aduanero cerrado formalmente con conformidad", actualizado));
     }

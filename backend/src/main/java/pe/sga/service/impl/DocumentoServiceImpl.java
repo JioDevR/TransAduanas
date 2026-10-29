@@ -3,6 +3,7 @@ package pe.sga.service.impl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.Resource;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -17,9 +18,11 @@ import pe.sga.entity.enums.CategoriaDocumento;
 import pe.sga.entity.enums.EntidadDocumento;
 import pe.sga.exception.ResourceNotFoundException;
 import pe.sga.repository.ClienteRepository;
+import pe.sga.repository.CotizacionPagoRepository;
 import pe.sga.repository.CotizacionRepository;
 import pe.sga.repository.ExpedienteRepository;
 import pe.sga.repository.IDocumentoAdjuntoRepository;
+import pe.sga.repository.LiquidacionFinancieraRepository;
 import pe.sga.repository.UsuarioRepository;
 import pe.sga.service.IDocumentoService;
 import pe.sga.service.IStorageService;
@@ -39,6 +42,8 @@ public class DocumentoServiceImpl implements IDocumentoService {
     private final ExpedienteRepository expedienteRepository;
     private final ClienteRepository clienteRepository;
     private final UsuarioRepository usuarioRepository;
+    private final CotizacionPagoRepository cotizacionPagoRepository;
+    private final LiquidacionFinancieraRepository liquidacionFinancieraRepository;
 
     @Override
     @Transactional
@@ -68,10 +73,16 @@ public class DocumentoServiceImpl implements IDocumentoService {
 
         if (idEntidad != null) {
             switch (entidadTipo) {
-                case COTIZACION -> cotizacion = cotizacionRepository.findById(idEntidad)
-                        .orElseThrow(() -> new ResourceNotFoundException("Cotización no encontrada con ID: " + idEntidad));
-                case EXPEDIENTE -> expediente = expedienteRepository.findById(idEntidad)
-                        .orElseThrow(() -> new ResourceNotFoundException("Expediente no encontrado con ID: " + idEntidad));
+                case COTIZACION -> {
+                    cotizacion = cotizacionRepository.findById(idEntidad)
+                            .orElseThrow(() -> new ResourceNotFoundException("Cotización no encontrada con ID: " + idEntidad));
+                    cliente = cotizacion.getCliente();
+                }
+                case EXPEDIENTE -> {
+                    expediente = expedienteRepository.findById(idEntidad)
+                            .orElseThrow(() -> new ResourceNotFoundException("Expediente no encontrado con ID: " + idEntidad));
+                    cliente = expediente.getCliente();
+                }
                 case CLIENTE -> cliente = clienteRepository.findById(idEntidad)
                         .orElseThrow(() -> new ResourceNotFoundException("Cliente no encontrado con ID: " + idEntidad));
                 default -> {}
@@ -177,6 +188,104 @@ public class DocumentoServiceImpl implements IDocumentoService {
         doc.setActivo(false);
         documentoRepository.save(doc);
         log.info("Documento anulado lógicamente con ID: {} (archivo físico preservado para trazabilidad aduanera)", id);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public void validarPropiedadEntidadCliente(Integer idClienteAutenticado, EntidadDocumento entidadTipo, Integer idEntidad) {
+        if (idClienteAutenticado == null || idEntidad == null) {
+            throw new AccessDeniedException("No cuenta con permisos para adjuntar documentos a esta entidad");
+        }
+        EntidadDocumento tipo = entidadTipo != null ? entidadTipo : EntidadDocumento.GENERAL;
+        switch (tipo) {
+            case COTIZACION -> {
+                Cotizacion cot = cotizacionRepository.findById(idEntidad)
+                        .orElseThrow(() -> new ResourceNotFoundException("Cotización no encontrada con ID: " + idEntidad));
+                if (cot.getCliente() == null || !idClienteAutenticado.equals(cot.getCliente().getIdCliente())) {
+                    throw new AccessDeniedException("La cotización no pertenece a su empresa");
+                }
+            }
+            case EXPEDIENTE -> {
+                Expediente exp = expedienteRepository.findById(idEntidad)
+                        .orElseThrow(() -> new ResourceNotFoundException("Expediente no encontrado con ID: " + idEntidad));
+                if (exp.getCliente() == null || !idClienteAutenticado.equals(exp.getCliente().getIdCliente())) {
+                    throw new AccessDeniedException("El expediente no pertenece a su empresa");
+                }
+            }
+            case CLIENTE -> {
+                if (!idClienteAutenticado.equals(idEntidad)) {
+                    throw new AccessDeniedException("No tiene permisos para operar sobre documentos de otra empresa");
+                }
+            }
+            default -> throw new AccessDeniedException("Tipo de entidad no permitido para clientes del portal");
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public void validarPropiedadConsultaCliente(Integer idClienteAutenticado, Integer idCotizacion, Integer idExpediente, Integer idCliente) {
+        if (idClienteAutenticado == null) {
+            throw new AccessDeniedException("Usuario de portal no válido");
+        }
+        if (idCotizacion == null && idExpediente == null) {
+            throw new AccessDeniedException("Debe especificar una cotización o expediente propio para consultar documentos");
+        }
+        if (idCliente != null && !idClienteAutenticado.equals(idCliente)) {
+            throw new AccessDeniedException("No puede consultar documentos de otro cliente");
+        }
+        if (idCotizacion != null) {
+            Cotizacion cot = cotizacionRepository.findById(idCotizacion)
+                    .orElseThrow(() -> new ResourceNotFoundException("Cotización no encontrada con ID: " + idCotizacion));
+            if (cot.getCliente() == null || !idClienteAutenticado.equals(cot.getCliente().getIdCliente())) {
+                throw new AccessDeniedException("La cotización solicitada no pertenece a su empresa");
+            }
+        }
+        if (idExpediente != null) {
+            Expediente exp = expedienteRepository.findById(idExpediente)
+                    .orElseThrow(() -> new ResourceNotFoundException("Expediente no encontrado con ID: " + idExpediente));
+            if (exp.getCliente() == null || !idClienteAutenticado.equals(exp.getCliente().getIdCliente())) {
+                throw new AccessDeniedException("El expediente solicitado no pertenece a su empresa");
+            }
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public void validarPropiedadDocumentoCliente(Integer idClienteAutenticado, DocumentoAdjunto doc) {
+        if (idClienteAutenticado == null || doc == null) {
+            throw new AccessDeniedException("No tiene permisos para acceder a este documento");
+        }
+        if (doc.getCliente() != null && idClienteAutenticado.equals(doc.getCliente().getIdCliente())) {
+            return;
+        }
+        if (doc.getCotizacion() != null && doc.getCotizacion().getCliente() != null
+                && idClienteAutenticado.equals(doc.getCotizacion().getCliente().getIdCliente())) {
+            return;
+        }
+        if (doc.getExpediente() != null && doc.getExpediente().getCliente() != null
+                && idClienteAutenticado.equals(doc.getExpediente().getCliente().getIdCliente())) {
+            return;
+        }
+        // Verificar si es comprobante de un pago de cotización o liquidación del cliente
+        boolean esComprobantePagoCliente = cotizacionPagoRepository
+                .findByCotizacion_Cliente_IdClienteOrderByFechaRegistroDesc(idClienteAutenticado)
+                .stream()
+                .anyMatch(p -> p.getDocumentoComprobante() != null
+                        && doc.getIdDocumento().equals(p.getDocumentoComprobante().getIdDocumento()));
+        if (esComprobantePagoCliente) {
+            return;
+        }
+
+        boolean esDocumentoLiquidacionCliente = liquidacionFinancieraRepository
+                .findByExpediente_Cliente_IdCliente(idClienteAutenticado)
+                .stream()
+                .anyMatch(l -> (l.getDocumentoVoucher() != null && doc.getIdDocumento().equals(l.getDocumentoVoucher().getIdDocumento()))
+                        || (l.getDocumentoFactura() != null && doc.getIdDocumento().equals(l.getDocumentoFactura().getIdDocumento())));
+        if (esDocumentoLiquidacionCliente) {
+            return;
+        }
+
+        throw new AccessDeniedException("Acceso denegado: el documento solicitado no pertenece a su empresa");
     }
 
     private DocumentoResponseDTO toDTO(DocumentoAdjunto d) {

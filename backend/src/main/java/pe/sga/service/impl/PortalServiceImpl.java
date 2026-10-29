@@ -11,6 +11,7 @@ import pe.sga.dto.portal.*;
 import pe.sga.dto.request.LoginRequestDTO;
 import pe.sga.entity.*;
 import pe.sga.entity.enums.EstadoCotizacion;
+import pe.sga.entity.enums.EstadoExpediente;
 import pe.sga.entity.enums.EstadoPagoCotizacion;
 import pe.sga.entity.enums.RolUsuario;
 import pe.sga.entity.enums.TipoAbonoCotizacion;
@@ -26,7 +27,10 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -236,6 +240,11 @@ public class PortalServiceImpl implements IPortalService {
             throw new BadRequestException("Solo se pueden aceptar cotizaciones aprobadas técnicamente por la agencia aduanera");
         }
 
+        if ((cotizacion.getObservaciones() != null && cotizacion.getObservaciones().contains("Aceptada formalmente por el cliente"))
+                || (cotizacion.getEstadoPago() != null && !"SIN_PAGO".equalsIgnoreCase(cotizacion.getEstadoPago()))) {
+            throw new BadRequestException("Esta cotización ya fue aceptada previamente.");
+        }
+
         cotizacion.setObservaciones((cotizacion.getObservaciones() != null ? cotizacion.getObservaciones() + " | " : "") + "Aceptada formalmente por el cliente vía Portal B2B el " + LocalDateTime.now());
         Cotizacion guardada = cotizacionRepository.save(cotizacion);
         return mapToPortalCotizacion(guardada);
@@ -245,8 +254,20 @@ public class PortalServiceImpl implements IPortalService {
     @Transactional(readOnly = true)
     public List<PortalExpedienteDTO> listarExpedientes(Integer idCliente) {
         validarCliente(idCliente);
-        return expedienteRepository.findByCliente_IdCliente(idCliente).stream()
-                .map(this::mapToPortalExpediente)
+        List<Expediente> expedientes = expedienteRepository.findByCliente_IdCliente(idCliente);
+        if (expedientes.isEmpty()) {
+            return List.of();
+        }
+        List<Integer> idsExp = expedientes.stream().map(Expediente::getIdExpediente).toList();
+        Map<Integer, ControlAlmacen> almacenMap = controlAlmacenRepository.findByExpediente_IdExpedienteIn(idsExp).stream()
+                .filter(a -> a.getExpediente() != null)
+                .collect(Collectors.toMap(a -> a.getExpediente().getIdExpediente(), Function.identity(), (a, b) -> a));
+        Map<Integer, DespachoTransporte> transporteMap = despachoTransporteRepository.findByExpediente_IdExpedienteIn(idsExp).stream()
+                .filter(t -> t.getExpediente() != null)
+                .collect(Collectors.toMap(t -> t.getExpediente().getIdExpediente(), Function.identity(), (a, b) -> a));
+
+        return expedientes.stream()
+                .map(e -> mapToPortalExpediente(e, almacenMap.get(e.getIdExpediente()), transporteMap.get(e.getIdExpediente())))
                 .toList();
     }
 
@@ -299,7 +320,8 @@ public class PortalServiceImpl implements IPortalService {
                 .count();
 
         long expedientesEnTransito = expedienteRepository.findByCliente_IdCliente(idCliente).stream()
-                .filter(e -> !"FINALIZADO".equalsIgnoreCase(e.getEstadoExpediente().name()))
+                .filter(e -> e.getEstadoExpediente() != EstadoExpediente.CERRADO
+                        && e.getEstadoExpediente() != EstadoExpediente.ANULADO)
                 .count();
 
         long pagosPendientes = cotizacionPagoRepository.findByCotizacion_Cliente_IdClienteOrderByFechaRegistroDesc(idCliente).stream()
@@ -324,6 +346,16 @@ public class PortalServiceImpl implements IPortalService {
     public List<PortalObligacionPagoDTO> listarObligacionesPendientes(Integer idCliente) {
         validarCliente(idCliente);
         List<Cotizacion> cotizaciones = cotizacionRepository.findByCliente_IdCliente(idCliente);
+        if (cotizaciones.isEmpty()) {
+            return List.of();
+        }
+        Map<Integer, Expediente> expByCotId = expedienteRepository.findByCliente_IdCliente(idCliente).stream()
+                .filter(e -> e.getCotizacion() != null)
+                .collect(Collectors.toMap(e -> e.getCotizacion().getIdCotizacion(), Function.identity(), (a, b) -> a));
+        Map<Integer, LiquidacionFinanciera> liqByExpId = liquidacionFinancieraRepository.findByExpediente_Cliente_IdCliente(idCliente).stream()
+                .filter(l -> l.getExpediente() != null)
+                .collect(Collectors.toMap(l -> l.getExpediente().getIdExpediente(), Function.identity(), (a, b) -> a));
+
         List<PortalObligacionPagoDTO> lista = new ArrayList<>();
 
         for (Cotizacion c : cotizaciones) {
@@ -331,14 +363,14 @@ public class PortalServiceImpl implements IPortalService {
                 continue;
             }
 
-            Optional<Expediente> expOpt = expedienteRepository.findByCotizacion_IdCotizacion(c.getIdCotizacion());
+            Optional<Expediente> expOpt = Optional.ofNullable(expByCotId.get(c.getIdCotizacion()));
             BigDecimal saldoCot = c.getSaldoPendiente() != null ? c.getSaldoPendiente() : BigDecimal.ZERO;
             BigDecimal totalCot = c.getTotalCotizado() != null ? c.getTotalCotizado() : BigDecimal.ZERO;
             BigDecimal abonadoCot = c.getTotalAbonado() != null ? c.getTotalAbonado() : BigDecimal.ZERO;
 
             if (expOpt.isPresent()) {
                 Expediente exp = expOpt.get();
-                Optional<LiquidacionFinanciera> liqOpt = liquidacionFinancieraRepository.findByExpediente_IdExpediente(exp.getIdExpediente());
+                Optional<LiquidacionFinanciera> liqOpt = Optional.ofNullable(liqByExpId.get(exp.getIdExpediente()));
                 BigDecimal liqUsd = liqOpt.map(l -> l.getTotalGeneralUsd() != null ? l.getTotalGeneralUsd() : BigDecimal.ZERO).orElse(BigDecimal.ZERO);
 
                 BigDecimal totalConsolidado = totalCot.add(liqUsd);
@@ -426,14 +458,26 @@ public class PortalServiceImpl implements IPortalService {
                 throw new BadRequestException("La liquidación indicada no corresponde a su empresa");
             }
 
+            DocumentoAdjunto documentoVoucher = null;
+            if (dto.getIdDocumentoComprobante() != null) {
+                documentoVoucher = documentoRepository.findById(dto.getIdDocumentoComprobante()).orElse(null);
+            }
+
             liquidacion.setMetodoPago(dto.getMetodoPago());
             liquidacion.setBancoDestino(dto.getBancoDestino());
             liquidacion.setNumeroOperacion(dto.getNumeroOperacion());
             liquidacion.setFechaPago(dto.getFechaOperacion().atStartOfDay());
             liquidacion.setEstadoPago("EN_CONCILIACION");
+            if (documentoVoucher != null) {
+                liquidacion.setDocumentoVoucher(documentoVoucher);
+            }
             liquidacion.setObservaciones((liquidacion.getObservaciones() != null ? liquidacion.getObservaciones() + " | " : "")
                     + "Voucher registrado por cliente el " + LocalDateTime.now() + " (Banco origen: " + dto.getBancoOrigen() + ")");
             liquidacionFinancieraRepository.save(liquidacion);
+
+            BigDecimal tcLiq = liquidacion.getTipoCambio() != null && liquidacion.getTipoCambio().compareTo(BigDecimal.ZERO) > 0
+                    ? liquidacion.getTipoCambio()
+                    : new BigDecimal("3.7500");
 
             return PortalPagoAnticipoDTO.builder()
                     .codigoPago("LIQ-PAG-" + liquidacion.getIdLiquidacion())
@@ -441,12 +485,17 @@ public class PortalServiceImpl implements IPortalService {
                     .tipoAbono("LIQUIDACION_FINAL")
                     .montoAbonado(dto.getMontoAbonado())
                     .moneda("USD")
+                    .tipoCambio(tcLiq)
+                    .montoEquivalentePen(dto.getMontoAbonado().multiply(tcLiq).setScale(2, RoundingMode.HALF_UP))
                     .metodoPago(dto.getMetodoPago())
                     .bancoOrigen(dto.getBancoOrigen())
                     .bancoDestino(dto.getBancoDestino())
                     .numeroOperacion(dto.getNumeroOperacion())
                     .fechaOperacion(dto.getFechaOperacion())
                     .estadoPago("PENDIENTE_REVISION")
+                    .idDocumentoComprobante(documentoVoucher != null ? documentoVoucher.getIdDocumento() : null)
+                    .documentoComprobanteNombre(documentoVoucher != null ? documentoVoucher.getNombreOriginal() : null)
+                    .documentoComprobanteUrl(documentoVoucher != null ? "/api/v1/documentos/" + documentoVoucher.getIdDocumento() + "/preview" : null)
                     .fechaRegistro(LocalDateTime.now())
                     .build();
         }
@@ -471,9 +520,10 @@ public class PortalServiceImpl implements IPortalService {
             }
         }
 
-        String codigoPago = "PAG-" + LocalDate.now().getYear() + "-" + String.format("%04d", cotizacionPagoRepository.count() + 1);
-        BigDecimal tipoCambio = new BigDecimal("1.0000");
+        String codigoPago = generarCodigoPagoCotizacion();
+        BigDecimal tipoCambio = new BigDecimal("3.7500");
         BigDecimal montoUsd = dto.getMontoAbonado();
+        BigDecimal montoEquivalentePen = montoUsd.multiply(tipoCambio).setScale(2, RoundingMode.HALF_UP);
 
         DocumentoAdjunto comprobante = null;
         if (dto.getIdDocumentoComprobante() != null) {
@@ -496,7 +546,7 @@ public class PortalServiceImpl implements IPortalService {
                 .montoAbonado(montoUsd)
                 .moneda("USD")
                 .tipoCambio(tipoCambio)
-                .montoEquivalentePen(montoUsd)
+                .montoEquivalentePen(montoEquivalentePen)
                 .metodoPago(dto.getMetodoPago())
                 .bancoOrigen(dto.getBancoOrigen())
                 .bancoDestino(dto.getBancoDestino())
@@ -580,6 +630,9 @@ public class PortalServiceImpl implements IPortalService {
     // =========================================================================
 
     private PortalCotizacionDTO mapToPortalCotizacion(Cotizacion c) {
+        boolean aceptadaPorCliente = (c.getObservaciones() != null && c.getObservaciones().contains("Aceptada formalmente por el cliente"))
+                || (c.getEstadoPago() != null && !"SIN_PAGO".equalsIgnoreCase(c.getEstadoPago()));
+
         return PortalCotizacionDTO.builder()
                 .idCotizacion(c.getIdCotizacion())
                 .codigoCotizacion(c.getCodigoCotizacion())
@@ -615,6 +668,7 @@ public class PortalServiceImpl implements IPortalService {
                 .fechaRevision(c.getFechaRevision())
                 .motivoObservacion(c.getMotivoObservacion())
                 .observaciones(c.getObservaciones())
+                .aceptadaPorCliente(aceptadaPorCliente)
                 .estadoPago(c.getEstadoPago())
                 .totalAbonado(c.getTotalAbonado())
                 .saldoPendiente(c.getSaldoPendiente())
@@ -622,6 +676,19 @@ public class PortalServiceImpl implements IPortalService {
     }
 
     private PortalExpedienteDTO mapToPortalExpediente(Expediente e) {
+        ControlAlmacen alm = e.getIdExpediente() != null
+                ? controlAlmacenRepository.findByExpediente_IdExpediente(e.getIdExpediente()).orElse(null)
+                : null;
+        DespachoTransporte tra = e.getIdExpediente() != null
+                ? despachoTransporteRepository.findByExpediente_IdExpediente(e.getIdExpediente()).orElse(null)
+                : null;
+        return mapToPortalExpediente(e, alm, tra);
+    }
+
+    private PortalExpedienteDTO mapToPortalExpediente(Expediente e, ControlAlmacen alm, DespachoTransporte tra) {
+        var merc = e.getMercancia() != null ? e.getMercancia() : (e.getCotizacion() != null ? e.getCotizacion().getMercancia() : null);
+        var tc = e.getTipoCarga() != null ? e.getTipoCarga() : (e.getCotizacion() != null ? e.getCotizacion().getTipoCarga() : null);
+
         PortalExpedienteDTO.PortalExpedienteDTOBuilder builder = PortalExpedienteDTO.builder()
                 .idExpediente(e.getIdExpediente())
                 .codigoExpediente(e.getCodigoExpediente())
@@ -630,11 +697,11 @@ public class PortalServiceImpl implements IPortalService {
                 .idCliente(e.getCliente() != null ? e.getCliente().getIdCliente() : null)
                 .razonSocialCliente(e.getCliente() != null ? e.getCliente().getRazonSocial() : null)
                 .rucCliente(e.getCliente() != null ? e.getCliente().getNumeroDocumento() : null)
-                .idMercancia(e.getCotizacion() != null && e.getCotizacion().getMercancia() != null ? e.getCotizacion().getMercancia().getIdMercancia() : null)
-                .codigoMercancia(e.getCotizacion() != null && e.getCotizacion().getMercancia() != null ? e.getCotizacion().getMercancia().getCodigo() : null)
-                .nombreMercancia(e.getCotizacion() != null && e.getCotizacion().getMercancia() != null ? e.getCotizacion().getMercancia().getNombre() : null)
-                .idTipoCarga(e.getCotizacion() != null && e.getCotizacion().getTipoCarga() != null ? e.getCotizacion().getTipoCarga().getIdTipoCarga() : null)
-                .nombreTipoCarga(e.getCotizacion() != null && e.getCotizacion().getTipoCarga() != null ? e.getCotizacion().getTipoCarga().getNombre() : null)
+                .idMercancia(merc != null ? merc.getIdMercancia() : null)
+                .codigoMercancia(merc != null ? merc.getCodigo() : null)
+                .nombreMercancia(merc != null ? merc.getNombre() : null)
+                .idTipoCarga(tc != null ? tc.getIdTipoCarga() : null)
+                .nombreTipoCarga(tc != null ? tc.getNombre() : null)
                 .agenteAduaneroNombre(e.getAgenteAduanero() != null ? e.getAgenteAduanero().getNombreCompleto() : null)
                 .numeroDam(e.getNumeroDam())
                 .canalSunat(e.getCanalSunat() != null ? e.getCanalSunat().name() : null)
@@ -654,35 +721,32 @@ public class PortalServiceImpl implements IPortalService {
                 .tieneAlmacen(false)
                 .tieneTransporte(false);
 
-        // Asociar control de almacén si existe
-        if (e.getIdExpediente() != null) {
-            controlAlmacenRepository.findByExpediente_IdExpediente(e.getIdExpediente()).ifPresent(alm -> {
-                builder.tieneAlmacen(true)
-                        .depositoTemporal(alm.getDepositoTemporal())
-                        .ubicacionBahia(alm.getUbicacionBahia())
-                        .diasLibresAlmacen(alm.getDiasLibresAlmacen())
-                        .fechaLimiteRetiro(alm.getFechaLimiteRetiro())
-                        .cantidadBultos(alm.getCantidadBultos())
-                        .pesoBrutoKg(alm.getPesoBrutoKg())
-                        .estadoAlmacen(alm.getEstadoAlmacen());
+        if (alm != null) {
+            builder.tieneAlmacen(true)
+                    .depositoTemporal(alm.getDepositoTemporal())
+                    .ubicacionBahia(alm.getUbicacionBahia())
+                    .diasLibresAlmacen(alm.getDiasLibresAlmacen())
+                    .fechaLimiteRetiro(alm.getFechaLimiteRetiro())
+                    .cantidadBultos(alm.getCantidadBultos())
+                    .pesoBrutoKg(alm.getPesoBrutoKg())
+                    .estadoAlmacen(alm.getEstadoAlmacen());
 
-                if (alm.getFechaLimiteRetiro() != null) {
-                    long dias = ChronoUnit.DAYS.between(LocalDate.now(), alm.getFechaLimiteRetiro());
-                    builder.diasRestantesAlmacen(dias);
-                }
-            });
+            if (alm.getFechaLimiteRetiro() != null) {
+                long dias = ChronoUnit.DAYS.between(LocalDate.now(), alm.getFechaLimiteRetiro());
+                builder.diasRestantesAlmacen(dias);
+            }
+        }
 
-            despachoTransporteRepository.findByExpediente_IdExpediente(e.getIdExpediente()).ifPresent(tra -> {
-                builder.tieneTransporte(true)
-                        .codigoTracking(tra.getCodigoTracking())
-                        .placaTracto(tra.getUnidad() != null ? tra.getUnidad().getPlacaTracto() : null)
-                        .conductorNombre(tra.getConductor() != null ? (tra.getConductor().getNombres() + " " + tra.getConductor().getApellidos()) : null)
-                        .direccionPartida(tra.getDireccionPartida())
-                        .direccionLlegada(tra.getDireccionLlegada())
-                        .distritoLlegada(tra.getDistritoLlegada())
-                        .fechaProgramadaTransporte(tra.getFechaProgramada())
-                        .estadoTransporte(tra.getEstadoTransporte());
-            });
+        if (tra != null) {
+            builder.tieneTransporte(true)
+                    .codigoTracking(tra.getCodigoTracking())
+                    .placaTracto(tra.getUnidad() != null ? tra.getUnidad().getPlacaTracto() : null)
+                    .conductorNombre(tra.getConductor() != null ? (tra.getConductor().getNombres() + " " + tra.getConductor().getApellidos()) : null)
+                    .direccionPartida(tra.getDireccionPartida())
+                    .direccionLlegada(tra.getDireccionLlegada())
+                    .distritoLlegada(tra.getDistritoLlegada())
+                    .fechaProgramadaTransporte(tra.getFechaProgramada())
+                    .estadoTransporte(tra.getEstadoTransporte());
         }
 
         return builder.build();
@@ -708,7 +772,7 @@ public class PortalServiceImpl implements IPortalService {
                 .observacionFinanzas(p.getObservacionFinanzas())
                 .idDocumentoComprobante(p.getDocumentoComprobante() != null ? p.getDocumentoComprobante().getIdDocumento() : null)
                 .documentoComprobanteNombre(p.getDocumentoComprobante() != null ? p.getDocumentoComprobante().getNombreOriginal() : null)
-                .documentoComprobanteUrl(p.getDocumentoComprobante() != null ? p.getDocumentoComprobante().getRutaAlmacenamiento() : null)
+                .documentoComprobanteUrl(p.getDocumentoComprobante() != null ? "/api/v1/documentos/" + p.getDocumentoComprobante().getIdDocumento() + "/preview" : null)
                 .fechaRegistro(p.getFechaRegistro())
                 .build();
     }
@@ -759,6 +823,29 @@ public class PortalServiceImpl implements IPortalService {
             codigo = String.format("COT-%d-%04d", year, count);
             count++;
         } while (cotizacionRepository.existsByCodigoCotizacion(codigo));
+        return codigo;
+    }
+
+    private String generarCodigoPagoCotizacion() {
+        int year = LocalDate.now().getYear();
+        String prefix = String.format("PAG-COT-%d-", year);
+        long nextSeq = cotizacionPagoRepository.findUltimoPagoPorPrefijo(prefix)
+                .map(CotizacionPago::getCodigoPago)
+                .map(cod -> {
+                    try {
+                        String numPart = cod.substring(prefix.length());
+                        return Long.parseLong(numPart) + 1;
+                    } catch (Exception e) {
+                        return cotizacionPagoRepository.count() + 1;
+                    }
+                })
+                .orElseGet(() -> cotizacionPagoRepository.count() + 1);
+
+        String codigo;
+        do {
+            codigo = String.format("PAG-COT-%d-%04d", year, nextSeq);
+            nextSeq++;
+        } while (cotizacionPagoRepository.existsByCodigoPago(codigo));
         return codigo;
     }
 

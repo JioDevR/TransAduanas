@@ -243,7 +243,14 @@ public class CotizacionPagoServiceImpl implements ICotizacionPagoService {
 
         for (CotizacionPago p : pagos) {
             if (p.getEstadoPago() == EstadoPagoCotizacion.APROBADO) {
-                totalAbonado = totalAbonado.add(p.getMontoAbonado());
+                BigDecimal montoEnUsd = p.getMontoAbonado() != null ? p.getMontoAbonado() : BigDecimal.ZERO;
+                if ("PEN".equalsIgnoreCase(p.getMoneda())) {
+                    BigDecimal tc = (p.getTipoCambio() != null && p.getTipoCambio().compareTo(BigDecimal.ZERO) > 0)
+                            ? p.getTipoCambio()
+                            : new BigDecimal("3.7500");
+                    montoEnUsd = montoEnUsd.divide(tc, 2, RoundingMode.HALF_UP);
+                }
+                totalAbonado = totalAbonado.add(montoEnUsd);
                 tieneAprobados = true;
             } else if (p.getEstadoPago() == EstadoPagoCotizacion.PENDIENTE_REVISION) {
                 tienePendientes = true;
@@ -278,8 +285,25 @@ public class CotizacionPagoServiceImpl implements ICotizacionPagoService {
 
     private String generarCodigoPago() {
         int year = LocalDate.now().getYear();
-        long count = cotizacionPagoRepository.count() + 1;
-        return String.format("PAG-COT-%d-%04d", year, count);
+        String prefix = String.format("PAG-COT-%d-", year);
+        long nextSeq = cotizacionPagoRepository.findUltimoPagoPorPrefijo(prefix)
+                .map(CotizacionPago::getCodigoPago)
+                .map(cod -> {
+                    try {
+                        String numPart = cod.substring(prefix.length());
+                        return Long.parseLong(numPart) + 1;
+                    } catch (Exception e) {
+                        return cotizacionPagoRepository.count() + 1;
+                    }
+                })
+                .orElseGet(() -> cotizacionPagoRepository.count() + 1);
+
+        String codigo;
+        do {
+            codigo = String.format("PAG-COT-%d-%04d", year, nextSeq);
+            nextSeq++;
+        } while (cotizacionPagoRepository.existsByCodigoPago(codigo));
+        return codigo;
     }
 
     private CotizacionPagoResponseDTO mapToResponse(CotizacionPago p) {

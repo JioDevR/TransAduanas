@@ -21,6 +21,7 @@ DELETE FROM documento_adjunto;
 DELETE FROM expediente;
 DELETE FROM cotizacion_pago;
 DELETE FROM cotizacion;
+DELETE FROM notificacion_cliente;
 DELETE FROM usuario_cliente;
 DELETE FROM cliente;
 DELETE FROM usuario WHERE rol != 'ADMINISTRADOR_TI' AND username != 'admin';
@@ -36,6 +37,7 @@ ALTER TABLE catalogo_puerto AUTO_INCREMENT = 1;
 ALTER TABLE catalogo_tipo_carga AUTO_INCREMENT = 1;
 ALTER TABLE catalogo_mercancia AUTO_INCREMENT = 1;
 ALTER TABLE usuario AUTO_INCREMENT = 2;
+ALTER TABLE notificacion_cliente AUTO_INCREMENT = 1;
 ALTER TABLE usuario_cliente AUTO_INCREMENT = 1;
 ALTER TABLE cliente AUTO_INCREMENT = 1;
 
@@ -251,10 +253,11 @@ INSERT INTO catalogo_mercancia (id_mercancia, codigo, nombre, categoria, requier
 -- =============================================================================
 -- 5. USUARIOS DEL SISTEMA (ROLES OPERATIVOS SGA)
 -- =============================================================================
--- Nota: El usuario 'admin' (ADMINISTRADOR_TI) no se incluye en esta semilla ya que es
--- aprovisionado automáticamente por el sistema al iniciar (DataInitializer).
 -- Contraseña para todos los usuarios semilla: Password123!
 -- Hash BCrypt: $2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee
+INSERT IGNORE INTO usuario (id_usuario, rol, id_sede, username, password_hash, nombres, apellidos, correo_institucional, tipo_documento, numero_documento, telefono, cargo_titulo, codigo_sunat, ultimo_acceso, estado_activo) VALUES
+    (1, 'ADMINISTRADOR_TI', 1, 'admin', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', 'Administrador', 'Sistema', 'admin@sga.pe', 'DNI', '00000000', '+51 999 999 999', 'Administrador TI', 'ADM-001', NOW(), TRUE);
+
 INSERT INTO usuario (id_usuario, rol, id_sede, username, password_hash, nombres, apellidos, correo_institucional, tipo_documento, numero_documento, telefono, cargo_titulo, codigo_sunat, ultimo_acceso, estado_activo) VALUES
     (2, 'GERENTE_GENERAL', 1, 'gerente', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', 'Carlos', 'Mendoza Valdivia', 'gerencia@transaduanas.pe', 'DNI', '00000002', '+51 999 000 002', 'Gerente General', 'GG-001', NOW(), TRUE),
     (3, 'ASESOR_LEGAL', 1, 'legal', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', 'Fernando', 'Arana Silva', 'legal@transaduanas.pe', 'DNI', '10234567', '+51 987 112 001', 'Asesor Legal', 'LEG-001', NOW(), TRUE),

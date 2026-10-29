@@ -69,7 +69,7 @@ public class ControlAlmacenController {
     @PreAuthorize(SecurityRoles.ACCESS_EXPEDIENTE_ALMACEN_WRITE)
     public ResponseEntity<ApiResponseDTO<ControlAlmacenResponseDTO>> autorizarSalida(
             @PathVariable Integer id,
-            @RequestBody ControlAlmacenSalidaDTO dto) {
+            @Valid @RequestBody ControlAlmacenSalidaDTO dto) {
         ControlAlmacenResponseDTO actualizado = controlAlmacenService.autorizarSalida(id, dto);
         return ResponseEntity.ok(ApiResponseDTO.ok("Salida y movimiento de carga autorizado exitosamente", actualizado));
     }

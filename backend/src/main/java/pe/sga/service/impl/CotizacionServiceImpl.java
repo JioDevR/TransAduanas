@@ -21,7 +21,12 @@ import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -44,13 +49,9 @@ public class CotizacionServiceImpl implements ICotizacionService {
     @Transactional(readOnly = true)
     public List<CotizacionResponseDTO> listarTodas(Boolean soloActivas) {
         if (soloActivas != null && soloActivas) {
-            return cotizacionRepository.findByEstadoNot(EstadoCotizacion.ANULADA).stream()
-                    .map(this::mapToResponse)
-                    .toList();
+            return mapListToResponse(cotizacionRepository.findByEstadoNot(EstadoCotizacion.ANULADA));
         }
-        return cotizacionRepository.findAll().stream()
-                .map(this::mapToResponse)
-                .toList();
+        return mapListToResponse(cotizacionRepository.findAll());
     }
 
     @Override
@@ -59,17 +60,13 @@ public class CotizacionServiceImpl implements ICotizacionService {
         if (estado == null) {
             return listarTodas(false);
         }
-        return cotizacionRepository.findByEstado(estado).stream()
-                .map(this::mapToResponse)
-                .toList();
+        return mapListToResponse(cotizacionRepository.findByEstado(estado));
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<CotizacionResponseDTO> listarPorCliente(Integer idCliente) {
-        return cotizacionRepository.findByCliente_IdCliente(idCliente).stream()
-                .map(this::mapToResponse)
-                .toList();
+        return mapListToResponse(cotizacionRepository.findByCliente_IdCliente(idCliente));
     }
 
     @Override
@@ -429,27 +426,81 @@ public class CotizacionServiceImpl implements ICotizacionService {
         }
     }
 
+    private List<CotizacionResponseDTO> mapListToResponse(List<Cotizacion> cotizaciones) {
+        if (cotizaciones == null || cotizaciones.isEmpty()) {
+            return List.of();
+        }
+        List<Integer> idsCotizacion = cotizaciones.stream()
+                .map(Cotizacion::getIdCotizacion)
+                .filter(Objects::nonNull)
+                .toList();
+        Set<Integer> idsClientes = cotizaciones.stream()
+                .map(Cotizacion::getCliente)
+                .filter(Objects::nonNull)
+                .map(Cliente::getIdCliente)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+
+        Map<Integer, Expediente> expMap = idsCotizacion.isEmpty()
+                ? Map.of()
+                : expedienteRepository.findByCotizacion_IdCotizacionIn(idsCotizacion).stream()
+                .filter(e -> e.getCotizacion() != null)
+                .collect(Collectors.toMap(e -> e.getCotizacion().getIdCotizacion(), Function.identity(), (a, b) -> a));
+
+        Set<Integer> pagosAprobadosSet = idsCotizacion.isEmpty()
+                ? Set.of()
+                : cotizacionPagoRepository.findCotizacionIdsWithEstadoPago(idsCotizacion, EstadoPagoCotizacion.APROBADO);
+
+        Set<Integer> clientesConUsuarioSet = idsClientes.isEmpty()
+                ? Set.of()
+                : usuarioClienteRepository.findClienteIdsWithUsuario(idsClientes);
+
+        return cotizaciones.stream()
+                .map(c -> mapToResponse(c, expMap, pagosAprobadosSet, clientesConUsuarioSet))
+                .toList();
+    }
+
     private CotizacionResponseDTO mapToResponse(Cotizacion c) {
+        Expediente exp = c.getIdCotizacion() != null
+                ? expedienteRepository.findByCotizacion_IdCotizacion(c.getIdCotizacion()).orElse(null)
+                : null;
+        Map<Integer, Expediente> expMap = (exp != null && c.getIdCotizacion() != null)
+                ? Map.of(c.getIdCotizacion(), exp)
+                : Map.of();
+        boolean pagoAprobado = c.getIdCotizacion() != null
+                && cotizacionPagoRepository.existsByCotizacion_IdCotizacionAndEstadoPago(c.getIdCotizacion(), EstadoPagoCotizacion.APROBADO);
+        Set<Integer> pagosSet = (pagoAprobado && c.getIdCotizacion() != null) ? Set.of(c.getIdCotizacion()) : Set.of();
+        boolean tieneUsr = c.getCliente() != null && c.getCliente().getIdCliente() != null
+                && usuarioClienteRepository.findByCliente_IdCliente(c.getCliente().getIdCliente()).isPresent();
+        Set<Integer> clientesSet = (tieneUsr && c.getCliente() != null) ? Set.of(c.getCliente().getIdCliente()) : Set.of();
+        return mapToResponse(c, expMap, pagosSet, clientesSet);
+    }
+
+    private CotizacionResponseDTO mapToResponse(
+            Cotizacion c,
+            Map<Integer, Expediente> expMap,
+            Set<Integer> pagosAprobadosSet,
+            Set<Integer> clientesConUsuarioSet
+    ) {
         boolean tieneExpediente = false;
         Integer idExpediente = null;
         String codigoExpediente = null;
 
-        if (c.getIdCotizacion() != null) {
-            var expOpt = expedienteRepository.findByCotizacion_IdCotizacion(c.getIdCotizacion());
-            if (expOpt.isPresent()) {
-                tieneExpediente = true;
-                idExpediente = expOpt.get().getIdExpediente();
-                codigoExpediente = expOpt.get().getCodigoExpediente();
-            }
+        if (c.getIdCotizacion() != null && expMap.containsKey(c.getIdCotizacion())) {
+            Expediente exp = expMap.get(c.getIdCotizacion());
+            tieneExpediente = true;
+            idExpediente = exp.getIdExpediente();
+            codigoExpediente = exp.getCodigoExpediente();
         }
 
         boolean tienePagoAprobado = "ADELANTO_APROBADO".equals(c.getEstadoPago())
                 || "PAGADO_TOTAL".equals(c.getEstadoPago())
-                || (c.getIdCotizacion() != null && cotizacionPagoRepository.existsByCotizacion_IdCotizacionAndEstadoPago(c.getIdCotizacion(), EstadoPagoCotizacion.APROBADO));
+                || (c.getIdCotizacion() != null && pagosAprobadosSet.contains(c.getIdCotizacion()));
 
         boolean habilitadoParaExpediente = c.getEstado() == EstadoCotizacion.APROBADA && tienePagoAprobado && !tieneExpediente;
 
-        boolean tieneUsuario = c.getCliente() != null && usuarioClienteRepository.findByCliente_IdCliente(c.getCliente().getIdCliente()).isPresent();
+        boolean tieneUsuario = c.getCliente() != null && c.getCliente().getIdCliente() != null
+                && clientesConUsuarioSet.contains(c.getCliente().getIdCliente());
 
         return CotizacionResponseDTO.builder()
                 .idCotizacion(c.getIdCotizacion())

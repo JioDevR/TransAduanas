@@ -179,7 +179,7 @@ CREATE TABLE usuario_cliente (
     PRIMARY KEY (id_usuario_cliente),
     CONSTRAINT uq_usrcli_cliente UNIQUE (id_cliente),
     CONSTRAINT uq_usrcli_username UNIQUE (username),
-    CONSTRAINT fk_usrcli_cliente FOREIGN KEY (id_cliente) REFERENCES cliente (id_cliente) ON UPDATE CASCADE ON DELETE CASCADE
+    CONSTRAINT fk_usrcli_cliente FOREIGN KEY (id_cliente) REFERENCES cliente (id_cliente) ON UPDATE CASCADE ON DELETE RESTRICT
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 CREATE TABLE notificacion_cliente (
@@ -192,7 +192,7 @@ CREATE TABLE notificacion_cliente (
     enlace VARCHAR(255) NULL,
     fecha_creacion DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id_notificacion),
-    CONSTRAINT fk_notifcli_cliente FOREIGN KEY (id_cliente) REFERENCES cliente (id_cliente) ON UPDATE CASCADE ON DELETE CASCADE
+    CONSTRAINT fk_notifcli_cliente FOREIGN KEY (id_cliente) REFERENCES cliente (id_cliente) ON UPDATE CASCADE ON DELETE RESTRICT
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 
@@ -364,7 +364,7 @@ CREATE TABLE control_almacen (
     -- Llave primaria y restricciones
     PRIMARY KEY (id_control_almacen),
     CONSTRAINT uq_almacen_expediente UNIQUE (id_expediente),
-    CONSTRAINT fk_almacen_expediente FOREIGN KEY (id_expediente) REFERENCES expediente (id_expediente) ON UPDATE CASCADE ON DELETE CASCADE
+    CONSTRAINT fk_almacen_expediente FOREIGN KEY (id_expediente) REFERENCES expediente (id_expediente) ON UPDATE CASCADE ON DELETE RESTRICT
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- =============================================================================
@@ -446,7 +446,7 @@ CREATE TABLE despacho_transporte (
     PRIMARY KEY (id_despacho_transporte),
     CONSTRAINT uq_transporte_expediente UNIQUE (id_expediente),
     CONSTRAINT uq_transporte_tracking UNIQUE (codigo_tracking),
-    CONSTRAINT fk_transporte_expediente FOREIGN KEY (id_expediente) REFERENCES expediente (id_expediente) ON UPDATE CASCADE ON DELETE CASCADE,
+    CONSTRAINT fk_transporte_expediente FOREIGN KEY (id_expediente) REFERENCES expediente (id_expediente) ON UPDATE CASCADE ON DELETE RESTRICT,
     CONSTRAINT fk_transporte_conductor FOREIGN KEY (id_conductor) REFERENCES conductor (id_conductor) ON UPDATE CASCADE ON DELETE SET NULL,
     CONSTRAINT fk_transporte_unidad FOREIGN KEY (id_unidad) REFERENCES unidad_transporte (id_unidad) ON UPDATE CASCADE ON DELETE SET NULL,
     CONSTRAINT fk_despacho_doc_remision FOREIGN KEY (id_documento_remision) REFERENCES documento_adjunto (id_documento) ON UPDATE CASCADE ON DELETE SET NULL

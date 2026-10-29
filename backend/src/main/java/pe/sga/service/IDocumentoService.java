@@ -35,4 +35,10 @@ public interface IDocumentoService {
     DocumentoAdjunto obtenerEntidad(Integer id);
 
     void eliminar(Integer id);
+
+    void validarPropiedadEntidadCliente(Integer idClienteAutenticado, EntidadDocumento entidadTipo, Integer idEntidad);
+
+    void validarPropiedadConsultaCliente(Integer idClienteAutenticado, Integer idCotizacion, Integer idExpediente, Integer idCliente);
+
+    void validarPropiedadDocumentoCliente(Integer idClienteAutenticado, DocumentoAdjunto doc);
 }

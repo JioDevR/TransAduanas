@@ -40,6 +40,11 @@ import pe.sga.service.IExpedienteService;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -58,45 +63,33 @@ public class ExpedienteServiceImpl implements IExpedienteService {
     @Transactional(readOnly = true)
     public List<ExpedienteResponseDTO> listarTodos(Boolean soloActivos) {
         if (soloActivos != null && soloActivos) {
-            return expedienteRepository.findByEstadoExpedienteNot(EstadoExpediente.ANULADO).stream()
-                    .map(this::mapToResponse)
-                    .toList();
+            return mapListToResponse(expedienteRepository.findByEstadoExpedienteNot(EstadoExpediente.ANULADO));
         }
-        return expedienteRepository.findAll().stream()
-                .map(this::mapToResponse)
-                .toList();
+        return mapListToResponse(expedienteRepository.findAll());
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<ExpedienteResponseDTO> listarPorCanal(CanalSunat canal) {
-        return expedienteRepository.findByCanalSunat(canal).stream()
-                .map(this::mapToResponse)
-                .toList();
+        return mapListToResponse(expedienteRepository.findByCanalSunat(canal));
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<ExpedienteResponseDTO> listarPorEstado(EstadoExpediente estado) {
-        return expedienteRepository.findByEstadoExpediente(estado).stream()
-                .map(this::mapToResponse)
-                .toList();
+        return mapListToResponse(expedienteRepository.findByEstadoExpediente(estado));
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<ExpedienteResponseDTO> listarPorAgente(Integer idAgenteAduanero) {
-        return expedienteRepository.findByAgenteAduanero_IdUsuario(idAgenteAduanero).stream()
-                .map(this::mapToResponse)
-                .toList();
+        return mapListToResponse(expedienteRepository.findByAgenteAduanero_IdUsuario(idAgenteAduanero));
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<ExpedienteResponseDTO> listarPorCliente(Integer idCliente) {
-        return expedienteRepository.findByCliente_IdCliente(idCliente).stream()
-                .map(this::mapToResponse)
-                .toList();
+        return mapListToResponse(expedienteRepository.findByCliente_IdCliente(idCliente));
     }
 
     @Override
@@ -155,6 +148,8 @@ public class ExpedienteServiceImpl implements IExpedienteService {
                 .codigoExpediente(codigoExpediente)
                 .cotizacion(cotizacion)
                 .cliente(cotizacion.getCliente())
+                .mercancia(cotizacion.getMercancia())
+                .tipoCarga(cotizacion.getTipoCarga())
                 .agenteAduanero(agente)
                 .fechaAsignacion(LocalDateTime.now())
                 .contactoExteriorNombre(dto.getContactoExteriorNombre())
@@ -635,11 +630,36 @@ public class ExpedienteServiceImpl implements IExpedienteService {
         return codigo;
     }
 
+    private List<ExpedienteResponseDTO> mapListToResponse(List<Expediente> expedientes) {
+        if (expedientes == null || expedientes.isEmpty()) {
+            return List.of();
+        }
+        List<Integer> idsExp = expedientes.stream()
+                .map(Expediente::getIdExpediente)
+                .filter(Objects::nonNull)
+                .toList();
+        Map<Integer, DespachoTransporte> despachoMap = idsExp.isEmpty()
+                ? Map.of()
+                : despachoRepository.findByExpediente_IdExpedienteIn(idsExp).stream()
+                .filter(d -> d.getExpediente() != null)
+                .collect(Collectors.toMap(d -> d.getExpediente().getIdExpediente(), Function.identity(), (a, b) -> a));
+
+        return expedientes.stream()
+                .map(e -> mapToResponse(e, Optional.ofNullable(despachoMap.get(e.getIdExpediente()))))
+                .toList();
+    }
+
     private ExpedienteResponseDTO mapToResponse(Expediente e) {
-        var despachoOpt = despachoRepository.findByExpediente_IdExpediente(e.getIdExpediente());
+        var despachoOpt = e.getIdExpediente() != null
+                ? despachoRepository.findByExpediente_IdExpediente(e.getIdExpediente())
+                : Optional.<DespachoTransporte>empty();
+        return mapToResponse(e, despachoOpt);
+    }
+
+    private ExpedienteResponseDTO mapToResponse(Expediente e, Optional<DespachoTransporte> despachoOpt) {
         var cot = e.getCotizacion();
-        var merc = cot != null ? cot.getMercancia() : null;
-        var tc = cot != null ? cot.getTipoCarga() : null;
+        var merc = e.getMercancia() != null ? e.getMercancia() : (cot != null ? cot.getMercancia() : null);
+        var tc = e.getTipoCarga() != null ? e.getTipoCarga() : (cot != null ? cot.getTipoCarga() : null);
         var pe = cot != null ? cot.getPuertoEnvio() : null;
         var pd = cot != null ? cot.getPuertoDestino() : null;
         var uc = cot != null ? cot.getUsuarioComercial() : null;

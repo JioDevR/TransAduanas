@@ -60,6 +60,8 @@
                 type="button"
                 class="toggle-pwd-btn"
                 @click="showCurrent = !showCurrent"
+                :title="showCurrent ? 'Ocultar contraseña' : 'Ver contraseña'"
+                :aria-label="showCurrent ? 'Ocultar contraseña actual' : 'Ver contraseña actual'"
                 tabindex="-1"
               >
                 <i :class="showCurrent ? 'pi pi-eye-slash' : 'pi pi-eye'"></i>
@@ -86,6 +88,8 @@
                 type="button"
                 class="toggle-pwd-btn"
                 @click="showNew = !showNew"
+                :title="showNew ? 'Ocultar contraseña' : 'Ver contraseña'"
+                :aria-label="showNew ? 'Ocultar nueva contraseña' : 'Ver nueva contraseña'"
                 tabindex="-1"
               >
                 <i :class="showNew ? 'pi pi-eye-slash' : 'pi pi-eye'"></i>
@@ -111,6 +115,8 @@
                 type="button"
                 class="toggle-pwd-btn"
                 @click="showConfirm = !showConfirm"
+                :title="showConfirm ? 'Ocultar contraseña' : 'Ver contraseña'"
+                :aria-label="showConfirm ? 'Ocultar confirmación de contraseña' : 'Ver confirmación de contraseña'"
                 tabindex="-1"
               >
                 <i :class="showConfirm ? 'pi pi-eye-slash' : 'pi pi-eye'"></i>

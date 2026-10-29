@@ -79,9 +79,12 @@
                 <div
                   class="dropdown-theme-row"
                   @click="toggleTheme"
+                  @keydown.enter="toggleTheme"
+                  @keydown.space.prevent="toggleTheme"
                   role="button"
                   tabindex="0"
                   :title="isDark ? 'Cambiar a Modo Claro' : 'Cambiar a Modo Oscuro'"
+                  :aria-label="isDark ? 'Cambiar a Modo Claro' : 'Cambiar a Modo Oscuro'"
                 >
                   <div class="theme-info-left">
                     <div class="theme-icon-box" :class="{ 'is-dark': isDark }">

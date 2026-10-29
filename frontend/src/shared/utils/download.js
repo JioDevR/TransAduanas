@@ -35,6 +35,9 @@ export function openBlobInNewTab(data, mimeType = 'application/pdf') {
   const blob = data instanceof Blob ? data : new Blob([data], { type: mimeType })
   const url = window.URL.createObjectURL(blob)
   window.open(url, '_blank')
+  setTimeout(() => {
+    window.URL.revokeObjectURL(url)
+  }, 60000)
 }
 
 export default {

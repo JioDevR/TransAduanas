@@ -4,28 +4,20 @@ import { useNavigationStore } from '@/core/stores/navigationStore'
 import AppLayout from '@/core/layouts/AppLayout.vue'
 
 import authRoutes from '@/features/auth/routes/auth.routes'
+import landingRoutes from '@/features/landing/routes/landing.routes'
 import adminRoutes from '@/features/admin/users/routes/admin.routes'
 import gerenciaRoutes from '@/features/gerencia/routes/gerencia.routes'
 import rolesRoutes from '@/core/router/roles.routes'
 
 const routes = [
   ...authRoutes,
+  // La landing pública debe ir ANTES del layout, porque ambas rutas usan el path '/'
+  ...landingRoutes,
   {
     path: '/',
     component: AppLayout,
     meta: { requiresAuth: true },
     children: [
-      {
-        path: '',
-        name: 'Root',
-        redirect: () => {
-          const authStore = useAuthStore()
-          if (!authStore.isAuthenticated) {
-            return '/login'
-          }
-          return authStore.homePath
-        }
-      },
       ...adminRoutes,
       ...gerenciaRoutes,
       ...rolesRoutes
@@ -36,6 +28,12 @@ const routes = [
     redirect: '/'
   }
 ]
+
+if (typeof window !== 'undefined' && window.history.state === null && window.location.pathname !== '/') {
+  const destino = window.location.pathname + window.location.search + window.location.hash
+  window.history.replaceState(null, '', '/')
+  window.history.pushState(null, '', destino)
+}
 
 const router = createRouter({
   history: createWebHistory(),
@@ -63,7 +61,6 @@ router.beforeEach(async (to, from, next) => {
     }
     return next(authStore.homePath)
   }
-
   // Si ya está autenticado e intenta acceder al login
   if (toPath === '/login' && isAuth) {
     return next(authStore.homePath)

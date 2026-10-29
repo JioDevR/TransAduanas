@@ -6,31 +6,18 @@
 ---
 
 ## Índice del Capítulo
-1. [¿Qué es `pom.xml` y Maven? (Explicación para no técnicos)](#1-qué-es-pomxml-y-maven-explicación-para-no-técnicos)
-2. [Matriz General del Stack Tecnológico](#2-matriz-general-del-stack-tecnológico)
-3. [Catálogo Detallado de Librerías y Dependencias](#3-catálogo-detallado-de-librerías-y-dependencias)
-   - [3.1 Ecosistema Spring Boot 4.1.2 (Starters Oficiales)](#31-ecosistema-spring-boot-412-starters-oficiales)
-   - [3.2 Persistencia y Base de Datos (MySQL Connector & JPA)](#32-persistencia-y-base-de-datos-mysql-connector--jpa)
-   - [3.3 Seguridad Criptográfica y JWT (JJWT 0.13.0)](#33-seguridad-criptográfica-y-jwt-jjwt-0130)
-   - [3.4 Productividad y Calidad de Código (Project Lombok)](#34-productividad-y-calidad-de-código-project-lombok)
-   - [3.5 Motor Híbrido de Reportes y Documentos PDF](#35-motor-híbrido-de-reportes-y-documentos-pdf)
-4. [Plugins del Ciclo de Compilación de Maven](#4-plugins-del-ciclo-de-compilación-de-maven)
+1. [Matriz General del Stack Tecnológico](#2-matriz-general-del-stack-tecnológico)
+2. [Catálogo Detallado de Librerías y Dependencias](#3-catálogo-detallado-de-librerías-y-dependencias)
+   - [2.1 Ecosistema Spring Boot 4.1.2 (Starters Oficiales)](#31-ecosistema-spring-boot-412-starters-oficiales)
+   - [2.2 Persistencia y Base de Datos (MySQL Connector & JPA)](#32-persistencia-y-base-de-datos-mysql-connector--jpa)
+   - [2.3 Seguridad Criptográfica y JWT (JJWT 0.13.0)](#33-seguridad-criptográfica-y-jwt-jjwt-0130)
+   - [2.4 Productividad y Calidad de Código (Project Lombok)](#34-productividad-y-calidad-de-código-project-lombok)
+   - [2.5 Motor Híbrido de Reportes y Documentos PDF](#35-motor-híbrido-de-reportes-y-documentos-pdf)
+3. [Plugins del Ciclo de Compilación de Maven](#4-plugins-del-ciclo-de-compilación-de-maven)
 
 ---
 
-## 1. ¿Qué es `pom.xml` y Maven? (Explicación para no técnicos)
-
-### La Analogía de la Lista de Materiales de una Constructora
-Cuando un arquitecto diseña un edificio, no fabrica los ladrillos, las ventanas ni el cemento desde cero; encarga materiales certificados a proveedores especializados y deja por escrito en una lista oficial de materiales exactamente qué marca, modelo y resistencia debe tener cada elemento.
-
-En el mundo del software:
-- **Apache Maven** es el director de compras y logística del proyecto.
-- El archivo [`backend/pom.xml`](file:///home/jiodev/Documents/Proyects/TransAduanas/backend/pom.xml) (*Project Object Model*) es la lista oficial de componentes externos que el backend necesita para funcionar.
-- Cuando ejecutas `mvn clean compile`, Maven se conecta a repositorios seguros en internet, descarga exactamente las versiones especificadas de cada librería, comprueba que sean compatibles entre sí y las ensambla junto a nuestro código para generar el programa ejecutable.
-
----
-
-## 2. Matriz General del Stack Tecnológico
+## 1. Matriz General del Stack Tecnológico
 
 | Componente | Versión | Tipo de Licencia | Rol en la Arquitectura |
 | :--- | :---: | :---: | :--- |
@@ -45,11 +32,11 @@ En el mundo del software:
 
 ---
 
-## 3. Catálogo Detallado de Librerías y Dependencias
+## 2. Catálogo Detallado de Librerías y Dependencias
 
 A continuación se detalla cada dependencia incluida en el archivo [`backend/pom.xml`](file:///home/jiodev/Documents/Proyects/TransAduanas/backend/pom.xml):
 
-### 3.1 Ecosistema Spring Boot 4.1.2 (Starters Oficiales)
+### 2.1 Ecosistema Spring Boot 4.1.2 (Starters Oficiales)
 
 #### A. `spring-boot-starter-webmvc`
 - **Artefacto:** `org.springframework.boot:spring-boot-starter-webmvc`
@@ -77,7 +64,7 @@ A continuación se detalla cada dependencia incluida en el archivo [`backend/pom
 
 ---
 
-### 3.2 Persistencia y Base de Datos (MySQL Connector & JPA)
+### 2.2 Persistencia y Base de Datos (MySQL Connector & JPA)
 
 #### `mysql-connector-j`
 - **Artefacto:** `com.mysql:mysql-connector-j` (Scope: `runtime`)
@@ -87,7 +74,7 @@ A continuación se detalla cada dependencia incluida en el archivo [`backend/pom
 
 ---
 
-### 3.3 Seguridad Criptográfica y JWT (JJWT 0.13.0)
+### 2.3 Seguridad Criptográfica y JWT (JJWT 0.13.0)
 
 El proyecto utiliza la suite **JJWT** (*Java JWT*) en su versión estándar moderna 0.13.0, dividida en 3 módulos:
 
@@ -101,7 +88,7 @@ El proyecto utiliza la suite **JJWT** (*Java JWT*) en su versión estándar mode
 
 ---
 
-### 3.4 Productividad y Calidad de Código (Project Lombok)
+### 2.4 Productividad y Calidad de Código (Project Lombok)
 
 #### `lombok`
 - **Artefacto:** `org.projectlombok:lombok` (Optional: `true`)
@@ -111,7 +98,7 @@ El proyecto utiliza la suite **JJWT** (*Java JWT*) en su versión estándar mode
 
 ---
 
-### 3.5 Motor Híbrido de Reportes y Documentos PDF
+### 2.5 Motor Híbrido de Reportes y Documentos PDF
 
 El backend cuenta con una arquitectura de reportería dual diseñada para satisfacer tanto reportes técnicos de alta densidad de datos como documentos ejecutivos de presentación visual:
 
@@ -131,7 +118,7 @@ El backend cuenta con una arquitectura de reportería dual diseñada para satisf
 
 ---
 
-## 4. Plugins del Ciclo de Compilación de Maven
+## 3. Plugins del Ciclo de Compilación de Maven
 
 El archivo [`backend/pom.xml`](file:///home/jiodev/Documents/Proyects/TransAduanas/backend/pom.xml) cuenta con 2 plugins esenciales en su sección `<build>`:
 

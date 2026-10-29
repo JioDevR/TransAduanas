@@ -89,26 +89,30 @@
         <h3 class="list-title">Despachos Aduaneros ({{ expedientes.length }})</h3>
         <div class="cards-scroller">
           <div 
-            v-for="e in expedientes" 
-            :key="e.idExpediente" 
+            v-for="exp in expedientes" 
+            :key="exp.idExpediente" 
             class="exp-item-card" 
-            :class="{ active: selectedExpediente?.idExpediente === e.idExpediente }"
-            @click="selectedExpediente = e"
+            :class="{ active: selectedExpediente?.idExpediente === exp.idExpediente }"
+            role="button"
+            tabindex="0"
+            @click="seleccionarExpediente(exp)"
+            @keydown.enter="seleccionarExpediente(exp)"
+            @keydown.space.prevent="seleccionarExpediente(exp)"
           >
             <div class="exp-top-row">
-              <span class="exp-code font-mono">{{ e.codigoExpediente }}</span>
-              <span class="canal-pill" :class="e.canalSunat?.toLowerCase()">
-                Canal {{ e.canalSunat }}
+              <span class="exp-code font-mono">{{ exp.codigoExpediente }}</span>
+              <span class="canal-pill" :class="exp.canalSunat?.toLowerCase()">
+                Canal {{ exp.canalSunat }}
               </span>
             </div>
-            <div class="exp-cargo-title">{{ e.nombreMercancia || 'Carga General' }}</div>
+            <div class="exp-cargo-title">{{ exp.nombreMercancia || 'Carga General' }}</div>
             <div class="exp-dam-row">
               <span class="label">DAM:</span>
-              <span class="val font-mono">{{ e.numeroDam || 'Pendiente' }}</span>
+              <span class="val font-mono">{{ exp.numeroDam || 'Pendiente' }}</span>
             </div>
             <div class="exp-footer-meta">
-              <span class="date font-mono">{{ formatDate(e.fechaApertura) }}</span>
-              <span class="state-text">{{ formatEstado(e.estadoExpediente) }}</span>
+              <span class="date font-mono">{{ formatDate(exp.fechaApertura) }}</span>
+              <span class="state-text">{{ formatEstado(exp.estadoExpediente) }}</span>
             </div>
           </div>
         </div>
@@ -377,6 +381,10 @@ const totalConLevante = computed(() => {
 onMounted(() => {
   cargarExpedientes()
 })
+
+function seleccionarExpediente(exp) {
+  selectedExpediente.value = exp
+}
 
 async function cargarExpedientes() {
   loading.value = true
@@ -698,6 +706,11 @@ function getDaysAlertClass(days) {
   background: var(--color-bg-surface);
   border-color: var(--color-primary);
   box-shadow: 0 4px 12px rgba(53, 47, 42, 0.08);
+}
+
+.exp-item-card:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
 }
 
 .exp-top-row {

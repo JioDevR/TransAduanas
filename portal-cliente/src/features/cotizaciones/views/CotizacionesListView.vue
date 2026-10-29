@@ -185,122 +185,119 @@
     </div>
 
     <!-- Modal de Detalle de Cotización -->
-    <div v-if="modalDetalleVisible" class="modal-backdrop" @click.self="modalDetalleVisible = false">
-      <div class="modal-card">
-        <div class="modal-header">
-          <div class="modal-title-box">
-            <span class="modal-kicker">DETALLE DE COTIZACIÓN COMERCIAL</span>
-            <h2 class="modal-title font-mono">{{ cotizacionSeleccionada?.codigoCotizacion }}</h2>
+    <BaseModal
+      v-model:visible="modalDetalleVisible"
+      :title="cotizacionSeleccionada?.codigoCotizacion || 'Detalle de Cotización'"
+      subtitle="DETALLE DE COTIZACIÓN COMERCIAL"
+      icon="pi pi-file"
+      max-width="680px"
+      @close="modalDetalleVisible = false"
+    >
+      <div class="modal-body" v-if="cotizacionSeleccionada">
+        <!-- Información General -->
+        <div class="detail-section">
+          <h4 class="section-title">Información de la Operación</h4>
+          <div class="detail-grid">
+            <div class="detail-item">
+              <span class="detail-label">Mercancía:</span>
+              <span class="detail-val">{{ cotizacionSeleccionada.nombreMercancia || 'Mercancía General' }} ({{ cotizacionSeleccionada.codigoMercancia || '-' }})</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Tipo de Carga:</span>
+              <span class="detail-val">{{ cotizacionSeleccionada.nombreTipoCarga || 'General' }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Régimen Aduanero:</span>
+              <span class="detail-val">{{ formatRegimen(cotizacionSeleccionada.regimenAduanero) }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Ruta Puerto:</span>
+              <span class="detail-val">{{ cotizacionSeleccionada.nombrePuertoEnvio || 'Origen' }} &rarr; {{ cotizacionSeleccionada.nombrePuertoDestino || 'Destino' }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Transporte Local:</span>
+              <span class="detail-val">{{ cotizacionSeleccionada.servicioTransporte ? 'Sí (Incluido a almacén)' : 'No incluido' }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Validez Comercial:</span>
+              <span class="detail-val">{{ cotizacionSeleccionada.validezDias }} días (Emitida: {{ cotizacionSeleccionada.fechaEmision }})</span>
+            </div>
           </div>
-          <button class="close-btn" @click="modalDetalleVisible = false">
-            <i class="pi pi-times"></i>
-          </button>
         </div>
 
-        <div class="modal-body" v-if="cotizacionSeleccionada">
-          <!-- Información General -->
-          <div class="detail-section">
-            <h4 class="section-title">Información de la Operación</h4>
-            <div class="detail-grid">
-              <div class="detail-item">
-                <span class="detail-label">Mercancía:</span>
-                <span class="detail-val">{{ cotizacionSeleccionada.nombreMercancia || 'Mercancía General' }} ({{ cotizacionSeleccionada.codigoMercancia || '-' }})</span>
-              </div>
-              <div class="detail-item">
-                <span class="detail-label">Tipo de Carga:</span>
-                <span class="detail-val">{{ cotizacionSeleccionada.nombreTipoCarga || 'General' }}</span>
-              </div>
-              <div class="detail-item">
-                <span class="detail-label">Régimen Aduanero:</span>
-                <span class="detail-val">{{ formatRegimen(cotizacionSeleccionada.regimenAduanero) }}</span>
-              </div>
-              <div class="detail-item">
-                <span class="detail-label">Ruta Puerto:</span>
-                <span class="detail-val">{{ cotizacionSeleccionada.nombrePuertoEnvio || 'Origen' }} &rarr; {{ cotizacionSeleccionada.nombrePuertoDestino || 'Destino' }}</span>
-              </div>
-              <div class="detail-item">
-                <span class="detail-label">Transporte Local:</span>
-                <span class="detail-val">{{ cotizacionSeleccionada.servicioTransporte ? 'Sí (Incluido a almacén)' : 'No incluido' }}</span>
-              </div>
-              <div class="detail-item">
-                <span class="detail-label">Validez Comercial:</span>
-                <span class="detail-val">{{ cotizacionSeleccionada.validezDias }} días (Emitida: {{ cotizacionSeleccionada.fechaEmision }})</span>
-              </div>
+        <!-- Desglose Económico y Liquidación Estimada -->
+        <div class="detail-section">
+          <h4 class="section-title">Desglose de Costos y Tributos (USD)</h4>
+          <div class="cost-table">
+            <div class="cost-row">
+              <span>Valor Mercancía (FOB estimado):</span>
+              <span class="font-mono">$ {{ formatCurrency(cotizacionSeleccionada.valorFob) }}</span>
+            </div>
+            <div class="cost-row">
+              <span>Flete Internacional Estimado:</span>
+              <span class="font-mono">$ {{ formatCurrency(cotizacionSeleccionada.montoFlete) }}</span>
+            </div>
+            <div class="cost-row">
+              <span>Seguro de Transporte Estimado:</span>
+              <span class="font-mono">$ {{ formatCurrency(cotizacionSeleccionada.montoSeguroEstimado) }}</span>
+            </div>
+            <div class="cost-row">
+              <span>Honorarios de Agenciamiento Aduanero:</span>
+              <span class="font-mono">$ {{ formatCurrency(cotizacionSeleccionada.montoHonorarios) }}</span>
+            </div>
+            <div class="cost-row highlight">
+              <span>Tributos Aduaneros Estimados (Aranceles + IGV):</span>
+              <span class="font-mono">$ {{ formatCurrency(cotizacionSeleccionada.montoTributos) }}</span>
+            </div>
+            <div class="cost-row total-row">
+              <span>TOTAL ESTIMADO DEL SERVICIO:</span>
+              <span class="font-mono total-amount">$ {{ formatCurrency(cotizacionSeleccionada.totalCotizado) }}</span>
             </div>
           </div>
+        </div>
 
-          <!-- Desglose Económico y Liquidación Estimada -->
-          <div class="detail-section">
-            <h4 class="section-title">Desglose de Costos y Tributos (USD)</h4>
-            <div class="cost-table">
-              <div class="cost-row">
-                <span>Valor Mercancía (FOB estimado):</span>
-                <span class="font-mono">$ {{ formatCurrency(cotizacionSeleccionada.valorFob) }}</span>
-              </div>
-              <div class="cost-row">
-                <span>Flete Internacional Estimado:</span>
-                <span class="font-mono">$ {{ formatCurrency(cotizacionSeleccionada.montoFlete) }}</span>
-              </div>
-              <div class="cost-row">
-                <span>Seguro de Transporte Estimado:</span>
-                <span class="font-mono">$ {{ formatCurrency(cotizacionSeleccionada.montoSeguroEstimado) }}</span>
-              </div>
-              <div class="cost-row">
-                <span>Honorarios de Agenciamiento Aduanero:</span>
-                <span class="font-mono">$ {{ formatCurrency(cotizacionSeleccionada.montoHonorarios) }}</span>
-              </div>
-              <div class="cost-row highlight">
-                <span>Tributos Aduaneros Estimados (Aranceles + IGV):</span>
-                <span class="font-mono">$ {{ formatCurrency(cotizacionSeleccionada.montoTributos) }}</span>
-              </div>
-              <div class="cost-row total-row">
-                <span>TOTAL ESTIMADO DEL SERVICIO:</span>
-                <span class="font-mono total-amount">$ {{ formatCurrency(cotizacionSeleccionada.totalCotizado) }}</span>
-              </div>
+        <!-- Estado de Pagos y Anticipos -->
+        <div class="detail-section">
+          <h4 class="section-title">Control Financiero de Anticipos</h4>
+          <div class="financial-status-box">
+            <div class="fin-col">
+              <span class="fin-label">Total Cotizado:</span>
+              <span class="fin-val font-mono">$ {{ formatCurrency(cotizacionSeleccionada.totalCotizado) }}</span>
+            </div>
+            <div class="fin-col">
+              <span class="fin-label">Total Abonado:</span>
+              <span class="fin-val font-mono success">$ {{ formatCurrency(cotizacionSeleccionada.totalAbonado) }}</span>
+            </div>
+            <div class="fin-col">
+              <span class="fin-label">Saldo Pendiente:</span>
+              <span class="fin-val font-mono warning">$ {{ formatCurrency(cotizacionSeleccionada.saldoPendiente) }}</span>
             </div>
           </div>
+        </div>
 
-          <!-- Estado de Pagos y Anticipos -->
-          <div class="detail-section">
-            <h4 class="section-title">Control Financiero de Anticipos</h4>
-            <div class="financial-status-box">
-              <div class="fin-col">
-                <span class="fin-label">Total Cotizado:</span>
-                <span class="fin-val font-mono">$ {{ formatCurrency(cotizacionSeleccionada.totalCotizado) }}</span>
-              </div>
-              <div class="fin-col">
-                <span class="fin-label">Total Abonado:</span>
-                <span class="fin-val font-mono success">$ {{ formatCurrency(cotizacionSeleccionada.totalAbonado) }}</span>
-              </div>
-              <div class="fin-col">
-                <span class="fin-label">Saldo Pendiente:</span>
-                <span class="fin-val font-mono warning">$ {{ formatCurrency(cotizacionSeleccionada.saldoPendiente) }}</span>
-              </div>
-            </div>
+        <!-- Banner de Observación Técnica de Aduanas -->
+        <div v-if="cotizacionSeleccionada.estado === 'OBSERVADA'" class="alert-box-observation">
+          <div class="alert-obs-header">
+            <i class="pi pi-exclamation-triangle"></i>
+            <strong>Observación Técnica de Aduanas Emitida</strong>
           </div>
-
-          <!-- Banner de Observación Técnica de Aduanas -->
-          <div v-if="cotizacionSeleccionada.estado === 'OBSERVADA'" class="alert-box-observation">
-            <div class="alert-obs-header">
-              <i class="pi pi-exclamation-triangle"></i>
-              <strong>Observación Técnica de Aduanas Emitida</strong>
-            </div>
-            <p class="alert-obs-message">
-              {{ cotizacionSeleccionada.motivoObservacion || 'Se requieren correcciones técnicas o precisiones documentarias en la propuesta comercial.' }}
-            </p>
-            <div class="alert-obs-footer">
-              <i class="pi pi-info-circle"></i>
-              <span>Su asesor comercial asignado se encuentra coordinando con usted la subsanación de estos requisitos antes del reingreso a supervisión.</span>
-            </div>
-          </div>
-
-          <!-- Observaciones -->
-          <div v-if="cotizacionSeleccionada.observaciones" class="observations-box">
+          <p class="alert-obs-message">
+            {{ cotizacionSeleccionada.motivoObservacion || 'Se requieren correcciones técnicas o precisiones documentarias en la propuesta comercial.' }}
+          </p>
+          <div class="alert-obs-footer">
             <i class="pi pi-info-circle"></i>
-            <span>{{ cotizacionSeleccionada.observaciones }}</span>
+            <span>Su asesor comercial asignado se encuentra coordinando con usted la subsanación de estos requisitos antes del reingreso a supervisión.</span>
           </div>
         </div>
 
+        <!-- Observaciones -->
+        <div v-if="cotizacionSeleccionada.observaciones" class="observations-box">
+          <i class="pi pi-info-circle"></i>
+          <span>{{ cotizacionSeleccionada.observaciones }}</span>
+        </div>
+      </div>
+
+      <template #footer>
         <div class="modal-footer">
           <button class="btn-secondary" @click="modalDetalleVisible = false">
             Cerrar
@@ -315,124 +312,120 @@
             <span>{{ cotizacionSeleccionada?.aceptadaPorCliente ? 'Cotización Ya Autorizada' : 'Aceptar y Autorizar Despacho' }}</span>
           </button>
         </div>
-      </div>
-    </div>
+      </template>
+    </BaseModal>
 
     <!-- Modal de Solicitar Nueva Cotización -->
-    <div v-if="modalSolicitudVisible" class="modal-backdrop" @click.self="modalSolicitudVisible = false">
-      <div class="modal-card">
-        <div class="modal-header">
-          <div class="modal-title-box">
-            <span class="modal-kicker">NUEVA OPERACIÓN</span>
-            <h2 class="modal-title">Solicitar Cotización de Agenciamiento</h2>
+    <BaseModal
+      v-model:visible="modalSolicitudVisible"
+      title="Solicitar Cotización de Agenciamiento"
+      subtitle="NUEVA OPERACIÓN"
+      icon="pi pi-file"
+      max-width="680px"
+      :busy="enviandoSolicitud"
+      @close="modalSolicitudVisible = false"
+    >
+      <form @submit.prevent="enviarSolicitud" class="modal-body">
+        <div class="form-grid">
+          <div class="form-field">
+            <label>Régimen Aduanero *</label>
+            <select v-model="solicitudForm.regimenAduanero" required class="custom-select">
+              <option value="IMPORTACION_DEFINITIVA">Importación Definitiva</option>
+              <option value="EXPORTACION_DEFINITIVA">Exportación Definitiva</option>
+            </select>
           </div>
-          <button class="close-btn" @click="modalSolicitudVisible = false">
-            <i class="pi pi-times"></i>
-          </button>
+
+          <div class="form-field">
+            <label>Modalidad de Transporte *</label>
+            <select v-model="modalidadSeleccionada" class="custom-select" @change="onModalidadChange">
+              <option value="MARITIMO">Marítimo</option>
+              <option value="AEREO">Aéreo</option>
+              <option value="TERRESTRE">Terrestre</option>
+            </select>
+          </div>
+
+          <div class="form-field">
+            <label>Tipo de Carga:</label>
+            <select v-model="solicitudForm.idTipoCarga" class="custom-select">
+              <option :value="null">Seleccione tipo de carga...</option>
+              <option v-for="tc in tiposCarga" :key="tc.idTipoCarga" :value="tc.idTipoCarga">
+                {{ tc.nombre }}
+              </option>
+            </select>
+          </div>
+
+          <div class="form-field">
+            <label>Mercancía / Partida:</label>
+            <select v-model="solicitudForm.idMercancia" class="custom-select">
+              <option :value="null">Seleccione mercancía...</option>
+              <option v-for="m in mercancias" :key="m.idMercancia" :value="m.idMercancia">
+                {{ m.codigo }} - {{ m.nombre }}
+              </option>
+            </select>
+          </div>
+
+          <div class="form-field">
+            <label>Puerto de Embarque (Origen):</label>
+            <select v-model="solicitudForm.idPuertoEnvio" class="custom-select">
+              <option :value="null">Seleccione puerto de salida...</option>
+              <option v-for="p in puertosFiltrados" :key="'env-' + p.idPuerto" :value="p.idPuerto">
+                {{ p.nombre }} ({{ p.pais }})
+              </option>
+            </select>
+          </div>
+
+          <div class="form-field">
+            <label>Puerto de Llegada (Destino):</label>
+            <select v-model="solicitudForm.idPuertoDestino" class="custom-select">
+              <option :value="null">Seleccione puerto de arribo...</option>
+              <option v-for="p in puertosFiltrados" :key="'dest-' + p.idPuerto" :value="p.idPuerto">
+                {{ p.nombre }} ({{ p.pais }})
+              </option>
+            </select>
+          </div>
+
+          <div class="form-field full">
+            <label>Valor FOB Estimado (USD) *</label>
+            <input 
+              v-model.number="solicitudForm.valorFob" 
+              type="number" 
+              step="0.01" 
+              min="1" 
+              placeholder="Ej. 25000.00" 
+              required 
+              class="custom-input font-mono"
+            />
+          </div>
+
+          <div class="form-field full">
+            <label class="checkbox-label">
+              <input type="checkbox" v-model="solicitudForm.servicioTransporte" />
+              <span>Requiero servicio de transporte terrestre hasta almacén / planta</span>
+            </label>
+          </div>
+
+          <div class="form-field full">
+            <label>Detalle de la Carga u Observaciones:</label>
+            <textarea 
+              v-model="solicitudForm.observaciones" 
+              rows="3" 
+              placeholder="Describa el tipo de mercancía, volumen en bultos o requerimientos especiales..."
+              class="custom-textarea"
+            ></textarea>
+          </div>
         </div>
 
-        <form @submit.prevent="enviarSolicitud" class="modal-body">
-          <div class="form-grid">
-            <div class="form-field">
-              <label>Régimen Aduanero *</label>
-              <select v-model="solicitudForm.regimenAduanero" required class="custom-select">
-                <option value="IMPORTACION_DEFINITIVA">Importación Definitiva</option>
-                <option value="EXPORTACION_DEFINITIVA">Exportación Definitiva</option>
-              </select>
-            </div>
-
-            <div class="form-field">
-              <label>Modalidad de Transporte *</label>
-              <select v-model="modalidadSeleccionada" class="custom-select" @change="onModalidadChange">
-                <option value="MARITIMO">Marítimo</option>
-                <option value="AEREO">Aéreo</option>
-                <option value="TERRESTRE">Terrestre</option>
-              </select>
-            </div>
-
-            <div class="form-field">
-              <label>Tipo de Carga:</label>
-              <select v-model="solicitudForm.idTipoCarga" class="custom-select">
-                <option :value="null">Seleccione tipo de carga...</option>
-                <option v-for="tc in tiposCarga" :key="tc.idTipoCarga" :value="tc.idTipoCarga">
-                  {{ tc.nombre }}
-                </option>
-              </select>
-            </div>
-
-            <div class="form-field">
-              <label>Mercancía / Partida:</label>
-              <select v-model="solicitudForm.idMercancia" class="custom-select">
-                <option :value="null">Seleccione mercancía...</option>
-                <option v-for="m in mercancias" :key="m.idMercancia" :value="m.idMercancia">
-                  {{ m.codigo }} - {{ m.nombre }}
-                </option>
-              </select>
-            </div>
-
-            <div class="form-field">
-              <label>Puerto de Embarque (Origen):</label>
-              <select v-model="solicitudForm.idPuertoEnvio" class="custom-select">
-                <option :value="null">Seleccione puerto de salida...</option>
-                <option v-for="p in puertosFiltrados" :key="'env-' + p.idPuerto" :value="p.idPuerto">
-                  {{ p.nombre }} ({{ p.pais }})
-                </option>
-              </select>
-            </div>
-
-            <div class="form-field">
-              <label>Puerto de Llegada (Destino):</label>
-              <select v-model="solicitudForm.idPuertoDestino" class="custom-select">
-                <option :value="null">Seleccione puerto de arribo...</option>
-                <option v-for="p in puertosFiltrados" :key="'dest-' + p.idPuerto" :value="p.idPuerto">
-                  {{ p.nombre }} ({{ p.pais }})
-                </option>
-              </select>
-            </div>
-
-            <div class="form-field full">
-              <label>Valor FOB Estimado (USD) *</label>
-              <input 
-                v-model.number="solicitudForm.valorFob" 
-                type="number" 
-                step="0.01" 
-                min="1" 
-                placeholder="Ej. 25000.00" 
-                required 
-                class="custom-input font-mono"
-              />
-            </div>
-
-            <div class="form-field full">
-              <label class="checkbox-label">
-                <input type="checkbox" v-model="solicitudForm.servicioTransporte" />
-                <span>Requiero servicio de transporte terrestre hasta almacén / planta</span>
-              </label>
-            </div>
-
-            <div class="form-field full">
-              <label>Detalle de la Carga u Observaciones:</label>
-              <textarea 
-                v-model="solicitudForm.observaciones" 
-                rows="3" 
-                placeholder="Describa el tipo de mercancía, volumen en bultos o requerimientos especiales..."
-                class="custom-textarea"
-              ></textarea>
-            </div>
-          </div>
-
-          <div class="modal-footer" style="padding: 1rem 0 0 0; margin-top: 1rem;">
-            <button type="button" class="btn-secondary" @click="modalSolicitudVisible = false">
-              Cancelar
-            </button>
-            <button type="submit" class="btn-primary" :disabled="enviandoSolicitud">
-              <i v-if="enviandoSolicitud" class="pi pi-spin pi-spinner"></i>
-              <span v-else>Enviar Solicitud a Evaluación</span>
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+        <div class="modal-footer" style="padding: 1rem 0 0 0; margin-top: 1rem;">
+          <button type="button" class="btn-secondary" @click="modalSolicitudVisible = false" :disabled="enviandoSolicitud">
+            Cancelar
+          </button>
+          <button type="submit" class="btn-primary" :disabled="enviandoSolicitud">
+            <i v-if="enviandoSolicitud" class="pi pi-spin pi-spinner"></i>
+            <span v-else>Enviar Solicitud a Evaluación</span>
+          </button>
+        </div>
+      </form>
+    </BaseModal>
   </div>
 </template>
 
@@ -442,6 +435,7 @@ import { portalCotizacionService } from '../services/portalCotizacionService'
 import { useNotification } from '@/shared/composables/useNotification'
 import { useConfirmation } from '@/shared/composables/useConfirmation'
 import BasePagination from '@/shared/components/BasePagination.vue'
+import BaseModal from '@/shared/components/BaseModal.vue'
 
 const { showSuccess, showError, showWarn } = useNotification()
 const { confirmAction } = useConfirmation()

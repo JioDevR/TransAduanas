@@ -320,113 +320,109 @@
     </div>
 
     <!-- Modal para Subsanar / Corregir Pago Observado -->
-    <div v-if="modalCorreccionVisible" class="modal-backdrop" @click.self="modalCorreccionVisible = false">
-      <div class="modal-card">
-        <div class="modal-header">
-          <div class="modal-title-box">
-            <span class="modal-kicker text-danger">SUBSANACIÓN DE PAGO OBSERVADO</span>
-            <h2 class="modal-title font-mono">Corregir Registro de Pago ({{ pagoSeleccionadoParaCorreccion?.codigoPago }})</h2>
+    <BaseModal
+      v-model:visible="modalCorreccionVisible"
+      :title="`Corregir Registro de Pago (${pagoSeleccionadoParaCorreccion?.codigoPago || ''})`"
+      subtitle="SUBSANACIÓN DE PAGO OBSERVADO"
+      icon="pi pi-exclamation-circle"
+      max-width="650px"
+      :busy="enviandoCorreccion"
+      @close="modalCorreccionVisible = false"
+    >
+      <form @submit.prevent="enviarCorreccion" class="modal-body">
+        <div class="alert-box-obs" v-if="pagoSeleccionadoParaCorreccion?.observacionFinanzas">
+          <i class="pi pi-info-circle"></i>
+          <div>
+            <strong>Observación emitida por Finanzas:</strong>
+            <p>{{ pagoSeleccionadoParaCorreccion.observacionFinanzas }}</p>
           </div>
-          <button class="close-btn" @click="modalCorreccionVisible = false">
-            <i class="pi pi-times"></i>
-          </button>
         </div>
 
-        <form @submit.prevent="enviarCorreccion" class="modal-body">
-          <div class="alert-box-obs" v-if="pagoSeleccionadoParaCorreccion?.observacionFinanzas">
-            <i class="pi pi-info-circle"></i>
-            <div>
-              <strong>Observación emitida por Finanzas:</strong>
-              <p>{{ pagoSeleccionadoParaCorreccion.observacionFinanzas }}</p>
+        <div class="form-grid">
+          <div class="form-field">
+            <label>Monto Abonado ($ USD) *</label>
+            <input 
+              v-model.number="correccionForm.montoAbonado" 
+              type="number" 
+              step="0.01" 
+              min="0.01" 
+              required 
+              class="custom-input font-mono"
+            />
+          </div>
+
+          <div class="form-field">
+            <label>Fecha de Operación Bancaria *</label>
+            <input 
+              v-model="correccionForm.fechaOperacion" 
+              type="date" 
+              required 
+              class="custom-input font-mono"
+            />
+          </div>
+
+          <div class="form-field">
+            <label>Banco Emisor (Origen) *</label>
+            <input 
+              v-model="correccionForm.bancoOrigen" 
+              type="text" 
+              placeholder="Ej. BCP, BBVA, Interbank..." 
+              required 
+              class="custom-input"
+            />
+          </div>
+
+          <div class="form-field">
+            <label>N° Constancia / Operación Bancaria *</label>
+            <input 
+              v-model="correccionForm.numeroOperacion" 
+              type="text" 
+              placeholder="Número correlativo de voucher" 
+              required 
+              class="custom-input font-mono"
+            />
+          </div>
+
+          <div class="form-field full">
+            <label>Reemplazar Archivo de Voucher (Opcional si es el mismo)</label>
+            <div class="file-dropzone" @dragover.prevent @drop.prevent="onFileCorreccionDrop">
+              <input 
+                type="file" 
+                id="voucher-corr-input" 
+                accept="application/pdf,image/png,image/jpeg,image/webp" 
+                @change="onFileCorreccionSelected"
+                class="file-input-hidden"
+              />
+              <label for="voucher-corr-input" class="dropzone-label">
+                <i class="pi pi-upload"></i>
+                <span v-if="!correccionArchivoSeleccionado">Haga clic para adjuntar nuevo comprobante o voucher</span>
+                <span v-else class="file-selected-text font-mono font-bold">{{ correccionArchivoSeleccionado.name }}</span>
+              </label>
             </div>
           </div>
 
-          <div class="form-grid">
-            <div class="form-field">
-              <label>Monto Abonado ($ USD) *</label>
-              <input 
-                v-model.number="correccionForm.montoAbonado" 
-                type="number" 
-                step="0.01" 
-                min="0.01" 
-                required 
-                class="custom-input font-mono"
-              />
-            </div>
-
-            <div class="form-field">
-              <label>Fecha de Operación Bancaria *</label>
-              <input 
-                v-model="correccionForm.fechaOperacion" 
-                type="date" 
-                required 
-                class="custom-input font-mono"
-              />
-            </div>
-
-            <div class="form-field">
-              <label>Banco Emisor (Origen) *</label>
-              <input 
-                v-model="correccionForm.bancoOrigen" 
-                type="text" 
-                placeholder="Ej. BCP, BBVA, Interbank..." 
-                required 
-                class="custom-input"
-              />
-            </div>
-
-            <div class="form-field">
-              <label>N° Constancia / Operación Bancaria *</label>
-              <input 
-                v-model="correccionForm.numeroOperacion" 
-                type="text" 
-                placeholder="Número correlativo de voucher" 
-                required 
-                class="custom-input font-mono"
-              />
-            </div>
-
-            <div class="form-field full">
-              <label>Reemplazar Archivo de Voucher (Opcional si es el mismo)</label>
-              <div class="file-dropzone" @dragover.prevent @drop.prevent="onFileCorreccionDrop">
-                <input 
-                  type="file" 
-                  id="voucher-corr-input" 
-                  accept="application/pdf,image/png,image/jpeg,image/webp" 
-                  @change="onFileCorreccionSelected"
-                  class="file-input-hidden"
-                />
-                <label for="voucher-corr-input" class="dropzone-label">
-                  <i class="pi pi-upload"></i>
-                  <span v-if="!correccionArchivoSeleccionado">Haga clic para adjuntar nuevo comprobante o voucher</span>
-                  <span v-else class="file-selected-text font-mono font-bold">{{ correccionArchivoSeleccionado.name }}</span>
-                </label>
-              </div>
-            </div>
-
-            <div class="form-field full">
-              <label>Sustento / Aclaración de la Corrección:</label>
-              <textarea 
-                v-model="correccionForm.observaciones" 
-                rows="2" 
-                placeholder="Explique las correcciones realizadas respecto a la observación contable..."
-                class="custom-textarea"
-              ></textarea>
-            </div>
+          <div class="form-field full">
+            <label>Sustento / Aclaración de la Corrección:</label>
+            <textarea 
+              v-model="correccionForm.observaciones" 
+              rows="2" 
+              placeholder="Explique las correcciones realizadas respecto a la observación contable..."
+              class="custom-textarea"
+            ></textarea>
           </div>
+        </div>
 
-          <div class="modal-footer" style="padding: 1.25rem 0 0 0; margin-top: 1rem;">
-            <button type="button" class="btn-secondary" @click="modalCorreccionVisible = false">
-              Cancelar
-            </button>
-            <button type="submit" class="btn-primary" :disabled="enviandoCorreccion">
-              <i v-if="enviandoCorreccion" class="pi pi-spin pi-spinner"></i>
-              <span v-else>Guardar Corrección y Reenviar a Revisión</span>
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+        <div class="modal-footer" style="padding: 1.25rem 0 0 0; margin-top: 1rem;">
+          <button type="button" class="btn-secondary" @click="modalCorreccionVisible = false" :disabled="enviandoCorreccion">
+            Cancelar
+          </button>
+          <button type="submit" class="btn-primary" :disabled="enviandoCorreccion">
+            <i v-if="enviandoCorreccion" class="pi pi-spin pi-spinner"></i>
+            <span v-else>Guardar Corrección y Reenviar a Revisión</span>
+          </button>
+        </div>
+      </form>
+    </BaseModal>
   </div>
 </template>
 
@@ -437,6 +433,7 @@ import { portalPagoService } from '../services/portalPagoService'
 import { useNotification } from '@/shared/composables/useNotification'
 import { openBlobInNewTab } from '@/shared/utils/download'
 import BasePagination from '@/shared/components/BasePagination.vue'
+import BaseModal from '@/shared/components/BaseModal.vue'
 
 const router = useRouter()
 const { showSuccess, showError, showWarn } = useNotification()

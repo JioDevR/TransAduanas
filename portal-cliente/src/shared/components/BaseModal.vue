@@ -5,7 +5,7 @@
     :closable="false"
     :close-on-escape="!busy"
     :dismissable-mask="closeOnBackdrop && !busy"
-    :style="{ width: maxWidth, maxWidth: '95vw' }"
+    :style="{ width: resolvedWidth, maxWidth: '95vw' }"
     class="base-modal-dialog"
     :pt="{
       root: { class: 'base-modal__window' },
@@ -15,24 +15,26 @@
     @update:visible="(val) => { if (!val) requestClose() }"
   >
     <template #header>
-      <div class="base-modal__header-left">
-        <div v-if="icon" class="base-modal__icon">
-          <i :class="icon"></i>
+      <slot name="header">
+        <div class="base-modal__header-left">
+          <div v-if="icon" class="base-modal__icon">
+            <i :class="icon"></i>
+          </div>
+          <div>
+            <h2 :id="titleId" class="base-modal__title">{{ title }}</h2>
+            <p v-if="subtitle" class="base-modal__subtitle">{{ subtitle }}</p>
+          </div>
         </div>
-        <div>
-          <h2 :id="titleId" class="base-modal__title">{{ title }}</h2>
-          <p v-if="subtitle" class="base-modal__subtitle">{{ subtitle }}</p>
-        </div>
-      </div>
-      <button
-        type="button"
-        class="base-modal__close"
-        title="Cerrar"
-        :disabled="busy"
-        @click="requestClose"
-      >
-        <i class="pi pi-times"></i>
-      </button>
+        <button
+          type="button"
+          class="base-modal__close"
+          title="Cerrar"
+          :disabled="busy"
+          @click="requestClose"
+        >
+          <i class="pi pi-times"></i>
+        </button>
+      </slot>
     </template>
 
     <!-- Alerta de error opcional -->
@@ -56,26 +58,42 @@
  * Componente modal reutilizable para el Portal del Cliente basado en PrimeVue Dialog.
  * Sigue la estética Warm Editorial, soporte de tema oscuro, slots de cabecera, cuerpo y pie.
  */
-import { useId } from 'vue'
+import { computed, useId } from 'vue'
 import Dialog from 'primevue/dialog'
 
 const props = defineProps({
   visible: { type: Boolean, default: false },
-  title: { type: String, required: true },
+  title: { type: String, default: '' },
   subtitle: { type: String, default: '' },
   icon: { type: String, default: '' },
   maxWidth: { type: String, default: '640px' },
+  size: { type: String, default: '' },
   errorMessage: { type: String, default: '' },
   busy: { type: Boolean, default: false },
   closeOnBackdrop: { type: Boolean, default: true }
 })
 
-const emit = defineEmits(['close'])
+const emit = defineEmits(['close', 'update:visible'])
+
+const sizeMap = {
+  sm: '480px',
+  md: '640px',
+  lg: '760px',
+  xl: '960px'
+}
+
+const resolvedWidth = computed(() => {
+  if (props.size && sizeMap[props.size]) return sizeMap[props.size]
+  return props.maxWidth || '640px'
+})
 
 const titleId = useId()
 
 const requestClose = () => {
-  if (!props.busy) emit('close')
+  if (!props.busy) {
+    emit('close')
+    emit('update:visible', false)
+  }
 }
 </script>
 
@@ -99,6 +117,12 @@ const requestClose = () => {
 .base-modal-dialog .p-dialog-content {
   padding: 0 !important;
   background: var(--color-bg-surface) !important;
+}
+
+.base-modal-dialog .p-dialog-footer {
+  padding: 0 !important;
+  border: none !important;
+  background: transparent !important;
 }
 
 /* ---------- Encabezado ---------- */

@@ -35,8 +35,8 @@ El repositorio cuenta con especificaciones técnicas completas y guías especial
 | Documento                                | Enlace                                                                                                        | Descripción y Contenido Clave                                                                                                                                                                                                                                                                                              |
 | :--------------------------------------- | :------------------------------------------------------------------------------------------------------------ | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Guía de Instalación (Local & Docker)** | [`docs/instalacion.md`](file:///home/jiodev/Documents/Proyects/TransAduanas/docs/instalacion.md)              | **1. Instalación Local (Entorno de Desarrollo):** carga de `schema.sql` y `seed.sql` en MySQL local, configuración de `application-local.properties`, arranque de Backend/Frontends y credenciales de prueba. **2. Instalación con Docker:** _(en implementación)_.                                                        |
-| **Documentación Técnica del Backend**    | [`docs/backend.md`](file:///home/jiodev/Documents/Proyects/TransAduanas/docs/backend.md)                      | Arquitectura N-Tier, patrones de diseño (Builder, Strategy, Wrapper, Soft Delete), dependencias `pom.xml`, modelo de seguridad RBAC con SpEL, catálogo de 21 controladores REST, motor de cálculo contable (IGV y SPOT 12%), motor de reportes PDF híbrido (JasperReports + Thymeleaf / OpenHTMLtoPDF) y logging rotativo. |
-| **Documentación Técnica del Frontend**   | [`docs/frontend.md`](file:///home/jiodev/Documents/Proyects/TransAduanas/docs/frontend.md)                    | Arquitectura por características (_Feature-Based_), Pinia Stores (`authStore`, `navigationStore`), Vue Router con Navigation Guards, integración Axios con Bearer y logout en 401, catálogo de componentes y modales de los módulos operativos.                                                                            |
+| **Documentación Técnica del Backend**    | [`docs/backend.md`](file:///home/jiodev/Documents/Proyects/TransAduanas/docs/backend.md) y [`docs/backend/`](file:///home/jiodev/Documents/Proyects/TransAduanas/docs/backend) | **Documento Maestro y 6 Capítulos Especializados:** Arquitectura N-Tier, inventario de dependencias `pom.xml`, seguridad RBAC con JWT, catálogo de 21 controladores REST, compuerta financiera, deuda heredada, motor híbrido de reportes PDF y logging rotativo. |
+| **Documentación Técnica del Frontend**   | [`docs/frontend.md`](file:///home/jiodev/Documents/Proyects/TransAduanas/docs/frontend.md), [`docs/app-sga/`](file:///home/jiodev/Documents/Proyects/TransAduanas/docs/app-sga) y [`docs/app-portal-clientes/`](file:///home/jiodev/Documents/Proyects/TransAduanas/docs/app-portal-clientes) | **Documento Maestro y Capítulos Separados:** Frontend Interno SGA (`app-sga/`, 6 capítulos) y Portal del Cliente B2B (`app-portal-cliente/`, 5 capítulos), arquitectura Feature-Based, Pinia stores, Navigation Guards, tokens Warm Editorial y catálogo de módulos. |
 | **Especificación de Lenguaje de Diseño** | [`docs/lenguaje_diseño.md`](file:///home/jiodev/Documents/Proyects/TransAduanas/docs/lenguaje_dise%C3%B1o.md) | Sistema de diseño **Warm Editorial**, tokens CSS de color (arena, latte, espresso), tipografía dual (Inter y JetBrains Mono), rejilla de 4px, preset de PrimeVue Aura y guía de implementación de Modo Claro / Modo Oscuro.                                                                                                |
 
 ---
@@ -83,9 +83,9 @@ Gestionado a través de **Apache Maven** ([`backend/pom.xml`](file:///home/jiode
 
 ### 4.2 Frontend Interno & Portal B2B: Vue 3 & Vite
 
-Gestionados a través de **Node.js / npm** en [`frontend/package.json`](file:///home/jiodev/Documents/Proyects/TransAduanas/frontend/package.json) y [`portal-cliente/package.json`](file:///home/jiodev/Documents/Proyects/TransAduanas/portal-cliente/package.json):
+Gestionados a través de **Node.js / npm** en [`app-sga/package.json`](file:///home/jiodev/Documents/Proyects/TransAduanas/app-sga/package.json) y [`app-portal-cliente/package.json`](file:///home/jiodev/Documents/Proyects/TransAduanas/app-portal-cliente/package.json):
 
-| Dependencia                     | Versión (`frontend` / `portal-cliente`) | Propósito Técnico y Justificación                                                                         |
+| Dependencia                     | Versión (`app-sga` / `app-portal-cliente`) | Propósito Técnico y Justificación                                                                         |
 | :------------------------------ | :-------------------------------------: | :-------------------------------------------------------------------------------------------------------- |
 | `vue`                           |            ^3.5.42 / ^3.5.13            | Framework progresivo reactivo utilizado con la Composition API y sintaxis `<script setup>`.               |
 | `vite`                          |             ^8.3.0 / ^6.2.0             | Entorno de desarrollo ultrarrápido con Hot Module Replacement (HMR) y empaquetador Rollup.                |
@@ -154,7 +154,7 @@ El backend implementa un diseño multicapa desacoplado donde ninguna capa superi
 El cliente web está diseñado como una Single Page Application (SPA) modular por dominios funcionales, con renderizado fluido y responsivo:
 
 ```
-frontend/src/
+app-sga/src/
 ├── core/                                  # Núcleo horizontal de la aplicación
 │   ├── api/apiClient.js                   # Instancia Axios con Interceptors (Token + 401 Redirect)
 │   ├── auth/roles.js                      # Constantes de roles, rutas asignadas y etiquetas
@@ -235,12 +235,12 @@ TransAduanas/
 │   ├── application-local.properties.example   # Plantilla para variables y credenciales locales
 │   └── src/main/                              # Código fuente Java (21 controllers, 17 entities) y recursos
 │
-├── frontend/                                  # Frontend Interno Operativo (Vue 3 / Vite 8 / Puerto 5180)
+├── app-sga/                                   # Frontend Interno Operativo (Vue 3 / Vite 8 / Puerto 5180)
 │   ├── package.json                           # Dependencias npm y scripts
 │   ├── vite.config.js                         # Servidor dev (5180) y proxy inverso hacia :8085
 │   └── src/                                   # Módulos de los 8 roles institucionales
 │
-├── portal-cliente/                            # Portal del Cliente B2B (Vue 3 / Vite 6 / Puerto 5174)
+├── app-portal-cliente/                        # Portal del Cliente B2B (Vue 3 / Vite 6 / Puerto 5174)
 │   ├── package.json                           # SPA corporativa para clientes importadores/exportadores
 │   ├── vite.config.js                         # Servidor dev (5174) y proxy inverso hacia :8085
 │   └── src/                                   # Vistas de tracking, cotizaciones, pagos y notificaciones B2B
@@ -251,9 +251,12 @@ TransAduanas/
 │   └── seed.sql                               # Datos semilla completos (sedes, catálogos, usuarios, clientes)
 │
 ├── docs/                                      # Documentación Técnica Especializada
-│   ├── instalacion.md                         # Guía paso a paso de instalación para Entorno de Desarrollo
-│   ├── backend.md                             # Especificación técnica del Backend
-│   ├── frontend.md                            # Especificación técnica del Frontend
+│   ├── instalacion.md                         # Guía paso a paso de instalación (Local y Docker)
+│   ├── backend.md                             # Documento maestro de arquitectura del Backend
+│   ├── backend/                               # Capítulos especializados del Backend (6 módulos)
+│   ├── frontend.md                            # Documento maestro de arquitectura Frontend
+│   ├── app-sga/                               # Capítulos especializados del Frontend Interno SGA (6 módulos)
+│   ├── app-portal-clientes/                   # Capítulos especializados del Portal B2B (5 módulos)
 │   └── lenguaje_diseño.md                     # Guía de estilos y tokens del Sistema Warm Editorial
 │
 └── README.md                                  # Documento maestro de arquitectura y visión general
@@ -278,7 +281,7 @@ TransAduanas/
 | :----------------------------- | :-------------------------------------------------------------------------------------- | :-------------------------- | :----------: | :------------------------------------------------------------------- |
 | **1. Base de Datos (`SGAdb`)** | [`db/`](file:///home/jiodev/Documents/Proyects/TransAduanas/db)                         | MySQL 8.4 InnoDB            |    `3306`    | `mysql -u root -p < db/schema.sql && mysql -u root -p < db/seed.sql` |
 | **2. Backend API REST**        | [`backend/`](file:///home/jiodev/Documents/Proyects/TransAduanas/backend)               | Spring Boot 4.1.2 / Java 21 |    `8085`    | `cd backend && mvn spring-boot:run`                                  |
-| **3. Frontend Interno (SGA)**  | [`frontend/`](file:///home/jiodev/Documents/Proyects/TransAduanas/frontend)             | Vue 3 + Vite 8              |    `5180`    | `cd frontend && npm install && npm run dev`                          |
-| **4. Portal del Cliente B2B**  | [`portal-cliente/`](file:///home/jiodev/Documents/Proyects/TransAduanas/portal-cliente) | Vue 3 + Vite 6              |    `5174`    | `cd portal-cliente && npm install && npm run dev`                    |
+| **3. Frontend Interno (SGA)**  | [`app-sga/`](file:///home/jiodev/Documents/Proyects/TransAduanas/app-sga)             | Vue 3 + Vite 8              |    `5180`    | `cd app-sga && npm install && npm run dev`                          |
+| **4. Portal del Cliente B2B**  | [`app-portal-cliente/`](file:///home/jiodev/Documents/Proyects/TransAduanas/app-portal-cliente) | Vue 3 + Vite 6              |    `5174`    | `cd app-portal-cliente && npm install && npm run dev`                    |
 
 Para configurar `application-local.properties`, revisar los requisitos previos o consultar las credenciales de los **8 roles institucionales** y cuentas RUC del **Portal B2B**, dirígete a [`docs/instalacion.md`](file:///home/jiodev/Documents/Proyects/TransAduanas/docs/instalacion.md).

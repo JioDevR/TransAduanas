@@ -1,11 +1,41 @@
 # Documentación Técnica del Frontend — Sistema de Gestión Aduanera - Transaduanas
 
 **Sistema de Gestión Aduanera - Transaduanas**  
-_Documento de Especificación de Arquitectura Frontend, Tecnologías, Patrones de Diseño, Sistema Warm Editorial, Enrutamiento y Catálogo de Módulos_
+_Documento Maestro de Arquitectura Frontend, Tecnologías, Sistema Warm Editorial y Catálogo de Módulos_
 
 ---
 
-## Índice General
+## 📚 Estructura de la Documentación Modular de las Aplicaciones Web
+
+La interfaz de usuario de la plataforma se compone de **dos aplicaciones Single Page Application (SPA) independientes**, cada una documentada en su propia carpeta temática especializada:
+
+| Aplicación | Directorio en Repositorio | Carpeta de Documentación | Alcance y Perfil de Usuario |
+| :--- | :--- | :--- | :--- |
+| **Frontend Interno SGA** | [`app-sga/`](file:///home/jiodev/Documents/Proyects/TransAduanas/app-sga) | [`docs/app-sga/`](file:///home/jiodev/Documents/Proyects/TransAduanas/docs/app-sga) | **Sistema Operativo Interno (Puerto 5180):** 8 roles institucionales (Comercial, Aduanas, Almacén VGM, Transporte TMS, Finanzas, Liquidación, Legal, Gerencia y TI). 6 capítulos detallados. |
+| **Portal del Cliente B2B** | [`app-portal-cliente/`](file:///home/jiodev/Documents/Proyects/TransAduanas/app-portal-cliente) | [`docs/app-portal-clientes/`](file:///home/jiodev/Documents/Proyects/TransAduanas/docs/app-portal-clientes) | **Extranet Corporativa B2B (Puerto 5174):** Autoservicio para clientes importadores y exportadores por RUC (Tracking DAM, cotizaciones en USD, deuda heredada y subida de vouchers). 5 capítulos detallados. |
+
+---
+
+### Capítulos de `app-sga` (Frontend Interno)
+1. [`docs/app-sga/01_introduccion_y_arquitectura.md`](file:///home/jiodev/Documents/Proyects/TransAduanas/docs/app-sga/01_introduccion_y_arquitectura.md) — Visión para no técnicos, arquitectura SPA con Vue 3.5, Vite 8 y Feature-Based.
+2. [`docs/app-sga/02_dependencias_y_librerias.md`](file:///home/jiodev/Documents/Proyects/TransAduanas/docs/app-sga/02_dependencias_y_librerias.md) — Inventario exhaustivo del `package.json` de `app-sga`.
+3. [`docs/app-sga/03_nucleo_autenticacion_y_enrutamiento.md`](file:///home/jiodev/Documents/Proyects/TransAduanas/docs/app-sga/03_nucleo_autenticacion_y_enrutamiento.md) — `apiClient.js` (JWT y 401), Pinia stores, `roles.js` y guardias de seguridad en `router`.
+4. [`docs/app-sga/04_catalogo_modulos_y_vistas.md`](file:///home/jiodev/Documents/Proyects/TransAduanas/docs/app-sga/04_catalogo_modulos_y_vistas.md) — Catálogo de vistas de los 8 roles institucionales y sus modales de negocio.
+5. [`docs/app-sga/05_componentes_compartidos_y_estilos.md`](file:///home/jiodev/Documents/Proyects/TransAduanas/docs/app-sga/05_componentes_compartidos_y_estilos.md) — Tokens Warm Editorial, modo claro/oscuro, `AppSidebar`, `BaseModal` y composables.
+6. [`docs/app-sga/06_pruebas_y_ejecucion.md`](file:///home/jiodev/Documents/Proyects/TransAduanas/docs/app-sga/06_pruebas_y_ejecucion.md) — Testing con Vitest, build Rollup con división de chunks y troubleshooting.
+
+---
+
+### Capítulos de `app-portal-cliente` (Portal del Cliente B2B)
+1. [`docs/app-portal-clientes/01_introduccion_y_arquitectura.md`](file:///home/jiodev/Documents/Proyects/TransAduanas/docs/app-portal-clientes/01_introduccion_y_arquitectura.md) — Visión no técnica de la extranet B2B y arquitectura Vue 3 / Vite 6.
+2. [`docs/app-portal-clientes/02_dependencias_y_librerias.md`](file:///home/jiodev/Documents/Proyects/TransAduanas/docs/app-portal-clientes/02_dependencias_y_librerias.md) — Inventario del `package.json` de `app-portal-cliente`.
+3. [`docs/app-portal-clientes/03_autenticacion_b2b_y_seguridad.md`](file:///home/jiodev/Documents/Proyects/TransAduanas/docs/app-portal-clientes/03_autenticacion_b2b_y_seguridad.md) — Autenticación por RUC (11 dígitos) y flujo de primer acceso con cambio obligatorio de contraseña.
+4. [`docs/app-portal-clientes/04_vistas_y_funcionalidades_b2b.md`](file:///home/jiodev/Documents/Proyects/TransAduanas/docs/app-portal-clientes/04_vistas_y_funcionalidades_b2b.md) — Tracking DAM, cotizaciones en USD, estado de cuenta con deuda heredada y registro de pagos con voucher.
+5. [`docs/app-portal-clientes/05_componentes_servicios_y_pruebas.md`](file:///home/jiodev/Documents/Proyects/TransAduanas/docs/app-portal-clientes/05_componentes_servicios_y_pruebas.md) — Capa shared (`BaseModal`, `useTheme`, `download.js`), servicios de API B2B y pruebas con Vitest.
+
+---
+
+## Índice General del Documento Maestro
 
 1. [Visión General del Frontend](#1-visión-general-del-frontend)
 2. [Arquitectura de Software Frontend](#2-arquitectura-de-software-frontend)

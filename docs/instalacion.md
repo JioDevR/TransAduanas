@@ -69,7 +69,7 @@ Antes de comenzar, verifica que tengas instaladas las siguientes herramientas en
 | **Java JDK** | **21 LTS** | `java -version` | Compilación y ejecución del backend Spring Boot 4.1.2. |
 | **Apache Maven** | **3.9+** | `mvn -version` | Gestión de dependencias Java, compilación de Lombok y arranque del servidor. |
 | **Node.js** | **18.x / 20.x LTS+** | `node -v` | Entorno de ejecución para los servidores de desarrollo Vite. |
-| **npm** | **9.x+** | `npm -v` | Gestor de paquetes para `frontend/` y `portal-cliente/`. |
+| **npm** | **9.x+** | `npm -v` | Gestor de paquetes para `app-sga/` y `app-portal-cliente/`. |
 | **MySQL Server** | **8.0 / 8.4 LTS** | `mysql --version` | Motor de base de datos relacional InnoDB activo en el puerto `3306`. |
 
 ---
@@ -155,13 +155,13 @@ mvn spring-boot:run
 
 ### 1.5 Paso 3: Instalación y Ejecución del Frontend Interno (SGA Operativo)
 
-El **Frontend Interno** ([`frontend/`](file:///home/jiodev/Documents/Proyects/TransAduanas/frontend)) es la aplicación web principal donde operan los **8 roles institucionales**. Corre en el puerto `5180` y redirige automáticamente las llamadas `/api` hacia `http://localhost:8085`.
+El **Frontend Interno** ([`app-sga/`](file:///home/jiodev/Documents/Proyects/TransAduanas/app-sga)) es la aplicación web principal donde operan los **8 roles institucionales**. Corre en el puerto `5180` y redirige automáticamente las llamadas `/api` hacia `http://localhost:8085`.
 
 Abre una **nueva terminal** desde la raíz del proyecto y ejecuta:
 
 ```bash
 # 1. Ingresar al directorio del frontend interno
-cd frontend
+cd app-sga
 
 # 2. Instalar dependencias de Node.js
 npm install
@@ -176,13 +176,13 @@ npm run dev
 
 ### 1.6 Paso 4: Instalación y Ejecución del Portal del Cliente B2B
 
-El **Portal del Cliente B2B** ([`portal-cliente/`](file:///home/jiodev/Documents/Proyects/TransAduanas/portal-cliente)) es la plataforma externa donde los clientes corporativos (importadores y exportadores) consultan el tracking de sus expedientes, revisan cotizaciones, registran pagos y descargan su documentación. Corre en el puerto `5174`.
+El **Portal del Cliente B2B** ([`app-portal-cliente/`](file:///home/jiodev/Documents/Proyects/TransAduanas/app-portal-cliente)) es la plataforma externa donde los clientes corporativos (importadores y exportadores) consultan el tracking de sus expedientes, revisan cotizaciones, registran pagos y descargan su documentación. Corre en el puerto `5174`.
 
 Abre una **tercera terminal** desde la raíz del proyecto y ejecuta:
 
 ```bash
 # 1. Ingresar al directorio del portal de clientes
-cd portal-cliente
+cd app-portal-cliente
 
 # 2. Instalar dependencias de Node.js
 npm install
@@ -203,8 +203,8 @@ Una vez completados los 4 pasos anteriores, tendrás todo el ecosistema activo e
 | :--- | :--- | :--- | :---: | :--- |
 | **1. Base de Datos (`SGAdb`)** | [`db/`](file:///home/jiodev/Documents/Proyects/TransAduanas/db) | MySQL 8.4 InnoDB | `3306` | `jdbc:mysql://localhost:3306/SGAdb` |
 | **2. Backend API REST** | [`backend/`](file:///home/jiodev/Documents/Proyects/TransAduanas/backend) | Spring Boot 4.1.2 / Java 21 | `8085` | `http://localhost:8085/api/v1/health` |
-| **3. Frontend Interno (SGA)** | [`frontend/`](file:///home/jiodev/Documents/Proyects/TransAduanas/frontend) | Vue 3 + Vite 8 + PrimeVue | `5180` | `http://localhost:5180` |
-| **4. Portal del Cliente B2B** | [`portal-cliente/`](file:///home/jiodev/Documents/Proyects/TransAduanas/portal-cliente) | Vue 3 + Vite 6 + PrimeVue | `5174` | `http://localhost:5174` |
+| **3. Frontend Interno (SGA)** | [`app-sga/`](file:///home/jiodev/Documents/Proyects/TransAduanas/app-sga) | Vue 3 + Vite 8 + PrimeVue | `5180` | `http://localhost:5180` |
+| **4. Portal del Cliente B2B** | [`app-portal-cliente/`](file:///home/jiodev/Documents/Proyects/TransAduanas/app-portal-cliente) | Vue 3 + Vite 6 + PrimeVue | `5174` | `http://localhost:5174` |
 
 ---
 
@@ -246,12 +246,12 @@ Para ejecutar las pruebas unitarias y verificar la compilación de los módulos 
 
 ```bash
 # Pruebas unitarias y build del Frontend Interno
-cd frontend
+cd app-sga
 npm run test
 npm run build
 
 # Pruebas unitarias y build del Portal del Cliente B2B
-cd ../portal-cliente
+cd ../app-portal-cliente
 npm run test
 npm run build
 ```

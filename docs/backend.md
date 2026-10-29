@@ -1,6 +1,6 @@
-# Documentación Técnica del Backend — TransAduanas (SGA Backend API)
+# Documentación Técnica del Backend — Sistema de Gestión Aduanera - Transaduanas
 
-**Sistema de Gestión Aduanera y Logística Internacional**  
+**Sistema de Gestión Aduanera - Transaduanas**  
 *Documento de Especificación de Arquitectura, Tecnologías, Patrones, Seguridad y Catálogo de Servicios REST*
 
 ---
@@ -34,7 +34,7 @@
 
 ## 1. Visión General del Sistema
 
-El backend **sga-backend** es el motor central de la plataforma **TransAduanas (SGA)**, una solución corporativa de alto rendimiento desarrollada para gobernar, automatizar y auditar integralmente las operaciones de agenciamiento aduanero, depósito temporal, transporte de carga pesada y liquidación financiera en el Perú, en estricta conformidad con las directivas de la **SUNAT** (Superintendencia Nacional de Aduanas y de Administración Tributaria) y el **MTC** (Ministerio de Transportes y Comunicaciones).
+El backend **sga-backend** es el motor central del **Sistema de Gestión Aduanera - Transaduanas**, una solución corporativa de alto rendimiento desarrollada para gobernar, automatizar y auditar integralmente las operaciones de agenciamiento aduanero, depósito temporal, transporte de carga pesada y liquidación financiera en el Perú, en estricta conformidad con las directivas de la **SUNAT** (Superintendencia Nacional de Aduanas y de Administración Tributaria) y el **MTC** (Ministerio de Transportes y Comunicaciones).
 
 ### Principios Fundamentales del Backend:
 1. **API RESTful Stateless:** Toda comunicación cliente-servidor se realiza mediante protocolos HTTP seguros, utilizando tokens JSON Web Token (JWT) para mantener la sesión desacoplada del servidor de aplicaciones.

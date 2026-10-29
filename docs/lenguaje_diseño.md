@@ -1,6 +1,6 @@
-# Manual del Lenguaje de Diseño Oficial (SGA Design System)
+# Manual del Lenguaje de Diseño Oficial — Sistema de Gestión Aduanera - Transaduanas
 
-**Sistema:** SGA - Plataforma de Gestión Aduanera Integral  
+**Sistema:** Sistema de Gestión Aduanera - Transaduanas  
 **Versión del Sistema de Diseño:** 2.0 (Editorial Cálido & Titanio Carbón)  
 **Propósito:** Estandarizar la interfaz visual, tipografía, paleta cromática, espaciados y componentes para garantizar coherencia, elegancia y alta usabilidad en todos los módulos de la aplicación.
 

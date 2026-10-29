@@ -1,6 +1,6 @@
-# Documentación Técnica del Frontend — TransAduanas (SGA Frontend SPA)
+# Documentación Técnica del Frontend — Sistema de Gestión Aduanera - Transaduanas
 
-**Sistema de Gestión Aduanera y Logística Internacional**  
+**Sistema de Gestión Aduanera - Transaduanas**  
 _Documento de Especificación de Arquitectura Frontend, Tecnologías, Patrones de Diseño, Sistema Warm Editorial, Enrutamiento y Catálogo de Módulos_
 
 ---
@@ -52,7 +52,7 @@ _Documento de Especificación de Arquitectura Frontend, Tecnologías, Patrones d
 
 ## 1. Visión General del Frontend
 
-El frontend **sga-frontend** es una Single Page Application (SPA) empresarial construida con **Vue 3** y **Vite**, concebida para ofrecer una experiencia de usuario de grado corporativo a los ocho perfiles operativos de **TransAduanas (SGA)**.
+El frontend **sga-frontend** es una Single Page Application (SPA) empresarial construida con **Vue 3** y **Vite**, concebida para ofrecer una experiencia de usuario de grado corporativo a los ocho perfiles operativos del **Sistema de Gestión Aduanera - Transaduanas**.
 
 ### Objetivos y Enfoque del Cliente Web:
 

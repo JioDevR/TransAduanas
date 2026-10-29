@@ -66,12 +66,14 @@ export const portalPagoService = {
 
       const jsonPayload = {
         tipoObligacion: payload.get('tipoObligacion'),
-        idReferenciaObligacion: payload.get('idReferenciaObligacion') ? Number(payload.get('idReferenciaObligacion')) : null,
-        monto: payload.get('monto') ? Number(payload.get('monto')) : null,
+        idReferencia: payload.get('idReferencia') ? Number(payload.get('idReferencia')) : (payload.get('idReferenciaObligacion') ? Number(payload.get('idReferenciaObligacion')) : null),
+        montoAbonado: payload.get('montoAbonado') ? Number(payload.get('montoAbonado')) : (payload.get('monto') ? Number(payload.get('monto')) : null),
         moneda: payload.get('moneda') || 'USD',
-        fechaPago: payload.get('fechaPago'),
-        bancoOrigen: payload.get('bancoOrigen'),
-        numeroOperacion: payload.get('numeroOperacion'),
+        metodoPago: payload.get('metodoPago') || 'TRANSFERENCIA_BANCARIA',
+        bancoOrigen: payload.get('bancoOrigen') || '',
+        bancoDestino: payload.get('bancoDestino') || 'BCP Dolares TransAduanas',
+        numeroOperacion: payload.get('numeroOperacion') || '',
+        fechaOperacion: payload.get('fechaOperacion') || payload.get('fechaPago'),
         idDocumentoComprobante: idDocumentoComprobante ? Number(idDocumentoComprobante) : null,
         observaciones: payload.get('observaciones') || ''
       }
@@ -83,16 +85,31 @@ export const portalPagoService = {
 
   /**
    * Envía el payload JSON de registro de voucher bancario a revisión contable.
+   * Alineado con PortalRegistroVoucherDTO en backend.
    * @param {Object} payload
    */
   async registrarVoucher(payload) {
+    const jsonPayload = {
+      tipoObligacion: payload.tipoObligacion,
+      idReferencia: payload.idReferencia != null ? Number(payload.idReferencia) : (payload.idReferenciaObligacion != null ? Number(payload.idReferenciaObligacion) : null),
+      montoAbonado: payload.montoAbonado != null ? Number(payload.montoAbonado) : (payload.monto != null ? Number(payload.monto) : null),
+      moneda: payload.moneda || 'USD',
+      metodoPago: payload.metodoPago || 'TRANSFERENCIA_BANCARIA',
+      bancoOrigen: payload.bancoOrigen || '',
+      bancoDestino: payload.bancoDestino || 'BCP Dolares TransAduanas',
+      numeroOperacion: payload.numeroOperacion || '',
+      fechaOperacion: payload.fechaOperacion || payload.fechaPago,
+      observaciones: payload.observaciones || '',
+      idDocumentoComprobante: payload.idDocumentoComprobante != null ? Number(payload.idDocumentoComprobante) : null
+    }
+
     try {
-      const response = await apiClient.post('/portal/pagos/registrar-voucher', payload)
+      const response = await apiClient.post('/portal/pagos/registrar-voucher', jsonPayload)
       return response.data?.data || response.data
     } catch (err) {
       if (err.response?.status === 404) {
         // Fallback a ruta alternativa si estuviera configurada
-        const response = await apiClient.post('/portal/pagos/registrar', payload)
+        const response = await apiClient.post('/portal/pagos/registrar', jsonPayload)
         return response.data?.data || response.data
       }
       throw err
@@ -101,6 +118,7 @@ export const portalPagoService = {
 
   /**
    * Corrige un voucher observado por Finanzas.
+   * Alineado con PortalCorreccionPagoDTO en backend.
    * @param {number|string} idPago - ID del pago o anticipo a subsanar
    * @param {Object|FormData} payload
    */
@@ -117,12 +135,27 @@ export const portalPagoService = {
       }
 
       jsonPayload = {
-        monto: payload.get('monto') ? Number(payload.get('monto')) : null,
-        fechaPago: payload.get('fechaPago'),
-        bancoOrigen: payload.get('bancoOrigen'),
-        numeroOperacion: payload.get('numeroOperacion'),
+        montoAbonado: payload.get('montoAbonado') ? Number(payload.get('montoAbonado')) : (payload.get('monto') ? Number(payload.get('monto')) : null),
+        moneda: payload.get('moneda') || 'USD',
+        metodoPago: payload.get('metodoPago') || 'TRANSFERENCIA_BANCARIA',
+        bancoOrigen: payload.get('bancoOrigen') || '',
+        bancoDestino: payload.get('bancoDestino') || 'BCP Dolares TransAduanas',
+        numeroOperacion: payload.get('numeroOperacion') || '',
+        fechaOperacion: payload.get('fechaOperacion') || payload.get('fechaPago'),
         idDocumentoComprobante: idDocumentoComprobante ? Number(idDocumentoComprobante) : null,
-        sustentoSubsanacion: payload.get('sustentoSubsanacion') || payload.get('observaciones') || ''
+        observaciones: payload.get('observaciones') || payload.get('sustentoSubsanacion') || ''
+      }
+    } else if (payload && typeof payload === 'object') {
+      jsonPayload = {
+        montoAbonado: payload.montoAbonado != null ? Number(payload.montoAbonado) : (payload.monto != null ? Number(payload.monto) : null),
+        moneda: payload.moneda || 'USD',
+        metodoPago: payload.metodoPago || 'TRANSFERENCIA_BANCARIA',
+        bancoOrigen: payload.bancoOrigen || '',
+        bancoDestino: payload.bancoDestino || 'BCP Dolares TransAduanas',
+        numeroOperacion: payload.numeroOperacion || '',
+        fechaOperacion: payload.fechaOperacion || payload.fechaPago,
+        idDocumentoComprobante: payload.idDocumentoComprobante != null ? Number(payload.idDocumentoComprobante) : null,
+        observaciones: payload.observaciones ?? payload.sustentoSubsanacion ?? ''
       }
     }
 

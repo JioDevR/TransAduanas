@@ -7,8 +7,8 @@
         <span>Volver a Cobros & Pagos</span>
       </button>
       <div class="topbar-status-chip" v-if="obligacionSeleccionada">
-        <span class="chip-type" :class="obligacionSeleccionada.tipoObligacion === 'EXPEDIENTE_HEREDADO' ? 'chip-exp' : 'chip-cot'">
-          {{ obligacionSeleccionada.tipoObligacion === 'EXPEDIENTE_HEREDADO' ? 'EXPEDIENTE ADUANERO (DEUDA HEREDADA)' : 'ANTICIPO DE COTIZACIÓN (PRE-EXPEDIENTE)' }}
+        <span class="chip-type" :class="obligacionSeleccionada.tipoObligacion === 'EXPEDIENTE_HEREDADO' || obligacionSeleccionada.tipoObligacion === 'LIQUIDACION_EXPEDIENTE' ? 'chip-exp' : 'chip-cot'">
+          {{ obligacionSeleccionada.tipoObligacion === 'EXPEDIENTE_HEREDADO' ? 'EXPEDIENTE ADUANERO (DEUDA HEREDADA)' : (obligacionSeleccionada.tipoObligacion === 'LIQUIDACION_EXPEDIENTE' ? 'LIQUIDACIÓN DE EXPEDIENTE' : 'ANTICIPO DE COTIZACIÓN (PRE-EXPEDIENTE)') }}
         </span>
         <span class="chip-code font-mono">{{ obligacionSeleccionada.codigo }}</span>
       </div>
@@ -483,6 +483,7 @@ async function cargarObligaciones() {
     }
   } catch (err) {
     console.error('Error al cargar obligaciones pendientes', err)
+    showError('No se pudieron recuperar las obligaciones de pago. Verifique su conexión.')
   } finally {
     loadingObligaciones.value = false
   }
@@ -548,9 +549,29 @@ function onMontoManualInput() {
   }
 }
 
+const MAX_FILE_SIZE = 10 * 1024 * 1024
+const ALLOWED_MIME_TYPES = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp']
+
+function validarArchivoVoucher(file) {
+  if (!file) return false
+  if (file.size > MAX_FILE_SIZE) {
+    showWarn('El archivo excede el tamaño máximo permitido de 10 MB.')
+    return false
+  }
+  if (!ALLOWED_MIME_TYPES.includes(file.type)) {
+    showWarn('Solo se permiten archivos en formato PDF, PNG, JPG o WEBP.')
+    return false
+  }
+  return true
+}
+
 function onFileSelected(e) {
   const file = e.target.files?.[0]
   if (file) {
+    if (!validarArchivoVoucher(file)) {
+      e.target.value = ''
+      return
+    }
     archivoVoucher.value = file
   }
 }
@@ -558,6 +579,9 @@ function onFileSelected(e) {
 function onFileDrop(e) {
   const file = e.dataTransfer?.files?.[0]
   if (file) {
+    if (!validarArchivoVoucher(file)) {
+      return
+    }
     archivoVoucher.value = file
   }
 }

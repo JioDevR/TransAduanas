@@ -388,7 +388,7 @@
 
             <div class="form-field full">
               <label>Reemplazar Archivo de Voucher (Opcional si es el mismo)</label>
-              <div class="file-dropzone">
+              <div class="file-dropzone" @dragover.prevent @drop.prevent="onFileCorreccionDrop">
                 <input 
                   type="file" 
                   id="voucher-corr-input" 
@@ -439,7 +439,7 @@ import { openBlobInNewTab } from '@/shared/utils/download'
 import BasePagination from '@/shared/components/BasePagination.vue'
 
 const router = useRouter()
-const { showSuccess, showError } = useNotification()
+const { showSuccess, showError, showWarn } = useNotification()
 
 const resumen = ref(null)
 const obligaciones = ref([])
@@ -561,9 +561,39 @@ async function verComprobante(idDocumento) {
   }
 }
 
+const MAX_FILE_SIZE = 10 * 1024 * 1024
+const ALLOWED_MIME_TYPES = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp']
+
+function validarArchivoCorreccion(file) {
+  if (!file) return false
+  if (file.size > MAX_FILE_SIZE) {
+    showWarn('El archivo excede el tamaño máximo permitido de 10 MB.')
+    return false
+  }
+  if (!ALLOWED_MIME_TYPES.includes(file.type)) {
+    showWarn('Solo se permiten archivos en formato PDF, PNG, JPG o WEBP.')
+    return false
+  }
+  return true
+}
+
 function onFileCorreccionSelected(e) {
-  const file = e.target.files[0]
+  const file = e.target.files?.[0]
   if (file) {
+    if (!validarArchivoCorreccion(file)) {
+      e.target.value = ''
+      return
+    }
+    correccionArchivoSeleccionado.value = file
+  }
+}
+
+function onFileCorreccionDrop(e) {
+  const file = e.dataTransfer?.files?.[0]
+  if (file) {
+    if (!validarArchivoCorreccion(file)) {
+      return
+    }
     correccionArchivoSeleccionado.value = file
   }
 }
@@ -574,7 +604,7 @@ function abrirModalCorreccion(pago) {
   correccionForm.value = {
     idPago: pago.idPago,
     montoAbonado: pago.montoAbonado,
-    moneda: 'USD',
+    moneda: pago.moneda || 'USD',
     metodoPago: pago.metodoPago || 'TRANSFERENCIA_BANCARIA',
     bancoOrigen: pago.bancoOrigen || 'BCP',
     bancoDestino: pago.bancoDestino || 'BCP Dolares TransAduanas',
@@ -596,12 +626,15 @@ async function enviarCorreccion() {
 
     const idPago = correccionForm.value.idPago
     const payload = {
-      monto: Number(correccionForm.value.montoAbonado),
-      fechaPago: correccionForm.value.fechaOperacion,
+      montoAbonado: Number(correccionForm.value.montoAbonado),
+      moneda: correccionForm.value.moneda || 'USD',
+      metodoPago: correccionForm.value.metodoPago || 'TRANSFERENCIA_BANCARIA',
       bancoOrigen: correccionForm.value.bancoOrigen,
+      bancoDestino: correccionForm.value.bancoDestino || 'BCP Dolares TransAduanas',
       numeroOperacion: correccionForm.value.numeroOperacion,
-      idDocumentoComprobante: correccionForm.value.idDocumentoComprobante,
-      sustentoSubsanacion: correccionForm.value.observaciones
+      fechaOperacion: correccionForm.value.fechaOperacion,
+      observaciones: correccionForm.value.observaciones || '',
+      idDocumentoComprobante: correccionForm.value.idDocumentoComprobante ? Number(correccionForm.value.idDocumentoComprobante) : null
     }
 
     const res = await portalPagoService.corregirPago(idPago, payload)

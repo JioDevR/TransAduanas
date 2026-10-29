@@ -888,6 +888,7 @@ import RetiroDirectoModal from '../components/RetiroDirectoModal.vue'
 import CierreExpedienteModal from '../components/CierreExpedienteModal.vue'
 import DocumentosManagerModal from '@/shared/components/DocumentosManagerModal.vue'
 import AuditoriaExpedienteModal from '../components/AuditoriaExpedienteModal.vue'
+import { getCredencialesPostAprobacionNotification } from '@/features/aduanas/utils/aprobacionAduaneraUtils'
 
 
 const route = useRoute()
@@ -1286,6 +1287,10 @@ const confirmApprove = async (cotizacion) => {
       observaciones: 'Aprobada formalmente por Supervisión Aduanera.'
     })
     showSuccess(`¡Cotización ${cotizacion.codigoCotizacion} Aprobada! Lista para apertura de Expediente Aduanero.`)
+
+    const notifCred = getCredencialesPostAprobacionNotification(cotizacion)
+    showInfo(notifCred.message, notifCred.title, notifCred.life)
+
     await loadData()
   } catch (err) {
     showError(err.response?.data?.message || 'No se pudo aprobar la cotización.')

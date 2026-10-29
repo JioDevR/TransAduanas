@@ -3,26 +3,26 @@
     <!-- Header de Sección -->
     <div class="view-header">
       <div class="header-titles">
-        <span class="view-kicker">CONTROL FINANCIERO Y COBRANZAS</span>
+        <span class="view-kicker">CONTROL FINANCIERO Y COBRANZAS // USD</span>
         <h1 class="view-title">Cobros, Pagos & Liquidaciones</h1>
-        <p class="view-subtitle">Consulte su estado de cuenta empresarial, historial de anticipos de cotización, liquidaciones aduaneras y registre sus vouchers bancarios.</p>
+        <p class="view-subtitle">Consulte su estado de cuenta empresarial en Dólares ($ USD), gestione anticipos de cotizaciones y amortice la deuda heredada de sus expedientes.</p>
       </div>
       <div class="header-actions">
-        <button class="btn-primary" @click="openVoucherModal">
-          <i class="pi pi-receipt"></i>
-          <span>Registrar Comprobante de Pago</span>
+        <button class="btn-primary" @click="irARegistrarPago()">
+          <i class="pi pi-plus-circle"></i>
+          <span>Registrar Comprobante de Pago ($ USD)</span>
         </button>
       </div>
     </div>
 
-    <!-- Tarjetas de Resumen Financiero -->
+    <!-- Tarjetas de Resumen Financiero en USD -->
     <div class="kpi-grid" v-if="resumen">
       <div class="kpi-card">
         <div class="kpi-icon-box">
           <i class="pi pi-file"></i>
         </div>
         <div class="kpi-content">
-          <span class="kpi-label">TOTAL COTIZADO</span>
+          <span class="kpi-label">TOTAL CONTRATADO / COTIZADO</span>
           <span class="kpi-value mono">$ {{ formatCurrency(resumen.totalCotizadoUsd) }}</span>
         </div>
       </div>
@@ -32,7 +32,7 @@
           <i class="pi pi-check-circle"></i>
         </div>
         <div class="kpi-content">
-          <span class="kpi-label">TOTAL AMORTIZADO</span>
+          <span class="kpi-label">TOTAL AMORTIZADO (USD)</span>
           <span class="kpi-value mono success-text">$ {{ formatCurrency(resumen.totalAbonadoUsd) }}</span>
         </div>
       </div>
@@ -42,19 +42,22 @@
           <i class="pi pi-wallet"></i>
         </div>
         <div class="kpi-content">
-          <span class="kpi-label">SALDO PENDIENTE TOTAL</span>
+          <span class="kpi-label">SALDO PENDIENTE CONSOLIDADO</span>
           <span class="kpi-value mono warning-text">$ {{ formatCurrency(resumen.saldoPendienteUsd) }}</span>
         </div>
       </div>
 
       <div class="kpi-card">
         <div class="kpi-icon-box accent">
-          <i class="pi pi-percentage"></i>
+          <i class="pi pi-receipt"></i>
         </div>
         <div class="kpi-content">
-          <span class="kpi-label">LIQUIDACIONES ADUANERAS (PEN)</span>
-          <span class="kpi-value mono">S/ {{ formatCurrency(resumen.totalLiquidacionesPen) }}</span>
-          <span class="kpi-sub-text">SPOT Detracción: S/ {{ formatCurrency(resumen.totalDetraccionesPen) }}</span>
+          <span class="kpi-label">VOUCHERS REGISTRADOS</span>
+          <span class="kpi-value mono">{{ anticipos.length }}</span>
+          <span class="kpi-sub-text" v-if="resumen.pagosPendientesRevision > 0">
+            {{ resumen.pagosPendientesRevision }} pendiente(s) de conciliación
+          </span>
+          <span class="kpi-sub-text" v-else>Conciliaciones al día</span>
         </div>
       </div>
     </div>
@@ -63,36 +66,159 @@
     <div class="tabs-container">
       <button 
         class="tab-btn" 
-        :class="{ active: activeTab === 'anticipos' }" 
-        @click="activeTab = 'anticipos'"
+        :class="{ active: activeTab === 'cotizaciones' }" 
+        @click="activeTab = 'cotizaciones'"
       >
         <i class="pi pi-clock"></i>
-        <span>Anticipos de Cotización (Pre-Expediente)</span>
-        <span class="tab-badge">{{ anticipos.length }}</span>
+        <span>Cotizaciones por Iniciar (Pre-Expediente)</span>
+        <span class="tab-badge">{{ cotizacionesPreExpediente.length }}</span>
       </button>
 
       <button 
         class="tab-btn" 
-        :class="{ active: activeTab === 'liquidaciones' }" 
-        @click="activeTab = 'liquidaciones'"
+        :class="{ active: activeTab === 'expedientes' }" 
+        @click="activeTab = 'expedientes'"
       >
-        <i class="pi pi-calculator"></i>
-        <span>Liquidaciones de Despacho (Tributos & Gastos)</span>
-        <span class="tab-badge">{{ liquidaciones.length }}</span>
+        <i class="pi pi-compass"></i>
+        <span>Expedientes en Trámite (Deuda Heredada)</span>
+        <span class="tab-badge">{{ expedientesHeredados.length }}</span>
+      </button>
+
+      <button 
+        class="tab-btn" 
+        :class="{ active: activeTab === 'historial' }" 
+        @click="activeTab = 'historial'"
+      >
+        <i class="pi pi-history"></i>
+        <span>Historial de Vouchers Bancarios</span>
+        <span class="tab-badge">{{ anticipos.length }}</span>
       </button>
     </div>
 
-    <!-- Contenido de Pestaña 1: Anticipos -->
-    <div v-if="activeTab === 'anticipos'" class="table-card">
+    <!-- TAB 1: Cotizaciones Pre-Expediente -->
+    <div v-if="activeTab === 'cotizaciones'" class="table-card">
       <div v-if="loading" class="loading-state">
         <i class="pi pi-spin pi-spinner"></i>
-        <span>Cargando historial de pagos y anticipos...</span>
+        <span>Cargando cotizaciones pendientes de anticipo...</span>
+      </div>
+
+      <div v-else-if="cotizacionesPreExpediente.length === 0" class="empty-state">
+        <i class="pi pi-check-circle success-text" style="font-size: 2rem;"></i>
+        <h3>No hay cotizaciones pendientes de anticipo</h3>
+        <p>Todas sus cotizaciones aprobadas ya cuentan con expediente aperturado o no registran saldo pendiente.</p>
+      </div>
+
+      <div v-else class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>CÓDIGO COTIZACIÓN</th>
+              <th>MERCANCÍA / DESCRIPCIÓN</th>
+              <th class="text-right">TOTAL COTIZADO ($)</th>
+              <th class="text-right">TOTAL AMORTIZADO ($)</th>
+              <th class="text-right">SALDO PENDIENTE ($)</th>
+              <th class="text-right">ANTICIPO SUGERIDO (50%)</th>
+              <th class="text-center">ESTADO PAGO</th>
+              <th class="text-center">ACCIÓN</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="c in cotizacionesPreExpediente" :key="c.idReferencia">
+              <td class="font-mono font-bold">{{ c.codigo }}</td>
+              <td>{{ c.descripcion }}</td>
+              <td class="text-right font-mono">$ {{ formatCurrency(c.totalContratadoUsd) }}</td>
+              <td class="text-right font-mono success-text">$ {{ formatCurrency(c.totalAmortizadoUsd) }}</td>
+              <td class="text-right font-mono font-bold warning-text">$ {{ formatCurrency(c.saldoPendienteUsd) }}</td>
+              <td class="text-right font-mono highlight-cell">$ {{ formatCurrency(c.montoSugeridoAnticipoUsd) }}</td>
+              <td class="text-center">
+                <span class="status-pill" :class="getPagoStatusClass(c.estadoPago)">
+                  {{ formatEstadoPago(c.estadoPago) }}
+                </span>
+              </td>
+              <td class="text-center">
+                <button 
+                  type="button" 
+                  class="btn-action-primary" 
+                  @click="irARegistrarPago('cotizacion', c.idCotizacion || c.idReferencia)"
+                >
+                  <i class="pi pi-wallet"></i>
+                  <span>Abonar Anticipo</span>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB 2: Expedientes con Deuda Heredada -->
+    <div v-if="activeTab === 'expedientes'" class="table-card">
+      <div v-if="loading" class="loading-state">
+        <i class="pi pi-spin pi-spinner"></i>
+        <span>Cargando expedientes con deuda heredada...</span>
+      </div>
+
+      <div v-else-if="expedientesHeredados.length === 0" class="empty-state">
+        <i class="pi pi-check-circle success-text" style="font-size: 2rem;"></i>
+        <h3>No hay expedientes con saldo deudor pendiente</h3>
+        <p>Todos sus despachos aduaneros se encuentran al día con sus liquidaciones y amortizaciones en USD.</p>
+      </div>
+
+      <div v-else class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>CÓDIGO EXPEDIENTE</th>
+              <th>DAM / DUA</th>
+              <th>COTIZACIÓN ORIGEN</th>
+              <th>CANAL SUNAT</th>
+              <th class="text-right">DEUDA CONSOLIDADA ($)</th>
+              <th class="text-right">AMORTIZADO ($)</th>
+              <th class="text-right">SALDO PENDIENTE ($)</th>
+              <th class="text-center">ACCIÓN</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="e in expedientesHeredados" :key="e.idReferencia">
+              <td class="font-mono font-bold">{{ e.codigoExpediente }}</td>
+              <td class="font-mono">{{ e.numeroDam || 'En numeración' }}</td>
+              <td class="font-mono">{{ e.codigoCotizacion }}</td>
+              <td>
+                <span v-if="e.canalSunat" class="canal-badge" :class="e.canalSunat.toLowerCase()">
+                  {{ e.canalSunat }}
+                </span>
+                <span v-else class="text-muted font-sm">Pendiente</span>
+              </td>
+              <td class="text-right font-mono font-bold">$ {{ formatCurrency(e.totalContratadoUsd) }}</td>
+              <td class="text-right font-mono success-text">$ {{ formatCurrency(e.totalAmortizadoUsd) }}</td>
+              <td class="text-right font-mono font-bold warning-text">$ {{ formatCurrency(e.saldoPendienteUsd) }}</td>
+              <td class="text-center">
+                <button 
+                  type="button" 
+                  class="btn-action-primary" 
+                  @click="irARegistrarPago('expediente', e.idExpediente || e.idReferencia)"
+                >
+                  <i class="pi pi-credit-card"></i>
+                  <span>Amortizar / Pagar Saldo</span>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB 3: Historial de Vouchers Bancarios -->
+    <div v-if="activeTab === 'historial'" class="table-card">
+      <div v-if="loading" class="loading-state">
+        <i class="pi pi-spin pi-spinner"></i>
+        <span>Cargando bitácora de vouchers bancarios...</span>
       </div>
 
       <div v-else-if="anticipos.length === 0" class="empty-state">
         <i class="pi pi-folder-open"></i>
-        <h3>No se registran anticipos</h3>
-        <p>Cuando realice un abono bancario de cotización y registre el comprobante, aparecerá en esta bandeja.</p>
+        <h3>No se registran comprobantes aún</h3>
+        <p>Cuando realice un abono bancario en Dólares y registre el comprobante, aparecerá en esta bandeja para seguimiento contable.</p>
       </div>
 
       <div v-else class="table-responsive">
@@ -100,7 +226,7 @@
           <thead>
             <tr>
               <th>CÓDIGO PAGO</th>
-              <th>COTIZACIÓN</th>
+              <th>DOCUMENTO</th>
               <th>TIPO ABONO</th>
               <th class="text-right">MONTO ABONADO</th>
               <th>BANCO ORIGEN / DESTINO</th>
@@ -118,7 +244,7 @@
                 <span class="abono-tag">{{ p.tipoAbono }}</span>
               </td>
               <td class="text-right font-mono font-bold highlight-cell">
-                {{ p.moneda }} {{ formatCurrency(p.montoAbonado) }}
+                $ {{ formatCurrency(p.montoAbonado) }}
               </td>
               <td>
                 <div class="bank-box">
@@ -150,212 +276,21 @@
                     <i class="pi pi-pencil"></i>
                     <span>Subsanar</span>
                   </button>
+
                   <a 
                     v-if="p.documentoComprobanteUrl" 
                     :href="p.documentoComprobanteUrl" 
                     target="_blank" 
                     class="btn-action-view"
-                    title="Ver Comprobante Adjunto"
+                    title="Ver Voucher Adjunto"
                   >
-                    <i class="pi pi-file"></i>
+                    <i class="pi pi-external-link"></i>
                   </a>
                 </div>
               </td>
             </tr>
           </tbody>
         </table>
-      </div>
-    </div>
-
-    <!-- Contenido de Pestaña 2: Liquidaciones Finales -->
-    <div v-if="activeTab === 'liquidaciones'" class="table-card">
-      <div v-if="loading" class="loading-state">
-        <i class="pi pi-spin pi-spinner"></i>
-        <span>Cargando liquidaciones financieras de despacho...</span>
-      </div>
-
-      <div v-else-if="liquidaciones.length === 0" class="empty-state">
-        <i class="pi pi-folder-open"></i>
-        <h3>No se registran liquidaciones emitidas</h3>
-        <p>Una vez obtenido el levante aduanero y culminado el servicio logístico, Finanzas emitirá su liquidación final.</p>
-      </div>
-
-      <div v-else class="table-responsive">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>CÓDIGO LIQ.</th>
-              <th>EXPEDIENTE & DAM</th>
-              <th class="text-right">TRIBUTOS SUNAT</th>
-              <th class="text-right">ALMACÉN & FLETE</th>
-              <th class="text-right">HONORARIOS</th>
-              <th class="text-right">DETRACCIÓN (12%)</th>
-              <th class="text-right">TOTAL USD</th>
-              <th class="text-right">TOTAL PEN</th>
-              <th class="text-center">ESTADO</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="l in liquidaciones" :key="l.idLiquidacion">
-              <td class="font-mono font-bold">{{ l.codigoLiquidacion }}</td>
-              <td>
-                <div class="font-mono font-bold">{{ l.codigoExpediente }}</div>
-                <div class="item-sub font-mono">DAM: {{ l.numeroDam || 'Pendiente' }}</div>
-              </td>
-              <td class="text-right font-mono">$ {{ formatCurrency(l.totalTributosSunat) }}</td>
-              <td class="text-right font-mono">$ {{ formatCurrency(Number(l.gastosAlmacenPuerto || 0) + Number(l.fleteTransporteLocal || 0)) }}</td>
-              <td class="text-right font-mono">$ {{ formatCurrency(l.honorariosAgencia) }}</td>
-              <td class="text-right font-mono">S/ {{ formatCurrency(l.montoDetraccion) }}</td>
-              <td class="text-right font-mono font-bold highlight-cell">$ {{ formatCurrency(l.totalGeneralUsd) }}</td>
-              <td class="text-right font-mono font-bold">S/ {{ formatCurrency(l.totalGeneralPen) }}</td>
-              <td class="text-center">
-                <span class="status-pill" :class="getPagoStatusClass(l.estadoPago)">
-                  {{ l.estadoPago }}
-                </span>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- Modal para Registrar Comprobante de Pago -->
-    <div v-if="modalVoucherVisible" class="modal-backdrop" @click.self="modalVoucherVisible = false">
-      <div class="modal-card">
-        <div class="modal-header">
-          <div class="modal-title-box">
-            <span class="modal-kicker">CONCILIACIÓN BANCARIA</span>
-            <h2 class="modal-title">Registrar Comprobante / Voucher Bancario</h2>
-          </div>
-          <button class="close-btn" @click="modalVoucherVisible = false">
-            <i class="pi pi-times"></i>
-          </button>
-        </div>
-
-        <form @submit.prevent="enviarVoucher" class="modal-body">
-          <div class="form-grid">
-            <div class="form-field full">
-              <label>Tipo de Obligación a Pagar *</label>
-              <select v-model="voucherForm.tipoObligacion" required class="custom-select" @change="actualizarReferencias">
-                <option value="ANTICIPO_COTIZACION">Anticipo de Cotización (Pre-Expediente)</option>
-                <option value="LIQUIDACION_EXPEDIENTE">Liquidación Final de Despacho</option>
-              </select>
-            </div>
-
-            <div class="form-field full">
-              <label>Referencia de Documento *</label>
-              <select v-model="voucherForm.idReferencia" required class="custom-select font-mono">
-                <option :value="null">Seleccione documento a amortizar...</option>
-                <option v-for="ref in opcionesReferencia" :key="ref.id" :value="ref.id">
-                  {{ ref.codigo }} • {{ ref.descripcion }} (Saldo: $ {{ formatCurrency(ref.saldo) }})
-                </option>
-              </select>
-            </div>
-
-            <div class="form-field">
-              <label>Monto Transferido / Abonado *</label>
-              <input 
-                v-model.number="voucherForm.montoAbonado" 
-                type="number" 
-                step="0.01" 
-                min="0.01" 
-                placeholder="0.00" 
-                required 
-                class="custom-input font-mono"
-              />
-            </div>
-
-            <div class="form-field">
-              <label>Moneda *</label>
-              <select v-model="voucherForm.moneda" required class="custom-select">
-                <option value="USD">Dólares Americanos (USD)</option>
-                <option value="PEN">Soles Peruanos (PEN)</option>
-              </select>
-            </div>
-
-            <div class="form-field">
-              <label>Banco Emisor (Su Banco):</label>
-              <select v-model="voucherForm.bancoOrigen" class="custom-select">
-                <option value="BCP">Banco de Crédito del Perú (BCP)</option>
-                <option value="BBVA">BBVA Continental</option>
-                <option value="INTERBANK">Interbank</option>
-                <option value="SCOTIABANK">Scotiabank</option>
-                <option value="BANCO_NACION">Banco de la Nación (Detracción)</option>
-              </select>
-            </div>
-
-            <div class="form-field">
-              <label>Cuenta Receptora de TransAduanas *</label>
-              <select v-model="voucherForm.bancoDestino" required class="custom-select">
-                <option value="BCP Dolares TransAduanas">BCP Dólares (Cta: 191-289381-1-09)</option>
-                <option value="BCP Soles TransAduanas">BCP Soles (Cta: 191-289381-0-08)</option>
-                <option value="BBVA Dolares TransAduanas">BBVA Dólares (Cta: 0011-0182-0100)</option>
-                <option value="Banco Nacion SPOT">Banco de la Nación SPOT (Cta: 00-000-12891)</option>
-              </select>
-            </div>
-
-            <div class="form-field">
-              <label>Número de Operación Bancaria *</label>
-              <input 
-                v-model.trim="voucherForm.numeroOperacion" 
-                type="text" 
-                placeholder="Ej. OP-8823192" 
-                required 
-                class="custom-input font-mono"
-              />
-            </div>
-
-            <div class="form-field">
-              <label>Fecha de la Transferencia *</label>
-              <input 
-                v-model="voucherForm.fechaOperacion" 
-                type="date" 
-                required 
-                class="custom-input"
-              />
-            </div>
-
-            <div class="form-field full">
-              <label>Adjuntar Comprobante Bancario (Voucher PDF o Imagen):</label>
-              <div class="file-dropzone">
-                <input 
-                  type="file" 
-                  id="voucher-file-input"
-                  accept="application/pdf,image/png,image/jpeg,image/webp" 
-                  @change="onVoucherFileSelected"
-                  class="file-input-hidden"
-                />
-                <label for="voucher-file-input" class="file-dropzone-label">
-                  <i class="pi pi-upload"></i>
-                  <span v-if="!voucherArchivoSeleccionado">Haga clic para adjuntar voucher (PDF, JPG, PNG)</span>
-                  <span v-else class="file-selected-name">
-                    <i class="pi pi-file"></i> {{ voucherArchivoSeleccionado.name }} ({{ (voucherArchivoSeleccionado.size / 1024).toFixed(1) }} KB)
-                  </span>
-                </label>
-              </div>
-            </div>
-
-            <div class="form-field full">
-              <label>Observaciones de Pago:</label>
-              <textarea 
-                v-model="voucherForm.observaciones" 
-                rows="2" 
-                placeholder="Indique detalles de abono o número de comprobante..."
-                class="custom-textarea"
-              ></textarea>
-            </div>
-          </div>
-
-          <div class="modal-footer" style="padding: 1rem 0 0 0; margin-top: 1rem;">
-            <button type="button" class="btn-secondary" @click="modalVoucherVisible = false">
-              Cancelar
-            </button>
-            <button type="submit" class="btn-primary" :disabled="enviandoVoucher">
-              <i v-if="enviandoVoucher" class="pi pi-spin pi-spinner"></i>
-              <span v-else>Registrar Abono Bancario</span>
-            </button>
-          </div>
-        </form>
       </div>
     </div>
 
@@ -383,7 +318,7 @@
 
           <div class="form-grid">
             <div class="form-field">
-              <label>Monto Real Abonado *</label>
+              <label>Monto Real Abonado ($ USD) *</label>
               <input 
                 v-model.number="correccionForm.montoAbonado" 
                 type="number" 
@@ -395,21 +330,13 @@
             </div>
 
             <div class="form-field">
-              <label>Moneda *</label>
-              <select v-model="correccionForm.moneda" required class="custom-select">
-                <option value="USD">Dólares Americanos (USD)</option>
-                <option value="PEN">Soles Peruanos (PEN)</option>
-              </select>
-            </div>
-
-            <div class="form-field">
               <label>Banco Emisor (Su Banco):</label>
               <select v-model="correccionForm.bancoOrigen" class="custom-select">
                 <option value="BCP">Banco de Crédito del Perú (BCP)</option>
-                <option value="BBVA">BBVA Continental</option>
+                <option value="BBVA">BBVA Perú</option>
                 <option value="INTERBANK">Interbank</option>
                 <option value="SCOTIABANK">Scotiabank</option>
-                <option value="BANCO_NACION">Banco de la Nación</option>
+                <option value="BANBIF">BanBif</option>
               </select>
             </div>
 
@@ -417,9 +344,8 @@
               <label>Cuenta Receptora TransAduanas *</label>
               <select v-model="correccionForm.bancoDestino" required class="custom-select">
                 <option value="BCP Dolares TransAduanas">BCP Dólares (Cta: 191-289381-1-09)</option>
-                <option value="BCP Soles TransAduanas">BCP Soles (Cta: 191-289381-0-08)</option>
-                <option value="BBVA Dolares TransAduanas">BBVA Dólares (Cta: 0011-0182-0100)</option>
-                <option value="Banco Nacion SPOT">Banco de la Nación SPOT (Cta: 00-000-12891)</option>
+                <option value="BBVA Dolares TransAduanas">BBVA Dólares (Cta: 0011-0182-010049281)</option>
+                <option value="Interbank Dolares TransAduanas">Interbank Dólares (Cta: 200-300189281)</option>
               </select>
             </div>
 
@@ -490,20 +416,17 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import apiClient from '@/core/api/apiClient'
 
-const resumen = ref(null)
-const anticipos = ref([])
-const liquidaciones = ref([])
-const cotizaciones = ref([])
-const activeTab = ref('anticipos')
-const loading = ref(true)
+const router = useRouter()
 
-const modalVoucherVisible = ref(false)
-const enviandoVoucher = ref(false)
-const opcionesReferencia = ref([])
-const voucherArchivoSeleccionado = ref(null)
+const resumen = ref(null)
+const obligaciones = ref([])
+const anticipos = ref([])
+const activeTab = ref('cotizaciones')
+const loading = ref(true)
 
 // Variables para Subsanación / Corrección de Pago
 const modalCorreccionVisible = ref(false)
@@ -524,20 +447,6 @@ const correccionForm = ref({
   idDocumentoComprobante: null
 })
 
-const voucherForm = ref({
-  tipoObligacion: 'ANTICIPO_COTIZACION',
-  idReferencia: null,
-  montoAbonado: null,
-  moneda: 'USD',
-  metodoPago: 'TRANSFERENCIA_BANCARIA',
-  bancoOrigen: 'BCP',
-  bancoDestino: 'BCP Dolares TransAduanas',
-  numeroOperacion: '',
-  fechaOperacion: new Date().toISOString().substring(0, 10),
-  observaciones: '',
-  idDocumentoComprobante: null
-})
-
 onMounted(() => {
   cargarTodo()
 })
@@ -545,21 +454,40 @@ onMounted(() => {
 async function cargarTodo() {
   loading.value = true
   try {
-    const [resResumen, resAnticipos, resLiq, resCot] = await Promise.all([
+    const [resResumen, resObligaciones, resAnticipos] = await Promise.all([
       apiClient.get('/portal/pagos/resumen'),
-      apiClient.get('/portal/pagos/anticipos'),
-      apiClient.get('/portal/pagos/liquidaciones'),
-      apiClient.get('/portal/cotizaciones')
+      apiClient.get('/portal/pagos/obligaciones-pendientes'),
+      apiClient.get('/portal/pagos/anticipos')
     ])
 
     if (resResumen.data?.data) resumen.value = resResumen.data.data
+    if (resObligaciones.data?.data) obligaciones.value = resObligaciones.data.data
     if (resAnticipos.data?.data) anticipos.value = resAnticipos.data.data
-    if (resLiq.data?.data) liquidaciones.value = resLiq.data.data
-    if (resCot.data?.data) cotizaciones.value = resCot.data.data
+
+    // Si no hay cotizaciones pero hay expedientes, activar pestaña de expedientes
+    if (cotizacionesPreExpediente.value.length === 0 && expedientesHeredados.value.length > 0) {
+      activeTab.value = 'expedientes'
+    }
   } catch (err) {
     console.error('Error al cargar datos financieros', err)
   } finally {
     loading.value = false
+  }
+}
+
+const cotizacionesPreExpediente = computed(() => {
+  return obligaciones.value.filter(o => o.tipoObligacion === 'ANTICIPO_COTIZACION' || !o.tieneExpediente)
+})
+
+const expedientesHeredados = computed(() => {
+  return obligaciones.value.filter(o => o.tipoObligacion === 'EXPEDIENTE_HEREDADO' || o.tieneExpediente)
+})
+
+function irARegistrarPago(tipo, id) {
+  if (tipo && id) {
+    router.push({ name: 'RegistrarPago', query: { tipo, id } })
+  } else {
+    router.push({ name: 'RegistrarPago' })
   }
 }
 
@@ -569,8 +497,8 @@ function formatCurrency(val) {
 }
 
 function formatEstadoPago(st) {
-  if (!st) return ''
-  return st.replace('_', ' ')
+  if (!st) return 'PENDIENTE'
+  return st.replace(/_/g, ' ')
 }
 
 function getPagoStatusClass(st) {
@@ -578,28 +506,18 @@ function getPagoStatusClass(st) {
     case 'VALIDADO':
     case 'APROBADO':
     case 'PAGADO':
+    case 'PAGADO_TOTAL':
+    case 'ADELANTO_APROBADO':
       return 'success'
     case 'PENDIENTE_REVISION':
     case 'EN_CONCILIACION':
+    case 'PENDIENTE':
       return 'warning'
     case 'OBSERVADO':
     case 'RECHAZADO':
       return 'danger'
     default:
       return 'neutral'
-  }
-}
-
-function openVoucherModal() {
-  actualizarReferencias()
-  voucherArchivoSeleccionado.value = null
-  modalVoucherVisible.value = true
-}
-
-function onVoucherFileSelected(event) {
-  const file = event.target.files?.[0]
-  if (file) {
-    voucherArchivoSeleccionado.value = file
   }
 }
 
@@ -616,7 +534,7 @@ function abrirModalCorreccion(pago) {
   correccionForm.value = {
     idPago: pago.idPago,
     montoAbonado: pago.montoAbonado,
-    moneda: pago.moneda || 'USD',
+    moneda: 'USD',
     metodoPago: pago.metodoPago || 'TRANSFERENCIA_BANCARIA',
     bancoOrigen: pago.bancoOrigen || 'BCP',
     bancoDestino: pago.bancoDestino || 'BCP Dolares TransAduanas',
@@ -637,53 +555,6 @@ async function subirComprobante(file) {
   return res.data?.data?.idDocumento
 }
 
-function actualizarReferencias() {
-  if (voucherForm.value.tipoObligacion === 'ANTICIPO_COTIZACION') {
-    opcionesReferencia.value = cotizaciones.value.map(c => ({
-      id: c.idCotizacion,
-      codigo: c.codigoCotizacion,
-      descripcion: c.nombreMercancia || 'Cotización',
-      saldo: c.saldoPendiente
-    }))
-    if (opcionesReferencia.value.length > 0) {
-      voucherForm.value.idReferencia = opcionesReferencia.value[0].id
-      voucherForm.value.montoAbonado = opcionesReferencia.value[0].saldo
-    }
-  } else {
-    opcionesReferencia.value = liquidaciones.value.map(l => ({
-      id: l.idLiquidacion,
-      codigo: l.codigoLiquidacion,
-      descripcion: `Exp. ${l.codigoExpediente}`,
-      saldo: l.totalGeneralUsd
-    }))
-    if (opcionesReferencia.value.length > 0) {
-      voucherForm.value.idReferencia = opcionesReferencia.value[0].id
-      voucherForm.value.montoAbonado = opcionesReferencia.value[0].saldo
-    }
-  }
-}
-
-async function enviarVoucher() {
-  enviandoVoucher.value = true
-  try {
-    if (voucherArchivoSeleccionado.value) {
-      const docId = await subirComprobante(voucherArchivoSeleccionado.value)
-      voucherForm.value.idDocumentoComprobante = docId
-    }
-
-    const res = await apiClient.post('/portal/pagos/registrar-voucher', voucherForm.value)
-    if (res.data?.data) {
-      modalVoucherVisible.value = false
-      cargarTodo()
-      alert('Voucher registrado con éxito y enviado a validación contable en Finanzas')
-    }
-  } catch (err) {
-    alert(err.response?.data?.message || 'Error al registrar voucher')
-  } finally {
-    enviandoVoucher.value = false
-  }
-}
-
 async function enviarCorreccion() {
   enviandoCorreccion.value = true
   try {
@@ -700,7 +571,7 @@ async function enviarCorreccion() {
       alert('Pago corregido exitosamente. Ha retornado a la bandeja de Finanzas para su revisión.')
     }
   } catch (err) {
-    alert(err.response?.data?.message || 'Error al corregir pago')
+    alert(err.response?.data?.message || 'Error al enviar subsanación de pago')
   } finally {
     enviandoCorreccion.value = false
   }
@@ -716,68 +587,52 @@ async function enviarCorreccion() {
 
 .view-header {
   display: flex;
-  align-items: flex-start;
   justify-content: space-between;
+  align-items: flex-start;
   flex-wrap: wrap;
   gap: 1rem;
 }
 
 .view-kicker {
-  font-size: var(--font-size-2xs, 0.6875rem);
-  font-weight: 700;
+  font-size: 0.72rem;
+  font-weight: 800;
   letter-spacing: 0.08em;
   color: var(--color-accent-kicker, #9a7f60);
+  display: block;
+  margin-bottom: 0.25rem;
 }
 
 .view-title {
-  font-size: 1.5rem;
+  font-size: 1.75rem;
   font-weight: 800;
-  color: var(--color-text-main, #2b2520);
-  margin: 0.2rem 0;
-  letter-spacing: -0.02em;
-}
-
-.view-subtitle {
-  font-size: 0.85rem;
-  color: var(--color-text-muted, #6f6356);
+  color: var(--color-primary, #352f2a);
   margin: 0;
 }
 
-.btn-primary {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.65rem 1.15rem;
-  background: var(--color-primary, #352f2a);
-  color: #ffffff;
-  border: none;
-  border-radius: 6px;
-  font-size: 0.84rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.2s ease;
+.view-subtitle {
+  font-size: 0.9rem;
+  color: var(--color-text-muted, #6f6356);
+  margin-top: 0.25rem;
+  max-width: 750px;
 }
 
-.btn-primary:hover:not(:disabled) {
-  background: var(--color-primary-hover, #484039);
-}
-
-.btn-secondary {
-  padding: 0.65rem 1.15rem;
-  background: var(--color-bg-surface, #ffffff);
-  border: 1px solid var(--color-border, #e4dacb);
-  color: var(--color-text-main, #2b2520);
-  border-radius: 6px;
-  font-size: 0.84rem;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-/* KPI Grid */
+/* Tarjetas KPI en USD */
 .kpi-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  grid-template-columns: repeat(4, 1fr);
   gap: 1rem;
+}
+
+@media (max-width: 1024px) {
+  .kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .kpi-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .kpi-card {
@@ -788,11 +643,12 @@ async function enviarCorreccion() {
   display: flex;
   align-items: center;
   gap: 1rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.02);
 }
 
 .kpi-card.highlighted {
   border-color: var(--color-warning-border, #f8dab3);
-  background: linear-gradient(180deg, var(--color-bg-surface, #ffffff) 0%, var(--color-warning-bg, #fdf5e6) 100%);
+  background: #fffdfa;
 }
 
 .kpi-icon-box {
@@ -838,7 +694,7 @@ async function enviarCorreccion() {
 }
 
 .kpi-value {
-  font-size: 1.4rem;
+  font-size: 1.35rem;
   font-weight: 800;
   color: var(--color-text-main, #2b2520);
 }
@@ -852,7 +708,6 @@ async function enviarCorreccion() {
 
 .kpi-sub-text {
   font-size: 0.72rem;
-  font-family: var(--font-mono);
   color: var(--color-text-muted, #6f6356);
 }
 
@@ -861,6 +716,7 @@ async function enviarCorreccion() {
   display: flex;
   gap: 0.5rem;
   border-bottom: 1px solid var(--color-border, #e4dacb);
+  overflow-x: auto;
 }
 
 .tab-btn {
@@ -875,6 +731,7 @@ async function enviarCorreccion() {
   font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
+  white-space: nowrap;
   transition: all 0.2s ease;
 }
 
@@ -901,6 +758,7 @@ async function enviarCorreccion() {
   border: 1px solid var(--color-border, #e4dacb);
   border-radius: 10px;
   overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.02);
 }
 
 .table-responsive {
@@ -910,252 +768,74 @@ async function enviarCorreccion() {
 .data-table {
   width: 100%;
   border-collapse: collapse;
+  font-size: 0.85rem;
   text-align: left;
-  font-size: 0.82rem;
 }
 
 .data-table th {
-  background: var(--color-bg-subtle, #f2ebe1);
+  background: var(--color-bg-base, #f6f3ee);
   padding: 0.75rem 1rem;
-  font-size: 0.6875rem;
   font-weight: 700;
-  color: var(--color-text-muted, #6f6356);
+  font-size: 0.7rem;
   letter-spacing: 0.05em;
+  color: var(--color-text-subtle, #998c7e);
   border-bottom: 1px solid var(--color-border, #e4dacb);
+  white-space: nowrap;
 }
 
 .data-table td {
   padding: 0.85rem 1rem;
-  border-bottom: 1px solid var(--color-border-subtle, #ede5d8);
-  color: var(--color-text-main, #2b2520);
+  border-bottom: 1px solid var(--color-border-subtle, #f0eae1);
+  vertical-align: middle;
 }
 
-.data-table tr:hover {
-  background: var(--color-bg-base, #f6f3ee);
+.data-table tbody tr:hover {
+  background: var(--color-bg-subtle, #faf6f0);
 }
 
-.abono-tag {
-  display: inline-block;
-  padding: 0.15rem 0.45rem;
-  background: var(--color-bg-subtle, #f2ebe1);
-  border-radius: 4px;
-  font-size: 0.7rem;
-  font-weight: 600;
+.data-table tr.row-observed {
+  background: #fff9f9;
 }
 
-.bank-box {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  font-size: 0.75rem;
-}
-
-.bank-box i {
-  font-size: 0.65rem;
-  color: var(--color-accent-kicker, #9a7f60);
-}
-
-.bank-origin {
-  font-weight: 600;
-}
-
-.bank-dest {
-  color: var(--color-text-muted, #6f6356);
-}
-
-.status-pill {
-  display: inline-block;
-  padding: 0.15rem 0.5rem;
-  border-radius: 12px;
-  font-size: 0.7rem;
-  font-weight: 700;
-}
-
-.status-pill.success {
-  background: var(--color-success-bg, #eaf6ed);
-  color: var(--color-success-text, #1e6638);
-  border: 1px solid var(--color-success-border, #bce5c6);
-}
-
-.status-pill.warning {
-  background: var(--color-warning-bg, #fdf5e6);
-  color: var(--color-warning-text, #8c5b16);
-  border: 1px solid var(--color-warning-border, #f8dab3);
-}
-
-.status-pill.danger {
-  background: var(--color-danger-bg, #fdf0f0);
-  color: var(--color-danger-text, #9e2a2b);
-  border: 1px solid var(--color-danger-border, #f6c8c8);
-}
-
-.status-pill.neutral {
-  background: var(--color-bg-base, #f6f3ee);
-  color: var(--color-text-muted, #6f6356);
-  border: 1px solid var(--color-border, #e4dacb);
-}
-
-/* Modales */
-.modal-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.45);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  padding: 1.5rem;
-}
-
-.modal-card {
-  background: var(--color-bg-surface, #ffffff);
-  border-radius: 12px;
-  width: 100%;
-  max-width: 650px;
-  max-height: 90vh;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
-}
-
-.modal-header {
-  padding: 1.25rem 1.5rem;
-  border-bottom: 1px solid var(--color-border, #e4dacb);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.modal-kicker {
-  font-size: 0.6875rem;
-  font-weight: 700;
-  color: var(--color-accent-kicker, #9a7f60);
-}
-
-.modal-title {
-  margin: 0.15rem 0 0 0;
-  font-size: 1.2rem;
-}
-
-.close-btn {
-  background: none;
-  border: none;
-  font-size: 1.1rem;
-  cursor: pointer;
-  color: var(--color-text-subtle, #998c7e);
-}
-
-.modal-body {
-  padding: 1.5rem;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-}
-
-.form-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-}
-
-.form-field.full {
-  grid-column: span 2;
-}
-
-.form-field {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-}
-
-.form-field label {
-  font-size: 0.8rem;
-  font-weight: 600;
-}
-
-.custom-select, .custom-input {
-  border: 1px solid var(--color-border, #e4dacb);
-  border-radius: 6px;
-  padding: 0.55rem;
-  background: var(--color-bg-surface, #ffffff);
-  color: var(--color-text-main, #2b2520);
-  font-size: 0.82rem;
-}
-
-.custom-textarea {
-  border: 1px solid var(--color-border, #e4dacb);
-  border-radius: 6px;
-  padding: 0.55rem;
-  font-family: var(--font-sans);
-  font-size: 0.82rem;
-}
-
-.modal-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.75rem;
-}
-
-.empty-state, .loading-state {
-  padding: 3rem 1.5rem;
-  text-align: center;
-  color: var(--color-text-muted, #6f6356);
+.highlight-cell {
+  background: var(--color-bg-base, #fbf8f4);
 }
 
 .text-right { text-align: right; }
 .text-center { text-align: center; }
-.font-mono { font-family: var(--font-mono); }
-.font-bold { font-weight: 700; }
-.highlight-cell { color: var(--color-primary, #352f2a); }
 
-/* Observaciones y Correcciones */
-.row-observed {
-  background-color: rgba(220, 38, 38, 0.04) !important;
-}
-
-.obs-inline-callout {
-  margin-top: 0.35rem;
-  display: flex;
+.btn-action-primary {
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  gap: 0.35rem;
-  font-size: 0.72rem;
-  color: #b91c1c;
-  background: #fef2f2;
-  border: 1px solid #fecaca;
-  padding: 0.2rem 0.5rem;
-  border-radius: 4px;
-  max-width: 220px;
-  text-align: left;
-}
-
-.action-btn-group {
-  display: flex;
-  align-items: center;
-  justify-content: center;
   gap: 0.4rem;
+  background: var(--color-primary, #352f2a);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 0.45rem 0.85rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.btn-action-primary:hover {
+  background: #1f1b18;
 }
 
 .btn-action-correct {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  background: #dc2626;
-  color: #ffffff;
-  border: none;
+  background: var(--color-danger-bg, #fde8e6);
+  color: var(--color-danger, #b3261e);
+  border: 1px solid var(--color-danger-border, #f9c2bd);
   border-radius: 4px;
   padding: 0.35rem 0.65rem;
   font-size: 0.75rem;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.btn-action-correct:hover {
-  background: #b91c1c;
-  transform: translateY(-1px);
 }
 
 .btn-action-view {
@@ -1165,21 +845,173 @@ async function enviarCorreccion() {
   width: 28px;
   height: 28px;
   border-radius: 4px;
-  background: var(--color-bg-subtle, #f4eee5);
-  color: var(--color-text-main, #2b2520);
+  background: var(--color-bg-base, #f6f3ee);
   border: 1px solid var(--color-border, #e4dacb);
-  font-size: 0.85rem;
-  transition: all 0.2s ease;
+  color: var(--color-primary, #352f2a);
+  text-decoration: none;
 }
 
-.btn-action-view:hover {
-  background: #e2d9cd;
+.action-btn-group {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
 }
 
-/* File Dropzone */
-.file-dropzone {
-  position: relative;
+.abono-tag {
+  display: inline-block;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  background: var(--color-bg-base, #f6f3ee);
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--color-primary, #352f2a);
+}
+
+.bank-box {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+}
+
+.canal-badge {
+  display: inline-block;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+
+.canal-badge.verde { background: #e6f4ea; color: #137333; }
+.canal-badge.naranja { background: #fef7e0; color: #b06000; }
+.canal-badge.rojo { background: #fce8e6; color: #c5221f; }
+
+.status-pill {
+  display: inline-block;
+  padding: 0.2rem 0.6rem;
+  border-radius: 12px;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.status-pill.success {
+  background: var(--color-success-bg, #eaf6ed);
+  color: var(--color-success-text, #1e6638);
+}
+
+.status-pill.warning {
+  background: var(--color-warning-bg, #fdf5e6);
+  color: var(--color-warning-text, #8c5b16);
+}
+
+.status-pill.danger {
+  background: var(--color-danger-bg, #fde8e6);
+  color: var(--color-danger, #b3261e);
+}
+
+.status-pill.neutral {
+  background: var(--color-bg-base, #f6f3ee);
+  color: var(--color-text-muted, #6f6356);
+}
+
+.obs-inline-callout {
+  margin-top: 0.35rem;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.72rem;
+  color: var(--color-danger, #b3261e);
+  background: #fff0f0;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  text-align: left;
+}
+
+/* Modales */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.modal-card {
+  background: #fff;
+  border-radius: 10px;
   width: 100%;
+  max-width: 650px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--color-border, #e4dacb);
+}
+
+.modal-title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  margin: 0.25rem 0 0 0;
+  color: var(--color-primary, #352f2a);
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 1.1rem;
+  color: var(--color-text-muted, #6f6356);
+  cursor: pointer;
+}
+
+.modal-body {
+  padding: 1.5rem;
+}
+
+.alert-box-obs {
+  display: flex;
+  gap: 0.75rem;
+  background: #fff2f2;
+  border: 1px solid #ffcccc;
+  border-radius: 6px;
+  padding: 0.75rem;
+  color: #c5221f;
+  font-size: 0.85rem;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.form-field.full {
+  grid-column: 1 / -1;
+}
+
+.custom-input, .custom-select, .custom-textarea {
+  border: 1px solid var(--color-border, #e4dacb);
+  border-radius: 6px;
+  padding: 0.6rem 0.75rem;
+  font-size: 0.85rem;
+  width: 100%;
+}
+
+.file-dropzone {
+  border: 2px dashed var(--color-border, #e4dacb);
+  border-radius: 6px;
+  padding: 1rem;
+  text-align: center;
+  cursor: pointer;
 }
 
 .file-input-hidden {
@@ -1188,61 +1020,57 @@ async function enviarCorreccion() {
 
 .file-dropzone-label {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  padding: 0.75rem;
-  border: 2px dashed var(--color-border, #e4dacb);
-  border-radius: 6px;
-  background: var(--color-bg-subtle, #faf8f5);
-  color: var(--color-text-muted, #6f6356);
-  font-size: 0.82rem;
-  cursor: pointer;
-  transition: border-color 0.2s, background 0.2s;
-  text-align: center;
-}
-
-.file-dropzone-label:hover {
-  border-color: var(--color-primary, #b45309);
-  background: #fffdf9;
-}
-
-.file-selected-name {
-  color: #15803d;
-  font-weight: 600;
-  display: flex;
+  flex-direction: column;
   align-items: center;
   gap: 0.35rem;
+  cursor: pointer;
+  font-size: 0.8rem;
+  color: var(--color-text-muted, #6f6356);
 }
 
-.alert-box-obs {
+.modal-footer {
   display: flex;
+  justify-content: flex-end;
   gap: 0.75rem;
-  background: #fef2f2;
-  border: 1px solid #f87171;
+}
+
+.btn-primary {
+  background: var(--color-primary, #352f2a);
+  color: #fff;
+  border: none;
   border-radius: 6px;
-  padding: 0.75rem 1rem;
-  color: #991b1b;
-  font-size: 0.82rem;
-  line-height: 1.4;
+  padding: 0.65rem 1.25rem;
+  font-weight: 700;
+  font-size: 0.875rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
-.alert-box-obs i {
-  font-size: 1.25rem;
-  color: #dc2626;
-  margin-top: 0.1rem;
+.btn-primary:hover:not(:disabled) {
+  background: #1f1b18;
 }
 
-.alert-box-obs p {
-  margin: 0.25rem 0 0 0;
-  font-weight: 500;
+.btn-secondary {
+  background: transparent;
+  color: var(--color-text-muted, #6f6356);
+  border: 1px solid var(--color-border, #e4dacb);
+  border-radius: 6px;
+  padding: 0.65rem 1rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
 }
 
-.text-danger {
-  color: #dc2626 !important;
-}
-
-.mb-3 {
-  margin-bottom: 0.75rem;
+.loading-state, .empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1.5rem;
+  gap: 0.75rem;
+  text-align: center;
+  color: var(--color-text-muted, #6f6356);
 }
 </style>

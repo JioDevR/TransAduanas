@@ -131,16 +131,24 @@ router.beforeEach(async (to, from, next) => {
     if (navStore.activeModule !== 'comercial') {
       navStore.setActiveModule('comercial')
     }
+    if (to.query?.tab) {
+      navStore.setComercialSubOption(to.query.tab)
+    }
   } else if (to.path.startsWith('/gestion-aduanera')) {
     if (navStore.activeModule !== 'gestion-aduanera') {
       navStore.setActiveModule('gestion-aduanera')
     }
-    if (to.path.includes('liquidacion')) {
+    if (to.query?.tab) {
+      navStore.setGestionAduaneraSubOption(to.query.tab)
+    } else if (to.path.includes('liquidacion')) {
       navStore.setGestionAduaneraSubOption('declaraciones')
     }
   } else if (to.path.startsWith('/agente-aduanero')) {
     if (navStore.activeModule !== 'agente-aduanero') {
       navStore.setActiveModule('agente-aduanero')
+    }
+    if (to.query?.tab) {
+      navStore.setAgenteAduaneroSubOption(to.query.tab)
     }
   } else if (to.path.startsWith('/transporte-flota')) {
     if (navStore.activeModule !== 'transporte-flota') {
@@ -153,9 +161,15 @@ router.beforeEach(async (to, from, next) => {
     if (navStore.activeModule !== 'legal-auditoria') {
       navStore.setActiveModule('legal-auditoria')
     }
+    if (to.query?.tab) {
+      navStore.setLegalAuditoriaSubOption(to.query.tab)
+    }
   } else if (to.path.startsWith('/finanzas')) {
     if (navStore.activeModule !== 'finanzas') {
       navStore.setActiveModule('finanzas')
+    }
+    if (to.query?.tab) {
+      navStore.setFinanzasSubOption(to.query.tab)
     }
   }
 

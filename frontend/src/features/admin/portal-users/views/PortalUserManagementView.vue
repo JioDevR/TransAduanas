@@ -147,6 +147,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { portalUserService } from '../services/portalUserService'
 import { useNavigationStore } from '@/core/stores/navigationStore'
 import { useNotification } from '@/shared/composables/useNotification'
+import { useConfirmation } from '@/shared/composables/useConfirmation'
 import PortalUserTable from '../components/PortalUserTable.vue'
 import PortalUserForm from '../components/PortalUserForm.vue'
 import PortalUserAuditModal from '../components/PortalUserAuditModal.vue'
@@ -154,6 +155,7 @@ import PortalUserResetPasswordModal from '../components/PortalUserResetPasswordM
 
 const navigationStore = useNavigationStore()
 const { showSuccess, showError } = useNotification()
+const { confirmAction } = useConfirmation()
 
 const users = ref([])
 const loading = ref(false)
@@ -241,7 +243,13 @@ const handleToggleStatus = async (user) => {
   const isActivating = !user.estadoActivo
   const actionText = isActivating ? 'reactivar' : 'desactivar (baja lógica)'
 
-  if (!confirm(`¿Está seguro de que desea ${actionText} la cuenta de @${user.username}?`)) {
+  const confirmed = await confirmAction({
+    header: isActivating ? 'Reactivar Cuenta del Portal' : 'Desactivar Cuenta del Portal',
+    message: `¿Está seguro de que desea ${actionText} la cuenta de @${user.username}?`,
+    acceptLabel: isActivating ? 'Sí, Reactivar' : 'Sí, Desactivar',
+    acceptClass: isActivating ? 'p-button-success' : 'p-button-danger'
+  })
+  if (!confirmed) {
     return
   }
 

@@ -793,7 +793,7 @@ onMounted(() => {
 
 .filter-select {
   padding: 0.6rem 0.85rem;
-  background: var(--color-bg-subtle);
+  background-color: var(--color-bg-subtle);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   color: var(--color-text-main);

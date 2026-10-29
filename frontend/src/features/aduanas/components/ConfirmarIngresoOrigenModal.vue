@@ -196,15 +196,15 @@ const handleSubmit = async () => {
   display: flex;
   align-items: flex-start;
   gap: 12px;
-  background: rgba(16, 185, 129, 0.08);
-  border: 1px solid rgba(16, 185, 129, 0.25);
+  background: var(--color-success-bg);
+  border: 1px solid var(--color-success-border);
   border-radius: 8px;
   padding: 12px 14px;
-  color: var(--text-color, #e2e8f0);
+  color: var(--color-text-main);
 }
 
 .ingreso-info-banner i {
-  color: #10b981;
+  color: var(--color-success-text);
   margin-top: 2px;
 }
 
@@ -212,7 +212,7 @@ const handleSubmit = async () => {
   display: block;
   font-size: 0.85rem;
   font-weight: 700;
-  color: #34d399;
+  color: var(--color-success-text);
   margin-bottom: 3px;
 }
 
@@ -220,7 +220,7 @@ const handleSubmit = async () => {
   margin: 0;
   font-size: 0.8rem;
   line-height: 1.35;
-  color: var(--text-muted, #94a3b8);
+  color: var(--color-text-muted);
 }
 
 .ingreso-fields-grid {
@@ -244,17 +244,17 @@ const handleSubmit = async () => {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: var(--text-muted, #94a3b8);
+  color: var(--color-text-muted);
 }
 
 .text-input,
 .textarea-input {
   width: 100%;
   padding: 8px 12px;
-  background: var(--bg-surface-elevated, #1e293b);
-  border: 1px solid var(--border-color, #334155);
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
   border-radius: 6px;
-  color: var(--text-color, #f8fafc);
+  color: var(--color-text-main);
   font-size: 0.85rem;
   transition: border-color 0.15s ease;
 }
@@ -262,7 +262,7 @@ const handleSubmit = async () => {
 .text-input:focus,
 .textarea-input:focus {
   outline: none;
-  border-color: #10b981;
+  border-color: var(--color-primary);
 }
 
 .textarea-input {
@@ -275,15 +275,15 @@ const handleSubmit = async () => {
   gap: 10px;
   margin-top: 10px;
   padding-top: 14px;
-  border-top: 1px solid var(--border-color, #334155);
+  border-top: 1px solid var(--color-border);
 }
 
 .btn-modal-cancel {
   padding: 8px 16px;
-  background: transparent;
-  border: 1px solid var(--border-color, #334155);
+  background: var(--color-bg-subtle);
+  border: 1px solid var(--color-border);
   border-radius: 6px;
-  color: var(--text-color, #e2e8f0);
+  color: var(--color-text-main);
   font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
@@ -291,7 +291,7 @@ const handleSubmit = async () => {
 }
 
 .btn-modal-cancel:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--color-bg-muted);
 }
 
 .btn-modal-save {
@@ -299,10 +299,10 @@ const handleSubmit = async () => {
   align-items: center;
   gap: 8px;
   padding: 8px 18px;
-  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  background: var(--color-primary);
   border: none;
   border-radius: 6px;
-  color: #fff;
+  color: var(--color-primary-text);
   font-size: 0.85rem;
   font-weight: 700;
   cursor: pointer;

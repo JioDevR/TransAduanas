@@ -43,7 +43,7 @@ export const useNavigationStore = defineStore('navigation', {
       return ROLE_MODULE_MAP[authStore.userRole] || 'comercial'
     },
 
-    moduleTitle: (state) => {
+    moduleTitle() {
       const titles = {
         'administracion-ti': 'Administración TI',
         'gerencia-general': 'Gerencia General',
@@ -54,7 +54,7 @@ export const useNavigationStore = defineStore('navigation', {
         'finanzas': 'Finanzas',
         'legal-auditoria': 'Legal y Auditoría'
       }
-      return titles[state.currentModule] || 'Operaciones'
+      return titles[this.currentModule] || 'Operaciones'
     },
 
     // Getters de compatibilidad con nombres antiguos

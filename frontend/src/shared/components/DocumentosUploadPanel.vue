@@ -708,15 +708,15 @@ defineExpose({
   display: flex;
   align-items: flex-start;
   gap: 1rem;
-  background: var(--color-warning-subtle, #fef8ec);
-  border: 1px solid var(--color-warning, #d97706);
-  border-left: 5px solid var(--color-warning, #d97706);
+  background: var(--color-warning-bg);
+  border: 1px solid var(--color-warning-border);
+  border-left: 5px solid var(--color-warning-text);
   border-radius: var(--radius-md, 8px);
   padding: 1rem 1.25rem;
 }
 
 .alert-icon-box {
-  color: var(--color-warning, #d97706);
+  color: var(--color-warning-text);
   font-size: 1.5rem;
   margin-top: 0.1rem;
 }
@@ -1018,7 +1018,7 @@ defineExpose({
   gap: 0.5rem;
   padding: 0.5rem 1.25rem;
   background: var(--color-primary, #352f2a);
-  color: #fff;
+  color: var(--color-primary-text);
   border: none;
   border-radius: var(--radius-md, 8px);
   font-weight: 700;
@@ -1209,7 +1209,7 @@ defineExpose({
   padding: 0.35rem 0.65rem;
   border-radius: var(--radius-sm, 6px);
   background: var(--color-primary, #352f2a);
-  color: #fff;
+  color: var(--color-primary-text);
   border: none;
   font-size: 0.75rem;
   font-weight: 600;
@@ -1236,7 +1236,7 @@ defineExpose({
 }
 
 .action-btn-outline.reject:hover {
-  background: var(--color-danger-subtle, #f8d7da);
+  background: var(--color-danger-bg);
 }
 
 .btn-outline-warm {
@@ -1270,6 +1270,6 @@ defineExpose({
 }
 
 .text-accent {
-  color: var(--color-accent-copper, #c2410c);
+  color: var(--color-accent-kicker);
 }
 </style>

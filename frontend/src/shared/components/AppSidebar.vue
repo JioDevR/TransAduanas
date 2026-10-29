@@ -901,7 +901,7 @@ const handleFinanzasAction = (action) => {
 .module-custom-select {
   width: 100%;
   appearance: none;
-  background: var(--color-bg-surface);
+  background-color: var(--color-bg-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   padding: 0.45rem 1.65rem 0.45rem 0.6rem;

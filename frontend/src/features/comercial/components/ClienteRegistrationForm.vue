@@ -614,10 +614,10 @@ const handleSubmit = () => {
   align-items: center;
   gap: var(--space-3, 0.75rem);
   padding: var(--space-4, 1rem) var(--space-5, 1.25rem);
-  background: var(--color-danger-subtle);
-  border: 1px solid var(--color-danger);
+  background: var(--color-danger-bg);
+  border: 1px solid var(--color-danger-border);
   border-radius: var(--radius-lg, 0.75rem);
-  color: var(--color-danger);
+  color: var(--color-danger-text);
   font-size: var(--font-size-sm, 0.875rem);
 }
 
@@ -628,7 +628,7 @@ const handleSubmit = () => {
 .error-close-btn {
   background: none;
   border: none;
-  color: var(--color-danger);
+  color: var(--color-danger-text);
   cursor: pointer;
   padding: 0.25rem;
 }
@@ -659,7 +659,7 @@ const handleSubmit = () => {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-xl, 1rem);
   padding: var(--space-6, 1.5rem) var(--space-8, 2rem);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-subtle);
 }
 
 .block-header {
@@ -785,7 +785,7 @@ const handleSubmit = () => {
   outline: none;
   border-color: var(--color-primary);
   background: var(--color-bg-surface);
-  box-shadow: 0 0 0 2px var(--color-primary-subtle);
+  box-shadow: 0 0 0 2px var(--color-bg-subtle);
 }
 
 .doc-num-input {
@@ -836,7 +836,7 @@ const handleSubmit = () => {
 }
 
 .doc-type-btn.active {
-  background: var(--color-primary-subtle);
+  background: var(--color-bg-subtle);
   border-color: var(--color-primary);
   color: var(--color-primary);
 }
@@ -875,13 +875,13 @@ const handleSubmit = () => {
 }
 
 .auto-banner-icon.prospect-icon {
-  background: var(--color-warning-subtle);
-  color: var(--color-warning);
+  background: var(--color-warning-bg);
+  color: var(--color-warning-text);
 }
 
 .auto-banner-icon.client-icon {
-  background: var(--color-success-subtle);
-  color: var(--color-success);
+  background: var(--color-success-bg);
+  color: var(--color-success-text);
 }
 
 .auto-banner-content {
@@ -918,14 +918,14 @@ const handleSubmit = () => {
 }
 
 .auto-banner-badge.badge-prospect {
-  background: var(--color-warning-subtle);
-  color: var(--color-warning);
+  background: var(--color-warning-bg);
+  color: var(--color-warning-text);
   border: 1px solid rgba(217, 119, 6, 0.3);
 }
 
 .auto-banner-badge.badge-client {
-  background: var(--color-success-subtle);
-  color: var(--color-success);
+  background: var(--color-success-bg);
+  color: var(--color-success-text);
   border: 1px solid rgba(16, 185, 129, 0.3);
 }
 
@@ -951,7 +951,7 @@ const handleSubmit = () => {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-xl, 1rem);
   padding: var(--space-6, 1.5rem);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-subtle);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -968,7 +968,7 @@ const handleSubmit = () => {
   font-weight: 800;
   letter-spacing: 0.1em;
   color: var(--color-primary);
-  background: var(--color-primary-subtle);
+  background: var(--color-bg-subtle);
   padding: 0.25rem 0.65rem;
   border-radius: var(--radius-full, 9999px);
   margin-bottom: var(--space-4, 1rem);
@@ -982,7 +982,7 @@ const handleSubmit = () => {
   width: 4rem;
   height: 4rem;
   border-radius: var(--radius-lg, 0.75rem);
-  background: var(--color-primary-subtle);
+  background: var(--color-bg-subtle);
   color: var(--color-primary);
   border: 2px solid var(--color-border);
   display: flex;

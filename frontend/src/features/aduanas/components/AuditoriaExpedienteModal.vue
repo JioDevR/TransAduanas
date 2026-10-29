@@ -883,7 +883,7 @@ const getCanalColor = (canal) => {
   background: var(--color-bg-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg, 12px);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-subtle);
   flex-wrap: wrap;
 }
 
@@ -1072,7 +1072,7 @@ const getCanalColor = (canal) => {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg, 12px);
   padding: 1.5rem 1.75rem;
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-subtle);
 }
 
 .form-block-card.highlight-border {
@@ -1502,7 +1502,7 @@ const getCanalColor = (canal) => {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg, 12px);
   padding: 1.5rem;
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-subtle);
 }
 
 .card-kicker-row {
@@ -1577,7 +1577,7 @@ const getCanalColor = (canal) => {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg, 12px);
   padding: 1.5rem;
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-subtle);
 }
 
 .checklist-header {

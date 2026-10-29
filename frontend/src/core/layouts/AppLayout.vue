@@ -185,6 +185,8 @@ const currentTitle = computed(() => {
       dashboard: 'Centro de Control y Monitoreo del Sistema TI',
       users: 'Gestor y Directorio de Usuarios TI',
       'create-user': 'Ficha de Registro de Operador',
+      'portal-users': 'Gestión de Usuarios del Portal B2B',
+      'create-portal-user': 'Alta de Usuario del Portal B2B',
       logs: 'Bitácora y Consola de Logs TI',
       about: 'Acerca del Sistema SGA'
     }
@@ -275,6 +277,8 @@ const currentKicker = computed(() => {
       dashboard: 'PANEL DE CONTROL TI // INFRAESTRUCTURA & SEGURIDAD',
       users: 'ADMINISTRACIÓN DE PERSONAL // SEGURIDAD & ACCESOS',
       'create-user': 'ALTA DE OPERADOR // SGA-FORM-00',
+      'portal-users': 'PORTAL DE CLIENTES B2B // CREDENCIALES CORPORATIVAS',
+      'create-portal-user': 'ALTA DE USUARIO EXTERNO // PORTAL B2B',
       logs: 'AUDITORÍA & MONITOREO // TRAZAS SPRING BOOT',
       about: 'INGENIERÍA DE SOFTWARE // FICHA TÉCNICA'
     }
@@ -282,6 +286,14 @@ const currentKicker = computed(() => {
   }
   if (navigationStore.currentModule === 'gestion-aduanera') {
     return 'SUPERVISIÓN & CONTROL // OPERACIONES ADUANERAS'
+  }
+  if (navigationStore.currentModule === 'agente-aduanero') {
+    const aKickers = {
+      almacen: 'TERMINAL LOGÍSTICO // RECEPCIÓN & CONTEO DE BULTOS',
+      expedientes: 'OPERATIVA DE CAMPO // SEGUIMIENTO & AFORO ADUANERO',
+      despacho: 'COORDINACIÓN LOGÍSTICA // SALIDA & DESPACHO DE CARGA'
+    }
+    return aKickers[navigationStore.agenteAduaneroSubOption] || 'OPERATIVA DE CAMPO // AGENCIA & ALMACÉN ADUANERO'
   }
   if (navigationStore.currentModule === 'transporte-flota') {
     const tKickers = {
@@ -295,7 +307,20 @@ const currentKicker = computed(() => {
     return tKickers[navigationStore.transporteFlotaSubOption] || 'LOGÍSTICA TERRESTRE // TRANSPORTE & FLOTA'
   }
   if (navigationStore.currentModule === 'finanzas') {
-    return 'GESTIÓN CONTABLE // TESORERÍA & FACTURACIÓN'
+    const fKickers = {
+      dashboard: 'PANEL FINANCIERO // RECAUDACIÓN & LIQUIDEZ',
+      'pre-expedientes': 'VALIDACIÓN DE ANTICIPOS // APERTURA OPERATIVA',
+      liquidaciones: 'CIERRE FINANCIERO // LIQUIDACIONES DE EXPEDIENTE',
+      conciliacion: 'TESORERÍA & BANCOS // CONCILIACIÓN DE ABONOS'
+    }
+    return fKickers[navigationStore.finanzasSubOption] || 'GESTIÓN CONTABLE // TESORERÍA & FACTURACIÓN'
+  }
+  if (navigationStore.currentModule === 'legal-auditoria') {
+    const lKickers = {
+      expedientes: 'CUMPLIMIENTO NORMATIVO // EXPEDIENTES & FISCALIZACIÓN',
+      auditorias: 'CONTROL LEGAL // AUDITORÍA & TRAZABILIDAD SUNAT'
+    }
+    return lKickers[navigationStore.legalAuditoriaSubOption] || 'CUMPLIMIENTO NORMATIVO // LEGAL & AUDITORÍA ADUANERA'
   }
   return null
 })
@@ -328,7 +353,9 @@ const currentSubtitle = computed(() => {
       dashboard: 'Supervisión en tiempo real de servicios core, personal aduanero activo, infraestructura territorial y bitácora.',
       users: 'Seguimiento de cuentas de operador aduanero, asignación de perfiles de acceso y supervisión de acreditaciones SUNAT.',
       'create-user': 'Complete los datos legales, acreditaciones aduaneras SUNAT y credenciales para dar de alta al operador.',
-      logs: 'Monitoreo de trazas de ejecución en Spring Boot 3, eventos JWT y diagnóstico de excepciones.',
+      'portal-users': 'Administración de credenciales de acceso externo para empresas clientes formalizadas en el Portal B2B.',
+      'create-portal-user': 'Vincule un cliente corporativo activo y genere sus credenciales iniciales para el Portal de Clientes B2B.',
+      logs: 'Monitoreo de trazas de ejecución en Spring Boot 4, eventos JWT y diagnóstico de excepciones.',
       about: 'Especificaciones de arquitectura, dependencias de compilación y estado del stack tecnológico.'
     }
     return tiSubs[navigationStore.administracionTiSubOption] || 'Control de accesos de operadores, parámetros de infraestructura y auditoría técnica del sistema.'
@@ -351,6 +378,30 @@ const currentSubtitle = computed(() => {
       expedientes: 'Gestión integral de expedientes aduaneros, asignación de canales SUNAT y autorización de levante.'
     }
     return sMap[navigationStore.gestionAduaneraSubOption] || 'Auditoría técnica de propuestas, control de partidas, apertura de expedientes aduaneros y seguimiento SUNAT.'
+  }
+  if (navigationStore.currentModule === 'agente-aduanero') {
+    const aSubs = {
+      almacen: 'Control de ingreso físico a almacén, pesaje de balanza, conteo de bultos y verificación de precintos.',
+      expedientes: 'Ejecución de diligencias de campo, aforo físico con especialistas SUNAT y seguimiento de levante.',
+      despacho: 'Coordinación de retiro en terminal portuario/aeroportuario y entrega hacia transporte terrestre.'
+    }
+    return aSubs[navigationStore.agenteAduaneroSubOption] || 'Control de ingreso a almacén, pesaje, diligencias de aforo físico y coordinación de levante aduanero.'
+  }
+  if (navigationStore.currentModule === 'finanzas') {
+    const fSubs = {
+      dashboard: 'Visibilidad consolidada de ingresos, validación de vouchers bancarios, detracciones SPOT y flujo de caja.',
+      'pre-expedientes': 'Verificación de abonos de adelanto y tributos para habilitar la apertura de expedientes aduaneros.',
+      liquidaciones: 'Cálculo y facturación definitiva de servicios logísticos, almacenaje, transporte y gastos operativos.',
+      conciliacion: 'Auditoría y conciliación bancaria de transferencias, depósitos y comprobantes registrados.'
+    }
+    return fSubs[navigationStore.finanzasSubOption] || 'Validación de anticipos comerciales, liquidación financiera de expedientes y conciliación de tesorería.'
+  }
+  if (navigationStore.currentModule === 'legal-auditoria') {
+    const lSubs = {
+      expedientes: 'Revisión jurídico-aduanera de expedientes observados, canal rojo, rectificaciones DAM y sanciones.',
+      auditorias: 'Inspección integral de trazabilidad documentaria, cumplimiento SUNAT y dictámenes legales.'
+    }
+    return lSubs[navigationStore.legalAuditoriaSubOption] || 'Supervisión de cumplimiento normativo, revisión de expedientes observados y trazabilidad legal ante SUNAT.'
   }
   return null
 })

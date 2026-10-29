@@ -641,7 +641,7 @@ defineExpose({
   background: var(--color-bg-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-xl, 1rem);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-subtle);
   flex-wrap: wrap;
 }
 
@@ -686,7 +686,7 @@ defineExpose({
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--color-primary);
-  background: var(--color-primary-subtle);
+  background: var(--color-bg-subtle);
   padding: 0.2rem 0.55rem;
   border-radius: var(--radius-sm, 0.25rem);
 }
@@ -704,13 +704,13 @@ defineExpose({
 }
 
 .mode-create {
-  background: var(--color-success-subtle);
-  color: var(--color-success);
+  background: var(--color-success-bg);
+  color: var(--color-success-text);
 }
 
 .mode-edit {
-  background: var(--color-warning-subtle);
-  color: var(--color-warning);
+  background: var(--color-warning-bg);
+  color: var(--color-warning-text);
 }
 
 .form-main-title {
@@ -766,10 +766,10 @@ defineExpose({
   border-radius: var(--radius-md, 0.5rem);
   border: none;
   background: var(--color-primary);
-  color: var(--color-primary-contrast);
+  color: var(--color-primary-text);
   cursor: pointer;
   transition: all var(--transition-fast);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-subtle);
 }
 
 .btn-espresso:hover:not(:disabled) {
@@ -790,10 +790,10 @@ defineExpose({
   align-items: center;
   gap: var(--space-3, 0.75rem);
   padding: var(--space-4, 1rem) var(--space-5, 1.25rem);
-  background: var(--color-danger-subtle);
-  border: 1px solid var(--color-danger);
+  background: var(--color-danger-bg);
+  border: 1px solid var(--color-danger-border);
   border-radius: var(--radius-lg, 0.75rem);
-  color: var(--color-danger);
+  color: var(--color-danger-text);
   font-size: var(--font-size-sm, 0.875rem);
 }
 
@@ -804,7 +804,7 @@ defineExpose({
 .error-close-btn {
   background: none;
   border: none;
-  color: var(--color-danger);
+  color: var(--color-danger-text);
   cursor: pointer;
   padding: 0.25rem;
 }
@@ -812,7 +812,7 @@ defineExpose({
 /* 2. Grid de Contenido */
 .form-content-grid {
   display: grid;
-  grid-template-columns: 1fr 380px;
+  grid-template-columns: 1fr 400px;
   gap: var(--space-6, 1.5rem);
   align-items: start;
 }
@@ -835,7 +835,7 @@ defineExpose({
   border: 1px solid var(--color-border);
   border-radius: var(--radius-xl, 1rem);
   padding: var(--space-6, 1.5rem) var(--space-8, 2rem);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-subtle);
 }
 
 .block-header {
@@ -971,7 +971,7 @@ defineExpose({
   outline: none;
   border-color: var(--color-primary);
   background: var(--color-bg-surface);
-  box-shadow: 0 0 0 2px var(--color-primary-subtle);
+  box-shadow: 0 0 0 2px var(--color-bg-subtle);
 }
 
 .code-input {
@@ -1023,7 +1023,7 @@ defineExpose({
 }
 
 .shortcut-chip:hover {
-  background: var(--color-primary-subtle);
+  background: var(--color-bg-subtle);
   border-color: var(--color-primary);
   color: var(--color-primary);
 }
@@ -1055,7 +1055,7 @@ defineExpose({
 
 .container-option-card.selected {
   border-color: var(--color-primary);
-  background: var(--color-primary-subtle);
+  background: var(--color-bg-subtle);
   box-shadow: 0 0 0 1px var(--color-primary);
 }
 
@@ -1075,7 +1075,7 @@ defineExpose({
 
 .container-option-card.selected .option-icon-box {
   background: var(--color-primary);
-  color: var(--color-primary-contrast);
+  color: var(--color-primary-text);
   border-color: var(--color-primary);
 }
 
@@ -1144,7 +1144,7 @@ defineExpose({
 
 .status-option-card.selected {
   border-color: var(--color-primary);
-  background: var(--color-primary-subtle);
+  background: var(--color-bg-subtle);
   box-shadow: 0 0 0 1px var(--color-primary);
 }
 
@@ -1162,11 +1162,11 @@ defineExpose({
 }
 
 .dot-active {
-  background: var(--color-success);
+  background: var(--color-success-text);
 }
 
 .dot-inactive {
-  background: var(--color-danger);
+  background: var(--color-danger-text);
 }
 
 .status-card-title {
@@ -1198,7 +1198,7 @@ defineExpose({
   border: 1px solid var(--color-border);
   border-radius: var(--radius-xl, 1rem);
   padding: var(--space-6, 1.5rem);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-subtle);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1215,7 +1215,7 @@ defineExpose({
   font-weight: 800;
   letter-spacing: 0.1em;
   color: var(--color-primary);
-  background: var(--color-primary-subtle);
+  background: var(--color-bg-subtle);
   padding: 0.25rem 0.65rem;
   border-radius: var(--radius-full, 9999px);
   margin-bottom: var(--space-4, 1rem);
@@ -1229,7 +1229,7 @@ defineExpose({
   width: 4rem;
   height: 4rem;
   border-radius: var(--radius-lg, 0.75rem);
-  background: var(--color-primary-subtle);
+  background: var(--color-bg-subtle);
   color: var(--color-primary);
   border: 2px solid var(--color-border);
   display: flex;
@@ -1310,13 +1310,13 @@ defineExpose({
 }
 
 .badge-active {
-  background: var(--color-success-subtle);
-  color: var(--color-success);
+  background: var(--color-success-bg);
+  color: var(--color-success-text);
 }
 
 .badge-inactive {
-  background: var(--color-danger-subtle);
-  color: var(--color-danger);
+  background: var(--color-danger-bg);
+  color: var(--color-danger-text);
 }
 
 .card-footer-stamp {
@@ -1335,7 +1335,7 @@ defineExpose({
   border: 1px solid var(--color-border);
   border-radius: var(--radius-xl, 1rem);
   padding: var(--space-5, 1.25rem);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-subtle);
   display: flex;
   flex-direction: column;
   gap: var(--space-4, 1rem);
@@ -1372,7 +1372,7 @@ defineExpose({
 }
 
 .checklist-row.valid {
-  color: var(--color-success);
+  color: var(--color-success-text);
   font-weight: 600;
 }
 

@@ -959,8 +959,7 @@ defineExpose({
   display: flex;
   flex-direction: column;
   gap: 1.75rem;
-  max-width: 1440px;
-  margin: 0 auto;
+  width: 100%;
   animation: fadeIn 0.25s ease-out;
 }
 
@@ -1081,7 +1080,7 @@ defineExpose({
 /* 2. Grid Principal */
 .form-content-grid {
   display: grid;
-  grid-template-columns: 1fr 340px;
+  grid-template-columns: 1fr 400px;
   gap: 1.75rem;
   align-items: start;
 }
@@ -1192,7 +1191,7 @@ defineExpose({
 .form-select {
   width: 100%;
   padding: 0.65rem 0.85rem 0.65rem 2.4rem;
-  background: var(--color-bg-surface);
+  background-color: var(--color-bg-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   color: var(--color-text-main);
@@ -1210,7 +1209,7 @@ defineExpose({
 
 .form-input:disabled,
 .form-select:disabled {
-  background: var(--color-bg-subtle);
+  background-color: var(--color-bg-subtle);
   color: var(--color-text-subtle);
   cursor: not-allowed;
 }

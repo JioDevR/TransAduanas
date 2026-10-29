@@ -337,7 +337,7 @@ async function handleSubmit() {
 
 .submit-button {
   background: var(--color-primary, #352f2a);
-  color: #ffffff;
+  color: var(--color-primary-text, #ffffff);
   border: none;
   border-radius: 6px;
   padding: 0.85rem 1.25rem;

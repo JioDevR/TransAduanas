@@ -394,10 +394,12 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import apiClient from '@/core/api/apiClient'
+import { portalPagoService } from '../services/portalPagoService'
+import { useNotification } from '@/shared/composables/useNotification'
 
 const route = useRoute()
 const router = useRouter()
+const { showSuccess, showError, showWarn } = useNotification()
 
 const loadingObligaciones = ref(true)
 const enviando = ref(false)
@@ -453,9 +455,9 @@ onMounted(async () => {
 async function cargarObligaciones() {
   loadingObligaciones.value = true
   try {
-    const res = await apiClient.get('/portal/pagos/obligaciones-pendientes')
-    if (res.data?.data) {
-      obligaciones.value = res.data.data
+    const data = await portalPagoService.listarObligaciones()
+    if (data) {
+      obligaciones.value = data
 
       // Seleccionar según query params o el primer elemento
       const qTipo = route.query.tipo?.toString().toUpperCase()
@@ -567,27 +569,23 @@ function quitarArchivo() {
 }
 
 async function subirComprobante(file) {
-  const formData = new FormData()
-  formData.append('file', file)
-  const res = await apiClient.post('/portal/pagos/upload-comprobante', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' }
-  })
-  return res.data?.data?.idDocumento
+  const docRes = await portalPagoService.subirComprobante(file)
+  return docRes?.idDocumento || docRes?.id
 }
 
 async function confirmarYRegistrar() {
   if (!form.value.montoAbonado || form.value.montoAbonado <= 0) {
-    alert('Por favor ingrese un monto válido a abonar.')
+    showWarn('Por favor ingrese un monto válido a abonar.')
     return
   }
 
   if (errorMontoExcedido.value) {
-    alert('El monto ingresado excede el saldo pendiente de la obligación.')
+    showError('El monto ingresado excede el saldo pendiente de la obligación.')
     return
   }
 
   if (!archivoVoucher.value) {
-    alert('Debe adjuntar la constancia o voucher bancario en formato PDF o Imagen.')
+    showWarn('Debe adjuntar la constancia o voucher bancario en formato PDF o Imagen.')
     return
   }
 
@@ -602,14 +600,14 @@ async function confirmarYRegistrar() {
     // 2. Forzar moneda USD
     form.value.moneda = 'USD'
 
-    const res = await apiClient.post('/portal/pagos/registrar-voucher', form.value)
-    if (res.data?.data) {
-      alert(`¡Voucher ${res.data.data.codigoPago || ''} registrado con éxito! Ha sido remitido a conciliación contable en Finanzas.`)
+    const res = await portalPagoService.registrarVoucher(form.value)
+    if (res) {
+      showSuccess(`¡Voucher ${res.codigoPago || ''} registrado con éxito! Ha sido remitido a conciliación contable en Finanzas.`, 'Voucher Registrado', 4500)
       router.push('/pagos')
     }
   } catch (err) {
     console.error('Error al registrar voucher', err)
-    alert(err.response?.data?.message || 'Error al registrar el comprobante de pago.')
+    showError(err.response?.data?.message || 'Error al registrar el comprobante de pago.')
   } finally {
     enviando.value = false
   }
@@ -978,9 +976,9 @@ function formatEstado(st) {
 }
 
 .preset-chip.active {
-  background: #fff;
-  border-color: var(--color-primary, #352f2a);
-  box-shadow: 0 0 0 3px rgba(53, 47, 42, 0.1);
+  background: var(--color-bg-surface);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(214, 180, 118, 0.2);
 }
 
 .chip-main {
@@ -1094,9 +1092,9 @@ function formatEstado(st) {
 }
 
 .bank-account-card.selected {
-  background: #fff;
-  border-color: var(--color-primary, #352f2a);
-  box-shadow: 0 0 0 3px rgba(53, 47, 42, 0.1);
+  background: var(--color-bg-surface);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(214, 180, 118, 0.2);
 }
 
 .bank-card-header {
@@ -1300,8 +1298,8 @@ function formatEstado(st) {
 }
 
 .btn-primary {
-  background: var(--color-primary, #352f2a);
-  color: #fff;
+  background: var(--color-primary);
+  color: var(--color-primary-text);
   border: none;
   border-radius: 6px;
   padding: 0.75rem 1.5rem;
@@ -1315,7 +1313,7 @@ function formatEstado(st) {
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: #1f1b18;
+  background: var(--color-primary-hover);
 }
 
 .btn-primary:disabled {

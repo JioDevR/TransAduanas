@@ -24,7 +24,7 @@
           </div>
           <div class="company-meta">
             <span class="company-name">{{ authStore.empresaNombre }}</span>
-            <span class="company-ruc">RUC: {{ authStore.ruc }}</span>
+            <span class="company-ruc font-mono">RUC: {{ authStore.ruc }}</span>
           </div>
         </div>
 
@@ -100,7 +100,7 @@
       </nav>
     </header>
 
-    <!-- Contenido Principal -->
+    <!-- Contenido Principal (Fluido 100% y 3.5rem) -->
     <main class="portal-main">
       <div class="main-container">
         <router-view />
@@ -125,18 +125,20 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { computed, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/core/stores/authStore'
 import { useTheme } from '@/shared/composables/useTheme'
-import { portalNotificationService } from '@/features/notificaciones/services/portalNotificationService'
+import { useConfirmation } from '@/shared/composables/useConfirmation'
+import { portalNotificationService, unreadNotificationsCount } from '@/features/notificaciones/services/portalNotificationService'
 
 const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
 const theme = useTheme()
+const { confirmAction } = useConfirmation()
 
-const unreadCount = ref(0)
+const unreadCount = unreadNotificationsCount
 
 const userInitial = computed(() => {
   const name = authStore.usuarioNombre || 'C'
@@ -146,10 +148,8 @@ const userInitial = computed(() => {
 async function cargarResumenNotificaciones() {
   if (!authStore.isAuthenticated) return
   try {
-    const count = await portalNotificationService.getResumenNoLeidas()
-    unreadCount.value = typeof count === 'number' ? count : 0
+    await portalNotificationService.getResumenNoLeidas()
   } catch (error) {
-    // Silently ignore or set 0 if network fails
     console.debug('Error al obtener resumen de notificaciones:', error)
   }
 }
@@ -162,9 +162,20 @@ onMounted(() => {
   cargarResumenNotificaciones()
 })
 
-function handleLogout() {
-  authStore.logout()
-  router.push('/login')
+async function handleLogout() {
+  const confirmed = await confirmAction({
+    header: 'Cerrar Sesión Empresarial',
+    message: '¿Está seguro de que desea salir del portal corporativo TransAduanas?',
+    icon: 'pi pi-sign-out',
+    acceptLabel: 'Cerrar Sesión',
+    rejectLabel: 'Permanecer',
+    acceptClass: 'p-button-danger'
+  })
+
+  if (confirmed) {
+    authStore.logout()
+    router.push('/login')
+  }
 }
 </script>
 
@@ -173,14 +184,14 @@ function handleLogout() {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background-color: var(--color-bg-base, #f6f3ee);
-  color: var(--color-text-main, #2b2520);
+  background-color: var(--color-bg-base);
+  color: var(--color-text-main);
   font-family: var(--font-sans);
 }
 
 .portal-header {
-  background: var(--color-bg-surface, #ffffff);
-  border-bottom: 1px solid var(--color-border, #e4dacb);
+  background: var(--color-bg-surface);
+  border-bottom: 1px solid var(--color-border);
   position: sticky;
   top: 0;
   z-index: 100;
@@ -188,9 +199,8 @@ function handleLogout() {
 }
 
 .header-container {
-  max-width: 1440px;
-  margin: 0 auto;
-  padding: 0.85rem 1.75rem;
+  width: 100%;
+  padding: 0.85rem 3.5rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -206,8 +216,8 @@ function handleLogout() {
 .brand-logo {
   width: 42px;
   height: 42px;
-  background: var(--color-primary, #352f2a);
-  color: var(--color-primary-text, #ffffff);
+  background: var(--color-primary);
+  color: var(--color-primary-text);
   border-radius: 8px;
   display: flex;
   align-items: center;
@@ -229,7 +239,7 @@ function handleLogout() {
 .brand-name {
   font-size: 1.15rem;
   font-weight: 700;
-  color: var(--color-text-main, #2b2520);
+  color: var(--color-text-main);
   letter-spacing: -0.02em;
 }
 
@@ -237,16 +247,16 @@ function handleLogout() {
   font-size: 0.65rem;
   font-weight: 700;
   padding: 0.15rem 0.45rem;
-  background: var(--color-bg-subtle, #f2ebe1);
-  color: var(--color-accent-kicker, #9a7f60);
-  border: 1px solid var(--color-border, #e4dacb);
+  background: var(--color-bg-subtle);
+  color: var(--color-accent-kicker);
+  border: 1px solid var(--color-border);
   border-radius: 4px;
   letter-spacing: 0.05em;
 }
 
 .brand-sub {
   font-size: 0.72rem;
-  color: var(--color-text-muted, #6f6356);
+  color: var(--color-text-muted);
 }
 
 .header-company {
@@ -254,8 +264,8 @@ function handleLogout() {
   align-items: center;
   gap: 0.75rem;
   padding: 0.45rem 1rem;
-  background: var(--color-bg-base, #f6f3ee);
-  border: 1px solid var(--color-border, #e4dacb);
+  background: var(--color-bg-base);
+  border: 1px solid var(--color-border);
   border-radius: 8px;
 }
 
@@ -263,12 +273,12 @@ function handleLogout() {
   width: 32px;
   height: 32px;
   border-radius: 6px;
-  background: var(--color-bg-surface, #ffffff);
-  border: 1px solid var(--color-border-subtle, #ede5d8);
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-subtle);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--color-accent-kicker, #9a7f60);
+  color: var(--color-accent-kicker);
   font-size: 1rem;
 }
 
@@ -280,13 +290,12 @@ function handleLogout() {
 .company-name {
   font-size: 0.82rem;
   font-weight: 600;
-  color: var(--color-text-main, #2b2520);
+  color: var(--color-text-main);
 }
 
 .company-ruc {
   font-size: 0.72rem;
-  font-family: var(--font-mono);
-  color: var(--color-text-muted, #6f6356);
+  color: var(--color-text-muted);
 }
 
 .header-actions {
@@ -299,9 +308,9 @@ function handleLogout() {
   width: 38px;
   height: 38px;
   border-radius: 8px;
-  border: 1px solid var(--color-border, #e4dacb);
-  background: var(--color-bg-surface, #ffffff);
-  color: var(--color-text-main, #2b2520);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-surface);
+  color: var(--color-text-main);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -311,8 +320,8 @@ function handleLogout() {
 }
 
 .action-btn:hover {
-  background: var(--color-bg-subtle, #f2ebe1);
-  border-color: var(--color-border-strong, #d5c8b6);
+  background: var(--color-bg-subtle);
+  border-color: var(--color-border-strong);
 }
 
 .notif-btn {
@@ -324,7 +333,7 @@ function handleLogout() {
   position: absolute;
   top: -4px;
   right: -4px;
-  background: var(--color-danger, #b23b3b);
+  background: var(--color-danger);
   color: #ffffff;
   font-size: 0.65rem;
   font-weight: 700;
@@ -335,11 +344,11 @@ function handleLogout() {
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 2px solid var(--color-bg-surface, #ffffff);
+  border: 2px solid var(--color-bg-surface);
 }
 
 .nav-badge {
-  background: var(--color-danger, #b23b3b);
+  background: var(--color-danger);
   color: #ffffff;
   font-size: 0.65rem;
   font-weight: 700;
@@ -349,9 +358,9 @@ function handleLogout() {
 }
 
 .logout-btn:hover {
-  color: var(--color-danger-text, #9e2a2b);
-  background: var(--color-danger-bg, #fdf0f0);
-  border-color: var(--color-danger-border, #f6c8c8);
+  color: var(--color-danger-text);
+  background: var(--color-danger-bg);
+  border-color: var(--color-danger-border);
 }
 
 .user-profile {
@@ -360,14 +369,14 @@ function handleLogout() {
   gap: 0.65rem;
   padding: 0.25rem 0.65rem;
   border-radius: 8px;
-  border: 1px solid var(--color-border-subtle, #ede5d8);
+  border: 1px solid var(--color-border-subtle);
 }
 
 .user-avatar {
   width: 30px;
   height: 30px;
   border-radius: 50%;
-  background: var(--color-accent-kicker, #9a7f60);
+  background: var(--color-accent-kicker);
   color: #ffffff;
   display: flex;
   align-items: center;
@@ -388,19 +397,18 @@ function handleLogout() {
 
 .user-role {
   font-size: 0.68rem;
-  color: var(--color-text-muted, #6f6356);
+  color: var(--color-text-muted);
 }
 
-/* Sub-navegación */
+/* Sub-navegación fluida */
 .portal-nav {
-  background: var(--color-bg-sidebar, #ede6db);
-  border-top: 1px solid var(--color-border-subtle, #ede5d8);
+  background: var(--color-bg-sidebar);
+  border-top: 1px solid var(--color-border-subtle);
 }
 
 .nav-container {
-  max-width: 1440px;
-  margin: 0 auto;
-  padding: 0 1.75rem;
+  width: 100%;
+  padding: 0 3.5rem;
   display: flex;
   gap: 0.5rem;
 }
@@ -412,47 +420,46 @@ function handleLogout() {
   padding: 0.75rem 1.25rem;
   font-size: 0.84rem;
   font-weight: 500;
-  color: var(--color-text-muted, #6f6356);
+  color: var(--color-text-muted);
   text-decoration: none;
   border-bottom: 2px solid transparent;
   transition: all 0.2s ease;
 }
 
 .nav-item:hover {
-  color: var(--color-text-main, #2b2520);
-  background: rgba(255, 255, 255, 0.4);
+  color: var(--color-text-main);
+  background: var(--color-bg-subtle);
 }
 
 .nav-item.active {
-  color: var(--color-primary, #352f2a);
+  color: var(--color-primary);
   font-weight: 700;
-  border-bottom-color: var(--color-primary, #352f2a);
-  background: var(--color-bg-surface, #ffffff);
+  border-bottom-color: var(--color-primary);
+  background: var(--color-bg-surface);
 }
 
-/* Área de contenido */
+/* Área de contenido fluida (100% y padding: 2rem 3.5rem 3rem) */
 .portal-main {
   flex: 1;
-  padding: 2rem 1.75rem;
+  padding: 2rem 3.5rem 3rem;
+  width: 100%;
 }
 
 .main-container {
-  max-width: 1440px;
-  margin: 0 auto;
+  width: 100%;
 }
 
-/* Footer */
+/* Footer fluido */
 .portal-footer {
-  background: var(--color-bg-surface, #ffffff);
-  border-top: 1px solid var(--color-border, #e4dacb);
-  padding: 1.25rem 1.75rem;
+  background: var(--color-bg-surface);
+  border-top: 1px solid var(--color-border);
+  padding: 1.25rem 3.5rem;
   font-size: 0.75rem;
-  color: var(--color-text-muted, #6f6356);
+  color: var(--color-text-muted);
 }
 
 .footer-container {
-  max-width: 1440px;
-  margin: 0 auto;
+  width: 100%;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -475,5 +482,24 @@ function handleLogout() {
   align-items: center;
   gap: 0.45rem;
   font-weight: 500;
+}
+
+@media (max-width: 1024px) {
+  .header-container,
+  .nav-container,
+  .portal-main,
+  .portal-footer {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .header-company {
+    display: none;
+  }
+  .nav-container {
+    overflow-x: auto;
+  }
 }
 </style>

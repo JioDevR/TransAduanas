@@ -31,45 +31,57 @@
       </div>
     </div>
 
-    <!-- Métricas KPI -->
+    <!-- Métricas KPI con numeración 01..04 estándar Warm Editorial -->
     <div class="kpi-grid">
       <div class="kpi-card">
-        <div class="kpi-icon-box">
-          <i class="pi pi-bell"></i>
+        <div class="kpi-top">
+          <span class="kpi-idx">01</span>
+          <div class="kpi-icon-box">
+            <i class="pi pi-bell"></i>
+          </div>
         </div>
         <div class="kpi-content">
           <span class="kpi-label">TOTAL NOTIFICACIONES</span>
-          <span class="kpi-value">{{ notificaciones.length }}</span>
+          <span class="kpi-value font-mono">{{ notificaciones.length }}</span>
         </div>
       </div>
 
       <div class="kpi-card" :class="{ 'warning-highlight': totalNoLeidas > 0 }">
-        <div class="kpi-icon-box" :class="totalNoLeidas > 0 ? 'warning' : ''">
-          <i class="pi pi-inbox"></i>
+        <div class="kpi-top">
+          <span class="kpi-idx">02</span>
+          <div class="kpi-icon-box" :class="totalNoLeidas > 0 ? 'warning' : ''">
+            <i class="pi pi-inbox"></i>
+          </div>
         </div>
         <div class="kpi-content">
           <span class="kpi-label">PENDIENTES POR LEER</span>
-          <span class="kpi-value">{{ totalNoLeidas }}</span>
+          <span class="kpi-value font-mono">{{ totalNoLeidas }}</span>
         </div>
       </div>
 
       <div class="kpi-card">
-        <div class="kpi-icon-box success">
-          <i class="pi pi-check-circle"></i>
+        <div class="kpi-top">
+          <span class="kpi-idx">03</span>
+          <div class="kpi-icon-box success">
+            <i class="pi pi-check-circle"></i>
+          </div>
         </div>
         <div class="kpi-content">
           <span class="kpi-label">COTIZACIONES APROBADAS</span>
-          <span class="kpi-value">{{ totalAprobaciones }}</span>
+          <span class="kpi-value font-mono">{{ totalAprobaciones }}</span>
         </div>
       </div>
 
       <div class="kpi-card">
-        <div class="kpi-icon-box accent">
-          <i class="pi pi-shield"></i>
+        <div class="kpi-top">
+          <span class="kpi-idx">04</span>
+          <div class="kpi-icon-box accent">
+            <i class="pi pi-shield"></i>
+          </div>
         </div>
         <div class="kpi-content">
           <span class="kpi-label">SEGURIDAD Y ACCESOS</span>
-          <span class="kpi-value">{{ totalSeguridad }}</span>
+          <span class="kpi-value font-mono">{{ totalSeguridad }}</span>
         </div>
       </div>
     </div>
@@ -131,7 +143,7 @@
 
       <div v-else class="notifications-list">
         <article 
-          v-for="notif in notificacionesFiltradas" 
+          v-for="notif in paginatedNotificaciones" 
           :key="notif.idNotificacion"
           class="notif-card"
           :class="{ 'is-unread': !notif.leido }"
@@ -149,7 +161,7 @@
               <span class="notif-type-tag" :class="getTipoColorClass(notif.tipo)">
                 {{ getTipoLabel(notif.tipo) }}
               </span>
-              <span class="notif-date">
+              <span class="notif-date font-mono">
                 <i class="pi pi-calendar"></i>
                 {{ formatFecha(notif.fechaCreacion) }}
               </span>
@@ -183,14 +195,29 @@
             </div>
           </div>
         </article>
+
+        <!-- Paginación Reutilizable -->
+        <BasePagination 
+          v-if="totalItems > pageSize"
+          v-model:currentPage="currentPage"
+          :total-pages="totalPages"
+          :total-items="totalItems"
+          :start-index="startIndex"
+          :end-index="endIndex"
+          item-label="notificaciones"
+        />
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { portalNotificationService } from '../services/portalNotificationService'
+import { useNotification } from '@/shared/composables/useNotification'
+import BasePagination from '@/shared/components/BasePagination.vue'
+
+const { showSuccess, showError } = useNotification()
 
 const notificaciones = ref([])
 const loading = ref(false)
@@ -198,13 +225,31 @@ const filtroTexto = ref('')
 const filtroEstado = ref('TODAS')
 const filtroTipo = ref('')
 
+// Paginación
+const currentPage = ref(1)
+const pageSize = ref(8)
+
+const totalItems = computed(() => notificacionesFiltradas.value.length)
+const totalPages = computed(() => Math.ceil(totalItems.value / pageSize.value) || 1)
+const startIndex = computed(() => (totalItems.value === 0 ? 0 : (currentPage.value - 1) * pageSize.value + 1))
+const endIndex = computed(() => Math.min(currentPage.value * pageSize.value, totalItems.value))
+
+const paginatedNotificaciones = computed(() => {
+  const start = (currentPage.value - 1) * pageSize.value
+  return notificacionesFiltradas.value.slice(start, start + pageSize.value)
+})
+
+watch([filtroTexto, filtroEstado, filtroTipo], () => {
+  currentPage.value = 1
+})
+
 async function cargarNotificaciones() {
   loading.value = true
   try {
     const data = await portalNotificationService.getNotificaciones()
     notificaciones.value = data || []
   } catch (error) {
-    console.error('Error al cargar notificaciones:', error)
+    showError(error.response?.data?.message || 'Error al cargar las notificaciones')
   } finally {
     loading.value = false
   }
@@ -214,8 +259,9 @@ async function marcarComoLeida(notif) {
   try {
     await portalNotificationService.marcarComoLeida(notif.idNotificacion)
     notif.leido = true
+    showSuccess('Notificación marcada como leída', 'Bandeja Actualizada', 2500)
   } catch (error) {
-    console.error('Error al marcar notificación como leída:', error)
+    showError('No se pudo marcar la notificación como leída')
   }
 }
 
@@ -223,8 +269,9 @@ async function marcarTodasLeidas() {
   try {
     await portalNotificationService.marcarTodasComoLeidas()
     notificaciones.value.forEach(n => { n.leido = true })
+    showSuccess('Todas las notificaciones han sido marcadas como leídas', 'Operación Exitosa', 3000)
   } catch (error) {
-    console.error('Error al marcar todas como leídas:', error)
+    showError('No se pudieron marcar todas las notificaciones como leídas')
   }
 }
 
@@ -366,7 +413,7 @@ onMounted(() => {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  color: var(--color-accent-kicker, #9a7f60);
+  color: var(--color-accent-kicker);
   margin-bottom: 0.35rem;
   display: block;
 }
@@ -375,14 +422,14 @@ onMounted(() => {
   font-size: 1.85rem;
   font-weight: 700;
   letter-spacing: -0.03em;
-  color: var(--color-text-main, #2b2520);
+  color: var(--color-text-main);
   margin: 0 0 0.5rem 0;
-  font-family: var(--font-serif, Georgia, serif);
+  font-family: var(--font-sans);
 }
 
 .view-subtitle {
   font-size: 0.92rem;
-  color: var(--color-text-muted, #6f6356);
+  color: var(--color-text-muted);
   max-width: 680px;
   margin: 0;
   line-height: 1.5;
@@ -407,13 +454,13 @@ onMounted(() => {
 }
 
 .btn-primary {
-  background: var(--color-primary, #352f2a);
-  color: var(--color-primary-text, #ffffff);
-  border: 1px solid var(--color-primary, #352f2a);
+  background: var(--color-primary);
+  color: var(--color-primary-text);
+  border: 1px solid var(--color-primary);
 }
 
 .btn-primary:hover:not(:disabled) {
-  opacity: 0.92;
+  background: var(--color-primary-hover);
   transform: translateY(-1px);
 }
 
@@ -423,14 +470,14 @@ onMounted(() => {
 }
 
 .btn-secondary {
-  background: var(--color-bg-surface, #ffffff);
-  color: var(--color-text-main, #2b2520);
-  border: 1px solid var(--color-border, #e4dacb);
+  background: var(--color-bg-surface);
+  color: var(--color-text-main);
+  border: 1px solid var(--color-border);
 }
 
 .btn-secondary:hover:not(:disabled) {
-  background: var(--color-bg-subtle, #f2ebe1);
-  border-color: var(--color-border-strong, #d5c8b6);
+  background: var(--color-bg-subtle);
+  border-color: var(--color-border-strong);
 }
 
 /* KPI Grid */
@@ -441,52 +488,72 @@ onMounted(() => {
 }
 
 .kpi-card {
-  background: var(--color-bg-surface, #ffffff);
-  border: 1px solid var(--color-border, #e4dacb);
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
   border-radius: 10px;
   padding: 1.15rem 1.35rem;
   display: flex;
-  align-items: center;
-  gap: 1rem;
-  box-shadow: 0 1px 3px rgba(43, 37, 32, 0.04);
-  transition: transform 0.2s ease;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 0.75rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .kpi-card:hover {
   transform: translateY(-2px);
+  border-color: var(--color-border-strong);
 }
 
 .kpi-card.warning-highlight {
-  border-color: var(--color-warning-border, #f2cf88);
-  background: #fdfaf3;
+  border-color: var(--color-warning-border);
+  background: var(--color-warning-bg);
+}
+
+.kpi-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.kpi-idx {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: var(--color-accent-kicker);
+  background: var(--color-bg-subtle);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 6px;
+  padding: 0.15rem 0.45rem;
+  letter-spacing: 0.02em;
+  font-family: var(--font-mono);
 }
 
 .kpi-icon-box {
-  width: 44px;
-  height: 44px;
-  border-radius: 10px;
-  background: var(--color-bg-subtle, #f2ebe1);
-  color: var(--color-text-main, #2b2520);
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  background: var(--color-bg-subtle);
+  color: var(--color-text-main);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.25rem;
+  font-size: 1.2rem;
   flex-shrink: 0;
 }
 
 .kpi-icon-box.success {
-  background: #eef8f2;
-  color: var(--color-success, #2a7e4e);
+  background: var(--color-success-bg);
+  color: var(--color-success-text);
 }
 
 .kpi-icon-box.warning {
-  background: #fff8e6;
-  color: #b26c00;
+  background: var(--color-warning-bg);
+  color: var(--color-warning-text);
 }
 
 .kpi-icon-box.accent {
-  background: #f4ede3;
-  color: var(--color-accent-kicker, #9a7f60);
+  background: var(--color-bg-subtle);
+  color: var(--color-accent-kicker);
 }
 
 .kpi-content {
@@ -498,14 +565,13 @@ onMounted(() => {
   font-size: 0.68rem;
   font-weight: 700;
   letter-spacing: 0.06em;
-  color: var(--color-text-muted, #6f6356);
+  color: var(--color-text-muted);
 }
 
 .kpi-value {
   font-size: 1.5rem;
   font-weight: 700;
-  color: var(--color-text-main, #2b2520);
-  font-family: var(--font-mono, monospace);
+  color: var(--color-text-main);
   margin-top: 0.15rem;
 }
 
@@ -513,8 +579,8 @@ onMounted(() => {
 .filters-bar {
   display: flex;
   gap: 1rem;
-  background: var(--color-bg-surface, #ffffff);
-  border: 1px solid var(--color-border, #e4dacb);
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
   border-radius: 10px;
   padding: 0.85rem 1.25rem;
   align-items: center;
@@ -532,7 +598,7 @@ onMounted(() => {
 .search-box i {
   position: absolute;
   left: 0.85rem;
-  color: var(--color-text-muted, #6f6356);
+  color: var(--color-text-muted);
   font-size: 0.95rem;
 }
 
@@ -540,17 +606,17 @@ onMounted(() => {
   width: 100%;
   padding: 0.55rem 0.85rem 0.55rem 2.4rem;
   border-radius: 6px;
-  border: 1px solid var(--color-border, #e4dacb);
-  background: var(--color-bg-base, #f6f3ee);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-base);
   font-size: 0.85rem;
-  color: var(--color-text-main, #2b2520);
+  color: var(--color-text-main);
   outline: none;
   transition: border-color 0.2s ease;
 }
 
 .search-input:focus {
-  border-color: var(--color-accent-kicker, #9a7f60);
-  background: #ffffff;
+  border-color: var(--color-primary);
+  background-color: var(--color-bg-surface);
 }
 
 .filter-group {
@@ -562,23 +628,23 @@ onMounted(() => {
 .filter-group label {
   font-size: 0.82rem;
   font-weight: 600;
-  color: var(--color-text-muted, #6f6356);
+  color: var(--color-text-muted);
 }
 
 .custom-select {
   padding: 0.55rem 0.95rem;
   border-radius: 6px;
-  border: 1px solid var(--color-border, #e4dacb);
-  background: var(--color-bg-base, #f6f3ee);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-base);
   font-size: 0.84rem;
-  color: var(--color-text-main, #2b2520);
+  color: var(--color-text-main);
   outline: none;
   cursor: pointer;
 }
 
 .custom-select:focus {
-  border-color: var(--color-accent-kicker, #9a7f60);
-  background: #ffffff;
+  border-color: var(--color-primary);
+  background-color: var(--color-bg-surface);
 }
 
 /* Lista de Notificaciones */
@@ -588,8 +654,8 @@ onMounted(() => {
 }
 
 .loading-state, .empty-state {
-  background: var(--color-bg-surface, #ffffff);
-  border: 1px solid var(--color-border, #e4dacb);
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
   border-radius: 10px;
   padding: 3.5rem 2rem;
   text-align: center;
@@ -597,15 +663,15 @@ onMounted(() => {
   flex-direction: column;
   align-items: center;
   gap: 0.75rem;
-  color: var(--color-text-muted, #6f6356);
+  color: var(--color-text-muted);
 }
 
 .empty-icon-box {
   width: 56px;
   height: 56px;
   border-radius: 50%;
-  background: var(--color-bg-subtle, #f2ebe1);
-  color: var(--color-accent-kicker, #9a7f60);
+  background: var(--color-bg-subtle);
+  color: var(--color-accent-kicker);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -616,15 +682,15 @@ onMounted(() => {
 .empty-state h3 {
   font-size: 1.15rem;
   font-weight: 700;
-  color: var(--color-text-main, #2b2520);
+  color: var(--color-text-main);
   margin: 0;
 }
 
 .empty-state p {
   font-size: 0.88rem;
   margin: 0;
-  max-width: 440px;
-  line-height: 1.5;
+  max-width: 480px;
+  line-height: 1.45;
 }
 
 .notifications-list {
@@ -634,8 +700,8 @@ onMounted(() => {
 }
 
 .notif-card {
-  background: var(--color-bg-surface, #ffffff);
-  border: 1px solid var(--color-border, #e4dacb);
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
   border-radius: 10px;
   padding: 1.25rem 1.5rem;
   display: flex;
@@ -645,13 +711,13 @@ onMounted(() => {
 }
 
 .notif-card:hover {
-  border-color: var(--color-border-strong, #d5c8b6);
+  border-color: var(--color-border-strong);
   box-shadow: 0 3px 8px rgba(43, 37, 32, 0.04);
 }
 
 .notif-card.is-unread {
-  background: #fdfaf6;
-  border-left: 4px solid var(--color-accent-kicker, #9a7f60);
+  background: var(--color-bg-subtle);
+  border-left: 4px solid var(--color-accent-kicker);
 }
 
 .notif-icon-col {
@@ -659,9 +725,9 @@ onMounted(() => {
 }
 
 .notif-avatar {
-  width: 44px;
-  height: 44px;
-  border-radius: 10px;
+  width: 42px;
+  height: 42px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -669,33 +735,33 @@ onMounted(() => {
 }
 
 .notif-avatar.neutral {
-  background: var(--color-bg-subtle, #f2ebe1);
-  color: var(--color-text-main, #2b2520);
+  background: var(--color-bg-subtle);
+  color: var(--color-text-main);
 }
 
 .notif-avatar.success {
-  background: #eef8f2;
-  color: var(--color-success, #2a7e4e);
+  background: var(--color-success-bg);
+  color: var(--color-success-text);
 }
 
 .notif-avatar.accent {
-  background: #f5ebe1;
-  color: var(--color-accent-kicker, #9a7f60);
+  background: var(--color-bg-subtle);
+  color: var(--color-accent-kicker);
 }
 
 .notif-avatar.info {
-  background: #edf4fa;
-  color: #1e6091;
+  background: var(--color-bg-subtle);
+  color: var(--color-info-text, var(--color-primary));
 }
 
 .notif-avatar.warning {
-  background: #fff8e6;
-  color: #b26c00;
+  background: var(--color-warning-bg);
+  color: var(--color-warning-text);
 }
 
 .notif-avatar.danger {
-  background: #fdf2f2;
-  color: #dc2626;
+  background: var(--color-danger-bg);
+  color: var(--color-danger-text);
 }
 
 .notif-content-col {
@@ -722,48 +788,47 @@ onMounted(() => {
 }
 
 .notif-type-tag.neutral {
-  background: var(--color-bg-subtle, #f2ebe1);
-  color: var(--color-text-main, #2b2520);
+  background: var(--color-bg-subtle);
+  color: var(--color-text-main);
 }
 
 .notif-type-tag.success {
-  background: #eef8f2;
-  color: var(--color-success, #2a7e4e);
+  background: var(--color-success-bg);
+  color: var(--color-success-text);
 }
 
 .notif-type-tag.accent {
-  background: #f5ebe1;
-  color: var(--color-accent-kicker, #9a7f60);
+  background: var(--color-bg-subtle);
+  color: var(--color-accent-kicker);
 }
 
 .notif-type-tag.info {
-  background: #edf4fa;
-  color: #1e6091;
+  background: var(--color-bg-subtle);
+  color: var(--color-info-text, var(--color-primary));
 }
 
 .notif-type-tag.warning {
-  background: #fff8e6;
-  color: #b26c00;
+  background: var(--color-warning-bg);
+  color: var(--color-warning-text);
 }
 
 .notif-type-tag.danger {
-  background: #fdf2f2;
-  color: #dc2626;
+  background: var(--color-danger-bg);
+  color: var(--color-danger-text);
 }
 
 .notif-date {
   font-size: 0.76rem;
-  color: var(--color-text-muted, #6f6356);
+  color: var(--color-text-muted);
   display: flex;
   align-items: center;
   gap: 0.35rem;
-  font-family: var(--font-mono, monospace);
 }
 
 .unread-pill {
   font-size: 0.65rem;
   font-weight: 700;
-  background: var(--color-accent-kicker, #9a7f60);
+  background: var(--color-accent-kicker);
   color: #ffffff;
   padding: 0.15rem 0.45rem;
   border-radius: 10px;
@@ -773,14 +838,14 @@ onMounted(() => {
 .notif-title {
   font-size: 1.05rem;
   font-weight: 700;
-  color: var(--color-text-main, #2b2520);
+  color: var(--color-text-main);
   margin: 0;
   line-height: 1.35;
 }
 
 .notif-message {
   font-size: 0.88rem;
-  color: var(--color-text-muted, #6f6356);
+  color: var(--color-text-muted);
   margin: 0;
   line-height: 1.55;
 }
@@ -792,7 +857,7 @@ onMounted(() => {
   gap: 1rem;
   margin-top: 0.35rem;
   padding-top: 0.65rem;
-  border-top: 1px dashed var(--color-border-subtle, #ede5d8);
+  border-top: 1px dashed var(--color-border-subtle);
   flex-wrap: wrap;
 }
 
@@ -802,13 +867,13 @@ onMounted(() => {
   gap: 0.4rem;
   font-size: 0.82rem;
   font-weight: 600;
-  color: var(--color-accent-kicker, #9a7f60);
+  color: var(--color-accent-kicker);
   text-decoration: none;
   transition: gap 0.2s ease, color 0.2s ease;
 }
 
 .btn-link-action:hover {
-  color: var(--color-text-main, #2b2520);
+  color: var(--color-text-main);
   gap: 0.65rem;
 }
 
@@ -817,7 +882,7 @@ onMounted(() => {
   align-items: center;
   gap: 0.35rem;
   font-size: 0.78rem;
-  color: var(--color-text-muted, #6f6356);
+  color: var(--color-text-muted);
   background: transparent;
   border: none;
   cursor: pointer;
@@ -827,7 +892,7 @@ onMounted(() => {
 }
 
 .btn-mark-read:hover {
-  background: var(--color-bg-subtle, #f2ebe1);
-  color: var(--color-text-main, #2b2520);
+  background: var(--color-bg-subtle);
+  color: var(--color-text-main);
 }
 </style>

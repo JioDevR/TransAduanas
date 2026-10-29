@@ -15,45 +15,57 @@
       </div>
     </div>
 
-    <!-- Tarjetas de Resumen Financiero en USD -->
+    <!-- Tarjetas de Resumen Financiero en USD con numeración 01..04 Warm Editorial -->
     <div class="kpi-grid" v-if="resumen">
       <div class="kpi-card">
-        <div class="kpi-icon-box">
-          <i class="pi pi-file"></i>
+        <div class="kpi-top">
+          <span class="kpi-idx">01</span>
+          <div class="kpi-icon-box">
+            <i class="pi pi-file"></i>
+          </div>
         </div>
         <div class="kpi-content">
           <span class="kpi-label">TOTAL CONTRATADO / COTIZADO</span>
-          <span class="kpi-value mono">$ {{ formatCurrency(resumen.totalCotizadoUsd) }}</span>
+          <span class="kpi-value font-mono">$ {{ formatCurrency(resumen.totalCotizadoUsd) }}</span>
         </div>
       </div>
 
       <div class="kpi-card">
-        <div class="kpi-icon-box success">
-          <i class="pi pi-check-circle"></i>
+        <div class="kpi-top">
+          <span class="kpi-idx">02</span>
+          <div class="kpi-icon-box success">
+            <i class="pi pi-check-circle"></i>
+          </div>
         </div>
         <div class="kpi-content">
           <span class="kpi-label">TOTAL AMORTIZADO (USD)</span>
-          <span class="kpi-value mono success-text">$ {{ formatCurrency(resumen.totalAbonadoUsd) }}</span>
+          <span class="kpi-value font-mono success-text">$ {{ formatCurrency(resumen.totalAbonadoUsd) }}</span>
         </div>
       </div>
 
       <div class="kpi-card highlighted">
-        <div class="kpi-icon-box warning">
-          <i class="pi pi-wallet"></i>
+        <div class="kpi-top">
+          <span class="kpi-idx">03</span>
+          <div class="kpi-icon-box warning">
+            <i class="pi pi-wallet"></i>
+          </div>
         </div>
         <div class="kpi-content">
           <span class="kpi-label">SALDO PENDIENTE CONSOLIDADO</span>
-          <span class="kpi-value mono warning-text">$ {{ formatCurrency(resumen.saldoPendienteUsd) }}</span>
+          <span class="kpi-value font-mono warning-text">$ {{ formatCurrency(resumen.saldoPendienteUsd) }}</span>
         </div>
       </div>
 
       <div class="kpi-card">
-        <div class="kpi-icon-box accent">
-          <i class="pi pi-receipt"></i>
+        <div class="kpi-top">
+          <span class="kpi-idx">04</span>
+          <div class="kpi-icon-box accent">
+            <i class="pi pi-receipt"></i>
+          </div>
         </div>
         <div class="kpi-content">
           <span class="kpi-label">VOUCHERS REGISTRADOS</span>
-          <span class="kpi-value mono">{{ anticipos.length }}</span>
+          <span class="kpi-value font-mono">{{ anticipos.length }}</span>
           <span class="kpi-sub-text" v-if="resumen.pagosPendientesRevision > 0">
             {{ resumen.pagosPendientesRevision }} pendiente(s) de conciliación
           </span>
@@ -71,7 +83,7 @@
       >
         <i class="pi pi-clock"></i>
         <span>Cotizaciones por Iniciar (Pre-Expediente)</span>
-        <span class="tab-badge">{{ cotizacionesPreExpediente.length }}</span>
+        <span class="tab-badge font-mono">{{ cotizacionesPreExpediente.length }}</span>
       </button>
 
       <button 
@@ -81,7 +93,7 @@
       >
         <i class="pi pi-compass"></i>
         <span>Expedientes en Trámite (Deuda Heredada)</span>
-        <span class="tab-badge">{{ expedientesHeredados.length }}</span>
+        <span class="tab-badge font-mono">{{ expedientesHeredados.length }}</span>
       </button>
 
       <button 
@@ -91,7 +103,7 @@
       >
         <i class="pi pi-history"></i>
         <span>Historial de Vouchers Bancarios</span>
-        <span class="tab-badge">{{ anticipos.length }}</span>
+        <span class="tab-badge font-mono">{{ anticipos.length }}</span>
       </button>
     </div>
 
@@ -237,7 +249,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="p in anticipos" :key="p.idPago" :class="{ 'row-observed': p.estadoPago === 'OBSERVADO' || p.estadoPago === 'RECHAZADO' }">
+            <tr v-for="p in paginatedAnticipos" :key="p.idPago" :class="{ 'row-observed': p.estadoPago === 'OBSERVADO' || p.estadoPago === 'RECHAZADO' }">
               <td class="font-mono font-bold">{{ p.codigoPago }}</td>
               <td class="font-mono">{{ p.codigoCotizacion }}</td>
               <td>
@@ -254,7 +266,7 @@
                 </div>
               </td>
               <td class="font-mono">{{ p.numeroOperacion }}</td>
-              <td>{{ p.fechaOperacion }}</td>
+              <td class="font-mono">{{ p.fechaOperacion }}</td>
               <td class="text-center">
                 <span class="status-pill" :class="getPagoStatusClass(p.estadoPago)">
                   {{ formatEstadoPago(p.estadoPago) }}
@@ -277,20 +289,33 @@
                     <span>Subsanar</span>
                   </button>
 
-                  <a 
-                    v-if="p.documentoComprobanteUrl" 
-                    :href="p.documentoComprobanteUrl" 
-                    target="_blank" 
+                  <!-- Botón previsualizar comprobante conectado a portalPagoService -->
+                  <button 
+                    v-if="p.idDocumentoComprobante" 
+                    type="button" 
                     class="btn-action-view"
-                    title="Ver Voucher Adjunto"
+                    title="Ver Voucher Bancario Oficial"
+                    @click="verComprobante(p.idDocumentoComprobante)"
                   >
-                    <i class="pi pi-external-link"></i>
-                  </a>
+                    <i class="pi pi-file"></i>
+                    <span>Voucher</span>
+                  </button>
                 </div>
               </td>
             </tr>
           </tbody>
         </table>
+
+        <!-- Paginador Compartido de Historial -->
+        <BasePagination 
+          v-if="totalAnticipos > pageSize"
+          v-model:currentPage="currentHistorialPage"
+          :total-pages="totalHistorialPages"
+          :total-items="totalAnticipos"
+          :start-index="startIndexHistorial"
+          :end-index="endIndexHistorial"
+          item-label="vouchers"
+        />
       </div>
     </div>
 
@@ -300,7 +325,7 @@
         <div class="modal-header">
           <div class="modal-title-box">
             <span class="modal-kicker text-danger">SUBSANACIÓN DE PAGO OBSERVADO</span>
-            <h2 class="modal-title">Corregir Registro de Pago ({{ pagoSeleccionadoParaCorreccion?.codigoPago }})</h2>
+            <h2 class="modal-title font-mono">Corregir Registro de Pago ({{ pagoSeleccionadoParaCorreccion?.codigoPago }})</h2>
           </div>
           <button class="close-btn" @click="modalCorreccionVisible = false">
             <i class="pi pi-times"></i>
@@ -308,8 +333,8 @@
         </div>
 
         <form @submit.prevent="enviarCorreccion" class="modal-body">
-          <div class="alert-box-obs mb-3" v-if="pagoSeleccionadoParaCorreccion?.observacionFinanzas">
-            <i class="pi pi-exclamation-triangle"></i>
+          <div class="alert-box-obs" v-if="pagoSeleccionadoParaCorreccion?.observacionFinanzas">
+            <i class="pi pi-info-circle"></i>
             <div>
               <strong>Observación emitida por Finanzas:</strong>
               <p>{{ pagoSeleccionadoParaCorreccion.observacionFinanzas }}</p>
@@ -318,7 +343,7 @@
 
           <div class="form-grid">
             <div class="form-field">
-              <label>Monto Real Abonado ($ USD) *</label>
+              <label>Monto Abonado ($ USD) *</label>
               <input 
                 v-model.number="correccionForm.montoAbonado" 
                 type="number" 
@@ -330,83 +355,73 @@
             </div>
 
             <div class="form-field">
-              <label>Banco Emisor (Su Banco):</label>
-              <select v-model="correccionForm.bancoOrigen" class="custom-select">
-                <option value="BCP">Banco de Crédito del Perú (BCP)</option>
-                <option value="BBVA">BBVA Perú</option>
-                <option value="INTERBANK">Interbank</option>
-                <option value="SCOTIABANK">Scotiabank</option>
-                <option value="BANBIF">BanBif</option>
-              </select>
-            </div>
-
-            <div class="form-field">
-              <label>Cuenta Receptora TransAduanas *</label>
-              <select v-model="correccionForm.bancoDestino" required class="custom-select">
-                <option value="BCP Dolares TransAduanas">BCP Dólares (Cta: 191-289381-1-09)</option>
-                <option value="BBVA Dolares TransAduanas">BBVA Dólares (Cta: 0011-0182-010049281)</option>
-                <option value="Interbank Dolares TransAduanas">Interbank Dólares (Cta: 200-300189281)</option>
-              </select>
-            </div>
-
-            <div class="form-field">
-              <label>Número de Operación Bancaria *</label>
+              <label>Fecha de Operación Bancaria *</label>
               <input 
-                v-model.trim="correccionForm.numeroOperacion" 
-                type="text" 
+                v-model="correccionForm.fechaOperacion" 
+                type="date" 
                 required 
                 class="custom-input font-mono"
               />
             </div>
 
             <div class="form-field">
-              <label>Fecha de Operación *</label>
+              <label>Banco Emisor (Origen) *</label>
               <input 
-                v-model="correccionForm.fechaOperacion" 
-                type="date" 
+                v-model="correccionForm.bancoOrigen" 
+                type="text" 
+                placeholder="Ej. BCP, BBVA, Interbank..." 
                 required 
                 class="custom-input"
               />
             </div>
 
+            <div class="form-field">
+              <label>N° Constancia / Operación Bancaria *</label>
+              <input 
+                v-model="correccionForm.numeroOperacion" 
+                type="text" 
+                placeholder="Número correlativo de voucher" 
+                required 
+                class="custom-input font-mono"
+              />
+            </div>
+
             <div class="form-field full">
-              <label>Reemplazar Voucher Bancario (Nuevo PDF o Imagen):</label>
+              <label>Reemplazar Archivo de Voucher (Opcional si es el mismo)</label>
               <div class="file-dropzone">
                 <input 
                   type="file" 
-                  id="correccion-file-input"
+                  id="voucher-corr-input" 
                   accept="application/pdf,image/png,image/jpeg,image/webp" 
-                  @change="onCorreccionFileSelected"
+                  @change="onFileCorreccionSelected"
                   class="file-input-hidden"
                 />
-                <label for="correccion-file-input" class="file-dropzone-label">
+                <label for="voucher-corr-input" class="dropzone-label">
                   <i class="pi pi-upload"></i>
-                  <span v-if="!correccionArchivoSeleccionado">Haga clic para adjuntar comprobante corregido (opcional)</span>
-                  <span v-else class="file-selected-name">
-                    <i class="pi pi-file"></i> {{ correccionArchivoSeleccionado.name }} ({{ (correccionArchivoSeleccionado.size / 1024).toFixed(1) }} KB)
-                  </span>
+                  <span v-if="!correccionArchivoSeleccionado">Haga clic para adjuntar nuevo comprobante o voucher</span>
+                  <span v-else class="file-selected-text font-mono font-bold">{{ correccionArchivoSeleccionado.name }}</span>
                 </label>
               </div>
             </div>
 
             <div class="form-field full">
-              <label>Explicación de la Subsanación:</label>
+              <label>Sustento / Aclaración de la Corrección:</label>
               <textarea 
                 v-model="correccionForm.observaciones" 
                 rows="2" 
-                placeholder="Indique las correcciones realizadas o aclaraciones para el Contador..."
+                placeholder="Explique las correcciones realizadas respecto a la observación contable..."
                 class="custom-textarea"
               ></textarea>
             </div>
           </div>
 
-          <div class="modal-footer" style="padding: 1rem 0 0 0; margin-top: 1rem;">
+          <div class="modal-footer" style="padding: 1.25rem 0 0 0; margin-top: 1rem;">
             <button type="button" class="btn-secondary" @click="modalCorreccionVisible = false">
               Cancelar
             </button>
             <button type="submit" class="btn-primary" :disabled="enviandoCorreccion">
               <i v-if="enviandoCorreccion" class="pi pi-spin pi-spinner"></i>
-              <span v-else>Re-enviar a Revisión de Finanzas</span>
+              <span v-else>Guardar Corrección y Reenviar a Revisión</span>
             </button>
           </div>
         </form>
@@ -418,15 +433,33 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import apiClient from '@/core/api/apiClient'
+import { portalPagoService } from '../services/portalPagoService'
+import { useNotification } from '@/shared/composables/useNotification'
+import { openBlobInNewTab } from '@/shared/utils/download'
+import BasePagination from '@/shared/components/BasePagination.vue'
 
 const router = useRouter()
+const { showSuccess, showError } = useNotification()
 
 const resumen = ref(null)
 const obligaciones = ref([])
 const anticipos = ref([])
 const activeTab = ref('cotizaciones')
 const loading = ref(true)
+
+// Paginación de Historial
+const currentHistorialPage = ref(1)
+const pageSize = ref(8)
+
+const totalAnticipos = computed(() => anticipos.value.length)
+const totalHistorialPages = computed(() => Math.ceil(totalAnticipos.value / pageSize.value) || 1)
+const startIndexHistorial = computed(() => (totalAnticipos.value === 0 ? 0 : (currentHistorialPage.value - 1) * pageSize.value + 1))
+const endIndexHistorial = computed(() => Math.min(currentHistorialPage.value * pageSize.value, totalAnticipos.value))
+
+const paginatedAnticipos = computed(() => {
+  const start = (currentHistorialPage.value - 1) * pageSize.value
+  return anticipos.value.slice(start, start + pageSize.value)
+})
 
 // Variables para Subsanación / Corrección de Pago
 const modalCorreccionVisible = ref(false)
@@ -454,64 +487,54 @@ onMounted(() => {
 async function cargarTodo() {
   loading.value = true
   try {
-    const [resResumen, resObligaciones, resAnticipos] = await Promise.all([
-      apiClient.get('/portal/pagos/resumen'),
-      apiClient.get('/portal/pagos/obligaciones-pendientes'),
-      apiClient.get('/portal/pagos/anticipos')
+    const [dataResumen, dataObligaciones, dataAnticipos] = await Promise.all([
+      portalPagoService.obtenerResumen(),
+      portalPagoService.listarObligaciones(),
+      portalPagoService.listarAnticipos()
     ])
 
-    if (resResumen.data?.data) resumen.value = resResumen.data.data
-    if (resObligaciones.data?.data) obligaciones.value = resObligaciones.data.data
-    if (resAnticipos.data?.data) anticipos.value = resAnticipos.data.data
+    if (dataResumen) resumen.value = dataResumen
+    if (dataObligaciones) obligaciones.value = dataObligaciones
+    if (dataAnticipos) anticipos.value = dataAnticipos
 
     // Si no hay cotizaciones pero hay expedientes, activar pestaña de expedientes
     if (cotizacionesPreExpediente.value.length === 0 && expedientesHeredados.value.length > 0) {
       activeTab.value = 'expedientes'
     }
   } catch (err) {
-    console.error('Error al cargar datos financieros', err)
+    showError(err.response?.data?.message || 'Error al cargar información financiera')
   } finally {
     loading.value = false
   }
 }
 
 const cotizacionesPreExpediente = computed(() => {
-  return obligaciones.value.filter(o => o.tipoObligacion === 'ANTICIPO_COTIZACION' || !o.tieneExpediente)
+  return obligaciones.value.filter(o => o.tipoObligacion === 'COTIZACION')
 })
 
 const expedientesHeredados = computed(() => {
-  return obligaciones.value.filter(o => o.tipoObligacion === 'EXPEDIENTE_HEREDADO' || o.tieneExpediente)
+  return obligaciones.value.filter(o => o.tipoObligacion === 'EXPEDIENTE')
 })
-
-function irARegistrarPago(tipo, id) {
-  if (tipo && id) {
-    router.push({ name: 'RegistrarPago', query: { tipo, id } })
-  } else {
-    router.push({ name: 'RegistrarPago' })
-  }
-}
 
 function formatCurrency(val) {
   if (val == null) return '0.00'
   return Number(val).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
 
-function formatEstadoPago(st) {
-  if (!st) return 'PENDIENTE'
-  return st.replace(/_/g, ' ')
+function formatEstadoPago(pago) {
+  if (!pago) return 'PENDIENTE'
+  return pago.replace('_', ' ')
 }
 
 function getPagoStatusClass(st) {
   switch (st) {
-    case 'VALIDADO':
-    case 'APROBADO':
     case 'PAGADO':
+    case 'CONCILIADO':
     case 'PAGADO_TOTAL':
-    case 'ADELANTO_APROBADO':
       return 'success'
-    case 'PENDIENTE_REVISION':
-    case 'EN_CONCILIACION':
     case 'PENDIENTE':
+    case 'REGISTRADO':
+    case 'PAGADO_PARCIAL':
       return 'warning'
     case 'OBSERVADO':
     case 'RECHAZADO':
@@ -521,8 +544,25 @@ function getPagoStatusClass(st) {
   }
 }
 
-function onCorreccionFileSelected(event) {
-  const file = event.target.files?.[0]
+function irARegistrarPago(tipo, id) {
+  if (tipo && id) {
+    router.push({ path: '/pagos/registrar', query: { tipo, id } })
+  } else {
+    router.push('/pagos/registrar')
+  }
+}
+
+async function verComprobante(idDocumento) {
+  try {
+    const blob = await portalPagoService.previsualizarComprobante(idDocumento)
+    openBlobInNewTab(blob, 'application/pdf')
+  } catch (err) {
+    showError('No se pudo visualizar el comprobante de pago')
+  }
+}
+
+function onFileCorreccionSelected(e) {
+  const file = e.target.files[0]
   if (file) {
     correccionArchivoSeleccionado.value = file
   }
@@ -546,32 +586,32 @@ function abrirModalCorreccion(pago) {
   modalCorreccionVisible.value = true
 }
 
-async function subirComprobante(file) {
-  const formData = new FormData()
-  formData.append('file', file)
-  const res = await apiClient.post('/portal/pagos/upload-comprobante', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' }
-  })
-  return res.data?.data?.idDocumento
-}
-
 async function enviarCorreccion() {
   enviandoCorreccion.value = true
   try {
     if (correccionArchivoSeleccionado.value) {
-      const docId = await subirComprobante(correccionArchivoSeleccionado.value)
-      correccionForm.value.idDocumentoComprobante = docId
+      const docRes = await portalPagoService.subirComprobante(correccionArchivoSeleccionado.value)
+      correccionForm.value.idDocumentoComprobante = docRes?.idDocumento || docRes?.id
     }
 
     const idPago = correccionForm.value.idPago
-    const res = await apiClient.put(`/portal/pagos/anticipos/${idPago}/corregir`, correccionForm.value)
-    if (res.data?.data) {
+    const payload = {
+      monto: Number(correccionForm.value.montoAbonado),
+      fechaPago: correccionForm.value.fechaOperacion,
+      bancoOrigen: correccionForm.value.bancoOrigen,
+      numeroOperacion: correccionForm.value.numeroOperacion,
+      idDocumentoComprobante: correccionForm.value.idDocumentoComprobante,
+      sustentoSubsanacion: correccionForm.value.observaciones
+    }
+
+    const res = await portalPagoService.corregirPago(idPago, payload)
+    if (res) {
       modalCorreccionVisible.value = false
-      cargarTodo()
-      alert('Pago corregido exitosamente. Ha retornado a la bandeja de Finanzas para su revisión.')
+      showSuccess('Pago subsanado exitosamente. Ha retornado a Finanzas para su revisión contable.', 'Subsanación Enviada')
+      await cargarTodo()
     }
   } catch (err) {
-    alert(err.response?.data?.message || 'Error al enviar subsanación de pago')
+    showError(err.response?.data?.message || 'Error al enviar subsanación de pago')
   } finally {
     enviandoCorreccion.value = false
   }
@@ -583,12 +623,14 @@ async function enviarCorreccion() {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+  width: 100%;
 }
 
+/* Header */
 .view-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
   flex-wrap: wrap;
   gap: 1rem;
 }
@@ -597,7 +639,7 @@ async function enviarCorreccion() {
   font-size: 0.72rem;
   font-weight: 800;
   letter-spacing: 0.08em;
-  color: var(--color-accent-kicker, #9a7f60);
+  color: var(--color-accent-kicker);
   display: block;
   margin-bottom: 0.25rem;
 }
@@ -605,22 +647,521 @@ async function enviarCorreccion() {
 .view-title {
   font-size: 1.75rem;
   font-weight: 800;
-  color: var(--color-primary, #352f2a);
+  color: var(--color-primary);
   margin: 0;
 }
 
 .view-subtitle {
   font-size: 0.9rem;
-  color: var(--color-text-muted, #6f6356);
+  color: var(--color-text-muted);
   margin-top: 0.25rem;
   max-width: 750px;
 }
 
-/* Tarjetas KPI en USD */
+.btn-primary {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--color-primary);
+  color: var(--color-primary-text);
+  border: none;
+  border-radius: 6px;
+  padding: 0.75rem 1.25rem;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--color-primary-hover);
+}
+
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* KPI Grid */
 .kpi-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 1rem;
+}
+
+.kpi-card {
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 0.75rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.kpi-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--color-border-strong);
+}
+
+.kpi-card.highlighted {
+  border-color: var(--color-warning-border);
+  background: var(--color-warning-bg);
+}
+
+.kpi-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.kpi-idx {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: var(--color-accent-kicker);
+  background: var(--color-bg-subtle);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 6px;
+  padding: 0.15rem 0.45rem;
+  letter-spacing: 0.02em;
+  font-family: var(--font-mono);
+}
+
+.kpi-icon-box {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  background: var(--color-bg-subtle);
+  border: 1px solid var(--color-border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  color: var(--color-primary);
+}
+
+.kpi-icon-box.success {
+  background: var(--color-success-bg);
+  border-color: var(--color-success-border);
+  color: var(--color-success-text);
+}
+
+.kpi-icon-box.warning {
+  background: var(--color-warning-bg);
+  border-color: var(--color-warning-border);
+  color: var(--color-warning-text);
+}
+
+.kpi-icon-box.accent {
+  background: var(--color-bg-subtle);
+  color: var(--color-accent-kicker);
+}
+
+.kpi-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.kpi-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--color-text-subtle);
+}
+
+.kpi-value {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--color-text-main);
+}
+
+.success-text { color: var(--color-success-text); }
+.warning-text { color: var(--color-warning-text); }
+
+.kpi-sub-text {
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+}
+
+/* Tabs */
+.tabs-container {
+  display: flex;
+  gap: 0.5rem;
+  border-bottom: 1px solid var(--color-border);
+  overflow-x: auto;
+}
+
+.tab-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.tab-btn:hover {
+  color: var(--color-text-main);
+}
+
+.tab-btn.active {
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
+}
+
+.tab-badge {
+  background: var(--color-bg-subtle);
+  padding: 0.1rem 0.45rem;
+  border-radius: 12px;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+/* Tabla */
+.table-card {
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.table-responsive {
+  overflow-x: auto;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 0.82rem;
+}
+
+.data-table th {
+  background: var(--color-bg-base);
+  padding: 0.75rem 1rem;
+  font-weight: 700;
+  font-size: 0.7rem;
+  letter-spacing: 0.05em;
+  color: var(--color-text-subtle);
+  border-bottom: 1px solid var(--color-border);
+  white-space: nowrap;
+}
+
+.data-table td {
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid var(--color-border-subtle);
+  vertical-align: middle;
+}
+
+.data-table tbody tr:hover {
+  background: var(--color-bg-subtle);
+}
+
+.data-table tr.row-observed {
+  background: var(--color-danger-bg);
+}
+
+.highlight-cell {
+  background: var(--color-bg-base);
+}
+
+.btn-action-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: var(--color-primary);
+  color: var(--color-primary-text);
+  border: none;
+  border-radius: 6px;
+  padding: 0.45rem 0.85rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-action-primary:hover {
+  background: var(--color-primary-hover);
+}
+
+.btn-action-correct {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: var(--color-danger-bg);
+  color: var(--color-danger-text);
+  border: 1px solid var(--color-danger-border);
+  border-radius: 4px;
+  padding: 0.35rem 0.65rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn-action-view {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.65rem;
+  border-radius: 4px;
+  background: var(--color-bg-base);
+  border: 1px solid var(--color-border);
+  color: var(--color-primary);
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-action-view:hover {
+  background: var(--color-bg-subtle);
+  border-color: var(--color-border-strong);
+}
+
+.action-btn-group {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.abono-tag {
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  background: var(--color-bg-base);
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+.bank-box {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.78rem;
+}
+
+.bank-box i {
+  font-size: 0.65rem;
+  color: var(--color-accent-kicker);
+}
+
+.canal-badge {
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+
+.canal-badge.verde { background: var(--color-success-bg); color: var(--color-success-text); }
+.canal-badge.naranja { background: var(--color-warning-bg); color: var(--color-warning-text); }
+.canal-badge.rojo { background: var(--color-danger-bg); color: var(--color-danger-text); }
+
+.status-pill {
+  padding: 0.2rem 0.55rem;
+  border-radius: 12px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  display: inline-block;
+}
+
+.status-pill.success {
+  background: var(--color-success-bg);
+  color: var(--color-success-text);
+}
+
+.status-pill.warning {
+  background: var(--color-warning-bg);
+  color: var(--color-warning-text);
+}
+
+.status-pill.danger {
+  background: var(--color-danger-bg);
+  color: var(--color-danger-text);
+}
+
+.status-pill.neutral {
+  background: var(--color-bg-base);
+  color: var(--color-text-muted);
+}
+
+.obs-inline-callout {
+  margin-top: 0.35rem;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.72rem;
+  color: var(--color-danger-text);
+  background: var(--color-danger-bg);
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+}
+
+/* Modales */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.modal-card {
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  width: 100%;
+  max-width: 650px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: var(--shadow-elevated, 0 10px 25px rgba(0,0,0,0.2));
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-bg-subtle);
+}
+
+.modal-title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  margin: 0.25rem 0 0 0;
+  color: var(--color-primary);
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 1.1rem;
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.modal-body {
+  padding: 1.5rem;
+}
+
+.alert-box-obs {
+  display: flex;
+  gap: 0.75rem;
+  background: var(--color-danger-bg);
+  border: 1px solid var(--color-danger-border);
+  border-radius: 6px;
+  padding: 0.75rem;
+  color: var(--color-danger-text);
+  font-size: 0.85rem;
+  margin-bottom: 1.25rem;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.form-field.full {
+  grid-column: span 2;
+}
+
+.form-field label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--color-text-main);
+}
+
+.custom-input, .custom-select, .custom-textarea {
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  padding: 0.6rem 0.75rem;
+  font-size: 0.85rem;
+  font-family: inherit;
+  outline: none;
+  background: var(--color-bg-surface);
+  color: var(--color-text-main);
+}
+
+.custom-input:focus, .custom-select:focus, .custom-textarea:focus {
+  border-color: var(--color-primary);
+}
+
+.file-dropzone {
+  border: 2px dashed var(--color-border);
+  border-radius: 6px;
+  padding: 1rem;
+  text-align: center;
+  background: var(--color-bg-base);
+}
+
+.file-input-hidden {
+  display: none;
+}
+
+.dropzone-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  cursor: pointer;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+.file-selected-text {
+  color: var(--color-success-text);
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  border-top: 1px solid var(--color-border);
+  padding-top: 1rem;
+}
+
+.btn-secondary {
+  background: transparent;
+  color: var(--color-text-muted);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  padding: 0.65rem 1rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.btn-secondary:hover {
+  background: var(--color-bg-subtle);
+  color: var(--color-text-main);
+}
+
+.loading-state, .empty-state {
+  padding: 3.5rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  text-align: center;
+  color: var(--color-text-muted);
 }
 
 @media (max-width: 1024px) {
@@ -633,444 +1174,11 @@ async function enviarCorreccion() {
   .kpi-grid {
     grid-template-columns: 1fr;
   }
-}
-
-.kpi-card {
-  background: var(--color-bg-surface, #ffffff);
-  border: 1px solid var(--color-border, #e4dacb);
-  border-radius: 10px;
-  padding: 1.25rem;
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.02);
-}
-
-.kpi-card.highlighted {
-  border-color: var(--color-warning-border, #f8dab3);
-  background: #fffdfa;
-}
-
-.kpi-icon-box {
-  width: 44px;
-  height: 44px;
-  border-radius: 8px;
-  background: var(--color-bg-base, #f6f3ee);
-  border: 1px solid var(--color-border-subtle, #ede5d8);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.25rem;
-  color: var(--color-primary, #352f2a);
-}
-
-.kpi-icon-box.success {
-  background: var(--color-success-bg, #eaf6ed);
-  border-color: var(--color-success-border, #bce5c6);
-  color: var(--color-success-text, #1e6638);
-}
-
-.kpi-icon-box.warning {
-  background: var(--color-warning-bg, #fdf5e6);
-  border-color: var(--color-warning-border, #f8dab3);
-  color: var(--color-warning-text, #8c5b16);
-}
-
-.kpi-icon-box.accent {
-  background: var(--color-bg-subtle, #f2ebe1);
-  color: var(--color-accent-kicker, #9a7f60);
-}
-
-.kpi-content {
-  display: flex;
-  flex-direction: column;
-}
-
-.kpi-label {
-  font-size: 0.6875rem;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  color: var(--color-text-subtle, #998c7e);
-}
-
-.kpi-value {
-  font-size: 1.35rem;
-  font-weight: 800;
-  color: var(--color-text-main, #2b2520);
-}
-
-.kpi-value.mono {
-  font-family: var(--font-mono);
-}
-
-.success-text { color: var(--color-success-text, #1e6638); }
-.warning-text { color: var(--color-warning-text, #8c5b16); }
-
-.kpi-sub-text {
-  font-size: 0.72rem;
-  color: var(--color-text-muted, #6f6356);
-}
-
-/* Tabs */
-.tabs-container {
-  display: flex;
-  gap: 0.5rem;
-  border-bottom: 1px solid var(--color-border, #e4dacb);
-  overflow-x: auto;
-}
-
-.tab-btn {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1.25rem;
-  background: none;
-  border: none;
-  border-bottom: 2px solid transparent;
-  color: var(--color-text-muted, #6f6356);
-  font-size: 0.85rem;
-  font-weight: 600;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: all 0.2s ease;
-}
-
-.tab-btn:hover {
-  color: var(--color-text-main, #2b2520);
-}
-
-.tab-btn.active {
-  color: var(--color-primary, #352f2a);
-  border-bottom-color: var(--color-primary, #352f2a);
-}
-
-.tab-badge {
-  background: var(--color-bg-subtle, #f2ebe1);
-  padding: 0.1rem 0.45rem;
-  border-radius: 12px;
-  font-size: 0.7rem;
-  font-family: var(--font-mono);
-}
-
-/* Tabla */
-.table-card {
-  background: var(--color-bg-surface, #ffffff);
-  border: 1px solid var(--color-border, #e4dacb);
-  border-radius: 10px;
-  overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.02);
-}
-
-.table-responsive {
-  overflow-x: auto;
-}
-
-.data-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.85rem;
-  text-align: left;
-}
-
-.data-table th {
-  background: var(--color-bg-base, #f6f3ee);
-  padding: 0.75rem 1rem;
-  font-weight: 700;
-  font-size: 0.7rem;
-  letter-spacing: 0.05em;
-  color: var(--color-text-subtle, #998c7e);
-  border-bottom: 1px solid var(--color-border, #e4dacb);
-  white-space: nowrap;
-}
-
-.data-table td {
-  padding: 0.85rem 1rem;
-  border-bottom: 1px solid var(--color-border-subtle, #f0eae1);
-  vertical-align: middle;
-}
-
-.data-table tbody tr:hover {
-  background: var(--color-bg-subtle, #faf6f0);
-}
-
-.data-table tr.row-observed {
-  background: #fff9f9;
-}
-
-.highlight-cell {
-  background: var(--color-bg-base, #fbf8f4);
-}
-
-.text-right { text-align: right; }
-.text-center { text-align: center; }
-
-.btn-action-primary {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  background: var(--color-primary, #352f2a);
-  color: #fff;
-  border: none;
-  border-radius: 6px;
-  padding: 0.45rem 0.85rem;
-  font-size: 0.78rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  white-space: nowrap;
-}
-
-.btn-action-primary:hover {
-  background: #1f1b18;
-}
-
-.btn-action-correct {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  background: var(--color-danger-bg, #fde8e6);
-  color: var(--color-danger, #b3261e);
-  border: 1px solid var(--color-danger-border, #f9c2bd);
-  border-radius: 4px;
-  padding: 0.35rem 0.65rem;
-  font-size: 0.75rem;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.btn-action-view {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 4px;
-  background: var(--color-bg-base, #f6f3ee);
-  border: 1px solid var(--color-border, #e4dacb);
-  color: var(--color-primary, #352f2a);
-  text-decoration: none;
-}
-
-.action-btn-group {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-}
-
-.abono-tag {
-  display: inline-block;
-  padding: 0.2rem 0.5rem;
-  border-radius: 4px;
-  background: var(--color-bg-base, #f6f3ee);
-  font-size: 0.7rem;
-  font-weight: 700;
-  color: var(--color-primary, #352f2a);
-}
-
-.bank-box {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  font-size: 0.75rem;
-}
-
-.canal-badge {
-  display: inline-block;
-  padding: 0.15rem 0.45rem;
-  border-radius: 4px;
-  font-size: 0.7rem;
-  font-weight: 800;
-}
-
-.canal-badge.verde { background: #e6f4ea; color: #137333; }
-.canal-badge.naranja { background: #fef7e0; color: #b06000; }
-.canal-badge.rojo { background: #fce8e6; color: #c5221f; }
-
-.status-pill {
-  display: inline-block;
-  padding: 0.2rem 0.6rem;
-  border-radius: 12px;
-  font-size: 0.7rem;
-  font-weight: 700;
-}
-
-.status-pill.success {
-  background: var(--color-success-bg, #eaf6ed);
-  color: var(--color-success-text, #1e6638);
-}
-
-.status-pill.warning {
-  background: var(--color-warning-bg, #fdf5e6);
-  color: var(--color-warning-text, #8c5b16);
-}
-
-.status-pill.danger {
-  background: var(--color-danger-bg, #fde8e6);
-  color: var(--color-danger, #b3261e);
-}
-
-.status-pill.neutral {
-  background: var(--color-bg-base, #f6f3ee);
-  color: var(--color-text-muted, #6f6356);
-}
-
-.obs-inline-callout {
-  margin-top: 0.35rem;
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  font-size: 0.72rem;
-  color: var(--color-danger, #b3261e);
-  background: #fff0f0;
-  padding: 0.2rem 0.5rem;
-  border-radius: 4px;
-  text-align: left;
-}
-
-/* Modales */
-.modal-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  padding: 1rem;
-}
-
-.modal-card {
-  background: #fff;
-  border-radius: 10px;
-  width: 100%;
-  max-width: 650px;
-  max-height: 90vh;
-  overflow-y: auto;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.15);
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  padding: 1.25rem 1.5rem;
-  border-bottom: 1px solid var(--color-border, #e4dacb);
-}
-
-.modal-title {
-  font-size: 1.25rem;
-  font-weight: 800;
-  margin: 0.25rem 0 0 0;
-  color: var(--color-primary, #352f2a);
-}
-
-.close-btn {
-  background: none;
-  border: none;
-  font-size: 1.1rem;
-  color: var(--color-text-muted, #6f6356);
-  cursor: pointer;
-}
-
-.modal-body {
-  padding: 1.5rem;
-}
-
-.alert-box-obs {
-  display: flex;
-  gap: 0.75rem;
-  background: #fff2f2;
-  border: 1px solid #ffcccc;
-  border-radius: 6px;
-  padding: 0.75rem;
-  color: #c5221f;
-  font-size: 0.85rem;
-}
-
-.form-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-}
-
-.form-field.full {
-  grid-column: 1 / -1;
-}
-
-.custom-input, .custom-select, .custom-textarea {
-  border: 1px solid var(--color-border, #e4dacb);
-  border-radius: 6px;
-  padding: 0.6rem 0.75rem;
-  font-size: 0.85rem;
-  width: 100%;
-}
-
-.file-dropzone {
-  border: 2px dashed var(--color-border, #e4dacb);
-  border-radius: 6px;
-  padding: 1rem;
-  text-align: center;
-  cursor: pointer;
-}
-
-.file-input-hidden {
-  display: none;
-}
-
-.file-dropzone-label {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.35rem;
-  cursor: pointer;
-  font-size: 0.8rem;
-  color: var(--color-text-muted, #6f6356);
-}
-
-.modal-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.75rem;
-}
-
-.btn-primary {
-  background: var(--color-primary, #352f2a);
-  color: #fff;
-  border: none;
-  border-radius: 6px;
-  padding: 0.65rem 1.25rem;
-  font-weight: 700;
-  font-size: 0.875rem;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.btn-primary:hover:not(:disabled) {
-  background: #1f1b18;
-}
-
-.btn-secondary {
-  background: transparent;
-  color: var(--color-text-muted, #6f6356);
-  border: 1px solid var(--color-border, #e4dacb);
-  border-radius: 6px;
-  padding: 0.65rem 1rem;
-  font-weight: 600;
-  font-size: 0.875rem;
-  cursor: pointer;
-}
-
-.loading-state, .empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 3rem 1.5rem;
-  gap: 0.75rem;
-  text-align: center;
-  color: var(--color-text-muted, #6f6356);
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+  .form-field.full {
+    grid-column: span 1;
+  }
 }
 </style>

@@ -15,45 +15,57 @@
       </div>
     </div>
 
-    <!-- Tarjetas Métricas KPI -->
+    <!-- Tarjetas Métricas KPI con numeración 01..04 Warm Editorial -->
     <div class="kpi-grid">
       <div class="kpi-card">
-        <div class="kpi-icon-box">
-          <i class="pi pi-file"></i>
+        <div class="kpi-top">
+          <span class="kpi-idx">01</span>
+          <div class="kpi-icon-box">
+            <i class="pi pi-file"></i>
+          </div>
         </div>
         <div class="kpi-content">
           <span class="kpi-label">TOTAL COTIZACIONES</span>
-          <span class="kpi-value">{{ cotizaciones.length }}</span>
+          <span class="kpi-value font-mono">{{ cotizaciones.length }}</span>
         </div>
       </div>
 
       <div class="kpi-card">
-        <div class="kpi-icon-box success">
-          <i class="pi pi-check-circle"></i>
+        <div class="kpi-top">
+          <span class="kpi-idx">02</span>
+          <div class="kpi-icon-box success">
+            <i class="pi pi-check-circle"></i>
+          </div>
         </div>
         <div class="kpi-content">
           <span class="kpi-label">APROBADAS PARA DESPACHO</span>
-          <span class="kpi-value">{{ cotizacionesAprobadas }}</span>
+          <span class="kpi-value font-mono">{{ cotizacionesAprobadas }}</span>
         </div>
       </div>
 
       <div class="kpi-card">
-        <div class="kpi-icon-box warning">
-          <i class="pi pi-clock"></i>
+        <div class="kpi-top">
+          <span class="kpi-idx">03</span>
+          <div class="kpi-icon-box warning">
+            <i class="pi pi-clock"></i>
+          </div>
         </div>
         <div class="kpi-content">
           <span class="kpi-label">EN EVALUACIÓN TÉCNICA</span>
-          <span class="kpi-value">{{ cotizacionesPendientes }}</span>
+          <span class="kpi-value font-mono">{{ cotizacionesPendientes }}</span>
         </div>
       </div>
 
       <div class="kpi-card highlighted">
-        <div class="kpi-icon-box accent">
-          <i class="pi pi-dollar"></i>
+        <div class="kpi-top">
+          <span class="kpi-idx">04</span>
+          <div class="kpi-icon-box accent">
+            <i class="pi pi-dollar"></i>
+          </div>
         </div>
         <div class="kpi-content">
           <span class="kpi-label">VALOR TOTAL COTIZADO</span>
-          <span class="kpi-value mono">$ {{ formatCurrency(totalMontoCotizado) }}</span>
+          <span class="kpi-value font-mono">$ {{ formatCurrency(totalMontoCotizado) }}</span>
         </div>
       </div>
     </div>
@@ -119,11 +131,11 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="c in cotizacionesFiltradas" :key="c.idCotizacion">
+            <tr v-for="c in paginatedCotizaciones" :key="c.idCotizacion">
               <td class="font-mono font-bold">{{ c.codigoCotizacion }}</td>
               <td>
                 <div class="item-name">{{ c.nombreMercancia || 'Mercancía General' }}</div>
-                <div class="item-sub mono">{{ c.codigoMercancia || 'Sin partida' }} • {{ c.nombreTipoCarga || 'General' }}</div>
+                <div class="item-sub font-mono">{{ c.codigoMercancia || 'Sin partida' }} • {{ c.nombreTipoCarga || 'General' }}</div>
               </td>
               <td>
                 <span class="regimen-tag" :class="c.regimenAduanero?.toLowerCase()">
@@ -158,6 +170,17 @@
             </tr>
           </tbody>
         </table>
+
+        <!-- Paginador Compartido -->
+        <BasePagination 
+          v-if="totalItems > pageSize"
+          v-model:currentPage="currentPage"
+          :total-pages="totalPages"
+          :total-items="totalItems"
+          :start-index="startIndex"
+          :end-index="endIndex"
+          item-label="cotizaciones"
+        />
       </div>
     </div>
 
@@ -181,11 +204,11 @@
             <div class="detail-grid">
               <div class="detail-item">
                 <span class="detail-label">Mercancía:</span>
-                <span class="detail-val">{{ cotizacionSeleccionada.nombreMercancia }} ({{ cotizacionSeleccionada.codigoMercancia }})</span>
+                <span class="detail-val">{{ cotizacionSeleccionada.nombreMercancia || 'Mercancía General' }} ({{ cotizacionSeleccionada.codigoMercancia || '-' }})</span>
               </div>
               <div class="detail-item">
                 <span class="detail-label">Tipo de Carga:</span>
-                <span class="detail-val">{{ cotizacionSeleccionada.nombreTipoCarga }}</span>
+                <span class="detail-val">{{ cotizacionSeleccionada.nombreTipoCarga || 'General' }}</span>
               </div>
               <div class="detail-item">
                 <span class="detail-label">Régimen Aduanero:</span>
@@ -193,7 +216,7 @@
               </div>
               <div class="detail-item">
                 <span class="detail-label">Ruta Puerto:</span>
-                <span class="detail-val">{{ cotizacionSeleccionada.nombrePuertoEnvio }} &rarr; {{ cotizacionSeleccionada.nombrePuertoDestino }}</span>
+                <span class="detail-val">{{ cotizacionSeleccionada.nombrePuertoEnvio || 'Origen' }} &rarr; {{ cotizacionSeleccionada.nombrePuertoDestino || 'Destino' }}</span>
               </div>
               <div class="detail-item">
                 <span class="detail-label">Transporte Local:</span>
@@ -285,11 +308,11 @@
           <button 
             v-if="cotizacionSeleccionada?.estado === 'APROBADA'" 
             class="btn-primary" 
-            @click="aceptarCotizacion(cotizacionSeleccionada.idCotizacion)"
-            :disabled="aceptando"
+            @click="handleAceptarCotizacion(cotizacionSeleccionada)"
+            :disabled="aceptando || cotizacionSeleccionada?.aceptadaPorCliente"
           >
-            <i class="pi pi-check"></i>
-            <span>Aceptar y Autorizar Despacho</span>
+            <i :class="aceptando ? 'pi pi-spin pi-spinner' : (cotizacionSeleccionada?.aceptadaPorCliente ? 'pi pi-check-circle' : 'pi pi-check')"></i>
+            <span>{{ cotizacionSeleccionada?.aceptadaPorCliente ? 'Cotización Ya Autorizada' : 'Aceptar y Autorizar Despacho' }}</span>
           </button>
         </div>
       </div>
@@ -310,11 +333,60 @@
 
         <form @submit.prevent="enviarSolicitud" class="modal-body">
           <div class="form-grid">
-            <div class="form-field full">
+            <div class="form-field">
               <label>Régimen Aduanero *</label>
               <select v-model="solicitudForm.regimenAduanero" required class="custom-select">
                 <option value="IMPORTACION_DEFINITIVA">Importación Definitiva</option>
                 <option value="EXPORTACION_DEFINITIVA">Exportación Definitiva</option>
+              </select>
+            </div>
+
+            <div class="form-field">
+              <label>Modalidad de Transporte *</label>
+              <select v-model="modalidadSeleccionada" class="custom-select" @change="onModalidadChange">
+                <option value="MARITIMO">Marítimo</option>
+                <option value="AEREO">Aéreo</option>
+                <option value="TERRESTRE">Terrestre</option>
+              </select>
+            </div>
+
+            <div class="form-field">
+              <label>Tipo de Carga:</label>
+              <select v-model="solicitudForm.idTipoCarga" class="custom-select">
+                <option :value="null">Seleccione tipo de carga...</option>
+                <option v-for="tc in tiposCarga" :key="tc.idTipoCarga" :value="tc.idTipoCarga">
+                  {{ tc.nombre }}
+                </option>
+              </select>
+            </div>
+
+            <div class="form-field">
+              <label>Mercancía / Partida:</label>
+              <select v-model="solicitudForm.idMercancia" class="custom-select">
+                <option :value="null">Seleccione mercancía...</option>
+                <option v-for="m in mercancias" :key="m.idMercancia" :value="m.idMercancia">
+                  {{ m.codigo }} - {{ m.nombre }}
+                </option>
+              </select>
+            </div>
+
+            <div class="form-field">
+              <label>Puerto de Embarque (Origen):</label>
+              <select v-model="solicitudForm.idPuertoEnvio" class="custom-select">
+                <option :value="null">Seleccione puerto de salida...</option>
+                <option v-for="p in puertosFiltrados" :key="'env-' + p.idPuerto" :value="p.idPuerto">
+                  {{ p.nombre }} ({{ p.pais }})
+                </option>
+              </select>
+            </div>
+
+            <div class="form-field">
+              <label>Puerto de Llegada (Destino):</label>
+              <select v-model="solicitudForm.idPuertoDestino" class="custom-select">
+                <option :value="null">Seleccione puerto de arribo...</option>
+                <option v-for="p in puertosFiltrados" :key="'dest-' + p.idPuerto" :value="p.idPuerto">
+                  {{ p.nombre }} ({{ p.pais }})
+                </option>
               </select>
             </div>
 
@@ -329,25 +401,6 @@
                 required 
                 class="custom-input font-mono"
               />
-            </div>
-
-            <div class="form-field">
-              <label>Puerto de Embarque (Origen):</label>
-              <select v-model="solicitudForm.idPuertoEnvio" class="custom-select">
-                <option :value="null">Seleccione puerto...</option>
-                <option :value="12">Puerto de Shanghái (China)</option>
-                <option :value="20">Puerto de Los Ángeles (EE.UU.)</option>
-                <option :value="27">Puerto de Róterdam (Países Bajos)</option>
-              </select>
-            </div>
-
-            <div class="form-field">
-              <label>Puerto de Llegada (Destino):</label>
-              <select v-model="solicitudForm.idPuertoDestino" class="custom-select">
-                <option :value="1">Callao - Muelle Sur (DP World)</option>
-                <option :value="2">Callao - Muelle Norte (APM Terminals)</option>
-                <option :value="3">Puerto de Paita (Piura)</option>
-              </select>
             </div>
 
             <div class="form-field full">
@@ -384,14 +437,30 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-import apiClient from '@/core/api/apiClient'
+import { ref, computed, onMounted, watch } from 'vue'
+import { portalCotizacionService } from '../services/portalCotizacionService'
+import { useNotification } from '@/shared/composables/useNotification'
+import { useConfirmation } from '@/shared/composables/useConfirmation'
+import BasePagination from '@/shared/components/BasePagination.vue'
+
+const { showSuccess, showError, showWarn } = useNotification()
+const { confirmAction } = useConfirmation()
 
 const cotizaciones = ref([])
 const loading = ref(true)
 const filtroTexto = ref('')
 const filtroRegimen = ref('')
 const filtroEstado = ref('')
+
+// Catálogos dinámicos
+const puertos = ref([])
+const mercancias = ref([])
+const tiposCarga = ref([])
+const modalidadSeleccionada = ref('MARITIMO')
+
+// Paginación
+const currentPage = ref(1)
+const pageSize = ref(10)
 
 const modalDetalleVisible = ref(false)
 const cotizacionSeleccionada = ref(null)
@@ -402,28 +471,22 @@ const enviandoSolicitud = ref(false)
 const solicitudForm = ref({
   regimenAduanero: 'IMPORTACION_DEFINITIVA',
   valorFob: null,
-  idPuertoEnvio: 12,
-  idPuertoDestino: 1,
+  idMercancia: null,
+  idTipoCarga: null,
+  idPuertoEnvio: null,
+  idPuertoDestino: null,
   servicioTransporte: true,
   observaciones: ''
 })
 
-onMounted(() => {
-  cargarCotizaciones()
+const puertosFiltrados = computed(() => {
+  if (!modalidadSeleccionada.value) return puertos.value
+  return puertos.value.filter(p => !p.tipo || p.tipo.toUpperCase() === modalidadSeleccionada.value)
 })
 
-async function cargarCotizaciones() {
-  loading.value = true
-  try {
-    const res = await apiClient.get('/portal/cotizaciones')
-    if (res.data?.data) {
-      cotizaciones.value = res.data.data
-    }
-  } catch (err) {
-    console.error('Error al cargar cotizaciones', err)
-  } finally {
-    loading.value = false
-  }
+function onModalidadChange() {
+  solicitudForm.value.idPuertoEnvio = null
+  solicitudForm.value.idPuertoDestino = null
 }
 
 const cotizacionesFiltradas = computed(() => {
@@ -440,6 +503,20 @@ const cotizacionesFiltradas = computed(() => {
   })
 })
 
+const totalItems = computed(() => cotizacionesFiltradas.value.length)
+const totalPages = computed(() => Math.ceil(totalItems.value / pageSize.value) || 1)
+const startIndex = computed(() => (totalItems.value === 0 ? 0 : (currentPage.value - 1) * pageSize.value + 1))
+const endIndex = computed(() => Math.min(currentPage.value * pageSize.value, totalItems.value))
+
+const paginatedCotizaciones = computed(() => {
+  const start = (currentPage.value - 1) * pageSize.value
+  return cotizacionesFiltradas.value.slice(start, start + pageSize.value)
+})
+
+watch([filtroTexto, filtroRegimen, filtroEstado], () => {
+  currentPage.value = 1
+})
+
 const cotizacionesAprobadas = computed(() => {
   return cotizaciones.value.filter(c => c.estado === 'APROBADA').length
 })
@@ -451,6 +528,40 @@ const cotizacionesPendientes = computed(() => {
 const totalMontoCotizado = computed(() => {
   return cotizaciones.value.reduce((acc, c) => acc + (Number(c.totalCotizado) || 0), 0)
 })
+
+onMounted(async () => {
+  await Promise.all([
+    cargarCotizaciones(),
+    cargarCatalogos()
+  ])
+})
+
+async function cargarCatalogos() {
+  try {
+    const [pList, mList, tcList] = await Promise.all([
+      portalCotizacionService.obtenerPuertos().catch(() => []),
+      portalCotizacionService.obtenerMercancias().catch(() => []),
+      portalCotizacionService.obtenerTiposCarga().catch(() => [])
+    ])
+    puertos.value = pList
+    mercancias.value = mList
+    tiposCarga.value = tcList
+  } catch (err) {
+    console.debug('Error al cargar catálogos:', err)
+  }
+}
+
+async function cargarCotizaciones() {
+  loading.value = true
+  try {
+    const data = await portalCotizacionService.listarCotizaciones()
+    cotizaciones.value = data || []
+  } catch (err) {
+    showError(err.response?.data?.message || 'Error al cargar cotizaciones')
+  } finally {
+    loading.value = false
+  }
+}
 
 function formatCurrency(val) {
   if (val == null) return '0.00'
@@ -490,16 +601,34 @@ function verDetalle(c) {
   modalDetalleVisible.value = true
 }
 
-async function aceptarCotizacion(id) {
+async function handleAceptarCotizacion(c) {
+  if (!c) return
+  if (c.aceptadaPorCliente) {
+    showWarn('Esta cotización ya fue aceptada y autorizada previamente.')
+    return
+  }
+
+  const confirmed = await confirmAction({
+    header: 'Aceptar y Autorizar Despacho',
+    message: `¿Está seguro de autorizar la cotización ${c.codigoCotizacion} por un monto de $ ${formatCurrency(c.totalCotizado)} USD? Al aceptar, se iniciará el despacho aduanero.`,
+    icon: 'pi pi-check-circle',
+    acceptLabel: 'Autorizar Despacho',
+    rejectLabel: 'Cancelar',
+    acceptClass: 'p-button-success'
+  })
+
+  if (!confirmed) return
+
   aceptando.value = true
   try {
-    const res = await apiClient.patch(`/portal/cotizaciones/${id}/aceptar`)
-    if (res.data?.data) {
+    const res = await portalCotizacionService.aceptarCotizacion(c.idCotizacion)
+    if (res) {
       modalDetalleVisible.value = false
-      cargarCotizaciones()
+      showSuccess(`Cotización ${c.codigoCotizacion} aceptada con éxito. Se ha generado la orden de despacho.`, 'Operación Autorizada', 4000)
+      await cargarCotizaciones()
     }
   } catch (err) {
-    alert(err.response?.data?.message || 'Error al aceptar cotización')
+    showError(err.response?.data?.message || 'Error al aceptar cotización')
   } finally {
     aceptando.value = false
   }
@@ -509,24 +638,28 @@ function openSolicitudModal() {
   solicitudForm.value = {
     regimenAduanero: 'IMPORTACION_DEFINITIVA',
     valorFob: null,
-    idPuertoEnvio: 12,
-    idPuertoDestino: 1,
+    idMercancia: null,
+    idTipoCarga: null,
+    idPuertoEnvio: null,
+    idPuertoDestino: null,
     servicioTransporte: true,
     observaciones: ''
   }
+  modalidadSeleccionada.value = 'MARITIMO'
   modalSolicitudVisible.value = true
 }
 
 async function enviarSolicitud() {
   enviandoSolicitud.value = true
   try {
-    const res = await apiClient.post('/portal/cotizaciones/solicitar', solicitudForm.value)
-    if (res.data?.data) {
+    const res = await portalCotizacionService.solicitarCotizacion(solicitudForm.value)
+    if (res) {
       modalSolicitudVisible.value = false
-      cargarCotizaciones()
+      showSuccess('Solicitud de cotización remitida con éxito a evaluación técnica.', 'Solicitud Enviada')
+      await cargarCotizaciones()
     }
   } catch (err) {
-    alert(err.response?.data?.message || 'Error al enviar solicitud')
+    showError(err.response?.data?.message || 'Error al enviar solicitud')
   } finally {
     enviandoSolicitud.value = false
   }
@@ -538,34 +671,36 @@ async function enviarSolicitud() {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+  width: 100%;
 }
 
+/* Header */
 .view-header {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
-  flex-wrap: wrap;
   gap: 1rem;
+  flex-wrap: wrap;
 }
 
 .view-kicker {
-  font-size: var(--font-size-2xs, 0.6875rem);
+  font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.08em;
-  color: var(--color-accent-kicker, #9a7f60);
+  color: var(--color-accent-kicker);
 }
 
 .view-title {
   font-size: 1.5rem;
   font-weight: 800;
-  color: var(--color-text-main, #2b2520);
+  color: var(--color-text-main);
   margin: 0.2rem 0;
   letter-spacing: -0.02em;
 }
 
 .view-subtitle {
   font-size: 0.85rem;
-  color: var(--color-text-muted, #6f6356);
+  color: var(--color-text-muted);
   margin: 0;
 }
 
@@ -574,82 +709,117 @@ async function enviarSolicitud() {
   align-items: center;
   gap: 0.5rem;
   padding: 0.65rem 1.15rem;
-  background: var(--color-primary, #352f2a);
-  color: #ffffff;
+  background: var(--color-primary);
+  color: var(--color-primary-text);
   border: none;
   border-radius: 6px;
   font-size: 0.84rem;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s ease;
+  transition: all 0.2s ease;
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: var(--color-primary-hover, #484039);
+  background: var(--color-primary-hover);
+}
+
+.btn-primary:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
 
 .btn-secondary {
   padding: 0.65rem 1.15rem;
-  background: var(--color-bg-surface, #ffffff);
-  border: 1px solid var(--color-border, #e4dacb);
-  color: var(--color-text-main, #2b2520);
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-main);
   border-radius: 6px;
   font-size: 0.84rem;
   font-weight: 600;
   cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: var(--color-bg-subtle);
+  border-color: var(--color-border-strong);
 }
 
 /* KPI Grid */
 .kpi-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  grid-template-columns: repeat(4, 1fr);
   gap: 1rem;
 }
 
 .kpi-card {
-  background: var(--color-bg-surface, #ffffff);
-  border: 1px solid var(--color-border, #e4dacb);
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
   border-radius: 10px;
   padding: 1.25rem;
   display: flex;
-  align-items: center;
-  gap: 1rem;
-  box-shadow: 0 2px 8px rgba(43, 37, 32, 0.02);
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 0.75rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.kpi-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--color-border-strong);
 }
 
 .kpi-card.highlighted {
-  border-color: var(--color-border-strong, #d5c8b6);
-  background: linear-gradient(180deg, var(--color-bg-surface, #ffffff) 0%, var(--color-bg-subtle, #f2ebe1) 100%);
+  border-color: var(--color-accent-kicker);
+}
+
+.kpi-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.kpi-idx {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: var(--color-accent-kicker);
+  background: var(--color-bg-subtle);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 6px;
+  padding: 0.15rem 0.45rem;
+  letter-spacing: 0.02em;
+  font-family: var(--font-mono);
 }
 
 .kpi-icon-box {
-  width: 44px;
-  height: 44px;
+  width: 40px;
+  height: 40px;
   border-radius: 8px;
-  background: var(--color-bg-base, #f6f3ee);
-  border: 1px solid var(--color-border-subtle, #ede5d8);
+  background: var(--color-bg-subtle);
+  border: 1px solid var(--color-border-subtle);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.25rem;
-  color: var(--color-primary, #352f2a);
+  font-size: 1.2rem;
+  color: var(--color-primary);
 }
 
 .kpi-icon-box.success {
-  background: var(--color-success-bg, #eaf6ed);
-  border-color: var(--color-success-border, #bce5c6);
-  color: var(--color-success-text, #1e6638);
+  background: var(--color-success-bg);
+  border-color: var(--color-success-border);
+  color: var(--color-success-text);
 }
 
 .kpi-icon-box.warning {
-  background: var(--color-warning-bg, #fdf5e6);
-  border-color: var(--color-warning-border, #f8dab3);
-  color: var(--color-warning-text, #8c5b16);
+  background: var(--color-warning-bg);
+  border-color: var(--color-warning-border);
+  color: var(--color-warning-text);
 }
 
 .kpi-icon-box.accent {
-  background: var(--color-bg-subtle, #f2ebe1);
-  color: var(--color-accent-kicker, #9a7f60);
+  background: var(--color-bg-subtle);
+  color: var(--color-accent-kicker);
 }
 
 .kpi-content {
@@ -658,20 +828,17 @@ async function enviarSolicitud() {
 }
 
 .kpi-label {
-  font-size: 0.6875rem;
+  font-size: 0.68rem;
   font-weight: 700;
   letter-spacing: 0.05em;
-  color: var(--color-text-subtle, #998c7e);
+  color: var(--color-text-subtle);
 }
 
 .kpi-value {
   font-size: 1.5rem;
   font-weight: 800;
-  color: var(--color-text-main, #2b2520);
-}
-
-.kpi-value.mono {
-  font-family: var(--font-mono);
+  color: var(--color-text-main);
+  margin-top: 0.15rem;
 }
 
 /* Filtros */
@@ -679,8 +846,8 @@ async function enviarSolicitud() {
   display: flex;
   align-items: center;
   gap: 1rem;
-  background: var(--color-bg-surface, #ffffff);
-  border: 1px solid var(--color-border, #e4dacb);
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
   border-radius: 8px;
   padding: 0.85rem 1rem;
   flex-wrap: wrap;
@@ -688,26 +855,26 @@ async function enviarSolicitud() {
 
 .search-box {
   flex: 1;
-  min-width: 260px;
+  min-width: 250px;
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  border: 1px solid var(--color-border, #e4dacb);
+  border: 1px solid var(--color-border);
   border-radius: 6px;
   padding: 0.45rem 0.75rem;
-  background: var(--color-bg-base, #f6f3ee);
+  background: var(--color-bg-base);
 }
 
 .search-box i {
-  color: var(--color-text-subtle, #998c7e);
+  color: var(--color-text-subtle);
 }
 
-.search-input {
+.search-box input {
   border: none;
   background: transparent;
   width: 100%;
   font-size: 0.82rem;
-  color: var(--color-text-main, #2b2520);
+  color: var(--color-text-main);
   outline: none;
 }
 
@@ -716,23 +883,23 @@ async function enviarSolicitud() {
   align-items: center;
   gap: 0.5rem;
   font-size: 0.8rem;
-  color: var(--color-text-muted, #6f6356);
+  color: var(--color-text-muted);
 }
 
 .custom-select {
-  border: 1px solid var(--color-border, #e4dacb);
+  border: 1px solid var(--color-border);
   border-radius: 6px;
   padding: 0.45rem 0.65rem;
-  background: var(--color-bg-surface, #ffffff);
-  color: var(--color-text-main, #2b2520);
+  background: var(--color-bg-surface);
+  color: var(--color-text-main);
   font-size: 0.82rem;
   outline: none;
 }
 
 /* Tabla */
 .table-card {
-  background: var(--color-bg-surface, #ffffff);
-  border: 1px solid var(--color-border, #e4dacb);
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
   border-radius: 10px;
   overflow: hidden;
 }
@@ -749,23 +916,23 @@ async function enviarSolicitud() {
 }
 
 .data-table th {
-  background: var(--color-bg-subtle, #f2ebe1);
+  background: var(--color-bg-subtle);
   padding: 0.75rem 1rem;
   font-size: 0.6875rem;
   font-weight: 700;
-  color: var(--color-text-muted, #6f6356);
+  color: var(--color-text-muted);
   letter-spacing: 0.05em;
-  border-bottom: 1px solid var(--color-border, #e4dacb);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .data-table td {
   padding: 0.85rem 1rem;
-  border-bottom: 1px solid var(--color-border-subtle, #ede5d8);
-  color: var(--color-text-main, #2b2520);
+  border-bottom: 1px solid var(--color-border-subtle);
+  color: var(--color-text-main);
 }
 
 .data-table tr:hover {
-  background: var(--color-bg-base, #f6f3ee);
+  background: var(--color-bg-subtle);
 }
 
 .item-name {
@@ -774,7 +941,7 @@ async function enviarSolicitud() {
 
 .item-sub {
   font-size: 0.72rem;
-  color: var(--color-text-muted, #6f6356);
+  color: var(--color-text-muted);
 }
 
 .route-box {
@@ -786,73 +953,79 @@ async function enviarSolicitud() {
 
 .route-box i {
   font-size: 0.65rem;
-  color: var(--color-accent-kicker, #9a7f60);
+  color: var(--color-accent-kicker);
+}
+
+.highlight-cell {
+  color: var(--color-primary);
 }
 
 .regimen-tag {
-  display: inline-block;
-  padding: 0.15rem 0.45rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 0.2rem 0.45rem;
   border-radius: 4px;
-  font-size: 0.7rem;
-  font-weight: 600;
-  text-transform: capitalize;
 }
 
 .regimen-tag.importacion_definitiva {
-  background: var(--color-info-bg, #eef4fb);
-  color: var(--color-info-text, #21598f);
-  border: 1px solid var(--color-info-border, #cadff4);
+  background: var(--color-info-bg, var(--color-bg-subtle));
+  color: var(--color-info-text, var(--color-primary));
+  border: 1px solid var(--color-border-subtle);
 }
 
 .regimen-tag.exportacion_definitiva {
-  background: var(--color-success-bg, #eaf6ed);
-  color: var(--color-success-text, #1e6638);
-  border: 1px solid var(--color-success-border, #bce5c6);
+  background: var(--color-success-bg);
+  color: var(--color-success-text);
+  border: 1px solid var(--color-success-border);
 }
 
 .status-badge {
-  display: inline-block;
-  padding: 0.2rem 0.55rem;
-  border-radius: 20px;
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   font-weight: 700;
+  padding: 0.2rem 0.5rem;
+  border-radius: 12px;
+  display: inline-block;
 }
 
 .status-badge.success {
-  background: var(--color-success-bg, #eaf6ed);
-  color: var(--color-success-text, #1e6638);
-  border: 1px solid var(--color-success-border, #bce5c6);
+  background: var(--color-success-bg);
+  color: var(--color-success-text);
+  border: 1px solid var(--color-success-border);
 }
 
 .status-badge.warning {
-  background: var(--color-warning-bg, #fdf5e6);
-  color: var(--color-warning-text, #8c5b16);
-  border: 1px solid var(--color-warning-border, #f8dab3);
+  background: var(--color-warning-bg);
+  color: var(--color-warning-text);
+  border: 1px solid var(--color-warning-border);
 }
 
-.status-badge.info {
-  background: var(--color-info-bg, #eef4fb);
-  color: var(--color-info-text, #21598f);
-  border: 1px solid var(--color-info-border, #cadff4);
+.status-badge.danger {
+  background: var(--color-danger-bg);
+  color: var(--color-danger-text);
+  border: 1px solid var(--color-danger-border);
+}
+
+.status-badge.neutral {
+  background: var(--color-bg-subtle);
+  color: var(--color-text-muted);
+  border: 1px solid var(--color-border);
 }
 
 .pago-badge {
-  font-size: 0.7rem;
+  font-size: 0.72rem;
   font-weight: 600;
-  padding: 0.15rem 0.45rem;
-  border-radius: 4px;
 }
 
 .pago-badge.success {
-  color: var(--color-success-text, #1e6638);
+  color: var(--color-success-text);
 }
 
 .pago-badge.info {
-  color: var(--color-info-text, #21598f);
+  color: var(--color-info-text, var(--color-primary));
 }
 
 .pago-badge.neutral {
-  color: var(--color-text-subtle, #998c7e);
+  color: var(--color-text-subtle);
 }
 
 .btn-table-action {
@@ -860,27 +1033,27 @@ async function enviarSolicitud() {
   align-items: center;
   gap: 0.35rem;
   padding: 0.35rem 0.65rem;
-  background: var(--color-bg-base, #f6f3ee);
-  border: 1px solid var(--color-border, #e4dacb);
+  background: var(--color-bg-base);
+  border: 1px solid var(--color-border);
   border-radius: 4px;
   font-size: 0.75rem;
   font-weight: 600;
-  color: var(--color-text-main, #2b2520);
+  color: var(--color-text-main);
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .btn-table-action:hover {
-  background: var(--color-primary, #352f2a);
-  color: #ffffff;
-  border-color: var(--color-primary, #352f2a);
+  background: var(--color-primary);
+  color: var(--color-primary-text);
+  border-color: var(--color-primary);
 }
 
 /* Modales */
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.45);
+  background: rgba(0, 0, 0, 0.55);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -889,7 +1062,8 @@ async function enviarSolicitud() {
 }
 
 .modal-card {
-  background: var(--color-bg-surface, #ffffff);
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
   border-radius: 12px;
   width: 100%;
   max-width: 680px;
@@ -897,34 +1071,43 @@ async function enviarSolicitud() {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--shadow-elevated, 0 10px 30px rgba(0, 0, 0, 0.25));
 }
 
 .modal-header {
   padding: 1.25rem 1.5rem;
-  border-bottom: 1px solid var(--color-border, #e4dacb);
+  border-bottom: 1px solid var(--color-border);
   display: flex;
   align-items: center;
   justify-content: space-between;
+  background: var(--color-bg-subtle);
 }
 
 .modal-kicker {
   font-size: 0.6875rem;
   font-weight: 700;
-  color: var(--color-accent-kicker, #9a7f60);
+  color: var(--color-accent-kicker);
 }
 
 .modal-title {
   margin: 0.15rem 0 0 0;
   font-size: 1.25rem;
+  color: var(--color-text-main);
 }
 
 .close-btn {
-  background: none;
+  background: transparent;
   border: none;
   font-size: 1.1rem;
   cursor: pointer;
-  color: var(--color-text-subtle, #998c7e);
+  color: var(--color-text-subtle);
+  padding: 0.35rem;
+  border-radius: 4px;
+}
+
+.close-btn:hover {
+  color: var(--color-text-main);
+  background: var(--color-bg-muted);
 }
 
 .modal-body {
@@ -938,26 +1121,27 @@ async function enviarSolicitud() {
 .section-title {
   font-size: 0.85rem;
   font-weight: 700;
-  color: var(--color-primary, #352f2a);
+  color: var(--color-primary);
   margin: 0 0 0.65rem 0;
-  border-bottom: 1px solid var(--color-border-subtle, #ede5d8);
+  border-bottom: 1px solid var(--color-border-subtle);
   padding-bottom: 0.35rem;
 }
 
 .detail-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 0.65rem 1rem;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
 }
 
 .detail-item {
   display: flex;
   flex-direction: column;
+  gap: 0.15rem;
 }
 
 .detail-label {
   font-size: 0.72rem;
-  color: var(--color-text-muted, #6f6356);
+  color: var(--color-text-muted);
 }
 
 .detail-val {
@@ -966,8 +1150,8 @@ async function enviarSolicitud() {
 }
 
 .cost-table {
-  background: var(--color-bg-base, #f6f3ee);
-  border: 1px solid var(--color-border, #e4dacb);
+  background: var(--color-bg-base);
+  border: 1px solid var(--color-border);
   border-radius: 8px;
   overflow: hidden;
 }
@@ -976,31 +1160,30 @@ async function enviarSolicitud() {
   display: flex;
   justify-content: space-between;
   padding: 0.55rem 0.85rem;
-  border-bottom: 1px solid var(--color-border-subtle, #ede5d8);
+  border-bottom: 1px solid var(--color-border-subtle);
   font-size: 0.82rem;
 }
 
 .cost-row.highlight {
-  background: rgba(228, 218, 203, 0.3);
+  background: var(--color-warning-bg);
   font-weight: 600;
 }
 
 .cost-row.total-row {
-  background: var(--color-bg-sidebar, #ede6db);
+  background: var(--color-bg-subtle);
   font-weight: 700;
   border-bottom: none;
-  font-size: 0.95rem;
 }
 
 .total-amount {
-  color: var(--color-primary, #352f2a);
+  color: var(--color-primary);
 }
 
 .financial-status-box {
   display: flex;
   justify-content: space-between;
-  background: var(--color-bg-base, #f6f3ee);
-  border: 1px solid var(--color-border, #e4dacb);
+  background: var(--color-bg-base);
+  border: 1px solid var(--color-border);
   border-radius: 8px;
   padding: 0.75rem 1rem;
 }
@@ -1008,11 +1191,12 @@ async function enviarSolicitud() {
 .fin-col {
   display: flex;
   flex-direction: column;
+  gap: 0.15rem;
 }
 
 .fin-label {
   font-size: 0.72rem;
-  color: var(--color-text-muted, #6f6356);
+  color: var(--color-text-muted);
 }
 
 .fin-val {
@@ -1021,11 +1205,11 @@ async function enviarSolicitud() {
 }
 
 .fin-val.success {
-  color: var(--color-success-text, #1e6638);
+  color: var(--color-success-text);
 }
 
 .fin-val.warning {
-  color: var(--color-warning-text, #8c5b16);
+  color: var(--color-warning-text);
 }
 
 .observations-box {
@@ -1033,29 +1217,26 @@ async function enviarSolicitud() {
   align-items: center;
   gap: 0.5rem;
   padding: 0.65rem 0.85rem;
-  background: var(--color-warning-bg, #fdf5e6);
-  border: 1px solid var(--color-warning-border, #f8dab3);
+  background: var(--color-warning-bg);
+  border: 1px solid var(--color-warning-border);
   border-radius: 6px;
   font-size: 0.78rem;
-  color: var(--color-warning-text, #8c5b16);
+  color: var(--color-warning-text);
 }
 
 .modal-footer {
   padding: 1rem 1.5rem;
-  border-top: 1px solid var(--color-border, #e4dacb);
+  border-top: 1px solid var(--color-border);
   display: flex;
   justify-content: flex-end;
   gap: 0.75rem;
+  background: var(--color-bg-subtle);
 }
 
 .form-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, 1fr);
   gap: 1rem;
-}
-
-.form-field.full {
-  grid-column: span 2;
 }
 
 .form-field {
@@ -1064,82 +1245,120 @@ async function enviarSolicitud() {
   gap: 0.35rem;
 }
 
+.form-field.full {
+  grid-column: span 2;
+}
+
 .form-field label {
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   font-weight: 600;
+  color: var(--color-text-main);
 }
 
 .custom-textarea {
-  border: 1px solid var(--color-border, #e4dacb);
+  border: 1px solid var(--color-border);
   border-radius: 6px;
   padding: 0.65rem;
-  font-family: var(--font-sans);
+  font-family: inherit;
   font-size: 0.82rem;
+  outline: none;
+  background: var(--color-bg-surface);
+  color: var(--color-text-main);
+}
+
+.custom-textarea:focus,
+.custom-input:focus {
+  border-color: var(--color-primary);
 }
 
 .custom-input {
-  border: 1px solid var(--color-border, #e4dacb);
+  border: 1px solid var(--color-border);
   border-radius: 6px;
   padding: 0.55rem;
+  font-size: 0.85rem;
+  outline: none;
+  background: var(--color-bg-surface);
+  color: var(--color-text-main);
 }
 
 .checkbox-label {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  font-size: 0.82rem;
   cursor: pointer;
 }
 
-.empty-state, .loading-state {
+.loading-state, .empty-state {
   padding: 3rem 1.5rem;
   text-align: center;
-  color: var(--color-text-muted, #6f6356);
+  color: var(--color-text-muted);
 }
 
-.empty-state i, .loading-state i {
-  font-size: 2rem;
+.empty-state i {
+  font-size: 2.5rem;
   margin-bottom: 0.5rem;
+  opacity: 0.4;
 }
 
-.text-right { text-align: right; }
-.text-center { text-align: center; }
-.font-mono { font-family: var(--font-mono); }
-.font-bold { font-weight: 700; }
+.empty-state h3 {
+  margin: 0.2rem 0;
+  color: var(--color-text-main);
+}
+
+.empty-state p {
+  margin: 0;
+  font-size: 0.82rem;
+}
 
 .alert-box-observation {
-  background: rgba(220, 38, 38, 0.08);
-  border: 1px solid rgba(220, 38, 38, 0.25);
-  border-radius: 6px;
+  background: var(--color-danger-bg);
+  border: 1px solid var(--color-danger-border);
+  border-radius: 8px;
   padding: 0.85rem 1rem;
-  margin-bottom: 1.25rem;
+  margin-bottom: 0.5rem;
 }
 
 .alert-obs-header {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  color: #dc2626;
+  color: var(--color-danger-text);
   font-size: 0.875rem;
   margin-bottom: 0.4rem;
 }
 
 .alert-obs-message {
   font-size: 0.8125rem;
-  color: var(--color-text-main, #2c251e);
+  color: var(--color-text-main);
   line-height: 1.45;
   margin: 0 0 0.5rem 0;
-  padding-left: 1.35rem;
 }
 
 .alert-obs-footer {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 0.4rem;
   font-size: 0.75rem;
-  color: var(--color-text-muted, #6f6356);
-  border-top: 1px dashed rgba(220, 38, 38, 0.2);
+  color: var(--color-text-muted);
+  border-top: 1px dashed var(--color-danger-border);
   padding-top: 0.4rem;
-  padding-left: 1.35rem;
+}
+
+@media (max-width: 1024px) {
+  .kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .kpi-grid {
+    grid-template-columns: 1fr;
+  }
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+  .form-field.full {
+    grid-column: span 1;
+  }
 }
 </style>

@@ -771,7 +771,7 @@
 
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
-import { comercialService } from '@/features/comercial/services/comercialService'
+import { finanzasService } from '@/features/finanzas/services/finanzasService'
 import { documentoService } from '@/features/documentos/services/documentoService'
 import { useAuthStore } from '@/features/auth/stores/authStore'
 
@@ -911,7 +911,7 @@ watch(
 async function loadCotizacionesAprobadas() {
   loadingCotizaciones.value = true
   try {
-    const list = await comercialService.getCotizaciones()
+    const list = await finanzasService.getCotizacionesAprobadas()
     cotizacionesDisponibles.value = (list || []).filter(
       c => c.estado === 'APROBADA' && c.estadoPago !== 'PAGADO_TOTAL'
     )
@@ -1069,7 +1069,7 @@ async function handleSubmit() {
       idDocumentoComprobante: idDocComprobante
     }
 
-    const nuevoPago = await comercialService.registrarPagoCotizacion(targetCotizacion.idCotizacion, payload)
+    const nuevoPago = await finanzasService.registrarPagoCotizacion(targetCotizacion.idCotizacion, payload)
 
     emit('saved', { pago: nuevoPago, cotizacion: targetCotizacion })
   } catch (error) {

@@ -1,5 +1,4 @@
 import apiClient from '@/core/api/apiClient'
-import finanzasService from '@/features/finanzas/services/finanzasService'
 import { expedienteService } from './expedienteService'
 
 export const comercialService = {
@@ -87,17 +86,6 @@ export const comercialService = {
   async deleteCotizacion(id) {
     const response = await apiClient.delete(`/cotizaciones/${id}`)
     return response.data
-  },
-
-  // ==========================================
-  // PAGOS Y ANTICIPOS (Consolidados via finanzasService)
-  // ==========================================
-  async registrarPagoCotizacion(idCotizacion, data) {
-    return finanzasService.registrarPagoCotizacion(idCotizacion, data)
-  },
-
-  async getPagosCotizacion(idCotizacion) {
-    return finanzasService.getPagosCotizacion(idCotizacion)
   },
 
   // ==========================================

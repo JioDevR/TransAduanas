@@ -154,7 +154,7 @@ import UserTable from '../components/UserTable.vue'
 import UserRegistrationForm from '../components/UserRegistrationForm.vue'
 
 const navigationStore = useNavigationStore()
-const { showSuccess, showError, showInfo } = useNotification()
+const { showSuccess, showError, showInfo, showWarn } = useNotification()
 const { confirmAction } = useConfirmation()
 
 const users = ref([])
@@ -168,6 +168,8 @@ const selectedUser = ref(null)
 const showToast = (message, type = 'success') => {
   if (type === 'error') {
     showError(message)
+  } else if (type === 'warn' || type === 'warning') {
+    showWarn(message)
   } else if (type === 'info') {
     showInfo(message)
   } else {

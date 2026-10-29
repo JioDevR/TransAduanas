@@ -1063,7 +1063,7 @@ const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
 const navigationStore = useNavigationStore()
-const { showSuccess, showError, showInfo } = useNotification()
+const { showSuccess, showError, showInfo, showWarn } = useNotification()
 const { confirmAction, confirmDelete } = useConfirmation()
 
 const activeTab = ref('dashboard')
@@ -1311,6 +1311,8 @@ const resetExpedienteFilters = () => {
 const showToast = (message, type = 'success') => {
   if (type === 'error') {
     showError(message)
+  } else if (type === 'warn' || type === 'warning') {
+    showWarn(message)
   } else if (type === 'info') {
     showInfo(message)
   } else {

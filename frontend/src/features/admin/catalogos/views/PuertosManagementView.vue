@@ -318,7 +318,7 @@ import { useNotification } from '@/shared/composables/useNotification'
 import { useConfirmation } from '@/shared/composables/useConfirmation'
 import { openBlobInNewTab } from '@/shared/utils/download'
 
-const { showSuccess, showError, showInfo } = useNotification()
+const { showSuccess, showError, showInfo, showWarn } = useNotification()
 const { confirmAction } = useConfirmation()
 
 // Estado General
@@ -339,6 +339,8 @@ const selectedPuerto = ref(null)
 const showToast = (message, type = 'success') => {
   if (type === 'error') {
     showError(message)
+  } else if (type === 'warn' || type === 'warning') {
+    showWarn(message)
   } else if (type === 'info') {
     showInfo(message)
   } else {

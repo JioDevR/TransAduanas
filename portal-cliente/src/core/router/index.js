@@ -49,6 +49,12 @@ const routes = [
         meta: { title: 'Cobros y Pagos — Portal TransAduanas' }
       },
       {
+        path: 'pagos/registrar',
+        name: 'RegistrarPago',
+        component: () => import('@/features/pagos/views/RegistrarPagoView.vue'),
+        meta: { title: 'Registrar Pago / Abono Bancario — Portal TransAduanas' }
+      },
+      {
         path: 'notificaciones',
         name: 'Notificaciones',
         component: PortalNotificacionesView,

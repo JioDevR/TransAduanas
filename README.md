@@ -81,9 +81,9 @@ Gestionado a través de **Apache Maven** ([`backend/pom.xml`](file:///home/jiode
 
 ---
 
-### 4.2 Frontend Interno & Portal B2B: Vue 3 & Vite
+### 4.2 Frontends del Ecosistema (Interno, Portal B2B y Landing): Vue 3 & Vite
 
-Gestionados a través de **Node.js / npm** en [`app-sga/package.json`](file:///home/jiodev/Documents/Proyects/TransAduanas/app-sga/package.json) y [`app-portal-cliente/package.json`](file:///home/jiodev/Documents/Proyects/TransAduanas/app-portal-cliente/package.json):
+Gestionados a través de **Node.js / npm** como proyectos completamente independientes en [`app-sga/`](file:///home/jiodev/Documents/Proyects/TransAduanas/app-sga), [`app-portal-cliente/`](file:///home/jiodev/Documents/Proyects/TransAduanas/app-portal-cliente) y [`landing/`](file:///home/jiodev/Documents/Proyects/TransAduanas/landing):
 
 | Dependencia                     | Versión (`app-sga` / `app-portal-cliente`) | Propósito Técnico y Justificación                                                                         |
 | :------------------------------ | :-------------------------------------: | :-------------------------------------------------------------------------------------------------------- |
@@ -244,6 +244,11 @@ TransAduanas/
 │   ├── package.json                           # SPA corporativa para clientes importadores/exportadores
 │   ├── vite.config.js                         # Servidor dev (5174) y proxy inverso hacia :8085
 │   └── src/                                   # Vistas de tracking, cotizaciones, pagos y notificaciones B2B
+│
+├── landing/                                   # Landing Page Pública Independiente (Vue 3 / Vite 6 / Puerto 5173)
+│   ├── package.json                           # SPA independiente para difusión comercial y accesos al ecosistema
+│   ├── vite.config.js                         # Servidor dev en puerto 5173
+│   └── src/                                   # Vista de inicio, tokens editoriales y enlaces desacoplados
 │
 ├── db/                                        # Base de Datos MySQL 8.4 InnoDB
 │   ├── docker-compose.yml                     # Contenedor MySQL 8.4 con carga automática de scripts

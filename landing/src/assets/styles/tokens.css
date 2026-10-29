@@ -1,0 +1,145 @@
+/* ==========================================================================
+   WARM EDITORIAL DESIGN TOKENS - TRANSADUANAS
+   Inspirado en estética minimalista cálida: arena, latte y café espresso.
+   ========================================================================== */
+
+:root {
+  /* Paleta Base Cálida */
+  --color-bg-base: #f6f3ee;
+  --color-bg-sidebar: #ede6db;
+  --color-bg-surface: #ffffff;
+  --color-bg-hero: #ebdcc9;
+  --color-bg-subtle: #f2ebe1;
+  --color-bg-muted: #efe8de;
+
+  /* Bordes */
+  --color-border: #e4dacb;
+  --color-border-subtle: #ede5d8;
+  --color-border-strong: #d5c8b6;
+
+  /* Colores Principales */
+  --color-primary: #352f2a;          /* Espresso profundo para botones activos y destacados */
+  --color-primary-hover: #484039;
+  --color-primary-text: #ffffff;
+  --color-accent-kicker: #9a7f60;    /* Bronce/caramelo para subtítulos kicker en mayúsculas */
+
+  /* Tipografía */
+  --color-text-main: #2b2520;        /* Carbón tostado profundo para títulos y lectura */
+  --color-text-muted: #6f6356;       /* Gris cálido para textos secundarios */
+  --color-text-subtle: #998c7e;      /* Avena apagado para etiquetas y fechas */
+
+  /* Estados Funcionales Semánticos */
+  --color-success-bg: #eaf6ed;
+  --color-success-border: #bce5c6;
+  --color-success-text: #1e6638;
+
+  --color-warning-bg: #fdf5e6;
+  --color-warning-border: #f8dab3;
+  --color-warning-text: #8c5b16;
+
+  --color-danger-bg: #fdf0f0;
+  --color-danger-border: #f6c8c8;
+  --color-danger-text: #9e2a2b;
+
+  --color-info-bg: #eef4fb;
+  --color-info-border: #cadff4;
+  --color-info-text: #21598f;
+
+  /* Tipografía */
+  --font-sans: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', Monaco, Consolas, monospace;
+
+  /* Escala Tipográfica */
+  --font-size-2xs: 0.6875rem; /* 11px */
+  --font-size-xs: 0.75rem;    /* 12px */
+  --font-size-sm: 0.8125rem;  /* 13px */
+  --font-size-base: 0.875rem; /* 14px */
+  --font-size-md: 0.9375rem;  /* 15px */
+  --font-size-lg: 1.125rem;   /* 18px */
+  --font-size-xl: 1.25rem;    /* 20px */
+  --font-size-2xl: 1.45rem;   /* 23.2px */
+  --font-size-3xl: 1.875rem;  /* 30px */
+
+  /* Pesos */
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --font-weight-extrabold: 800;
+
+  /* Espaciado */
+  --space-0: 0;
+  --space-1: 0.25rem;  /* 4px */
+  --space-2: 0.5rem;   /* 8px */
+  --space-3: 0.75rem;  /* 12px */
+  --space-4: 1rem;     /* 16px */
+  --space-5: 1.25rem;  /* 20px */
+  --space-6: 1.5rem;   /* 24px */
+  --space-8: 2rem;     /* 32px */
+  --space-10: 2.5rem;  /* 40px */
+  --space-12: 3rem;    /* 48px */
+  --space-16: 4rem;    /* 64px */
+
+  /* Radios */
+  --radius-xs: 0.25rem;
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-2xl: 1.25rem;
+  --radius-pill: 9999px;
+
+  /* Sombras */
+  --shadow-subtle: 0 1px 3px rgba(45, 35, 25, 0.04), 0 1px 2px rgba(45, 35, 25, 0.02);
+  --shadow-card: 0 4px 16px -2px rgba(50, 40, 30, 0.04), 0 2px 6px -1px rgba(50, 40, 30, 0.02);
+  --shadow-elevated: 0 12px 28px -6px rgba(45, 35, 25, 0.08), 0 4px 10px -2px rgba(45, 35, 25, 0.03);
+
+  /* Transiciones */
+  --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ==========================================================================
+   PALETA OSCURA EDITORIAL (GRIS TITANIO CÁLIDO & ARENA DORADA)
+   ========================================================================== */
+.dark-theme {
+  --color-bg-base: #1e1e1b;
+  --color-bg-sidebar: #191815;
+  --color-bg-surface: #282723;
+  --color-bg-hero: #33312a;
+  --color-bg-subtle: #2e2d27;
+  --color-bg-muted: #383630;
+
+  --color-border: #444138;
+  --color-border-subtle: #36342c;
+  --color-border-strong: #5c564a;
+
+  --color-primary: #d6b476;          /* Arena dorada cálida luminosa */
+  --color-primary-hover: #e5c78f;
+  --color-primary-text: #1d1b15;
+  --color-accent-kicker: #e0c287;
+
+  --color-text-main: #f6f2ea;
+  --color-text-muted: #c4bcab;
+  --color-text-subtle: #968e7e;
+
+  --color-success-bg: #1c2b1f;
+  --color-success-border: #2d5738;
+  --color-success-text: #7ee79d;
+
+  --color-warning-bg: #342914;
+  --color-warning-border: #695222;
+  --color-warning-text: #fcd34d;
+
+  --color-danger-bg: #321818;
+  --color-danger-border: #652a2a;
+  --color-danger-text: #fca5a5;
+
+  --color-info-bg: #172635;
+  --color-info-border: #254b6d;
+  --color-info-text: #93c5fd;
+
+  --shadow-subtle: 0 1px 3px rgba(0, 0, 0, 0.35);
+  --shadow-card: 0 4px 16px -2px rgba(0, 0, 0, 0.45);
+  --shadow-elevated: 0 12px 28px -6px rgba(0, 0, 0, 0.55);
+}

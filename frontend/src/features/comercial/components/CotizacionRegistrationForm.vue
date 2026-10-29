@@ -240,7 +240,7 @@
 
               <div v-else class="clients-grid">
                 <div
-                  v-for="c in filteredAvailableClients.slice(0, 8)"
+                  v-for="c in filteredAvailableClients.slice(0, 12)"
                   :key="c.idCliente"
                   class="client-select-card"
                   @click="selectClient(c)"
@@ -251,8 +251,8 @@
                       {{ c.esProspecto ? 'Prospecto' : 'Cliente' }}
                     </span>
                   </div>
-                  <span class="client-card-name">{{ c.razonSocial }}</span>
-                  <span class="client-card-email">{{ c.correoContacto }}</span>
+                  <span class="client-card-name" :title="c.razonSocial">{{ c.razonSocial }}</span>
+                  <span class="client-card-email" :title="c.correoContacto">{{ c.correoContacto }}</span>
                 </div>
               </div>
             </div>
@@ -297,7 +297,7 @@
                   v-for="reg in regimenOptions"
                   :key="reg.value"
                   :class="['regimen-card', { selected: form.regimenAduanero === reg.value }]"
-                  @click="form.regimenAduanero = reg.value"
+                  @click="handleSelectRegimen(reg.value)"
                 >
                   <div class="regimen-header">
                     <span class="regimen-code-badge">{{ reg.codigo }}</span>
@@ -312,76 +312,177 @@
               </div>
             </div>
 
-            <!-- 2. Ruta y Puertos (Origen & Destino desde API) -->
-            <div class="field-row-grid">
-              <div class="field-group">
-                <label for="cot-puerto-envio" class="field-label">Puerto de Origen / Envío</label>
-                <Select
-                  id="cot-puerto-envio"
-                  v-model="form.idPuertoEnvio"
-                  :options="puertos"
-                  optionLabel="nombre"
-                  optionValue="idPuerto"
-                  filter
-                  filterPlaceholder="Buscar puerto o país..."
-                  placeholder="Seleccione puerto de embarque..."
-                  class="sga-custom-select"
-                  :disabled="submitting || loadingCatalogos"
+            <!-- 2. Modalidad de Transporte Internacional (2 Botones Simples: Aéreo / Marítimo) -->
+            <div class="field-group modalidad-selector-box">
+              <div class="label-with-badge">
+                <label class="field-label">Modalidad de Transporte Internacional *</label>
+                <span class="kicker-mini-badge">{{ modalidadTransporte === 'AEREO' ? 'VÍA AÉREA' : 'VÍA MARÍTIMA' }}</span>
+              </div>
+              <p class="field-helper-text">Seleccione el modo de tráfico para filtrar los terminales portuarios o aeropuertos correspondientes.</p>
+
+              <div class="modalidad-toggle-grid">
+                <button
+                  type="button"
+                  :class="['btn-modalidad-card', { active: modalidadTransporte === 'MARITIMO' }]"
+                  @click="setModalidad('MARITIMO')"
                 >
-                  <template #value="slotProps">
-                    <div v-if="selectedPuertoEnvio" class="select-val-row">
-                      <span class="badge-code-select">{{ selectedPuertoEnvio.codigoPuerto }}</span>
-                      <span class="select-label-text">{{ selectedPuertoEnvio.nombre }} ({{ selectedPuertoEnvio.pais }})</span>
-                      <span class="badge-type-pill">{{ selectedPuertoEnvio.tipo }}</span>
-                    </div>
-                    <span v-else class="select-placeholder-text">{{ slotProps.placeholder }}</span>
-                  </template>
-                  <template #option="slotProps">
-                    <div class="select-opt-row">
-                      <div class="opt-left">
-                        <span class="badge-code-select">{{ slotProps.option.codigoPuerto }}</span>
-                        <span class="opt-text">{{ slotProps.option.nombre }} ({{ slotProps.option.pais }})</span>
-                      </div>
-                      <span class="badge-type-pill">{{ slotProps.option.tipo }}</span>
-                    </div>
-                  </template>
-                </Select>
-                <span class="field-hint-mini">Terminal o puerto internacional de salida</span>
+                  <div class="modalidad-icon">
+                    <i class="pi pi-compass"></i>
+                  </div>
+                  <div class="modalidad-info">
+                    <span class="modalidad-title">Carga Marítima</span>
+                    <span class="modalidad-sub">Puertos oceánicos, terminales y muelles de atraque</span>
+                  </div>
+                  <i v-if="modalidadTransporte === 'MARITIMO'" class="pi pi-check-circle modalidad-active-check"></i>
+                </button>
+
+                <button
+                  type="button"
+                  :class="['btn-modalidad-card', { active: modalidadTransporte === 'AEREO' }]"
+                  @click="setModalidad('AEREO')"
+                >
+                  <div class="modalidad-icon">
+                    <i class="pi pi-send"></i>
+                  </div>
+                  <div class="modalidad-info">
+                    <span class="modalidad-title">Carga Aérea</span>
+                    <span class="modalidad-sub">Aeropuertos internacionales y terminales de carga aérea</span>
+                  </div>
+                  <i v-if="modalidadTransporte === 'AEREO'" class="pi pi-check-circle modalidad-active-check"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- 3. Ruta Logística: Cascada País -> Terminal (Origen & Destino) -->
+            <div class="ruta-logistica-grid">
+              <!-- Bloque Origen -->
+              <div class="ruta-card-block">
+                <div class="ruta-block-header">
+                  <span class="ruta-badge-badge">ORIGEN / SALIDA</span>
+                  <span v-if="form.regimenAduanero === 'EXPORTACION_DEFINITIVA'" class="badge-peru-default">Default Perú</span>
+                </div>
+
+                <div class="ruta-fields-stack">
+                  <!-- País de Origen -->
+                  <div class="field-group">
+                    <label for="cot-pais-envio" class="field-label">País de Origen *</label>
+                    <Select
+                      id="cot-pais-envio"
+                      v-model="paisOrigen"
+                      :options="paisesOrigenDisponibles"
+                      filter
+                      filterPlaceholder="Buscar país de salida..."
+                      placeholder="Seleccione país de salida..."
+                      class="sga-custom-select"
+                      :disabled="submitting || loadingCatalogos"
+                      @change="handlePaisOrigenChange"
+                    />
+                    <span class="field-hint-mini">País donde se ubica el terminal de despacho</span>
+                  </div>
+
+                  <!-- Terminal de Origen -->
+                  <div class="field-group">
+                    <label for="cot-puerto-envio" class="field-label">{{ modalidadTransporte === 'AEREO' ? 'Aeropuerto de Origen' : 'Puerto de Origen' }} *</label>
+                    <Select
+                      id="cot-puerto-envio"
+                      v-model="form.idPuertoEnvio"
+                      :options="puertosOrigenFiltrados"
+                      optionLabel="nombre"
+                      optionValue="idPuerto"
+                      filter
+                      filterMatchMode="smart"
+                      :filterFields="['searchCorpus', 'codigoPuerto', 'nombre']"
+                      :filterPlaceholder="modalidadTransporte === 'AEREO' ? 'Buscar aeropuerto o código...' : 'Buscar puerto o código...'"
+                      :placeholder="!paisOrigen ? 'Primero seleccione país de salida' : (modalidadTransporte === 'AEREO' ? 'Seleccione aeropuerto de salida...' : 'Seleccione puerto de salida...')"
+                      class="sga-custom-select"
+                      :disabled="submitting || loadingCatalogos || !paisOrigen"
+                    >
+                      <template #value="slotProps">
+                        <div v-if="selectedPuertoEnvio" class="select-val-row">
+                          <span class="badge-code-select">{{ selectedPuertoEnvio.codigoPuerto }}</span>
+                          <span class="select-label-text">{{ selectedPuertoEnvio.nombre }} ({{ selectedPuertoEnvio.pais }})</span>
+                          <span class="badge-type-pill">{{ selectedPuertoEnvio.tipo }}</span>
+                        </div>
+                        <span v-else class="select-placeholder-text">{{ slotProps.placeholder }}</span>
+                      </template>
+                      <template #option="slotProps">
+                        <div class="select-opt-row">
+                          <div class="opt-left">
+                            <span class="badge-code-select">{{ slotProps.option.codigoPuerto }}</span>
+                            <span class="opt-text">{{ slotProps.option.nombre }} ({{ slotProps.option.pais }})</span>
+                          </div>
+                          <span class="badge-type-pill">{{ slotProps.option.tipo }}</span>
+                        </div>
+                      </template>
+                    </Select>
+                    <span class="field-hint-mini">{{ modalidadTransporte === 'AEREO' ? 'Aeropuerto internacional de salida' : 'Terminal marítimo o muelle de salida' }}</span>
+                  </div>
+                </div>
               </div>
 
-              <div class="field-group">
-                <label for="cot-puerto-destino" class="field-label">Puerto de Destino / Arribo</label>
-                <Select
-                  id="cot-puerto-destino"
-                  v-model="form.idPuertoDestino"
-                  :options="puertos"
-                  optionLabel="nombre"
-                  optionValue="idPuerto"
-                  filter
-                  filterPlaceholder="Buscar puerto o aduana..."
-                  placeholder="Seleccione puerto de arribo..."
-                  class="sga-custom-select"
-                  :disabled="submitting || loadingCatalogos"
-                >
-                  <template #value="slotProps">
-                    <div v-if="selectedPuertoDestino" class="select-val-row">
-                      <span class="badge-code-select">{{ selectedPuertoDestino.codigoPuerto }}</span>
-                      <span class="select-label-text">{{ selectedPuertoDestino.nombre }} ({{ selectedPuertoDestino.pais }})</span>
-                      <span class="badge-type-pill">{{ selectedPuertoDestino.tipo }}</span>
-                    </div>
-                    <span v-else class="select-placeholder-text">{{ slotProps.placeholder }}</span>
-                  </template>
-                  <template #option="slotProps">
-                    <div class="select-opt-row">
-                      <div class="opt-left">
-                        <span class="badge-code-select">{{ slotProps.option.codigoPuerto }}</span>
-                        <span class="opt-text">{{ slotProps.option.nombre }} ({{ slotProps.option.pais }})</span>
-                      </div>
-                      <span class="badge-type-pill">{{ slotProps.option.tipo }}</span>
-                    </div>
-                  </template>
-                </Select>
-                <span class="field-hint-mini">Aduana o terminal de arribo nacional</span>
+              <!-- Bloque Destino -->
+              <div class="ruta-card-block destination">
+                <div class="ruta-block-header">
+                  <span class="ruta-badge-badge destination">DESTINO / ARRIBO</span>
+                  <span v-if="form.regimenAduanero === 'IMPORTACION_DEFINITIVA'" class="badge-peru-default">Default Perú</span>
+                </div>
+
+                <div class="ruta-fields-stack">
+                  <!-- País de Destino -->
+                  <div class="field-group">
+                    <label for="cot-pais-destino" class="field-label">País de Destino *</label>
+                    <Select
+                      id="cot-pais-destino"
+                      v-model="paisDestino"
+                      :options="paisesDestinoDisponibles"
+                      filter
+                      filterPlaceholder="Buscar país de arribo..."
+                      placeholder="Seleccione país de arribo..."
+                      class="sga-custom-select"
+                      :disabled="submitting || loadingCatalogos"
+                      @change="handlePaisDestinoChange"
+                    />
+                    <span class="field-hint-mini">País de la aduana o terminal de llegada</span>
+                  </div>
+
+                  <!-- Terminal de Destino -->
+                  <div class="field-group">
+                    <label for="cot-puerto-destino" class="field-label">{{ modalidadTransporte === 'AEREO' ? 'Aeropuerto de Destino' : 'Puerto de Destino' }} *</label>
+                    <Select
+                      id="cot-puerto-destino"
+                      v-model="form.idPuertoDestino"
+                      :options="puertosDestinoFiltrados"
+                      optionLabel="nombre"
+                      optionValue="idPuerto"
+                      filter
+                      filterMatchMode="smart"
+                      :filterFields="['searchCorpus', 'codigoPuerto', 'nombre']"
+                      :filterPlaceholder="modalidadTransporte === 'AEREO' ? 'Buscar aeropuerto o código...' : 'Buscar puerto o código...'"
+                      :placeholder="!paisDestino ? 'Primero seleccione país de arribo' : (modalidadTransporte === 'AEREO' ? 'Seleccione aeropuerto de arribo...' : 'Seleccione puerto de arribo...')"
+                      class="sga-custom-select"
+                      :disabled="submitting || loadingCatalogos || !paisDestino"
+                    >
+                      <template #value="slotProps">
+                        <div v-if="selectedPuertoDestino" class="select-val-row">
+                          <span class="badge-code-select">{{ selectedPuertoDestino.codigoPuerto }}</span>
+                          <span class="select-label-text">{{ selectedPuertoDestino.nombre }} ({{ selectedPuertoDestino.pais }})</span>
+                          <span class="badge-type-pill">{{ selectedPuertoDestino.tipo }}</span>
+                        </div>
+                        <span v-else class="select-placeholder-text">{{ slotProps.placeholder }}</span>
+                      </template>
+                      <template #option="slotProps">
+                        <div class="select-opt-row">
+                          <div class="opt-left">
+                            <span class="badge-code-select">{{ slotProps.option.codigoPuerto }}</span>
+                            <span class="opt-text">{{ slotProps.option.nombre }} ({{ slotProps.option.pais }})</span>
+                          </div>
+                          <span class="badge-type-pill">{{ slotProps.option.tipo }}</span>
+                        </div>
+                      </template>
+                    </Select>
+                    <span class="field-hint-mini">{{ modalidadTransporte === 'AEREO' ? 'Terminal aéreo internacional de llegada' : 'Aduana o muelle de arribo nacional' }}</span>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -395,6 +496,10 @@
                   :options="tiposCarga"
                   optionLabel="nombre"
                   optionValue="idTipoCarga"
+                  filter
+                  filterMatchMode="smart"
+                  :filterFields="['searchCorpus', 'codigo', 'nombre']"
+                  filterPlaceholder="Buscar tipo de carga o código..."
                   placeholder="Seleccione tipo de carga..."
                   class="sga-custom-select"
                   :disabled="submitting || loadingCatalogos"
@@ -408,12 +513,33 @@
                   </template>
                   <template #option="slotProps">
                     <div class="select-opt-row">
-                      <span class="badge-code-select">{{ slotProps.option.codigo }}</span>
-                      <span class="opt-text">{{ slotProps.option.nombre }}</span>
+                      <div class="opt-left">
+                        <span class="badge-code-select">{{ slotProps.option.codigo }}</span>
+                        <div class="opt-text-col">
+                          <span class="opt-title-text">{{ slotProps.option.nombre }}</span>
+                          <span v-if="slotProps.option.descripcion || getDescripcionFallback(slotProps.option.codigo)" class="opt-category-sub">{{ slotProps.option.descripcion || getDescripcionFallback(slotProps.option.codigo) }}</span>
+                        </div>
+                      </div>
                     </div>
                   </template>
                 </Select>
                 <span class="field-hint-mini">Modalidad de estiba y transporte de la mercancía</span>
+
+                <!-- Tarjeta Callout con Descripción visible del Tipo de Carga seleccionado -->
+                <transition name="fade">
+                  <div v-if="selectedTipoCarga && (selectedTipoCarga.descripcion || getDescripcionFallback(selectedTipoCarga.codigo))" class="tipo-carga-desc-callout">
+                    <div class="callout-icon-box">
+                      <i class="pi pi-box"></i>
+                    </div>
+                    <div class="callout-body">
+                      <div class="callout-header-row">
+                        <span class="callout-tag font-mono">{{ selectedTipoCarga.codigo }}</span>
+                        <span class="callout-kicker">ESPECIFICACIÓN OPERATIVA</span>
+                      </div>
+                      <p class="callout-desc">{{ selectedTipoCarga.descripcion || getDescripcionFallback(selectedTipoCarga.codigo) }}</p>
+                    </div>
+                  </div>
+                </transition>
               </div>
 
               <div class="field-group">
@@ -425,6 +551,8 @@
                   optionLabel="nombre"
                   optionValue="idMercancia"
                   filter
+                  filterMatchMode="smart"
+                  :filterFields="['searchCorpus', 'codigo', 'nombre', 'categoria', 'entidadReguladora']"
                   filterPlaceholder="Buscar por código, nombre o sector..."
                   placeholder="Seleccione mercancía clasificada..."
                   class="sga-custom-select"
@@ -1070,17 +1198,6 @@
                 <i class="pi pi-arrow-left"></i>
                 <span>Regresar a Documentación</span>
               </button>
-
-              <button
-                type="button"
-                class="btn-espresso"
-                @click="handleSubmit"
-                :disabled="submitting || !isFormReady"
-              >
-                <i v-if="submitting" class="pi pi-spin pi-spinner"></i>
-                <i v-else class="pi pi-check"></i>
-                <span>{{ isEditMode ? 'Guardar Cambios' : 'Emitir Cotización' }}</span>
-              </button>
             </div>
           </div>
         </section>
@@ -1111,6 +1228,7 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import Select from 'primevue/select'
 import Tag from 'primevue/tag'
+import { FilterService } from '@primevue/core/api'
 import { useAuthStore } from '@/features/auth/stores/authStore'
 import { comercialService } from '../services/comercialService'
 import { catalogoService } from '@/features/admin/catalogos/services/catalogoService'
@@ -1127,6 +1245,7 @@ import {
   calcularMontoPercepcion,
   calcularLiquidacionIntegral
 } from '@/features/comercial/composables/useCotizacionCalculator'
+import { useModalidadPuertos } from '@/features/comercial/composables/useModalidadPuertos'
 
 const props = defineProps({
   cotizacionToEdit: {
@@ -1278,9 +1397,36 @@ const selectedPuertoDestino = computed(() => {
   return puertos.value.find((p) => p.idPuerto === form.value.idPuertoDestino) || null
 })
 
+const DESCRIPCIONES_TIPO_CARGA_FALLBACK = {
+  CARGA_FCL: 'Contenedor exclusivo de 20 o 40 pies para un único consignatario',
+  CARGA_LCL: 'Carga agrupada en contenedor compartido para múltiples importadores',
+  CARGA_REEFER: 'Mercancías con cadena de frío continua y atmósfera controlada',
+  CARGA_RO_RO: 'Vehículos y maquinaria autopropulsada embarcada por rampas',
+  CARGA_PROYECTO: 'Bienes sobredimensionados o con peso extrapesado fuera de estándar',
+  CARGA_GRANEL_SOLIDO: 'Sólidos transportados a granel en bodegas sin empaque unitario',
+  CARGA_GRANEL_LIQUIDO: 'Líquidos transportados en buques tanque o tanques cisterna ISO',
+  CARGA_PELIGROSA_IMO: 'Sustancias peligrosas reguladas según código marítimo internacional IMO',
+  CARGA_VALORADA: 'Carga de alto valor comercial sujeta a protocolo de seguridad y custodia',
+  CARGA_AEREA_SUELTA: 'Bultos y cajas sueltas estibadas en bodegas inferiores del avión (belly cargo)',
+  CARGA_AEREA_ULD_PALLET: 'Pallet aeronáutico de aluminio estandarizado IATA con red de sujeción',
+  CARGA_AEREA_ULD_CONT: 'Contenedor liviano adaptado a la curvatura del fuselaje de la aeronave',
+  CARGA_AEREA_COURIER: 'Envíos de entrega rápida y comercio electrónico internacional',
+  CARGA_AEREA_PERECIBLE: 'Fármacos y perecibles en contenedor activo refrigerado con monitoreo continuo',
+  CARGA_AEREA_DGR_IATA: 'Mercancías peligrosas reguladas bajo la estricta normativa técnica IATA DGR',
+  CARGA_AEREA_VALORADA: 'Metales preciosos, joyas y divisas en bóveda blindada aeroportuaria con escolta',
+  CARGA_AEREA_AVI: 'Transporte aéreo de mascotas y animales vivos en cabina o bodega presurizada'
+}
+
+const getDescripcionFallback = (codigo) => {
+  return (codigo && DESCRIPCIONES_TIPO_CARGA_FALLBACK[codigo]) || ''
+}
+
 const selectedTipoCarga = computed(() => {
   if (!form.value.idTipoCarga) return null
-  return tiposCarga.value.find((tc) => tc.idTipoCarga === form.value.idTipoCarga) || null
+  const found = tiposCarga.value.find((tc) => tc.idTipoCarga === form.value.idTipoCarga)
+  if (!found) return null
+  const desc = found.descripcion || getDescripcionFallback(found.codigo)
+  return { ...found, descripcion: desc }
 })
 
 // Cargar catálogos desde backend con desenvolvimiento seguro
@@ -1293,18 +1439,78 @@ const loadCatalogos = async () => {
       catalogoService.getMercancias(true)
     ])
     if (puertosRes.status === 'fulfilled') {
-      puertos.value = unwrapList(puertosRes.value)
+      puertos.value = unwrapList(puertosRes.value).map((p) => ({
+        ...p,
+        searchCorpus: `${p.codigoPuerto || ''} ${p.nombre || ''} ${p.pais || ''} ${p.tipo || ''}`
+      }))
+      if (props.cotizacionToEdit && props.cotizacionToEdit.idCotizacion) {
+        inferirDesdePuertos()
+      } else {
+        aplicarReglasRegimen()
+      }
     }
     if (tiposCargaRes.status === 'fulfilled') {
-      tiposCarga.value = unwrapList(tiposCargaRes.value)
+      tiposCarga.value = unwrapList(tiposCargaRes.value).map((t) => {
+        const desc = t.descripcion || getDescripcionFallback(t.codigo)
+        return {
+          ...t,
+          descripcion: desc,
+          searchCorpus: `${t.codigo || ''} ${t.nombre || ''} ${desc}`
+        }
+      })
     }
     if (mercanciasRes.status === 'fulfilled') {
-      mercancias.value = unwrapList(mercanciasRes.value)
+      mercancias.value = unwrapList(mercanciasRes.value).map((m) => ({
+        ...m,
+        searchCorpus: `${m.codigo || ''} ${m.nombre || ''} ${m.categoria || ''} ${m.entidadReguladora || ''}`
+      }))
     }
   } catch (err) {
     console.error('Error cargando catálogos para cotización:', err)
   } finally {
     loadingCatalogos.value = false
+  }
+}
+
+// Integración de Modalidad y Cascada de Puertos
+const regimenAduaneroComputed = computed(() => form.value.regimenAduanero)
+const {
+  modalidadTransporte,
+  paisOrigen,
+  paisDestino,
+  paisesOrigenDisponibles,
+  paisesDestinoDisponibles,
+  puertosOrigenFiltrados,
+  puertosDestinoFiltrados,
+  setModalidad,
+  aplicarReglasRegimen,
+  inferirDesdePuertos
+} = useModalidadPuertos({
+  puertos,
+  regimen: regimenAduaneroComputed,
+  form
+})
+
+const handleSelectRegimen = (regValue) => {
+  form.value.regimenAduanero = regValue
+  aplicarReglasRegimen(regValue)
+}
+
+const handlePaisOrigenChange = () => {
+  if (form.value.idPuertoEnvio) {
+    const valid = puertosOrigenFiltrados.value.some((p) => p.idPuerto === form.value.idPuertoEnvio)
+    if (!valid) {
+      form.value.idPuertoEnvio = null
+    }
+  }
+}
+
+const handlePaisDestinoChange = () => {
+  if (form.value.idPuertoDestino) {
+    const valid = puertosDestinoFiltrados.value.some((p) => p.idPuerto === form.value.idPuertoDestino)
+    if (!valid) {
+      form.value.idPuertoDestino = null
+    }
   }
 }
 
@@ -1351,6 +1557,10 @@ watch(
         seguroManual.value = true
       }
 
+      if (puertos.value.length > 0) {
+        inferirDesdePuertos()
+      }
+
       try {
         const docs = await documentoService.getDocumentos({
           entidadTipo: 'COTIZACION',
@@ -1363,22 +1573,44 @@ watch(
     } else {
       form.value = defaultForm()
       existingDocsCount.value = 0
+      aplicarReglasRegimen()
     }
   },
   { immediate: true }
 )
 
-// Filtrado de Clientes para el Selector
+// Normalizador de texto para búsquedas (ignora tildes, mayúsculas y espacios extras)
+const normalizeSearchText = (text) => {
+  if (!text) return ''
+  return text
+    .toString()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim()
+}
+
+// Registrar filtro inteligente en FilterService para los componentes Select de PrimeVue
+FilterService.register('smart', (value, filter) => {
+  if (filter === undefined || filter === null || filter === '') return true
+  if (value === undefined || value === null) return false
+  const normVal = normalizeSearchText(value)
+  const tokens = normalizeSearchText(filter).split(/\s+/).filter(Boolean)
+  if (tokens.length === 0) return true
+  return tokens.every((tok) => normVal.includes(tok))
+})
+
+// Filtrado de Clientes para el Selector (Búsqueda inteligente sin tildes)
 const filteredAvailableClients = computed(() => {
-  const query = clientSearchQuery.value.toLowerCase().trim()
+  const query = normalizeSearchText(clientSearchQuery.value)
   if (!query) return localClientsList.value
 
+  const tokens = query.split(/\s+/).filter(Boolean)
   return localClientsList.value.filter((c) => {
-    return (
-      c.razonSocial?.toLowerCase().includes(query) ||
-      c.numeroDocumento?.includes(query) ||
-      c.correoContacto?.toLowerCase().includes(query)
+    const corpus = normalizeSearchText(
+      `${c.numeroDocumento || ''} ${c.razonSocial || ''} ${c.correoContacto || ''} ${c.contactoRepresentante || ''} ${c.telefonoContacto || ''} ${c.esProspecto ? 'prospecto' : 'cliente'}`
     )
+    return tokens.every((tok) => corpus.includes(tok))
   })
 })
 
@@ -1599,7 +1831,7 @@ defineExpose({
   background: var(--color-bg-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-xl, 1rem);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-subtle);
   flex-wrap: wrap;
 }
 
@@ -1644,7 +1876,7 @@ defineExpose({
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--color-primary);
-  background: var(--color-primary-subtle);
+  background: var(--color-bg-subtle);
   padding: 0.2rem 0.55rem;
   border-radius: var(--radius-sm, 0.25rem);
 }
@@ -1662,13 +1894,13 @@ defineExpose({
 }
 
 .mode-create {
-  background: var(--color-success-subtle);
-  color: var(--color-success);
+  background: var(--color-success-bg);
+  color: var(--color-success-text);
 }
 
 .mode-edit {
-  background: var(--color-warning-subtle);
-  color: var(--color-warning);
+  background: var(--color-warning-bg);
+  color: var(--color-warning-text);
 }
 
 .form-main-title {
@@ -1724,10 +1956,10 @@ defineExpose({
   border-radius: var(--radius-md, 0.5rem);
   border: none;
   background: var(--color-primary);
-  color: var(--color-primary-contrast);
+  color: var(--color-primary-text);
   cursor: pointer;
   transition: all var(--transition-fast);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-subtle);
 }
 
 .btn-espresso:hover:not(:disabled) {
@@ -1748,10 +1980,10 @@ defineExpose({
   align-items: center;
   gap: var(--space-3, 0.75rem);
   padding: var(--space-4, 1rem) var(--space-5, 1.25rem);
-  background: var(--color-danger-subtle);
-  border: 1px solid var(--color-danger);
+  background: var(--color-danger-bg);
+  border: 1px solid var(--color-danger-border);
   border-radius: var(--radius-lg, 0.75rem);
-  color: var(--color-danger);
+  color: var(--color-danger-text);
   font-size: var(--font-size-sm, 0.875rem);
 }
 
@@ -1762,7 +1994,7 @@ defineExpose({
 .error-close-btn {
   background: none;
   border: none;
-  color: var(--color-danger);
+  color: var(--color-danger-text);
   cursor: pointer;
   padding: 0.25rem;
 }
@@ -1824,7 +2056,7 @@ defineExpose({
   border: 1px solid var(--color-border);
   border-radius: var(--radius-xl, 1rem);
   padding: var(--space-3, 0.75rem) var(--space-6, 1.5rem);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-subtle);
   gap: var(--space-4, 1rem);
   overflow-x: auto;
 }
@@ -1863,14 +2095,14 @@ defineExpose({
 
 .stepper-step-btn.active .step-badge {
   background: var(--color-primary);
-  color: var(--color-primary-contrast);
+  color: var(--color-primary-text);
   border-color: var(--color-primary);
 }
 
 .stepper-step-btn.completed .step-badge {
-  background: var(--color-success-subtle);
-  color: var(--color-success);
-  border-color: var(--color-success);
+  background: var(--color-success-bg);
+  color: var(--color-success-text);
+  border-color: var(--color-success-border);
 }
 
 .step-info {
@@ -1929,7 +2161,7 @@ defineExpose({
   border: 1px solid var(--color-border);
   border-radius: var(--radius-xl, 1rem);
   padding: var(--space-6, 1.5rem) var(--space-8, 2rem);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-subtle);
 }
 
 .block-header {
@@ -2021,7 +2253,7 @@ defineExpose({
   outline: none;
   border-color: var(--color-primary);
   background: var(--color-bg-surface);
-  box-shadow: 0 0 0 2px var(--color-primary-subtle);
+  box-shadow: 0 0 0 2px var(--color-bg-subtle);
 }
 
 .clear-query-btn {
@@ -2043,7 +2275,7 @@ defineExpose({
   font-weight: 700;
   border-radius: var(--radius-md, 0.5rem);
   border: 1px dashed var(--color-primary);
-  background: var(--color-primary-subtle);
+  background: var(--color-bg-subtle);
   color: var(--color-primary);
   cursor: pointer;
   transition: all var(--transition-fast);
@@ -2051,7 +2283,7 @@ defineExpose({
 
 .btn-toggle-quick-client:hover {
   background: var(--color-primary);
-  color: var(--color-primary-contrast);
+  color: var(--color-primary-text);
 }
 
 /* Panel de Alta Rápida Inline */
@@ -2086,7 +2318,7 @@ defineExpose({
   font-size: var(--font-size-2xs, 0.65rem);
   font-weight: 800;
   letter-spacing: 0.08em;
-  background: var(--color-primary-subtle);
+  background: var(--color-bg-subtle);
   color: var(--color-primary);
   padding: 0.15rem 0.45rem;
   border-radius: var(--radius-sm, 0.25rem);
@@ -2102,7 +2334,7 @@ defineExpose({
   display: flex;
   align-items: center;
   gap: var(--space-2, 0.5rem);
-  color: var(--color-danger);
+  color: var(--color-danger-text);
   font-size: var(--font-size-xs, 0.75rem);
 }
 
@@ -2120,7 +2352,7 @@ defineExpose({
   justify-content: space-between;
   gap: var(--space-4, 1rem);
   padding: var(--space-4, 1rem) var(--space-5, 1.25rem);
-  background: var(--color-primary-subtle);
+  background: var(--color-bg-subtle);
   border: 1.5px solid var(--color-primary);
   border-radius: var(--radius-lg, 0.75rem);
 }
@@ -2136,7 +2368,7 @@ defineExpose({
   height: 3rem;
   border-radius: var(--radius-md, 0.5rem);
   background: var(--color-primary);
-  color: var(--color-primary-contrast);
+  color: var(--color-primary-text);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2175,13 +2407,13 @@ defineExpose({
 }
 
 .pill-client {
-  background: var(--color-success-subtle);
-  color: var(--color-success);
+  background: var(--color-success-bg);
+  color: var(--color-success-text);
 }
 
 .pill-prospect {
-  background: var(--color-warning-subtle);
-  color: var(--color-warning);
+  background: var(--color-warning-bg);
+  color: var(--color-warning-text);
 }
 
 .client-name {
@@ -2227,20 +2459,49 @@ defineExpose({
 }
 
 /* Lista de Selección de Clientes */
+/* Lista de Selección de Clientes - Grid consistente de 6 columnas */
 .clients-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: var(--space-3, 0.75rem);
 }
 
+@media (max-width: 1400px) {
+  .clients-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 1024px) {
+  .clients-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .clients-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 520px) {
+  .clients-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .client-select-card {
-  padding: var(--space-3, 0.75rem) var(--space-4, 1rem);
+  padding: 0.65rem 0.85rem;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg, 0.75rem);
   background: var(--color-bg-subtle);
   cursor: pointer;
   display: flex;
   flex-direction: column;
+  justify-content: space-between;
+  min-height: 84px;
+  height: 100%;
+  box-sizing: border-box;
   gap: 0.25rem;
   transition: all var(--transition-fast);
 }
@@ -2255,6 +2516,7 @@ defineExpose({
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 0.25rem;
 }
 
 .classification-pill-mini {
@@ -2262,6 +2524,7 @@ defineExpose({
   font-weight: 800;
   padding: 0.1rem 0.4rem;
   border-radius: var(--radius-full, 9999px);
+  white-space: nowrap;
 }
 
 .client-card-name {
@@ -2271,11 +2534,16 @@ defineExpose({
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  display: block;
 }
 
 .client-card-email {
   font-size: var(--font-size-2xs, 0.65rem);
   color: var(--color-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
 }
 
 .empty-clients-box {
@@ -2321,7 +2589,7 @@ defineExpose({
 
 .regimen-card.selected {
   border-color: var(--color-primary);
-  background: var(--color-primary-subtle);
+  background: var(--color-bg-subtle);
   box-shadow: 0 0 0 1px var(--color-primary);
 }
 
@@ -2392,7 +2660,7 @@ defineExpose({
   justify-content: space-between;
   align-items: center;
   padding: var(--space-5, 1.25rem) var(--space-6, 1.5rem);
-  background: var(--color-primary-subtle);
+  background: var(--color-bg-subtle);
   border: 1px solid var(--color-primary);
   border-radius: var(--radius-xl, 1rem);
   gap: var(--space-4, 1rem);
@@ -2535,7 +2803,7 @@ defineExpose({
   outline: none;
   border-color: var(--color-primary);
   background-color: var(--color-bg-surface);
-  box-shadow: 0 0 0 2px var(--color-primary-subtle);
+  box-shadow: 0 0 0 2px var(--color-bg-subtle);
 }
 
 .field-helper-text {
@@ -2574,7 +2842,7 @@ defineExpose({
 }
 
 .shortcut-chip:hover {
-  background: var(--color-primary-subtle);
+  background: var(--color-bg-subtle);
   border-color: var(--color-primary);
   color: var(--color-primary);
 }
@@ -2603,7 +2871,7 @@ defineExpose({
   border: 1px solid var(--color-border);
   border-radius: var(--radius-xl, 1rem);
   padding: var(--space-6, 1.5rem);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-subtle);
   display: flex;
   flex-direction: column;
   position: relative;
@@ -2618,7 +2886,7 @@ defineExpose({
   font-weight: 800;
   letter-spacing: 0.1em;
   color: var(--color-primary);
-  background: var(--color-primary-subtle);
+  background: var(--color-bg-subtle);
   padding: 0.25rem 0.65rem;
   border-radius: var(--radius-full, 9999px);
   margin-bottom: var(--space-3, 0.75rem);
@@ -2740,7 +3008,7 @@ defineExpose({
   border: 1px solid var(--color-border);
   border-radius: var(--radius-xl, 1rem);
   padding: var(--space-5, 1.25rem);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-subtle);
   display: flex;
   flex-direction: column;
   gap: var(--space-4, 1rem);
@@ -2777,7 +3045,7 @@ defineExpose({
 }
 
 .checklist-row.valid {
-  color: var(--color-success);
+  color: var(--color-success-text);
   font-weight: 600;
 }
 
@@ -3053,7 +3321,7 @@ defineExpose({
 .transport-card-opt.selected {
   border-color: var(--color-primary);
   background: var(--color-bg-subtle);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-subtle);
 }
 
 .opt-icon {
@@ -3107,7 +3375,7 @@ defineExpose({
   display: flex;
   flex-direction: column;
   gap: var(--space-4, 1rem);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-subtle);
 }
 
 .route-panel-header {
@@ -3233,7 +3501,7 @@ defineExpose({
 }
 
 .cost-title-box i {
-  color: var(--color-success);
+  color: var(--color-success-text);
   font-size: 1.1rem;
 }
 
@@ -3287,7 +3555,7 @@ defineExpose({
   display: flex;
   flex-direction: column;
   gap: var(--space-4, 1rem);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-subtle);
 }
 
 .tributos-card-header {
@@ -3617,8 +3885,218 @@ defineExpose({
   .field-row-grid,
   .costs-two-cols,
   .transport-toggle-grid,
+  .modalidad-toggle-grid,
+  .ruta-logistica-grid,
   .tributos-inputs-grid {
     grid-template-columns: 1fr !important;
   }
+}
+
+/* ========================================================================= */
+/* ESTILOS: SELECTOR DE MODALIDAD Y CASCADA DE PUERTOS                       */
+/* ========================================================================= */
+.modalidad-selector-box {
+  margin-top: var(--space-4, 1rem);
+  margin-bottom: var(--space-3, 0.75rem);
+}
+
+.modalidad-toggle-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3, 0.75rem);
+  margin-top: var(--space-2, 0.5rem);
+}
+
+.btn-modalidad-card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3, 0.75rem);
+  padding: var(--space-4, 1rem);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-lg, 0.75rem);
+  background: var(--color-bg-surface);
+  cursor: pointer;
+  text-align: left;
+  transition: all var(--transition-fast);
+  position: relative;
+}
+
+.btn-modalidad-card:hover {
+  border-color: var(--color-border-strong);
+  background: var(--color-bg-subtle);
+  transform: translateY(-1px);
+}
+
+.btn-modalidad-card.active {
+  border-color: var(--color-primary);
+  background: var(--color-bg-subtle);
+  box-shadow: 0 0 0 1px var(--color-primary);
+}
+
+.modalidad-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: var(--radius-md, 0.5rem);
+  background: var(--color-bg-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  color: var(--color-primary);
+  flex-shrink: 0;
+}
+
+.btn-modalidad-card.active .modalidad-icon {
+  background: var(--color-primary);
+  color: #ffffff;
+}
+
+.modalidad-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  flex: 1;
+}
+
+.modalidad-title {
+  font-size: var(--font-size-sm, 0.875rem);
+  font-weight: 800;
+  color: var(--color-text-main);
+}
+
+.modalidad-sub {
+  font-size: var(--font-size-xs, 0.75rem);
+  color: var(--color-text-muted);
+  line-height: 1.3;
+}
+
+.modalidad-active-check {
+  font-size: 1.15rem;
+  color: var(--color-primary);
+  margin-left: auto;
+}
+
+/* Grid de Ruta Logística (Origen y Destino) */
+.ruta-logistica-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4, 1rem);
+  margin-top: var(--space-2, 0.5rem);
+}
+
+.ruta-card-block {
+  padding: var(--space-4, 1rem);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg, 0.75rem);
+  background: var(--color-bg-subtle);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3, 0.75rem);
+}
+
+.ruta-block-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: var(--space-2, 0.5rem);
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.ruta-badge-badge {
+  font-family: monospace;
+  font-size: var(--font-size-2xs, 0.65rem);
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  padding: 0.2rem 0.5rem;
+  border-radius: var(--radius-sm, 0.25rem);
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-primary);
+}
+
+.ruta-badge-badge.destination {
+  color: var(--color-accent, #c97a3e);
+}
+
+.badge-peru-default {
+  font-size: var(--font-size-2xs, 0.65rem);
+  font-weight: 700;
+  color: var(--color-success-text);
+  background: var(--color-success-bg);
+  border: 1px solid var(--color-success-border);
+  padding: 0.15rem 0.45rem;
+  border-radius: var(--radius-sm, 0.25rem);
+}
+
+.ruta-fields-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3, 0.75rem);
+}
+
+/* Callout con Descripción del Tipo de Carga Seleccionado */
+.tipo-carga-desc-callout {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3, 0.75rem);
+  padding: var(--space-3, 0.75rem) var(--space-4, 1rem);
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-left: 3px solid var(--color-primary);
+  border-radius: var(--radius-md, 0.5rem);
+  margin-top: var(--space-2, 0.5rem);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.callout-icon-box {
+  width: 2rem;
+  height: 2rem;
+  border-radius: var(--radius-sm, 0.25rem);
+  background: var(--color-bg-subtle);
+  color: var(--color-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  flex-shrink: 0;
+  margin-top: 0.15rem;
+}
+
+.callout-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.callout-header-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2, 0.5rem);
+}
+
+.callout-tag {
+  font-size: var(--font-size-2xs, 0.65rem);
+  font-weight: 800;
+  background: var(--color-bg-muted);
+  border: 1px solid var(--color-border);
+  padding: 0.1rem 0.4rem;
+  border-radius: var(--radius-xs, 0.2rem);
+  color: var(--color-primary);
+}
+
+.callout-kicker {
+  font-size: var(--font-size-2xs, 0.65rem);
+  font-weight: 700;
+  color: var(--color-text-subtle);
+  letter-spacing: 0.04em;
+}
+
+.callout-desc {
+  font-size: var(--font-size-xs, 0.75rem);
+  color: var(--color-text-main);
+  line-height: 1.4;
+  margin: 0;
+  font-weight: 500;
 }
 </style>

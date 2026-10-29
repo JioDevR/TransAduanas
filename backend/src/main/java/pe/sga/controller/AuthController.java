@@ -3,6 +3,7 @@ package pe.sga.controller;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import pe.sga.dto.request.LoginRequestDTO;
@@ -27,6 +28,9 @@ public class AuthController {
 
     @GetMapping("/me")
     public ResponseEntity<ApiResponseDTO<UsuarioResponseDTO>> me(@AuthenticationPrincipal Usuario usuario) {
+        if (usuario == null || usuario.getIdUsuario() == null) {
+            throw new AccessDeniedException("No autenticado como usuario interno");
+        }
         UsuarioResponseDTO response = usuarioService.buscarPorId(usuario.getIdUsuario());
         return ResponseEntity.ok(ApiResponseDTO.ok("Usuario autenticado obtenido", response));
     }

@@ -36,13 +36,40 @@ public class JwtTokenProvider {
 
         return Jwts.builder()
                 .subject(usuario.getUsername())
+                .claim("tipoUsuario", "PERSONAL_INTERNO")
                 .claim("idUsuario", usuario.getIdUsuario())
-                .claim("rol", usuario.getRol().getNombreRol().toStandard().name())
+                .claim("rol", usuario.getRol().name())
                 .claim("correo", usuario.getCorreoInstitucional())
                 .issuedAt(now)
                 .expiration(expiryDate)
                 .signWith(getSigningKey())
                 .compact();
+    }
+
+    public String generateTokenForPortal(pe.sga.entity.UsuarioCliente usuarioCliente) {
+        Date now = new Date();
+        Date expiryDate = new Date(now.getTime() + jwtExpirationMs);
+
+        return Jwts.builder()
+                .subject(usuarioCliente.getUsername())
+                .claim("tipoUsuario", "CLIENTE_PORTAL")
+                .claim("idUsuarioCliente", usuarioCliente.getIdUsuarioCliente())
+                .claim("idCliente", usuarioCliente.getCliente().getIdCliente())
+                .claim("ruc", usuarioCliente.getCliente().getNumeroDocumento())
+                .claim("razonSocial", usuarioCliente.getCliente().getRazonSocial())
+                .claim("correo", usuarioCliente.getCorreoElectronico())
+                .issuedAt(now)
+                .expiration(expiryDate)
+                .signWith(getSigningKey())
+                .compact();
+    }
+
+    public Claims getClaimsFromToken(String token) {
+        return Jwts.parser()
+                .verifyWith(getSigningKey())
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
     }
 
     public String getUsernameFromToken(String token) {

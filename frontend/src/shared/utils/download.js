@@ -1,9 +1,13 @@
 /**
- * Utilidad compartida para descarga de archivos Blob (PDF JasperReports, Excel, etc.)
- * Centraliza la creación y limpieza del objeto URL y el enlace simulado en el DOM.
+ * Utilidad compartida para descarga y visualización de archivos Blob (PDF JasperReports, Excel, etc.)
+ * Centraliza la creación y limpieza del objeto URL y la apertura/descarga en el cliente.
+ */
+
+/**
+ * Descarga directamente un archivo binario Blob forzando el diálogo de guardado.
  *
  * @param {Blob|ArrayBuffer} data - Contenido binario del archivo
- * @param {string} filename - Nombre con el que se guardará el archivo en el cliente
+ * @param {string} filename - Nombre con el que se guardará el archivo
  * @param {string} mimeType - Tipo MIME del archivo (default: 'application/pdf')
  */
 export function downloadBlob(data, filename, mimeType = 'application/pdf') {
@@ -19,4 +23,24 @@ export function downloadBlob(data, filename, mimeType = 'application/pdf') {
   window.URL.revokeObjectURL(url)
 }
 
-export default downloadBlob
+/**
+ * Abre un archivo binario Blob en una nueva pestaña del navegador para visualización inmediata
+ * antes de solicitar descarga (visor nativo PDF del navegador).
+ *
+ * @param {Blob|ArrayBuffer} data - Contenido binario del archivo
+ * @param {string} mimeType - Tipo MIME del archivo (default: 'application/pdf')
+ */
+export function openBlobInNewTab(data, mimeType = 'application/pdf') {
+  if (!data) return
+  const blob = data instanceof Blob ? data : new Blob([data], { type: mimeType })
+  const url = window.URL.createObjectURL(blob)
+  window.open(url, '_blank')
+  setTimeout(() => {
+    window.URL.revokeObjectURL(url)
+  }, 60000)
+}
+
+export default {
+  downloadBlob,
+  openBlobInNewTab
+}

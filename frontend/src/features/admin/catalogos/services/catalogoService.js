@@ -81,6 +81,16 @@ export const catalogoService = {
     return response.data?.data ?? response.data
   },
 
+  /**
+   * Descargar reporte de tipos de carga en PDF
+   */
+  async downloadTiposCargaPdf() {
+    const response = await apiClient.get('/catalogos/tipos-carga/exportar-pdf', {
+      responseType: 'blob'
+    })
+    return response.data
+  },
+
   // ==========================================
   // CATÁLOGO DE MERCANCÍAS (PARTIDAS ARANCELARIAS)
   // ==========================================
@@ -120,6 +130,16 @@ export const catalogoService = {
   async reactivarMercancia(id) {
     const response = await apiClient.patch(`/catalogos/mercancias/${id}/reactivar`)
     return response.data?.data ?? response.data
+  },
+
+  /**
+   * Descargar reporte de mercancías / subpartidas arancelarias en PDF
+   */
+  async downloadMercanciasPdf() {
+    const response = await apiClient.get('/catalogos/mercancias/exportar-pdf', {
+      responseType: 'blob'
+    })
+    return response.data
   }
 }
 

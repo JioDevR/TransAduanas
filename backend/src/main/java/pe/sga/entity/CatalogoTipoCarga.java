@@ -23,6 +23,9 @@ public class CatalogoTipoCarga {
     @Column(name = "nombre", nullable = false, length = 100)
     private String nombre;
 
+    @Column(name = "descripcion", length = 255)
+    private String descripcion;
+
     @Column(name = "estado", nullable = false, length = 20)
     @Builder.Default
     private String estado = "ACTIVO";

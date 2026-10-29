@@ -1,107 +1,66 @@
 package pe.sga.service.impl;
 
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import pe.sga.dto.request.RolDTO;
 import pe.sga.dto.response.RolResponseDTO;
-import pe.sga.entity.Rol;
+import pe.sga.entity.enums.RolUsuario;
 import pe.sga.exception.BadRequestException;
 import pe.sga.exception.ResourceNotFoundException;
-import pe.sga.repository.RolRepository;
 import pe.sga.service.IRolService;
 
+import java.util.Arrays;
 import java.util.List;
 
 @Service
-@RequiredArgsConstructor
 public class RolServiceImpl implements IRolService {
 
-    private final RolRepository rolRepository;
-
     @Override
-    @Transactional(readOnly = true)
     public List<RolResponseDTO> listarTodos() {
-        return rolRepository.findAll().stream()
-                .map(this::mapToResponse)
+        return Arrays.stream(RolUsuario.values())
+                .map(this::mapFromEnum)
                 .toList();
     }
 
     @Override
-    @Transactional(readOnly = true)
     public List<RolResponseDTO> listarActivos() {
-        return rolRepository.findByEstadoActivoTrue().stream()
-                .map(this::mapToResponse)
-                .toList();
+        return listarTodos();
     }
 
     @Override
-    @Transactional(readOnly = true)
     public RolResponseDTO buscarPorId(Integer idRol) {
-        Rol rol = rolRepository.findById(idRol)
-                .orElseThrow(() -> new ResourceNotFoundException("Rol no encontrado con ID: " + idRol));
-        return mapToResponse(rol);
+        if (idRol == null || idRol < 1 || idRol > RolUsuario.values().length) {
+            throw new ResourceNotFoundException("Rol no encontrado con ID: " + idRol);
+        }
+        return mapFromEnum(RolUsuario.values()[idRol - 1]);
     }
 
     @Override
-    @Transactional
     public RolResponseDTO crear(RolDTO dto) {
-        if (rolRepository.existsByNombreRol(dto.getNombreRol())) {
-            throw new BadRequestException("El rol " + dto.getNombreRol() + " ya se encuentra registrado");
-        }
-
-        Rol rol = Rol.builder()
-                .nombreRol(dto.getNombreRol())
-                .descripcion(dto.getDescripcion())
-                .estadoActivo(dto.getEstadoActivo() != null ? dto.getEstadoActivo() : true)
-                .build();
-
-        return mapToResponse(rolRepository.save(rol));
+        throw new BadRequestException("Los roles son fijos del sistema y están definidos en RolUsuario");
     }
 
     @Override
-    @Transactional
     public RolResponseDTO actualizar(Integer idRol, RolDTO dto) {
-        Rol rol = rolRepository.findById(idRol)
-                .orElseThrow(() -> new ResourceNotFoundException("Rol no encontrado con ID: " + idRol));
-
-        if (!rol.getNombreRol().equals(dto.getNombreRol()) && rolRepository.existsByNombreRol(dto.getNombreRol())) {
-            throw new BadRequestException("El rol " + dto.getNombreRol() + " ya está en uso");
-        }
-
-        rol.setNombreRol(dto.getNombreRol());
-        rol.setDescripcion(dto.getDescripcion());
-        if (dto.getEstadoActivo() != null) {
-            rol.setEstadoActivo(dto.getEstadoActivo());
-        }
-
-        return mapToResponse(rolRepository.save(rol));
+        throw new BadRequestException("Los roles son fijos del sistema y están definidos en RolUsuario");
     }
 
     @Override
-    @Transactional
     public void eliminarPorEstado(Integer idRol) {
-        Rol rol = rolRepository.findById(idRol)
-                .orElseThrow(() -> new ResourceNotFoundException("Rol no encontrado con ID: " + idRol));
-        rol.setEstadoActivo(false);
-        rolRepository.save(rol);
+        throw new BadRequestException("Los roles del sistema no pueden ser eliminados dinámicamente");
     }
 
     @Override
-    @Transactional
     public void reactivar(Integer idRol) {
-        Rol rol = rolRepository.findById(idRol)
-                .orElseThrow(() -> new ResourceNotFoundException("Rol no encontrado con ID: " + idRol));
-        rol.setEstadoActivo(true);
-        rolRepository.save(rol);
+        throw new BadRequestException("Los roles del sistema están siempre activos");
     }
 
-    private RolResponseDTO mapToResponse(Rol rol) {
+    private RolResponseDTO mapFromEnum(RolUsuario r) {
         return RolResponseDTO.builder()
-                .idRol(rol.getIdRol())
-                .nombreRol(rol.getNombreRol())
-                .descripcion(rol.getDescripcion())
-                .estadoActivo(rol.getEstadoActivo())
+                .idRol(r.ordinal() + 1)
+                .nombreRol(r)
+                .rol(r.name())
+                .descripcion(r.getEtiqueta())
+                .estadoActivo(true)
                 .build();
     }
 }

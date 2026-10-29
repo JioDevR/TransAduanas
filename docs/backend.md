@@ -67,7 +67,7 @@ El backend está estructurado sobre el patrón arquitectónico clásico de **Cap
 4. **Capa de Acceso a Datos / Repositorios (`pe.sga.repository`):**  
    Extiende `JpaRepository<T, ID>` de Spring Data JPA. Abstrae la persistencia SQL mediante métodos derivados de convención, consultas `JPQL` y filtrado por claves compuestas.
 5. **Capa de Entidades y Modelo Relacional (`pe.sga.entity`):**  
-   Representa las 16 tablas relacionales normalizadas de la base de datos MySQL InnoDB, mapeadas con anotaciones de JPA (`@Entity`, `@Table`, `@ManyToOne`, `@JoinColumn`, etc.).
+   Representa las 17 tablas relacionales normalizadas de la base de datos MySQL InnoDB, mapeadas con anotaciones de JPA (`@Entity`, `@Table`, `@ManyToOne`, `@JoinColumn`, etc.).
 
 ---
 
@@ -132,11 +132,17 @@ El backend está estructurado sobre el patrón arquitectónico clásico de **Cap
 - **Nombres Criptográficos Únicos:** Cada archivo persistido en disco recibe un nombre UUID v4 preservando la extensión original en minúsculas, evitando colisiones y sobreescrituras en el sistema de archivos del servidor.
 - **Acceso mediante Resource Streaming:** Los endpoints de descarga y vista previa (`/api/v1/documentos/{id}/descargar` y `/api/v1/documentos/{id}/preview`) transmiten los archivos mediante `UrlResource` con cabeceras `Content-Type` dinámicas (MIME) y nombres codificados en UTF-8 (`URLEncoder`).
 
-#### B. Generación de Reportes PDF con JasperReports (`ReporteJasperServiceImpl`)
-- Generación dinámica de reportes vectoriales de alta fidelidad sin requerir archivos XML precompilados en disco.
-- Diseña las plantillas en tiempo de ejecución utilizando la API fluida `JasperDesign` (`JRDesignBand`, `JRDesignTextField`, `JRDesignStaticText`).
-- **Patrón Singleton y Cache en Memoria:** Utiliza variables volátiles (`cachedUsuariosReport`, `cachedSedesReport`, `cachedPuertosReport`) con bloques sincronizados de doble verificación (*double-checked locking*) para compilar la plantilla solo una vez, evitando sobrecarga de CPU y memoria en solicitudes concurrentes.
-- Retorna el documento generado como un flujo de bytes en memoria (`ByteArrayInputStream`), reduciendo el I/O en disco.
+#### B. Motor de Reportes PDF Híbrido (`ReporteJasperServiceImpl`)
+El backend cuenta con una arquitectura de reportería dual optimizada:
+1. **JasperReports 7.0.8 (Reporte de Personal y Usuarios):**
+   - Generación dinámica de reportes vectoriales de alta fidelidad compilados directamente en memoria sin requerir archivos `.jrxml` en disco.
+   - Diseña las plantillas en tiempo de ejecución utilizando la API fluida `JasperDesign` (`JRDesignBand`, `JRDesignTextField`, `JRDesignStaticText`).
+   - Compilador JDT Eclipse integrado para evaluar expresiones Java (`UsuarioReporteItemDTO`).
+   - **Patrón Singleton y Cache en Memoria:** Utiliza variable volátil con sincronización de doble verificación (*double-checked locking*) para compilar la plantilla una sola vez.
+2. **Thymeleaf + OpenHTMLtoPDF (Reportes de Catálogos y Sedes):**
+   - Renderizado moderno a partir de plantillas HTML5 semánticas estilizadas con tokens corporativos, convertidas a documentos PDF vectoriales mediante OpenHTMLtoPDF.
+   - Aplica a: Sedes territoriales (`reports/reporte-sedes`), Puertos y terminales (`reports/reporte-puertos`), Tipos de carga (`reports/reporte-tipos-carga`) y Mercancías (`reports/reporte-mercancias`).
+   - Todos los reportes retornan un flujo binario en memoria (`ByteArrayInputStream`), evitando el I/O en disco.
 
 #### C. Subsistema de Logging y Auditoría (`logback-spring.xml` & `AdminLogsServiceImpl`)
 - Configuración con rotación temporal y por tamaño (`SizeAndTimeBasedRollingPolicy`).
@@ -169,11 +175,11 @@ El backend está estructurado sobre el patrón arquitectónico clásico de **Cap
 ### 4.1 Matriz de Tecnologías Centrales
 
 - **Lenguaje de Programación:** Java 21 (Long-Term Support - LTS).
-- **Framework Principal:** Spring Boot 4.1.1 (Spring Framework 6.x / Jakarta EE 10).
+- **Framework Principal:** Spring Boot 4.1.2 (Spring Framework 6.x / Jakarta EE 10).
 - **Motor de Persistencia:** Spring Data JPA con Hibernate ORM.
 - **Mecanismo de Seguridad:** Spring Security 6.x + JJWT (Java JWT) 0.13.0.
 - **Motor de Base de Datos:** MySQL 8.4 LTS InnoDB.
-- **Motor de Reportes Vectoriales:** JasperReports 7.0.8 (PDF Engine + Eclipse JDT Compiler).
+- **Motor de Reportes Vectoriales:** JasperReports 7.0.8 (PDF Engine + Eclipse JDT Compiler) + Thymeleaf & OpenHTMLtoPDF.
 - **Gestor de Compilación y Dependencias:** Apache Maven 3.9+.
 
 ---
@@ -192,10 +198,10 @@ A continuación se detalla cada dependencia configurada en el archivo `backend/p
 
 | Grupo / Artefacto | Versión | Ámbito (Scope) | Función y Justificación Técnica |
 | :--- | :---: | :---: | :--- |
-| `org.springframework.boot:spring-boot-starter-data-jpa` | 4.1.1 | Compile | Capa de abstracción de datos relacionales. Incluye Hibernate como proveedor JPA, HikariCP como pool de conexiones de alto rendimiento y soporte de transacciones `@Transactional`. |
-| `org.springframework.boot:spring-boot-starter-security` | 4.1.1 | Compile | Motor de seguridad integral para control de acceso, protección de endpoints mediante SpEL, encoders de cifrado de contraseñas (BCrypt) y gestión de sesiones. |
-| `org.springframework.boot:spring-boot-starter-validation` | 4.1.1 | Compile | Validador declarativo de modelos de datos mediante anotaciones Jakarta Bean Validation (`@NotNull`, `@NotBlank`, `@Size`, `@Positive`, etc.). |
-| `org.springframework.boot:spring-boot-starter-webmvc` | 4.1.1 | Compile | Servidor web incrustado (Apache Tomcat) y soporte completo para arquitectura MVC y APIs REST con serializador Jackson JSON. |
+| `org.springframework.boot:spring-boot-starter-data-jpa` | 4.1.2 | Compile | Capa de abstracción de datos relacionales. Incluye Hibernate como proveedor JPA, HikariCP como pool de conexiones de alto rendimiento y soporte de transacciones `@Transactional`. |
+| `org.springframework.boot:spring-boot-starter-security` | 4.1.2 | Compile | Motor de seguridad integral para control de acceso, protección de endpoints mediante SpEL, encoders de cifrado de contraseñas (BCrypt) y gestión de sesiones. |
+| `org.springframework.boot:spring-boot-starter-validation` | 4.1.2 | Compile | Validador declarativo de modelos de datos mediante anotaciones Jakarta Bean Validation (`@NotNull`, `@NotBlank`, `@Size`, `@Positive`, etc.). |
+| `org.springframework.boot:spring-boot-starter-webmvc` | 4.1.2 | Compile | Servidor web incrustado (Apache Tomcat) y soporte completo para arquitectura MVC y APIs REST con serializador Jackson JSON. |
 | `com.mysql:mysql-connector-j` | Runtime | Runtime | Controlador oficial JDBC para la comunicación y ejecución de sentencias sobre bases de datos MySQL 8.x InnoDB. |
 | `org.projectlombok:lombok` | 1.18.x | Optional / Provided | Generador de código en tiempo de compilación para reducir código repetitivo (getters, setters, constructores, `toString`, `equals`, `@Builder`, `@Slf4j`). |
 | `net.sf.jasperreports:jasperreports` | 7.0.8 | Compile | Biblioteca central de JasperReports para compilación de diseños, inyección de parámetros y llenado de fuentes de datos basadas en JavaBeans (`JRBeanCollectionDataSource`). |
@@ -227,7 +233,7 @@ backend/
         │           │   ├── JwtTokenProvider.java         # Generación, firma y parseo de tokens JWT (JJWT)
         │           │   ├── SecurityConfig.java           # SecurityFilterChain, filtros y políticas de acceso
         │           │   └── SecurityRoles.java            # Constantes de roles y expresiones SpEL (@PreAuthorize)
-        │           ├── controller/              # Controladores REST expuestos en /api/v1/*
+        │           ├── controller/              # Controladores REST expuestos en /api/v1/* (21 Controladores)
         │           │   ├── AdminLogsController.java           # Gestión e inspección en vivo de logs del sistema
         │           │   ├── AuthController.java                # Inicio de sesión (/login) y perfil (/me)
         │           │   ├── CatalogoMercanciaController.java   # Mantenimiento de mercancías y partidas
@@ -243,15 +249,17 @@ backend/
         │           │   ├── ExpedienteController.java          # Expedientes aduaneros, DAM y levante SUNAT
         │           │   ├── HealthController.java              # Monitor de estado y salud del servicio REST
         │           │   ├── LiquidacionFinancieraController.java # Liquidaciones finales, gastos y métricas
+        │           │   ├── PortalController.java              # API B2B del Portal del Cliente (/api/v1/portal/**)
         │           │   ├── RolController.java                 # Consulta y administración de roles
         │           │   ├── SedeController.java                # Sedes operativas territoriales y reporte PDF
         │           │   ├── UnidadTransporteController.java    # Flota de camiones y tractos aduaneros
+        │           │   ├── UsuarioClienteAdminController.java # Gestión admin de usuarios del portal (/api/v1/admin/usuarios-portal/**)
         │           │   └── UsuarioController.java             # Cuentas de usuarios y reporte PDF de personal
         │           ├── dto/                     # Objetos de Transferencia de Datos
-        │           │   ├── reporte/             # DTOs proyectados para JasperReports
+        │           │   ├── reporte/             # DTOs proyectados para JasperReports (UsuarioReporteItemDTO)
         │           │   ├── request/             # DTOs de entrada con anotaciones Jakarta Validation
         │           │   └── response/            # DTOs de respuesta JSON y ApiResponseDTO<T>
-        │           ├── entity/                  # Entidades JPA (Mapeo a tablas MySQL InnoDB)
+        │           ├── entity/                  # Entidades JPA (17 Tablas relacionales MySQL InnoDB)
         │           │   ├── CatalogoMercancia.java
         │           │   ├── CatalogoPuerto.java
         │           │   ├── CatalogoTipoCarga.java
@@ -264,11 +272,12 @@ backend/
         │           │   ├── DocumentoAdjunto.java
         │           │   ├── Expediente.java
         │           │   ├── LiquidacionFinanciera.java
-        │           │   ├── Rol.java
+        │           │   ├── NotificacionCliente.java
         │           │   ├── Sede.java
         │           │   ├── UnidadTransporte.java
+        │           │   ├── UsuarioCliente.java
         │           │   ├── Usuario.java
-        │           │   └── enums/               # Enumeraciones de dominio (Canal, Estados, Roles)
+        │           │   └── enums/               # Enumeraciones de dominio (Canal, Estados, RolUsuario)
         │           ├── exception/               # Manejo de Excepciones de Negocio
         │           │   ├── BadRequestException.java       # Errores de validación de negocio (HTTP 400)
         │           │   ├── GlobalExceptionHandler.java    # Interceptor central @RestControllerAdvice
@@ -447,12 +456,13 @@ En conformidad con las auditorías de SUNAT, **ninguna entidad transaccional o m
 
 ### 7.3 Generación Determinista de Códigos Correlativos
 
-Los identificadores de negocio son correlativos estructurados generados en los servicios mediante el formato: `PREFIX-YYYYMM-XXXX`:
+Los identificadores de negocio son correlativos estructurados generados en los servicios mediante el formato: `PREFIJO-YYYY-XXXX` (4 dígitos de año y 4 correlativos secuenciales):
 
-- **Cotizaciones:** `COT-202610-0001`
-- **Expedientes:** `EXP-202610-0001`
-- **Despachos de Transporte (Tracking):** `DSP-202610-0001`
-- **Liquidaciones Financieras:** `LIQ-202610-0001`
+- **Cotizaciones:** `COT-2026-0001`
+- **Expedientes Aduaneros:** `EXP-2026-0001`
+- **Despachos de Transporte (Tracking):** `TRK-2026-0001`
+- **Liquidaciones Financieras:** `LIQ-2026-0001`
+- **Comprobantes de Pago / Anticipos:** `PAG-COT-2026-0001`
 
 ---
 
@@ -469,8 +479,9 @@ El servicio `LiquidacionFinancieraServiceImpl` incorpora la formulación contabl
 4. **Conversión Cambiaria a USD:**  
    $$\text{Total USD} = \frac{\text{Total PEN}}{\text{Tipo de Cambio Oficial (3.7500)}}$$
 5. **Cálculo de Detracción SPOT (Sistema de Pago de Obligaciones Tributarias - 12%):**  
-   Aplica sobre los servicios gravados con IGV cuando el monto supera el umbral legal de S/ 700:
+   Aplica sobre los servicios gravados con IGV cuando el monto total en moneda nacional iguala o supera el umbral legal de S/ 700.00 (`totalPen.compareTo(new BigDecimal("700.00")) >= 0`):
    $$\text{Monto Detracción} = (\text{Subtotal} + \text{IGV}) \times 0.12$$
+   Si el total en moneda nacional es inferior a S/ 700.00 (`totalPen < 700.00`), el importe de detracción es S/ 0.00 y no se retiene SPOT.
 
 ---
 
@@ -613,14 +624,60 @@ Todos los endpoints están prefijados bajo la versión de API `/api/v1`.
 | Método | Endpoint | Permiso SpEL | Descripción |
 | :---: | :--- | :--- | :--- |
 | `GET` | `/api/v1/sedes` | `ACCESS_SEDES_CATALOGOS_READ` | Lista todas las sedes operativas. |
-| `GET` | `/api/v1/sedes/exportar-pdf` | `ACCESS_SEDES_CATALOGOS_READ` | Genera y descarga reporte en PDF oficial con JasperReports. |
+| `GET` | `/api/v1/sedes/exportar-pdf` | `ACCESS_SEDES_CATALOGOS_READ` | Genera y descarga reporte en PDF oficial (Thymeleaf + OpenHTMLtoPDF). |
 | `GET` | `/api/v1/usuarios` | `ACCESS_USUARIOS_READ` | Lista cuentas de usuario del sistema. |
-| `GET` | `/api/v1/usuarios/exportar-pdf` | `ACCESS_USUARIOS_READ` | Exporta padrón oficial de personal en PDF con JasperReports. |
-| `GET` | `/api/v1/roles` | `ACCESS_ROLES_READ` | Consulta catálogo de los 8 roles del sistema. |
+| `GET` | `/api/v1/usuarios/exportar-pdf` | `ACCESS_USUARIOS_READ` | Exporta padrón oficial de personal en PDF con JasperReports 7.0.8. |
+| `GET` | `/api/v1/roles` | `ACCESS_ROLES_READ` | Consulta catálogo de los 8 roles del sistema (`RolUsuario`). |
 | `GET` | `/api/v1/admin/logs` | `ACCESS_LOGS_READ` | Inspección de las últimas N líneas del archivo de log. |
 | `GET` | `/api/v1/admin/logs/download` | `ACCESS_LOGS_READ` | Descarga el archivo `sga-backend.log`. |
 | `POST` | `/api/v1/admin/logs/clear` | `ACCESS_LOGS_READ` | Vacia el archivo de log en el servidor. |
 | `GET` | `/api/v1/health` | Público | Monitor de estado del servicio (UP, versión, timestamp). |
+
+---
+
+### 8.12 Portal del Cliente B2B (`/api/v1/portal/**` — `PortalController.java`)
+
+Controlador especializado para empresas importadoras/exportadoras y clientes corporativos con autenticación mediante `UsuarioCliente`:
+
+| Método | Endpoint | Permiso SpEL | Descripción |
+| :---: | :--- | :--- | :--- |
+| `POST` | `/api/v1/portal/auth/login` | Público | Autenticación B2B con credenciales (RUC/username) y entrega de JWT. |
+| `POST` | `/api/v1/portal/auth/cambiar-password` | Autenticado Portal | Cambio obligatorio o voluntario de contraseña del cliente. |
+| `GET` | `/api/v1/portal/perfil` | Autenticado Portal | Información corporativa y representante legal del cliente en sesión. |
+| `GET` | `/api/v1/portal/cotizaciones` | Autenticado Portal | Bandeja de cotizaciones emitidas a nombre de la empresa. |
+| `GET` | `/api/v1/portal/cotizaciones/{id}` | Autenticado Portal | Detalle completo de cotización (desglose arancelario y flete). |
+| `POST` | `/api/v1/portal/cotizaciones/solicitar` | Autenticado Portal | Formulación y solicitud de nueva proforma aduanera. |
+| `PATCH` | `/api/v1/portal/cotizaciones/{id}/aceptar` | Autenticado Portal | Aceptación formal de la propuesta comercial aprobada técnicamente. |
+| `GET` | `/api/v1/portal/expedientes` | Autenticado Portal | Listado de expedientes aduaneros activos y concluidos. |
+| `GET` | `/api/v1/portal/expedientes/{id}` | Autenticado Portal | Detalle y tracking integral del expediente (DAM, canal SUNAT, hitos). |
+| `GET` | `/api/v1/portal/expedientes/{id}/documentos` | Autenticado Portal | Visualización y descarga de sustentos digitales asociados. |
+| `GET` | `/api/v1/portal/pagos/resumen` | Autenticado Portal | Resumen financiero (saldo pendiente, total abonado, liquidaciones). |
+| `GET` | `/api/v1/portal/pagos/obligaciones-pendientes` | Autenticado Portal | Obligaciones financieras listas para abonar (anticipos y balances). |
+| `GET` | `/api/v1/portal/pagos/anticipos` | Autenticado Portal | Historial y estado de validación de anticipos registrados. |
+| `GET` | `/api/v1/portal/pagos/liquidaciones` | Autenticado Portal | Historial de liquidaciones finales tributarias de la empresa. |
+| `POST` | `/api/v1/portal/pagos/registrar-voucher` | Autenticado Portal | Registro formal de comprobante de pago bancario. |
+| `POST` | `/api/v1/portal/pagos/upload-comprobante` | Autenticado Portal | Carga multipart del archivo digital del voucher bancario. |
+| `PUT` | `/api/v1/portal/pagos/anticipos/{idPago}/corregir` | Autenticado Portal | Subsanación y recarga de comprobante observado por Finanzas. |
+| `GET` | `/api/v1/portal/notificaciones` | Autenticado Portal | Bandeja de avisos y alertas operativas de expedientes y pagos. |
+| `GET` | `/api/v1/portal/notificaciones/resumen` | Autenticado Portal | Conteo de avisos y notificaciones no leídas. |
+| `PATCH` | `/api/v1/portal/notificaciones/{id}/leer` | Autenticado Portal | Marca una notificación específica como leída. |
+| `PATCH` | `/api/v1/portal/notificaciones/marcar-todas-leidas` | Autenticado Portal | Marca todo el historial de notificaciones como leído. |
+
+---
+
+### 8.13 Administración de Usuarios del Portal B2B (`/api/v1/admin/usuarios-portal/**` — `UsuarioClienteAdminController.java`)
+
+Control administrativo exclusivo para la gobernanza de accesos de clientes externos:
+
+| Método | Endpoint | Permiso SpEL | Descripción |
+| :---: | :--- | :--- | :--- |
+| `GET` | `/api/v1/admin/usuarios-portal` | `ACCESS_USUARIOS_READ` | Directorio de usuarios de empresas clientes con búsqueda y filtros. |
+| `GET` | `/api/v1/admin/usuarios-portal/{id}` | `ACCESS_USUARIOS_READ` | Detalle del usuario del portal y empresa vinculada. |
+| `POST` | `/api/v1/admin/usuarios-portal` | `ACCESS_USUARIOS_WRITE` | Creación y provisión de credenciales de acceso para clientes. |
+| `PUT` | `/api/v1/admin/usuarios-portal/{id}` | `ACCESS_USUARIOS_WRITE` | Actualización de datos, nombres y correo de notificación. |
+| `DELETE` | `/api/v1/admin/usuarios-portal/{id}` | `ACCESS_USUARIOS_WRITE` | Desactivación lógica de la cuenta del portal (`estadoActivo = false`). |
+| `PATCH` | `/api/v1/admin/usuarios-portal/{id}/reactivar` | `ACCESS_USUARIOS_WRITE` | Reactivación formal de la cuenta del cliente. |
+| `PATCH` | `/api/v1/admin/usuarios-portal/{id}/reset-password` | `ACCESS_USUARIOS_WRITE` | Reseteo temporal y asignación de nueva contraseña de acceso. |
 
 ---
 
@@ -688,13 +745,16 @@ app.storage.upload-dir=${STORAGE_DIR:./uploads/documentos}
 
 Al arrancar la aplicación por primera vez, `DataInitializer` verifica la existencia de registros esenciales y auto-aprovisiona:
 
-1. **Los 8 Roles Normativos:** Registra los registros en la tabla `roles` con sus etiquetas institucionales.
+1. **Los 8 Roles Normativos:** Gobernados íntegramente a través del enum de dominio `pe.sga.entity.enums.RolUsuario` (sin tabla relacional `rol`), mapeando descripciones y cargos normativos.
 2. **Sede Central Base:** Crea la sede inicial `SED-PRUEBA` (Callao, OPERATIVO).
-3. **Catálogos Mínimos:** Registra terminal portuario y tipo de carga por defecto.
+3. **Catálogos Mínimos:** Registra terminal portuario (APM Terminals Callao) y tipos de carga marítima/aérea por defecto.
 4. **Superusuario Administrador:**
    - **Username:** `admin`
    - **Password inicial:** `Password123!` (almacenado con hash BCrypt)
-   - **Rol:** `ADMINISTRADOR_TI`
+   - **Rol:** `ADMINISTRADOR_TI` (acceso y dashboard en `/administracion-ti/dashboard`)
+5. **Cuentas Demo para el Portal del Cliente B2B:**
+   - **Camposol S.A.:** RUC `20370146994` / Contraseña `Password123!`
+   - **LG Electronics Peru S.A.:** RUC `20511894520` / Contraseña `Password123!`
 
 ---
 

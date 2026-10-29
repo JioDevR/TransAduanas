@@ -213,7 +213,7 @@ const formatVal = (val) => {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-xl, 1rem);
   padding: var(--space-6, 1.5rem);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-subtle);
   display: flex;
   flex-direction: column;
   position: relative;
@@ -228,7 +228,7 @@ const formatVal = (val) => {
   font-weight: 800;
   letter-spacing: 0.1em;
   color: var(--color-primary);
-  background: var(--color-primary-subtle);
+  background: var(--color-bg-subtle);
   padding: 0.25rem 0.65rem;
   border-radius: var(--radius-full, 9999px);
   margin-bottom: var(--space-3, 0.75rem);

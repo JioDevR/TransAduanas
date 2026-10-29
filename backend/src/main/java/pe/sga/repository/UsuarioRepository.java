@@ -1,13 +1,11 @@
 package pe.sga.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
 import pe.sga.entity.Usuario;
 
 import java.util.List;
 import java.util.Optional;
 
-@Repository
 public interface UsuarioRepository extends JpaRepository<Usuario, Integer> {
 
     Optional<Usuario> findByUsername(String username);
@@ -20,7 +18,7 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Integer> {
 
     List<Usuario> findByEstadoActivoTrue();
 
-    List<Usuario> findByRol_IdRol(Integer idRol);
+    List<Usuario> findByRol(pe.sga.entity.enums.RolUsuario rol);
 
     List<Usuario> findBySede_IdSede(Integer idSede);
 }

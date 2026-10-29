@@ -12,5 +12,6 @@ public class CatalogoTipoCargaResponseDTO {
     private Integer idTipoCarga;
     private String codigo;
     private String nombre;
+    private String descripcion;
     private String estado;
 }

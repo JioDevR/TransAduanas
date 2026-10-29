@@ -75,20 +75,33 @@
           </button>
         </li>
 
-        <!-- Sub-opción 02: Usuarios -->
+        <!-- Sub-opción 02: Personal Interno -->
         <li class="nav-item">
           <button
             type="button"
             :class="['nav-sub-btn', { active: navigationStore.administracionTiSubOption === 'users' || navigationStore.administracionTiSubOption === 'create-user' }]"
             @click="handleAdminSubClick('users')"
-            :title="isCollapsed ? 'Gestión de Usuarios' : ''"
+            :title="isCollapsed ? 'Personal Interno' : ''"
           >
             <span class="nav-num">02</span>
-            <span v-if="!isCollapsed" class="nav-label">Usuarios</span>
+            <span v-if="!isCollapsed" class="nav-label">Personal Interno</span>
           </button>
         </li>
 
-        <!-- Sub-opción 03: Logs del Sistema -->
+        <!-- Sub-opción 03: Usuarios Portal Clientes B2B -->
+        <li class="nav-item">
+          <button
+            type="button"
+            :class="['nav-sub-btn', { active: navigationStore.administracionTiSubOption === 'portal-users' || navigationStore.administracionTiSubOption === 'create-portal-user' }]"
+            @click="handleAdminSubClick('portal-users')"
+            :title="isCollapsed ? 'Usuarios Portal Clientes B2B' : ''"
+          >
+            <span class="nav-num">03</span>
+            <span v-if="!isCollapsed" class="nav-label">Usuarios Portal</span>
+          </button>
+        </li>
+
+        <!-- Sub-opción 04: Logs del Sistema -->
         <li class="nav-item">
           <button
             type="button"
@@ -96,12 +109,12 @@
             @click="handleAdminSubClick('logs')"
             :title="isCollapsed ? 'Consola de Logs TI' : ''"
           >
-            <span class="nav-num">03</span>
+            <span class="nav-num">04</span>
             <span v-if="!isCollapsed" class="nav-label">Logs TI</span>
           </button>
         </li>
 
-        <!-- Sub-opción 04: Acerca de -->
+        <!-- Sub-opción 05: Acerca de -->
         <li class="nav-item">
           <button
             type="button"
@@ -109,7 +122,7 @@
             @click="handleAdminSubClick('about')"
             :title="isCollapsed ? 'Acerca de SGA' : ''"
           >
-            <span class="nav-num">04</span>
+            <span class="nav-num">05</span>
             <span v-if="!isCollapsed" class="nav-label">Acerca de</span>
           </button>
         </li>
@@ -145,42 +158,42 @@
           </button>
         </li>
 
-        <!-- Sub-opción 03: Catálogos Auxiliares -->
+        <!-- Sub-opción 03: Puertos & Terminales -->
         <li class="nav-item">
           <button
             type="button"
-            :class="['nav-sub-btn', { active: navigationStore.gerenciaGeneralSubOption === 'catalogos' }]"
-            @click="handleGerenciaSubClick('catalogos')"
-            :title="isCollapsed ? 'Catálogos Auxiliares' : ''"
+            :class="['nav-sub-btn', { active: navigationStore.gerenciaGeneralSubOption === 'puertos' }]"
+            @click="handleGerenciaSubClick('puertos')"
+            :title="isCollapsed ? 'Puertos y Terminales Aduaneros' : ''"
           >
             <span class="nav-num">03</span>
-            <span v-if="!isCollapsed" class="nav-label">Catálogos Auxiliares</span>
+            <span v-if="!isCollapsed" class="nav-label">Puertos & Terminales</span>
           </button>
         </li>
 
-        <!-- Sub-opción 04: Parque de Flota -->
+        <!-- Sub-opción 04: Tipos de Carga -->
         <li class="nav-item">
           <button
             type="button"
-            :class="['nav-sub-btn', { active: navigationStore.gerenciaGeneralSubOption === 'flota' }]"
-            @click="handleGerenciaSubClick('flota')"
-            :title="isCollapsed ? 'Parque Automotor & Flota' : ''"
+            :class="['nav-sub-btn', { active: navigationStore.gerenciaGeneralSubOption === 'tipos-carga' }]"
+            @click="handleGerenciaSubClick('tipos-carga')"
+            :title="isCollapsed ? 'Tipos de Carga & Contenedor' : ''"
           >
             <span class="nav-num">04</span>
-            <span v-if="!isCollapsed" class="nav-label">Parque de Flota</span>
+            <span v-if="!isCollapsed" class="nav-label">Tipos de Carga</span>
           </button>
         </li>
 
-        <!-- Sub-opción 05: Conductores MTC -->
+        <!-- Sub-opción 05: Mercancías & Partidas -->
         <li class="nav-item">
           <button
             type="button"
-            :class="['nav-sub-btn', { active: navigationStore.gerenciaGeneralSubOption === 'conductores' }]"
-            @click="handleGerenciaSubClick('conductores')"
-            :title="isCollapsed ? 'Conductores MTC' : ''"
+            :class="['nav-sub-btn', { active: navigationStore.gerenciaGeneralSubOption === 'mercancias' }]"
+            @click="handleGerenciaSubClick('mercancias')"
+            :title="isCollapsed ? 'Mercancías & Partidas Arancelarias' : ''"
           >
             <span class="nav-num">05</span>
-            <span v-if="!isCollapsed" class="nav-label">Conductores MTC</span>
+            <span v-if="!isCollapsed" class="nav-label">Mercancías & Partidas</span>
           </button>
         </li>
       </ul>
@@ -259,7 +272,20 @@
           </button>
         </li>
 
-        <!-- Sub-opción 02: Gestión de Expedientes -->
+        <!-- Sub-opción 02: Apertura de Expedientes -->
+        <li class="nav-item">
+          <button
+            type="button"
+            :class="['nav-sub-btn', { active: navigationStore.gestionAduaneraSubOption === 'apertura' }]"
+            @click="handleGestionAduaneraSubClick('apertura')"
+            :title="isCollapsed ? 'Apertura de Expedientes Aduaneros' : ''"
+          >
+            <span class="nav-num">02</span>
+            <span v-if="!isCollapsed" class="nav-label">Apertura Expedientes</span>
+          </button>
+        </li>
+
+        <!-- Sub-opción 03: Gestión de Expedientes -->
         <li class="nav-item">
           <button
             type="button"
@@ -267,12 +293,12 @@
             @click="handleGestionAduaneraSubClick('expedientes')"
             :title="isCollapsed ? 'Gestión de Expedientes' : ''"
           >
-            <span class="nav-num">02</span>
+            <span class="nav-num">03</span>
             <span v-if="!isCollapsed" class="nav-label">Gestión de Expedientes</span>
           </button>
         </li>
 
-        <!-- Sub-opción 03: Declaraciones DAM (Liquidación) -->
+        <!-- Sub-opción 04: Declaraciones DAM (Liquidación) -->
         <li class="nav-item">
           <button
             type="button"
@@ -280,12 +306,12 @@
             @click="handleGestionAduaneraSubClick('declaraciones')"
             :title="isCollapsed ? 'Declaraciones DAM' : ''"
           >
-            <span class="nav-num">03</span>
+            <span class="nav-num">04</span>
             <span v-if="!isCollapsed" class="nav-label">Declaraciones DAM</span>
           </button>
         </li>
 
-        <!-- Sub-opción 04: Clasificación Arancelaria -->
+        <!-- Sub-opción 05: Clasificación Arancelaria -->
         <li class="nav-item">
           <button
             type="button"
@@ -293,12 +319,12 @@
             @click="handleGestionAduaneraSubClick('clasificacion')"
             :title="isCollapsed ? 'Clasificación Arancelaria' : ''"
           >
-            <span class="nav-num">04</span>
+            <span class="nav-num">05</span>
             <span v-if="!isCollapsed" class="nav-label">Clasificación Arancelaria</span>
           </button>
         </li>
 
-        <!-- Sub-opción 05: Cálculo de Tributos -->
+        <!-- Sub-opción 06: Cálculo de Tributos -->
         <li class="nav-item">
           <button
             type="button"
@@ -306,7 +332,7 @@
             @click="handleGestionAduaneraSubClick('tributos')"
             :title="isCollapsed ? 'Cálculo de Tributos' : ''"
           >
-            <span class="nav-num">05</span>
+            <span class="nav-num">06</span>
             <span v-if="!isCollapsed" class="nav-label">Cálculo de Tributos</span>
           </button>
         </li>
@@ -400,6 +426,32 @@
           >
             <span class="nav-num">04</span>
             <span v-if="!isCollapsed" class="nav-label">Monitoreo Global</span>
+          </button>
+        </li>
+
+        <!-- Sub-opción 05: Parque de Flota -->
+        <li class="nav-item">
+          <button
+            type="button"
+            :class="['nav-sub-btn', { active: navigationStore.transporteFlotaSubOption === 'unidades' }]"
+            @click="handleTransporteFlotaSubClick('unidades')"
+            :title="isCollapsed ? 'Parque Automotor & Flota' : ''"
+          >
+            <span class="nav-num">05</span>
+            <span v-if="!isCollapsed" class="nav-label">Parque de Flota</span>
+          </button>
+        </li>
+
+        <!-- Sub-opción 06: Conductores MTC -->
+        <li class="nav-item">
+          <button
+            type="button"
+            :class="['nav-sub-btn', { active: navigationStore.transporteFlotaSubOption === 'conductores' }]"
+            @click="handleTransporteFlotaSubClick('conductores')"
+            :title="isCollapsed ? 'Conductores MTC' : ''"
+          >
+            <span class="nav-num">06</span>
+            <span v-if="!isCollapsed" class="nav-label">Conductores MTC</span>
           </button>
         </li>
       </ul>
@@ -607,7 +659,10 @@ const handleGerenciaSubClick = (subOption) => {
     dashboard: '/gerencia-general/dashboard',
     overview: '/gerencia-general/dashboard',
     sedes: '/gerencia-general/sedes',
-    catalogos: '/gerencia-general/catalogos',
+    puertos: '/gerencia-general/puertos',
+    'tipos-carga': '/gerencia-general/tipos-carga',
+    mercancias: '/gerencia-general/mercancias',
+    catalogos: '/gerencia-general/puertos',
     flota: '/gerencia-general/flota',
     conductores: '/gerencia-general/conductores'
   }
@@ -624,6 +679,7 @@ const handleAdminSubClick = (subOption) => {
   const pathMap = {
     dashboard: '/administracion-ti/dashboard',
     users: '/administracion-ti/usuarios',
+    'portal-users': '/administracion-ti/usuarios-portal',
     logs: '/administracion-ti/logs',
     about: '/administracion-ti/acerca-de'
   }
@@ -702,11 +758,13 @@ const handleFinanzasSubClick = (subOption) => {
   }
 }
 
-// Disparador de acciones rápidas de Finanzas (modales)
+// Disparador de acciones rápidas de Finanzas (modales y vistas completas)
 const handleFinanzasAction = (action) => {
   navigationStore.setActiveModule('finanzas')
   if (route.path !== '/finanzas') {
-    router.push('/finanzas')
+    router.push({ path: '/finanzas', query: { tab: 'pre-expedientes', action } })
+  } else {
+    router.replace({ query: { ...route.query, tab: 'pre-expedientes', action } })
   }
   navigationStore.triggerFinanzasAction(action)
 }
@@ -843,7 +901,7 @@ const handleFinanzasAction = (action) => {
 .module-custom-select {
   width: 100%;
   appearance: none;
-  background: var(--color-bg-surface);
+  background-color: var(--color-bg-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   padding: 0.45rem 1.65rem 0.45rem 0.6rem;

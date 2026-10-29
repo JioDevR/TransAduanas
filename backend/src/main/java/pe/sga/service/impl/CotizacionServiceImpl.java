@@ -1,6 +1,8 @@
 package pe.sga.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pe.sga.dto.request.CotizacionRequestDTO;
@@ -19,9 +21,16 @@ import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class CotizacionServiceImpl implements ICotizacionService {
 
     private final CotizacionRepository cotizacionRepository;
@@ -32,18 +41,17 @@ public class CotizacionServiceImpl implements ICotizacionService {
     private final CatalogoPuertoRepository puertoRepository;
     private final ExpedienteRepository expedienteRepository;
     private final CotizacionPagoRepository cotizacionPagoRepository;
+    private final UsuarioClienteRepository usuarioClienteRepository;
+    private final NotificacionClienteRepository notificacionClienteRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     @Transactional(readOnly = true)
     public List<CotizacionResponseDTO> listarTodas(Boolean soloActivas) {
         if (soloActivas != null && soloActivas) {
-            return cotizacionRepository.findByEstadoNot(EstadoCotizacion.ANULADA).stream()
-                    .map(this::mapToResponse)
-                    .toList();
+            return mapListToResponse(cotizacionRepository.findByEstadoNot(EstadoCotizacion.ANULADA));
         }
-        return cotizacionRepository.findAll().stream()
-                .map(this::mapToResponse)
-                .toList();
+        return mapListToResponse(cotizacionRepository.findAll());
     }
 
     @Override
@@ -52,17 +60,13 @@ public class CotizacionServiceImpl implements ICotizacionService {
         if (estado == null) {
             return listarTodas(false);
         }
-        return cotizacionRepository.findByEstado(estado).stream()
-                .map(this::mapToResponse)
-                .toList();
+        return mapListToResponse(cotizacionRepository.findByEstado(estado));
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<CotizacionResponseDTO> listarPorCliente(Integer idCliente) {
-        return cotizacionRepository.findByCliente_IdCliente(idCliente).stream()
-                .map(this::mapToResponse)
-                .toList();
+        return mapListToResponse(cotizacionRepository.findByCliente_IdCliente(idCliente));
     }
 
     @Override
@@ -151,7 +155,7 @@ public class CotizacionServiceImpl implements ICotizacionService {
 
         Cotizacion guardada = cotizacionRepository.save(cotizacion);
         if (guardada.getEstado() == EstadoCotizacion.APROBADA) {
-            autoFormalizarCliente(guardada.getCliente());
+            autoFormalizarCliente(guardada.getCliente(), guardada);
         }
 
         return mapToResponse(guardada);
@@ -207,11 +211,22 @@ public class CotizacionServiceImpl implements ICotizacionService {
         if (dto.getValidezDias() != null) cotizacion.setValidezDias(dto.getValidezDias());
         if (dto.getObservaciones() != null) cotizacion.setObservaciones(dto.getObservaciones());
 
+        // Regla de Negocio BPMN: Si una cotización estaba OBSERVADA y el asesor comercial realiza la corrección,
+        // se restablece automáticamente a PENDIENTE para que reingrese a la bandeja de supervisión aduanera.
+        if (cotizacion.getEstado() == EstadoCotizacion.OBSERVADA) {
+            cotizacion.setEstado(EstadoCotizacion.PENDIENTE);
+            String notaCorreccion = "Corrección subsanada por ventas el " + LocalDate.now() + ". Reingresada a bandeja de supervisión aduanera.";
+            cotizacion.setObservaciones(cotizacion.getObservaciones() != null 
+                    ? cotizacion.getObservaciones() + " | " + notaCorreccion 
+                    : notaCorreccion);
+            log.info("Cotización {} corregida por el área comercial y reingresada a PENDIENTE para supervisión", cotizacion.getCodigoCotizacion());
+        }
+
         calcularValoresEconomicos(cotizacion, dto);
 
         Cotizacion guardada = cotizacionRepository.save(cotizacion);
         if (guardada.getEstado() == EstadoCotizacion.APROBADA) {
-            autoFormalizarCliente(guardada.getCliente());
+            autoFormalizarCliente(guardada.getCliente(), guardada);
         }
 
         return mapToResponse(guardada);
@@ -246,7 +261,31 @@ public class CotizacionServiceImpl implements ICotizacionService {
 
         Cotizacion guardada = cotizacionRepository.save(cotizacion);
         if (guardada.getEstado() == EstadoCotizacion.APROBADA) {
-            autoFormalizarCliente(guardada.getCliente());
+            autoFormalizarCliente(guardada.getCliente(), guardada);
+        } else if (guardada.getEstado() == EstadoCotizacion.OBSERVADA) {
+            // Regla de Negocio BPMN: ¿Tiene Usuario?
+            // El usuario solo se crea cuando la primera cotización se aprueba.
+            // Si ya cuenta con usuario, se emite Not. observ. cotiz. al portal B2B.
+            // Si NO tiene usuario, no se emite al portal: la comunicación y subsanación es presencial/directa con el vendedor.
+            if (guardada.getCliente() != null) {
+                Optional<UsuarioCliente> usuarioOpt = usuarioClienteRepository.findByCliente_IdCliente(guardada.getCliente().getIdCliente());
+                if (usuarioOpt.isPresent()) {
+                    NotificacionCliente notifObservada = NotificacionCliente.builder()
+                            .cliente(guardada.getCliente())
+                            .titulo("Cotización Observada: " + guardada.getCodigoCotizacion())
+                            .mensaje("Su cotización presenta observaciones de supervisión técnica aduanera: \"" + dto.getMotivoObservacion() + "\". Su asesor comercial asignado le contactará para coordinar la rectificación.")
+                            .tipo("COTIZACION_OBSERVADA")
+                            .leido(false)
+                            .enlace("/cotizaciones")
+                            .fechaCreacion(LocalDateTime.now())
+                            .build();
+                    notificacionClienteRepository.save(notifObservada);
+                    log.info("Notificación de cotización observada emitida al portal B2B para cliente ID {}", guardada.getCliente().getIdCliente());
+                } else {
+                    log.info("Cotización {} observada para cliente sin usuario B2B (ID: {}). Atención y subsanación presencial con el vendedor.",
+                            guardada.getCodigoCotizacion(), guardada.getCliente().getIdCliente());
+                }
+            }
         }
 
         return mapToResponse(guardada);
@@ -265,7 +304,23 @@ public class CotizacionServiceImpl implements ICotizacionService {
 
         Cotizacion guardada = cotizacionRepository.save(cotizacion);
         if (guardada.getEstado() == EstadoCotizacion.APROBADA) {
-            autoFormalizarCliente(guardada.getCliente());
+            autoFormalizarCliente(guardada.getCliente(), guardada);
+        } else if (guardada.getEstado() == EstadoCotizacion.OBSERVADA) {
+            if (guardada.getCliente() != null) {
+                Optional<UsuarioCliente> usuarioOpt = usuarioClienteRepository.findByCliente_IdCliente(guardada.getCliente().getIdCliente());
+                if (usuarioOpt.isPresent()) {
+                    NotificacionCliente notifObservada = NotificacionCliente.builder()
+                            .cliente(guardada.getCliente())
+                            .titulo("Cotización Observada: " + guardada.getCodigoCotizacion())
+                            .mensaje("Su cotización presenta observaciones técnicas: \"" + (motivoObservacion != null ? motivoObservacion : "Requiere rectificación documentaria") + "\".")
+                            .tipo("COTIZACION_OBSERVADA")
+                            .leido(false)
+                            .enlace("/cotizaciones")
+                            .fechaCreacion(LocalDateTime.now())
+                            .build();
+                    notificacionClienteRepository.save(notifObservada);
+                }
+            }
         }
 
         return mapToResponse(guardada);
@@ -371,25 +426,81 @@ public class CotizacionServiceImpl implements ICotizacionService {
         }
     }
 
+    private List<CotizacionResponseDTO> mapListToResponse(List<Cotizacion> cotizaciones) {
+        if (cotizaciones == null || cotizaciones.isEmpty()) {
+            return List.of();
+        }
+        List<Integer> idsCotizacion = cotizaciones.stream()
+                .map(Cotizacion::getIdCotizacion)
+                .filter(Objects::nonNull)
+                .toList();
+        Set<Integer> idsClientes = cotizaciones.stream()
+                .map(Cotizacion::getCliente)
+                .filter(Objects::nonNull)
+                .map(Cliente::getIdCliente)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+
+        Map<Integer, Expediente> expMap = idsCotizacion.isEmpty()
+                ? Map.of()
+                : expedienteRepository.findByCotizacion_IdCotizacionIn(idsCotizacion).stream()
+                .filter(e -> e.getCotizacion() != null)
+                .collect(Collectors.toMap(e -> e.getCotizacion().getIdCotizacion(), Function.identity(), (a, b) -> a));
+
+        Set<Integer> pagosAprobadosSet = idsCotizacion.isEmpty()
+                ? Set.of()
+                : cotizacionPagoRepository.findCotizacionIdsWithEstadoPago(idsCotizacion, EstadoPagoCotizacion.APROBADO);
+
+        Set<Integer> clientesConUsuarioSet = idsClientes.isEmpty()
+                ? Set.of()
+                : usuarioClienteRepository.findClienteIdsWithUsuario(idsClientes);
+
+        return cotizaciones.stream()
+                .map(c -> mapToResponse(c, expMap, pagosAprobadosSet, clientesConUsuarioSet))
+                .toList();
+    }
+
     private CotizacionResponseDTO mapToResponse(Cotizacion c) {
+        Expediente exp = c.getIdCotizacion() != null
+                ? expedienteRepository.findByCotizacion_IdCotizacion(c.getIdCotizacion()).orElse(null)
+                : null;
+        Map<Integer, Expediente> expMap = (exp != null && c.getIdCotizacion() != null)
+                ? Map.of(c.getIdCotizacion(), exp)
+                : Map.of();
+        boolean pagoAprobado = c.getIdCotizacion() != null
+                && cotizacionPagoRepository.existsByCotizacion_IdCotizacionAndEstadoPago(c.getIdCotizacion(), EstadoPagoCotizacion.APROBADO);
+        Set<Integer> pagosSet = (pagoAprobado && c.getIdCotizacion() != null) ? Set.of(c.getIdCotizacion()) : Set.of();
+        boolean tieneUsr = c.getCliente() != null && c.getCliente().getIdCliente() != null
+                && usuarioClienteRepository.findByCliente_IdCliente(c.getCliente().getIdCliente()).isPresent();
+        Set<Integer> clientesSet = (tieneUsr && c.getCliente() != null) ? Set.of(c.getCliente().getIdCliente()) : Set.of();
+        return mapToResponse(c, expMap, pagosSet, clientesSet);
+    }
+
+    private CotizacionResponseDTO mapToResponse(
+            Cotizacion c,
+            Map<Integer, Expediente> expMap,
+            Set<Integer> pagosAprobadosSet,
+            Set<Integer> clientesConUsuarioSet
+    ) {
         boolean tieneExpediente = false;
         Integer idExpediente = null;
         String codigoExpediente = null;
 
-        if (c.getIdCotizacion() != null) {
-            var expOpt = expedienteRepository.findByCotizacion_IdCotizacion(c.getIdCotizacion());
-            if (expOpt.isPresent()) {
-                tieneExpediente = true;
-                idExpediente = expOpt.get().getIdExpediente();
-                codigoExpediente = expOpt.get().getCodigoExpediente();
-            }
+        if (c.getIdCotizacion() != null && expMap.containsKey(c.getIdCotizacion())) {
+            Expediente exp = expMap.get(c.getIdCotizacion());
+            tieneExpediente = true;
+            idExpediente = exp.getIdExpediente();
+            codigoExpediente = exp.getCodigoExpediente();
         }
 
         boolean tienePagoAprobado = "ADELANTO_APROBADO".equals(c.getEstadoPago())
                 || "PAGADO_TOTAL".equals(c.getEstadoPago())
-                || (c.getIdCotizacion() != null && cotizacionPagoRepository.existsByCotizacion_IdCotizacionAndEstadoPago(c.getIdCotizacion(), EstadoPagoCotizacion.APROBADO));
+                || (c.getIdCotizacion() != null && pagosAprobadosSet.contains(c.getIdCotizacion()));
 
         boolean habilitadoParaExpediente = c.getEstado() == EstadoCotizacion.APROBADA && tienePagoAprobado && !tieneExpediente;
+
+        boolean tieneUsuario = c.getCliente() != null && c.getCliente().getIdCliente() != null
+                && clientesConUsuarioSet.contains(c.getCliente().getIdCliente());
 
         return CotizacionResponseDTO.builder()
                 .idCotizacion(c.getIdCotizacion())
@@ -397,6 +508,9 @@ public class CotizacionServiceImpl implements ICotizacionService {
                 .idCliente(c.getCliente() != null ? c.getCliente().getIdCliente() : null)
                 .clienteRazonSocial(c.getCliente() != null ? c.getCliente().getRazonSocial() : null)
                 .clienteNumeroDocumento(c.getCliente() != null ? c.getCliente().getNumeroDocumento() : null)
+                .clienteTelefono(c.getCliente() != null ? c.getCliente().getTelefonoContacto() : null)
+                .clienteCorreo(c.getCliente() != null ? c.getCliente().getCorreoContacto() : null)
+                .clienteTieneUsuario(tieneUsuario)
                 .idUsuarioComercial(c.getUsuarioComercial() != null ? c.getUsuarioComercial().getIdUsuario() : null)
                 .usuarioComercialNombre(c.getUsuarioComercial() != null ? c.getUsuarioComercial().getNombreCompleto() : null)
                 .idMercancia(c.getMercancia() != null ? c.getMercancia().getIdMercancia() : null)
@@ -445,11 +559,64 @@ public class CotizacionServiceImpl implements ICotizacionService {
     /**
      * Regla de Negocio: Promueve automáticamente a un prospecto comercial a 'Cliente Efectivo'
      * en el momento en que una cotización asociada es APROBADA.
+     * Si es la primera vez que se aprueba una cotización para esta empresa (no tiene cuenta en el portal),
+     * se le crea automáticamente su acceso a la plataforma B2B con username = RUC y debeCambiarPassword = true.
+     * Si ya tiene usuario, no se crea nada nuevo.
      */
-    private void autoFormalizarCliente(Cliente cliente) {
-        if (cliente != null && Boolean.TRUE.equals(cliente.getEsProspecto())) {
-            cliente.setEsProspecto(false);
+    private void autoFormalizarCliente(Cliente cliente, Cotizacion cotizacion) {
+        if (cliente == null) return;
+
+        boolean eraProspecto = "PROSPECTO".equalsIgnoreCase(cliente.getEstadoCliente());
+        if (eraProspecto) {
+            cliente.setEstadoCliente("CLIENTE");
             clienteRepository.save(cliente);
+            log.info("Empresa promovida de PROSPECTO a CLIENTE tras aprobación de cotización: id={}, ruc={}, razonSocial={}",
+                    cliente.getIdCliente(), cliente.getNumeroDocumento(), cliente.getRazonSocial());
+        }
+
+        // Verificar si ya tiene cuenta de acceso al portal B2B
+        Optional<UsuarioCliente> usuarioExistente = usuarioClienteRepository.findByCliente_IdCliente(cliente.getIdCliente());
+        if (usuarioExistente.isEmpty()) {
+            String username = cliente.getNumeroDocumento().trim();
+            if (!usuarioClienteRepository.existsByUsername(username)) {
+                UsuarioCliente nuevoUsuario = UsuarioCliente.builder()
+                        .cliente(cliente)
+                        .username(username)
+                        .passwordHash(passwordEncoder.encode("Password123!"))
+                        .estadoActivo(true)
+                        .debeCambiarPassword(true) // Obligatorio cambiar contraseña en su primer inicio de sesión
+                        .fechaCreacion(LocalDateTime.now())
+                        .fechaActualizacion(LocalDateTime.now())
+                        .build();
+
+                usuarioClienteRepository.save(nuevoUsuario);
+                log.info("Acceso al portal B2B creado automáticamente tras primera aprobación de cotización: cliente={}, username={}",
+                        cliente.getRazonSocial(), username);
+
+                // Notificación de Bienvenida y Activación
+                NotificacionCliente notifBienvenida = NotificacionCliente.builder()
+                        .cliente(cliente)
+                        .titulo("¡Bienvenido al Portal de Clientes B2B TransAduanas!")
+                        .mensaje("Su primera cotización (" + cotizacion.getCodigoCotizacion() + ") ha sido aprobada. Se ha habilitado su acceso corporativo. Por seguridad, deberá actualizar su contraseña temporal en su primer inicio de sesión.")
+                        .tipo("ACCESO_CREADO")
+                        .leido(false)
+                        .enlace("/cotizaciones")
+                        .fechaCreacion(LocalDateTime.now())
+                        .build();
+                notificacionClienteRepository.save(notifBienvenida);
+            }
+        } else {
+            // Ya tiene cuenta; solo notificar la aprobación de esta nueva cotización
+            NotificacionCliente notifAprobada = NotificacionCliente.builder()
+                    .cliente(cliente)
+                    .titulo("Cotización Aprobada: " + cotizacion.getCodigoCotizacion())
+                    .mensaje("Su cotización aduanera " + cotizacion.getCodigoCotizacion() + " por un total de USD " + cotizacion.getTotalCotizado() + " ha sido aprobada técnicamente.")
+                    .tipo("COTIZACION_APROBADA")
+                    .leido(false)
+                    .enlace("/cotizaciones")
+                    .fechaCreacion(LocalDateTime.now())
+                    .build();
+            notificacionClienteRepository.save(notifAprobada);
         }
     }
 }

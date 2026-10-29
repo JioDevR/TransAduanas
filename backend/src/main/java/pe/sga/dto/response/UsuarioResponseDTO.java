@@ -12,8 +12,9 @@ import java.time.LocalDateTime;
 public class UsuarioResponseDTO {
 
     private Integer idUsuario;
-    private Integer idRol;
+    private String rol;
     private String nombreRol;
+    private Integer idRol;
     private Integer idSede;
     private String codigoSede;
     private String nombreSede;

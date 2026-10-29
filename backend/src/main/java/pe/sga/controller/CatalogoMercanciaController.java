@@ -10,6 +10,12 @@ import pe.sga.dto.response.ApiResponseDTO;
 import pe.sga.dto.response.CatalogoMercanciaResponseDTO;
 import pe.sga.service.ICatalogoMercanciaService;
 
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import pe.sga.service.IReporteJasperService;
+
+import java.io.ByteArrayInputStream;
 import java.util.List;
 
 @RestController
@@ -18,6 +24,7 @@ import java.util.List;
 public class CatalogoMercanciaController {
 
     private final ICatalogoMercanciaService mercanciaService;
+    private final IReporteJasperService reporteJasperService;
 
     @GetMapping
     public ResponseEntity<ApiResponseDTO<List<CatalogoMercanciaResponseDTO>>> listar(
@@ -32,6 +39,20 @@ public class CatalogoMercanciaController {
             lista = mercanciaService.listarTodos();
         }
         return ResponseEntity.ok(ApiResponseDTO.ok("Lista de mercancías recuperada exitosamente", lista));
+    }
+
+    @GetMapping("/exportar-pdf")
+    @org.springframework.security.access.prepost.PreAuthorize(pe.sga.config.SecurityRoles.ACCESS_SEDES_CATALOGOS_READ)
+    public ResponseEntity<InputStreamResource> exportarMercanciasPdf() {
+        ByteArrayInputStream pdfStream = reporteJasperService.exportarMercanciasPdf();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Content-Disposition", "inline; filename=reporte-subpartidas-arancelarias.pdf");
+
+        return ResponseEntity.ok()
+                .headers(headers)
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(new InputStreamResource(pdfStream));
     }
 
     @GetMapping("/{id}")

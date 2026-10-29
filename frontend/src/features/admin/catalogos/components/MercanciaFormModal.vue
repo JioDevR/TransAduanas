@@ -30,13 +30,9 @@
         <div class="field-item">
           <label for="merc-categoria">Categoría Arancelaria *</label>
           <select id="merc-categoria" v-model="form.categoria" class="select-input" required>
-            <option value="FARMACOS">Fármacos y Medicamentos</option>
-            <option value="ALIMENTOS">Alimentos y Perecibles</option>
-            <option value="TECNOLOGIA">Tecnología y Electrónica</option>
-            <option value="TEXTILES">Textiles y Calzado</option>
-            <option value="MAQUINARIA">Maquinaria y Repuestos</option>
-            <option value="QUIMICOS">Sustancias Químicas</option>
-            <option value="GENERAL">Carga General Miscelánea</option>
+            <option v-for="cat in categoryOptions" :key="cat" :value="cat">
+              {{ cat }}
+            </option>
           </select>
         </div>
 
@@ -131,6 +127,10 @@ const props = defineProps({
   mercanciaToEdit: {
     type: Object,
     default: null
+  },
+  existingCategories: {
+    type: Array,
+    default: () => []
   }
 })
 
@@ -139,10 +139,46 @@ const emit = defineEmits(['close', 'saved'])
 const loading = ref(false)
 const errorMessage = ref('')
 
+const defaultCategories = [
+  'Agroexportacion',
+  'Agropecuario',
+  'Alimentos',
+  'Autopartes',
+  'Bebidas',
+  'Calzado',
+  'Confecciones',
+  'Cosmetica',
+  'Electrohogar',
+  'Entretenimiento',
+  'Equipamiento',
+  'Farmacia',
+  'Ferreteria',
+  'Hogar',
+  'Jugueteria',
+  'Licores',
+  'Madera',
+  'Maquinaria',
+  'Nutricion',
+  'Pesca',
+  'Quimicos',
+  'Quimicos / IMO',
+  'Seguridad',
+  'Tabaco',
+  'Tecnologia',
+  'Transporte',
+  'Vehiculos'
+]
+
+const categoryOptions = computed(() => {
+  const merged = new Set([...props.existingCategories, ...defaultCategories])
+  if (form.value?.categoria) merged.add(form.value.categoria)
+  return Array.from(merged).filter(Boolean).sort((a, b) => a.localeCompare(b))
+})
+
 const defaultForm = () => ({
   codigo: '',
   nombre: '',
-  categoria: 'GENERAL',
+  categoria: 'Tecnologia',
   requierePermiso: false,
   entidadReguladora: 'DIGEMID',
   arancelBasePct: 0.0,

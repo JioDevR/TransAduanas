@@ -33,6 +33,14 @@ public class Expediente {
     @JoinColumn(name = "id_cliente", nullable = false)
     private Cliente cliente;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_mercancia")
+    private CatalogoMercancia mercancia;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_tipo_carga")
+    private CatalogoTipoCarga tipoCarga;
+
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "id_agente_aduanero", nullable = false)
     private Usuario agenteAduanero;

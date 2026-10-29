@@ -12,11 +12,14 @@ import pe.sga.entity.DocumentoAdjunto;
 import pe.sga.entity.Usuario;
 import pe.sga.entity.enums.EstadoCotizacion;
 import pe.sga.entity.enums.EstadoPagoCotizacion;
+import pe.sga.entity.enums.RolUsuario;
 import pe.sga.exception.BadRequestException;
 import pe.sga.exception.ResourceNotFoundException;
+import pe.sga.entity.NotificacionCliente;
 import pe.sga.repository.CotizacionPagoRepository;
 import pe.sga.repository.CotizacionRepository;
 import pe.sga.repository.IDocumentoAdjuntoRepository;
+import pe.sga.repository.NotificacionClienteRepository;
 import pe.sga.repository.UsuarioRepository;
 import pe.sga.service.ICotizacionPagoService;
 
@@ -34,6 +37,7 @@ public class CotizacionPagoServiceImpl implements ICotizacionPagoService {
     private final CotizacionRepository cotizacionRepository;
     private final UsuarioRepository usuarioRepository;
     private final IDocumentoAdjuntoRepository documentoRepository;
+    private final NotificacionClienteRepository notificacionClienteRepository;
 
     @Override
     @Transactional
@@ -45,8 +49,13 @@ public class CotizacionPagoServiceImpl implements ICotizacionPagoService {
             throw new BadRequestException("Solo se pueden registrar pagos para cotizaciones que han sido APROBADAS técnicamente. Estado actual: " + cotizacion.getEstado());
         }
 
-        Usuario usuario = usuarioRepository.findById(idUsuarioRegistro != null ? idUsuarioRegistro : 1)
-                .orElseThrow(() -> new ResourceNotFoundException("Usuario de registro no encontrado con ID: " + idUsuarioRegistro));
+        Usuario usuario = null;
+        if (idUsuarioRegistro != null && usuarioRepository.existsById(idUsuarioRegistro)) {
+            usuario = usuarioRepository.findById(idUsuarioRegistro).get();
+        } else {
+            usuario = usuarioRepository.findAll().stream().findFirst()
+                    .orElse(null);
+        }
 
         DocumentoAdjunto documentoComprobante = null;
         if (dto.getIdDocumentoComprobante() != null) {
@@ -126,8 +135,18 @@ public class CotizacionPagoServiceImpl implements ICotizacionPagoService {
         CotizacionPago pago = cotizacionPagoRepository.findById(idPago)
                 .orElseThrow(() -> new ResourceNotFoundException("Pago no encontrado con ID: " + idPago));
 
-        Usuario finanzas = usuarioRepository.findById(idUsuarioFinanzas != null ? idUsuarioFinanzas : 1)
-                .orElseThrow(() -> new ResourceNotFoundException("Usuario de finanzas no encontrado con ID: " + idUsuarioFinanzas));
+        Usuario finanzas = null;
+        if (idUsuarioFinanzas != null && usuarioRepository.existsById(idUsuarioFinanzas)) {
+            finanzas = usuarioRepository.findById(idUsuarioFinanzas).get();
+        } else {
+            finanzas = usuarioRepository.findAll().stream()
+                    .filter(u -> RolUsuario.CONTADOR.equals(u.getRol()) || RolUsuario.ADMINISTRADOR_TI.equals(u.getRol()))
+                    .findFirst()
+                    .orElseGet(() -> usuarioRepository.findAll().stream().findFirst().orElse(null));
+        }
+        if (finanzas == null) {
+            throw new ResourceNotFoundException("No se encontró ningún usuario habilitado para validar el pago");
+        }
 
         String accion = dto.getAccion().toUpperCase();
         Cotizacion cotizacion = pago.getCotizacion();
@@ -141,6 +160,23 @@ public class CotizacionPagoServiceImpl implements ICotizacionPagoService {
 
             // Recalcular saldo y totales de cotización
             recalcularFinanzasCotizacion(cotizacion);
+
+            // Notificación al portal de clientes B2B (Diagrama: Pago Aprobado / Habilitado para apertura de expediente)
+            if (cotizacion != null && cotizacion.getCliente() != null) {
+                NotificacionCliente notif = NotificacionCliente.builder()
+                        .cliente(cotizacion.getCliente())
+                        .titulo("Anticipo de Pago Validado: " + pago.getCodigoPago())
+                        .mensaje("Su abono de " + pago.getMoneda() + " " + pago.getMontoAbonado()
+                                + " (Operación N° " + pago.getNumeroOperacion() + ") para la cotización "
+                                + cotizacion.getCodigoCotizacion()
+                                + " ha sido verificado y aprobado por Finanzas. Su servicio queda expedito para la apertura del expediente aduanero.")
+                        .tipo("PAGO")
+                        .leido(false)
+                        .enlace("/pagos")
+                        .fechaCreacion(LocalDateTime.now())
+                        .build();
+                notificacionClienteRepository.save(notif);
+            }
         } else if ("OBSERVAR".equals(accion) || "OBSERVADO".equals(accion)) {
             pago.setEstadoPago(EstadoPagoCotizacion.OBSERVADO);
             pago.setUsuarioFinanzas(finanzas);
@@ -149,6 +185,25 @@ public class CotizacionPagoServiceImpl implements ICotizacionPagoService {
             cotizacionPagoRepository.save(pago);
 
             recalcularFinanzasCotizacion(cotizacion);
+
+            // Notificación al portal de clientes B2B (Diagrama BPMN: "Not. pago invalido")
+            if (cotizacion != null && cotizacion.getCliente() != null) {
+                String motivo = dto.getObservacionFinanzas() != null && !dto.getObservacionFinanzas().isBlank()
+                        ? dto.getObservacionFinanzas()
+                        : "El comprobante o datos de operación no coinciden con extractos bancarios.";
+                NotificacionCliente notif = NotificacionCliente.builder()
+                        .cliente(cotizacion.getCliente())
+                        .titulo("Abono Bancario Observado por Finanzas: " + pago.getCodigoPago())
+                        .mensaje("Su abono de " + pago.getMoneda() + " " + pago.getMontoAbonado()
+                                + " (Operación N° " + pago.getNumeroOperacion() + ") ha sido observado por el área de Finanzas. "
+                                + "Motivo: " + motivo + ". Ingrese a la sección de Cobros y Pagos para subsanar el voucher o corregir los datos.")
+                        .tipo("PAGO")
+                        .leido(false)
+                        .enlace("/pagos")
+                        .fechaCreacion(LocalDateTime.now())
+                        .build();
+                notificacionClienteRepository.save(notif);
+            }
         } else if ("RECHAZAR".equals(accion) || "RECHAZADO".equals(accion)) {
             pago.setEstadoPago(EstadoPagoCotizacion.RECHAZADO);
             pago.setUsuarioFinanzas(finanzas);
@@ -157,6 +212,23 @@ public class CotizacionPagoServiceImpl implements ICotizacionPagoService {
             cotizacionPagoRepository.save(pago);
 
             recalcularFinanzasCotizacion(cotizacion);
+
+            if (cotizacion != null && cotizacion.getCliente() != null) {
+                String motivo = dto.getObservacionFinanzas() != null && !dto.getObservacionFinanzas().isBlank()
+                        ? dto.getObservacionFinanzas()
+                        : "Comprobante rechazado por Finanzas.";
+                NotificacionCliente notif = NotificacionCliente.builder()
+                        .cliente(cotizacion.getCliente())
+                        .titulo("Abono Rechazado por Finanzas: " + pago.getCodigoPago())
+                        .mensaje("Su comprobante de abono (Operación N° " + pago.getNumeroOperacion()
+                                + ") fue rechazado. Motivo: " + motivo + ". Ingrese al portal para regularizar su pago.")
+                        .tipo("PAGO")
+                        .leido(false)
+                        .enlace("/pagos")
+                        .fechaCreacion(LocalDateTime.now())
+                        .build();
+                notificacionClienteRepository.save(notif);
+            }
         } else {
             throw new BadRequestException("Acción no válida: " + dto.getAccion() + ". Las opciones son APROBAR, OBSERVAR o RECHAZAR.");
         }
@@ -182,7 +254,14 @@ public class CotizacionPagoServiceImpl implements ICotizacionPagoService {
 
         for (CotizacionPago p : pagos) {
             if (p.getEstadoPago() == EstadoPagoCotizacion.APROBADO) {
-                totalAbonado = totalAbonado.add(p.getMontoAbonado());
+                BigDecimal montoEnUsd = p.getMontoAbonado() != null ? p.getMontoAbonado() : BigDecimal.ZERO;
+                if ("PEN".equalsIgnoreCase(p.getMoneda())) {
+                    BigDecimal tc = (p.getTipoCambio() != null && p.getTipoCambio().compareTo(BigDecimal.ZERO) > 0)
+                            ? p.getTipoCambio()
+                            : new BigDecimal("3.7500");
+                    montoEnUsd = montoEnUsd.divide(tc, 2, RoundingMode.HALF_UP);
+                }
+                totalAbonado = totalAbonado.add(montoEnUsd);
                 tieneAprobados = true;
             } else if (p.getEstadoPago() == EstadoPagoCotizacion.PENDIENTE_REVISION) {
                 tienePendientes = true;
@@ -217,8 +296,25 @@ public class CotizacionPagoServiceImpl implements ICotizacionPagoService {
 
     private String generarCodigoPago() {
         int year = LocalDate.now().getYear();
-        long count = cotizacionPagoRepository.count() + 1;
-        return String.format("PAG-COT-%d-%04d", year, count);
+        String prefix = String.format("PAG-COT-%d-", year);
+        long nextSeq = cotizacionPagoRepository.findUltimoPagoPorPrefijo(prefix)
+                .map(CotizacionPago::getCodigoPago)
+                .map(cod -> {
+                    try {
+                        String numPart = cod.substring(prefix.length());
+                        return Long.parseLong(numPart) + 1;
+                    } catch (Exception e) {
+                        return cotizacionPagoRepository.count() + 1;
+                    }
+                })
+                .orElseGet(() -> cotizacionPagoRepository.count() + 1);
+
+        String codigo;
+        do {
+            codigo = String.format("PAG-COT-%d-%04d", year, nextSeq);
+            nextSeq++;
+        } while (cotizacionPagoRepository.existsByCodigoPago(codigo));
+        return codigo;
     }
 
     private CotizacionPagoResponseDTO mapToResponse(CotizacionPago p) {

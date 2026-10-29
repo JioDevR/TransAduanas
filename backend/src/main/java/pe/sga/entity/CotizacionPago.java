@@ -84,7 +84,7 @@ public class CotizacionPago {
     private String observacionFinanzas;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_usuario_registro", nullable = false)
+    @JoinColumn(name = "id_usuario_registro", nullable = true)
     private Usuario usuarioRegistro;
 
     @Column(name = "fecha_registro", nullable = false)

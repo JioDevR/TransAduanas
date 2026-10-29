@@ -79,9 +79,12 @@
                 <div
                   class="dropdown-theme-row"
                   @click="toggleTheme"
+                  @keydown.enter="toggleTheme"
+                  @keydown.space.prevent="toggleTheme"
                   role="button"
                   tabindex="0"
                   :title="isDark ? 'Cambiar a Modo Claro' : 'Cambiar a Modo Oscuro'"
+                  :aria-label="isDark ? 'Cambiar a Modo Claro' : 'Cambiar a Modo Oscuro'"
                 >
                   <div class="theme-info-left">
                     <div class="theme-icon-box" :class="{ 'is-dark': isDark }">
@@ -185,6 +188,8 @@ const currentTitle = computed(() => {
       dashboard: 'Centro de Control y Monitoreo del Sistema TI',
       users: 'Gestor y Directorio de Usuarios TI',
       'create-user': 'Ficha de Registro de Operador',
+      'portal-users': 'Gestión de Usuarios del Portal B2B',
+      'create-portal-user': 'Alta de Usuario del Portal B2B',
       logs: 'Bitácora y Consola de Logs TI',
       about: 'Acerca del Sistema SGA'
     }
@@ -195,7 +200,10 @@ const currentTitle = computed(() => {
       dashboard: 'Dashboard Ejecutivo y Métricas Generales',
       overview: 'Dashboard Ejecutivo y Métricas Generales',
       sedes: 'Gestión Integral de Sedes y Agencias Territoriales',
-      catalogos: 'Catálogos Auxiliares (Puertos y Tipos de Carga)',
+      puertos: 'Puertos y Terminales Aduaneros',
+      'tipos-carga': 'Tipos de Carga & Contenedores Sugeridos',
+      mercancias: 'Mercancías y Subpartidas Arancelarias',
+      catalogos: 'Puertos y Terminales Aduaneros',
       flota: 'Parque Automotor & Flota de Transporte',
       conductores: 'Plantilla de Conductores Acreditados MTC'
     }
@@ -213,6 +221,7 @@ const currentTitle = computed(() => {
   if (navigationStore.currentModule === 'gestion-aduanera') {
     const sMap = {
       cotizaciones: 'Bandeja de Cotizaciones para Revisión Técnica',
+      apertura: 'Apertura de Expedientes Aduaneros',
       expedientes: 'Gestión Integral de Expedientes Aduaneros',
       declaraciones: 'Declaraciones DAM (Liquidación)',
       clasificacion: 'Clasificación Arancelaria NANDINA',
@@ -224,7 +233,15 @@ const currentTitle = computed(() => {
     return 'Agente Aduanero'
   }
   if (navigationStore.currentModule === 'transporte-flota') {
-    return 'Transporte y Flota'
+    const tTitles = {
+      cabina: 'Mi Trabajo Actual (Cabina)',
+      camion: 'Camión Asignado',
+      viajes: 'Historial de Mis Viajes',
+      despachos: 'Monitoreo Global de Despachos',
+      unidades: 'Parque Automotor & Flota de Transporte',
+      conductores: 'Plantilla de Conductores Acreditados MTC'
+    }
+    return tTitles[navigationStore.transporteFlotaSubOption] || 'Transporte y Flota'
   }
   if (navigationStore.currentModule === 'legal-auditoria') {
     return 'Legal y Auditoría'
@@ -246,13 +263,25 @@ const currentKicker = computed(() => {
     return kMap[navigationStore.comercialSubOption] || 'RECEPCIÓN COMERCIAL // PROSPECTOS & COTIZACIONES'
   }
   if (navigationStore.currentModule === 'gerencia-general') {
-    return 'DIRECCIÓN EJECUTIVA // GESTIÓN CORPORATIVA'
+    const gKickers = {
+      dashboard: 'DIRECCIÓN EJECUTIVA // GESTIÓN CORPORATIVA',
+      sedes: 'INFRAESTRUCTURA & CONTROL TERRITORIAL // SEDES ADUANERAS',
+      puertos: 'CATÁLOGOS AUXILIARES // PUERTOS & TERMINALES ADUANEROS',
+      'tipos-carga': 'CATÁLOGOS AUXILIARES // LOGÍSTICA DE TRANSPORTE',
+      mercancias: 'NOMENCLATURA & RESTRICCIONES // SUNAT VUCE',
+      catalogos: 'CATÁLOGOS AUXILIARES // TABLAS MAESTRAS ADUANERAS',
+      flota: 'TRANSPORTE PESADO // FLOTA OPERATIVA',
+      conductores: 'PERSONAL CERTIFICADO // CONDUCTORES MTC'
+    }
+    return gKickers[navigationStore.gerenciaGeneralSubOption] || 'DIRECCIÓN EJECUTIVA // GESTIÓN CORPORATIVA'
   }
   if (navigationStore.currentModule === 'administracion-ti') {
     const tiKickers = {
       dashboard: 'PANEL DE CONTROL TI // INFRAESTRUCTURA & SEGURIDAD',
       users: 'ADMINISTRACIÓN DE PERSONAL // SEGURIDAD & ACCESOS',
       'create-user': 'ALTA DE OPERADOR // SGA-FORM-00',
+      'portal-users': 'PORTAL DE CLIENTES B2B // CREDENCIALES CORPORATIVAS',
+      'create-portal-user': 'ALTA DE USUARIO EXTERNO // PORTAL B2B',
       logs: 'AUDITORÍA & MONITOREO // TRAZAS SPRING BOOT',
       about: 'INGENIERÍA DE SOFTWARE // FICHA TÉCNICA'
     }
@@ -261,8 +290,40 @@ const currentKicker = computed(() => {
   if (navigationStore.currentModule === 'gestion-aduanera') {
     return 'SUPERVISIÓN & CONTROL // OPERACIONES ADUANERAS'
   }
+  if (navigationStore.currentModule === 'agente-aduanero') {
+    const aKickers = {
+      almacen: 'TERMINAL LOGÍSTICO // RECEPCIÓN & CONTEO DE BULTOS',
+      expedientes: 'OPERATIVA DE CAMPO // SEGUIMIENTO & AFORO ADUANERO',
+      despacho: 'COORDINACIÓN LOGÍSTICA // SALIDA & DESPACHO DE CARGA'
+    }
+    return aKickers[navigationStore.agenteAduaneroSubOption] || 'OPERATIVA DE CAMPO // AGENCIA & ALMACÉN ADUANERO'
+  }
+  if (navigationStore.currentModule === 'transporte-flota') {
+    const tKickers = {
+      cabina: 'CABINA DE RUTA // OPERACIÓN EN TIEMPO REAL',
+      camion: 'UNIDAD DE TRANSPORTE // HOJA DE VIDA',
+      viajes: 'BITÁCORA DE VIAJES // HISTORIAL OPERATIVO',
+      despachos: 'TORRE DE CONTROL // DESPACHOS EN CURSO',
+      unidades: 'TRANSPORTE PESADO // FLOTA OPERATIVA',
+      conductores: 'PERSONAL CERTIFICADO // CONDUCTORES MTC'
+    }
+    return tKickers[navigationStore.transporteFlotaSubOption] || 'LOGÍSTICA TERRESTRE // TRANSPORTE & FLOTA'
+  }
   if (navigationStore.currentModule === 'finanzas') {
-    return 'GESTIÓN CONTABLE // TESORERÍA & FACTURACIÓN'
+    const fKickers = {
+      dashboard: 'PANEL FINANCIERO // RECAUDACIÓN & LIQUIDEZ',
+      'pre-expedientes': 'VALIDACIÓN DE ANTICIPOS // APERTURA OPERATIVA',
+      liquidaciones: 'CIERRE FINANCIERO // LIQUIDACIONES DE EXPEDIENTE',
+      conciliacion: 'TESORERÍA & BANCOS // CONCILIACIÓN DE ABONOS'
+    }
+    return fKickers[navigationStore.finanzasSubOption] || 'GESTIÓN CONTABLE // TESORERÍA & FACTURACIÓN'
+  }
+  if (navigationStore.currentModule === 'legal-auditoria') {
+    const lKickers = {
+      expedientes: 'CUMPLIMIENTO NORMATIVO // EXPEDIENTES & FISCALIZACIÓN',
+      auditorias: 'CONTROL LEGAL // AUDITORÍA & TRAZABILIDAD SUNAT'
+    }
+    return lKickers[navigationStore.legalAuditoriaSubOption] || 'CUMPLIMIENTO NORMATIVO // LEGAL & AUDITORÍA ADUANERA'
   }
   return null
 })
@@ -278,24 +339,72 @@ const currentSubtitle = computed(() => {
     return sMap[navigationStore.comercialSubOption] || 'Supervisión comercial, emisión de presupuestos aduaneros y formalización de expedientes operativos.'
   }
   if (navigationStore.currentModule === 'gerencia-general') {
-    return 'Supervisión global de sedes territoriales, parque automotor y conductores acreditados MTC.'
+    const gSubs = {
+      dashboard: 'Supervisión global de sedes territoriales, parque automotor y conductores acreditados MTC.',
+      sedes: 'Directorio de sedes centrales, agencias aduaneras territoriales y terminales logísticos autorizados.',
+      puertos: 'Supervisión y control maestro de terminales marítimos, aéreos, terrestres y fluviales acreditados.',
+      'tipos-carga': 'Especificaciones técnicas de carga suelta, FCL, LCL y capacidades de tara recomendadas.',
+      mercancias: 'Catálogo arancelario NANDINA, porcentajes ad-valórem y entidades reguladoras VUCE.',
+      catalogos: 'Supervisión y control maestro de terminales marítimos, aéreos, terrestres y fluviales acreditados.',
+      flota: 'Control técnico del parque automotor, inspecciones vehiculares y asignación de unidades.',
+      conductores: 'Padrón de choferes profesionales con licencias vigentes ante el MTC y acreditaciones SUNAT.'
+    }
+    return gSubs[navigationStore.gerenciaGeneralSubOption] || 'Supervisión global de sedes territoriales, parque automotor y conductores acreditados MTC.'
   }
   if (navigationStore.currentModule === 'administracion-ti') {
     const tiSubs = {
       dashboard: 'Supervisión en tiempo real de servicios core, personal aduanero activo, infraestructura territorial y bitácora.',
       users: 'Seguimiento de cuentas de operador aduanero, asignación de perfiles de acceso y supervisión de acreditaciones SUNAT.',
       'create-user': 'Complete los datos legales, acreditaciones aduaneras SUNAT y credenciales para dar de alta al operador.',
-      logs: 'Monitoreo de trazas de ejecución en Spring Boot 3, eventos JWT y diagnóstico de excepciones.',
+      'portal-users': 'Administración de credenciales de acceso externo para empresas clientes formalizadas en el Portal B2B.',
+      'create-portal-user': 'Vincule un cliente corporativo activo y genere sus credenciales iniciales para el Portal de Clientes B2B.',
+      logs: 'Monitoreo de trazas de ejecución en Spring Boot 4, eventos JWT y diagnóstico de excepciones.',
       about: 'Especificaciones de arquitectura, dependencias de compilación y estado del stack tecnológico.'
     }
     return tiSubs[navigationStore.administracionTiSubOption] || 'Control de accesos de operadores, parámetros de infraestructura y auditoría técnica del sistema.'
   }
+  if (navigationStore.currentModule === 'transporte-flota') {
+    const tSubs = {
+      cabina: 'Control en vivo del servicio de transporte en curso, confirmación de hitos y reporte de incidencias en ruta.',
+      camion: 'Detalles técnicos de la tractora, configuración de ejes, capacidad de arrastre y certificados CITV.',
+      viajes: 'Registro histórico de despachos ejecutados, tiempos de trayecto y liquidaciones de flete completadas.',
+      despachos: 'Visibilidad centralizada de todas las unidades en tránsito hacia terminales portuarios y almacenes.',
+      unidades: 'Control técnico del parque automotor, inspecciones vehiculares y asignación de unidades.',
+      conductores: 'Padrón de choferes profesionales con licencias vigentes ante el MTC y acreditaciones SUNAT.'
+    }
+    return tSubs[navigationStore.transporteFlotaSubOption] || 'Gestión integral de la flota vehicular y despacho terrestre aduanero.'
+  }
   if (navigationStore.currentModule === 'gestion-aduanera') {
     const sMap = {
       cotizaciones: 'Auditoría técnica de propuestas comerciales, control de partidas arancelarias y validación normativa.',
+      apertura: 'Formalización y apertura operativa de expedientes aduaneros para cotizaciones con pago verificado.',
       expedientes: 'Gestión integral de expedientes aduaneros, asignación de canales SUNAT y autorización de levante.'
     }
     return sMap[navigationStore.gestionAduaneraSubOption] || 'Auditoría técnica de propuestas, control de partidas, apertura de expedientes aduaneros y seguimiento SUNAT.'
+  }
+  if (navigationStore.currentModule === 'agente-aduanero') {
+    const aSubs = {
+      almacen: 'Control de ingreso físico a almacén, pesaje de balanza, conteo de bultos y verificación de precintos.',
+      expedientes: 'Ejecución de diligencias de campo, aforo físico con especialistas SUNAT y seguimiento de levante.',
+      despacho: 'Coordinación de retiro en terminal portuario/aeroportuario y entrega hacia transporte terrestre.'
+    }
+    return aSubs[navigationStore.agenteAduaneroSubOption] || 'Control de ingreso a almacén, pesaje, diligencias de aforo físico y coordinación de levante aduanero.'
+  }
+  if (navigationStore.currentModule === 'finanzas') {
+    const fSubs = {
+      dashboard: 'Visibilidad consolidada de ingresos, validación de vouchers bancarios, detracciones SPOT y flujo de caja.',
+      'pre-expedientes': 'Verificación de abonos de adelanto y tributos para habilitar la apertura de expedientes aduaneros.',
+      liquidaciones: 'Cálculo y facturación definitiva de servicios logísticos, almacenaje, transporte y gastos operativos.',
+      conciliacion: 'Auditoría y conciliación bancaria de transferencias, depósitos y comprobantes registrados.'
+    }
+    return fSubs[navigationStore.finanzasSubOption] || 'Validación de anticipos comerciales, liquidación financiera de expedientes y conciliación de tesorería.'
+  }
+  if (navigationStore.currentModule === 'legal-auditoria') {
+    const lSubs = {
+      expedientes: 'Revisión jurídico-aduanera de expedientes observados, canal rojo, rectificaciones DAM y sanciones.',
+      auditorias: 'Inspección integral de trazabilidad documentaria, cumplimiento SUNAT y dictámenes legales.'
+    }
+    return lSubs[navigationStore.legalAuditoriaSubOption] || 'Supervisión de cumplimiento normativo, revisión de expedientes observados y trazabilidad legal ante SUNAT.'
   }
   return null
 })

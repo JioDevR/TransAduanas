@@ -1,18 +1,21 @@
 package pe.sga.repository;
 
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
 import pe.sga.entity.DespachoTransporte;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
-@Repository
 public interface DespachoTransporteRepository extends JpaRepository<DespachoTransporte, Integer> {
 
     Optional<DespachoTransporte> findByCodigoTracking(String codigoTracking);
 
     Optional<DespachoTransporte> findByExpediente_IdExpediente(Integer idExpediente);
+
+    @EntityGraph(attributePaths = {"conductor", "unidad"})
+    List<DespachoTransporte> findByExpediente_IdExpedienteIn(Collection<Integer> idsExpediente);
 
     boolean existsByCodigoTracking(String codigoTracking);
 

@@ -157,9 +157,9 @@
           responsiveLayout="scroll"
           class="custom-datatable"
           dataKey="idConductor"
-          :paginator="filteredConductores.length > 10"
-          :rows="10"
-          :rowsPerPageOptions="[10, 20, 50]"
+          :paginator="filteredConductores.length > 15"
+          :rows="15"
+          :rowsPerPageOptions="[15, 30, 50]"
         >
           <template #empty>
             <div class="empty-state-box">
@@ -423,7 +423,7 @@ import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import Tag from 'primevue/tag'
 import Dialog from 'primevue/dialog'
-import { transporteFlotaService } from '@/features/roles-modules/services/transporteFlotaService'
+import { transporteFlotaService } from '@/features/transporte/services/transporteFlotaService'
 import { userService } from '@/features/admin/users/services/userService'
 import { useNotification } from '@/shared/composables/useNotification'
 

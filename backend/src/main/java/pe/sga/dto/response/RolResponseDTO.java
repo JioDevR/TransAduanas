@@ -12,6 +12,7 @@ public class RolResponseDTO {
 
     private Integer idRol;
     private RolUsuario nombreRol;
+    private String rol;
     private String descripcion;
     private Boolean estadoActivo;
 }

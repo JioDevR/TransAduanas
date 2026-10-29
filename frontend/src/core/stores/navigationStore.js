@@ -8,11 +8,11 @@ export const useNavigationStore = defineStore('navigation', {
     activeModule: 'administracion-ti',
     // Sub-opciones en Administración TI: 'dashboard' | 'users' | 'sedes' | 'catalogos' | 'logs' | 'about'
     administracionTiSubOption: 'dashboard',
-    // Sub-opciones en Gerencia General: 'dashboard' | 'sedes' | 'catalogos' | 'flota' | 'conductores'
+    // Sub-opciones en Gerencia General: 'dashboard' | 'sedes' | 'puertos' | 'tipos-carga' | 'mercancias' | 'flota' | 'conductores'
     gerenciaGeneralSubOption: 'dashboard',
     // Sub-opciones en Recepción Comercial: 'dashboard' | 'cotizaciones' | 'clientes' | 'ordenes'
     comercialSubOption: 'dashboard',
-    // Sub-opciones en Gestión Aduanera: 'cotizaciones' | 'expedientes' | 'declaraciones' | 'clasificacion' | 'tributos'
+    // Sub-opciones en Gestión Aduanera: 'cotizaciones' | 'apertura' | 'expedientes' | 'declaraciones' | 'clasificacion' | 'tributos'
     gestionAduaneraSubOption: 'cotizaciones',
     // Sub-opciones en Agente Aduanero: 'almacen' | 'expedientes' | 'despacho'
     agenteAduaneroSubOption: 'almacen',
@@ -43,7 +43,7 @@ export const useNavigationStore = defineStore('navigation', {
       return ROLE_MODULE_MAP[authStore.userRole] || 'comercial'
     },
 
-    moduleTitle: (state) => {
+    moduleTitle() {
       const titles = {
         'administracion-ti': 'Administración TI',
         'gerencia-general': 'Gerencia General',
@@ -54,7 +54,7 @@ export const useNavigationStore = defineStore('navigation', {
         'finanzas': 'Finanzas',
         'legal-auditoria': 'Legal y Auditoría'
       }
-      return titles[state.currentModule] || 'Operaciones'
+      return titles[this.currentModule] || 'Operaciones'
     },
 
     // Getters de compatibilidad con nombres antiguos
@@ -100,8 +100,9 @@ export const useNavigationStore = defineStore('navigation', {
     },
 
     setGerenciaGeneralSubOption(option) {
-      if (this.gerenciaGeneralSubOption === option) return
-      this.gerenciaGeneralSubOption = option
+      const target = option === 'catalogos' ? 'puertos' : option
+      if (this.gerenciaGeneralSubOption === target) return
+      this.gerenciaGeneralSubOption = target
       this.navTick++
     },
     setGerenciaSubOption(option) {

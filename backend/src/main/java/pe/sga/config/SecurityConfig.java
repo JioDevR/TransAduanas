@@ -3,7 +3,6 @@ package pe.sga.config;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -66,6 +65,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // Rutas públicas de autenticación y salud
                         .requestMatchers("/api/v1/auth/**").permitAll()
+                        .requestMatchers("/api/v1/portal/auth/**").permitAll()
                         .requestMatchers("/api/v1/health/**").permitAll()
                         // Catálogos públicos de solo lectura
                         .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/v1/catalogos/**").permitAll()

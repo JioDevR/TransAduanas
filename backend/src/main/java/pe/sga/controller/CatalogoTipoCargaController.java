@@ -10,6 +10,12 @@ import pe.sga.dto.response.ApiResponseDTO;
 import pe.sga.dto.response.CatalogoTipoCargaResponseDTO;
 import pe.sga.service.ICatalogoTipoCargaService;
 
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import pe.sga.service.IReporteJasperService;
+
+import java.io.ByteArrayInputStream;
 import java.util.List;
 
 @RestController
@@ -18,6 +24,7 @@ import java.util.List;
 public class CatalogoTipoCargaController {
 
     private final ICatalogoTipoCargaService tipoCargaService;
+    private final IReporteJasperService reporteJasperService;
 
     @GetMapping
     public ResponseEntity<ApiResponseDTO<List<CatalogoTipoCargaResponseDTO>>> listar(
@@ -26,6 +33,20 @@ public class CatalogoTipoCargaController {
                 ? tipoCargaService.listarActivos()
                 : tipoCargaService.listarTodos();
         return ResponseEntity.ok(ApiResponseDTO.ok("Lista de tipos de carga recuperada", tipos));
+    }
+
+    @GetMapping("/exportar-pdf")
+    @org.springframework.security.access.prepost.PreAuthorize(pe.sga.config.SecurityRoles.ACCESS_SEDES_CATALOGOS_READ)
+    public ResponseEntity<InputStreamResource> exportarTiposCargaPdf() {
+        ByteArrayInputStream pdfStream = reporteJasperService.exportarTiposCargaPdf();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Content-Disposition", "inline; filename=reporte-tipos-carga.pdf");
+
+        return ResponseEntity.ok()
+                .headers(headers)
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(new InputStreamResource(pdfStream));
     }
 
     @GetMapping("/{id}")

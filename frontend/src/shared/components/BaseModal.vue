@@ -208,7 +208,7 @@ const requestClose = () => {
 .base-modal-dialog .select-input,
 .base-modal-dialog .textarea-input {
   width: 100%;
-  background: var(--color-bg-surface);
+  background-color: var(--color-bg-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   padding: 0.65rem 0.85rem;
@@ -231,7 +231,7 @@ const requestClose = () => {
 .base-modal-dialog .textarea-input:disabled {
   opacity: 0.6;
   cursor: not-allowed;
-  background: var(--color-bg-muted);
+  background-color: var(--color-bg-muted);
 }
 
 .base-modal-dialog .field-hint {

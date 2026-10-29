@@ -43,6 +43,10 @@ _Documento de Especificación de Arquitectura Frontend, Tecnologías, Patrones d
    - [9.11 Archivo Documental Digital](#911-archivo-documental-digital)
 10. [Biblioteca de Componentes Compartidos y Composables](#10-biblioteca-de-componentes-compartidos-y-composables)
 11. [Configuración, Entorno y Puesta en Marcha](#11-configuración-entorno-y-puesta-en-marcha)
+12. [Portal del Cliente B2B (portal-cliente)](#12-portal-del-cliente-b2b-portal-cliente)
+   - [12.1 Arquitectura y Estructura Modular](#121-arquitectura-y-estructura-modular)
+   - [12.2 Consumo de Servicios y Endpoints B2B](#122-consumo-de-servicios-y-endpoints-b2b)
+   - [12.3 Sistema de Diseño Warm Editorial y Modo Oscuro](#123-sistema-de-diseño-warm-editorial-y-modo-oscuro)
 
 ---
 
@@ -259,32 +263,61 @@ frontend/
     │   └── stores/
     │       └── navigationStore.js       # Store Pinia para conmutación de módulos y sub-pestañas
     │
-    ├── features/                        # Módulos Funcionales por Dominio
+    ├── features/                        # Módulos Funcionales por Dominio de Negocio
+    │   ├── admin/                       # Módulo de Administración TI
+    │   │   ├── about/views/             # Vista informativa del sistema (AboutSystemView.vue)
+    │   │   ├── catalogos/               # Puertos, Tipos de Carga y Mercancías (vistas, modales, servicios)
+    │   │   ├── dashboard/views/         # Panel ejecutivo y métricas generales (AdminDashboardView.vue)
+    │   │   ├── portal-users/            # Gestión de cuentas B2B (PortalUserManagementView, modales, service)
+    │   │   ├── sedes/                   # Gestión territorial de agencias (SedesManagementView, modal, service)
+    │   │   ├── services/logsService.js  # Servicio de consulta en vivo y descarga de logs
+    │   │   ├── users/                   # Directorio de operadores y roles (UserManagementView, modales, service)
+    │   │   └── views/SystemLogsView.vue # Visor en tiempo real de logs del backend
+    │   │
     │   ├── auth/                        # Módulo de Autenticación
     │   │   ├── routes/auth.routes.js    # Ruta /login
     │   │   ├── services/authService.js  # Consumo de /api/v1/auth/login y /me
     │   │   ├── stores/authStore.js      # Estado de sesión, usuario conectado y permisos
     │   │   └── views/LoginView.vue      # Vista de inicio de sesión con estilo editorial
     │   │
-    │   ├── admin/                       # Módulo de Administración TI
-    │   │   ├── about/views/             # Vista informativa del sistema (AboutSystemView.vue)
-    │   │   ├── catalogos/               # Gestión de Puertos, Tipos de Carga y Mercancías
-    │   │   ├── overview/views/          # Panel ejecutivo y métricas generales
-    │   │   ├── sedes/                   # Gestión territorial de agencias y sedes operativas
-    │   │   ├── services/logsService.js  # Servicio de consulta en vivo y descarga de logs
-    │   │   ├── users/                   # Directorio de operadores, roles y asignación de sedes
-    │   │   └── views/SystemLogsView.vue # Visor en tiempo real de logs del backend
-    │   │
     │   ├── gerencia/                    # Módulo de Gerencia General
     │   │   ├── routes/gerencia.routes.js# Rutas protegidas para GERENTE_GENERAL
-    │   │   └── views/                   # Padrón de Flota y Conductores Acreditados MTC
+    │   │   └── views/                   # Dashboard ejecutivo (GerenciaDashboardView.vue), flota y choferes
     │   │
-    │   ├── roles-modules/               # Módulos Operativos Centrales del Sistema
-    │   │   ├── components/              # Modales de alta densidad operativa (DAM, Almacén, Pagos)
+    │   ├── comercial/                   # Módulo de Recepción Comercial
+    │   │   ├── components/              # Calculadora 4 pasos, stepper, proforma preview y cliente modal
+    │   │   ├── composables/             # useCotizacionCalculator, useModalidadPuertos, useCotizacionCorrection
     │   │   ├── data/peruUbigeo.js       # Catálogo maestro de departamentos, provincias y distritos
-    │   │   ├── routes/roles.routes.js   # Rutas para Agente Comercial, Supervisor, Contador, etc.
-    │   │   ├── services/                # Servicios HTTP de negocio (comercial, aduanas, finanzas)
-    │   │   └── views/                   # Vistas principales de los roles operativos
+    │   │   ├── services/                # comercialService.js, expedienteService.js
+    │   │   └── views/                   # RecepcionComercialView.vue
+    │   │
+    │   ├── aduanas/                     # Módulo de Gestión Aduanera
+    │   │   ├── components/              # Apertura DAM, Canal/Levante, Auditoría, Tránsito y Modales
+    │   │   ├── services/                # gestionAduaneraService.js, expedienteService.js
+    │   │   ├── utils/                   # aprobacionAduaneraUtils.js
+    │   │   └── views/                   # GestionAduaneraView.vue
+    │   │
+    │   ├── almacen/                     # Módulo de Depósito Temporal y Custodia
+    │   │   ├── components/              # IngresoAlmacenModal.vue (pesaje balanza VGM)
+    │   │   ├── services/                # almacenService.js, expedienteService.js
+    │   │   └── views/                   # AgenteAduaneroView.vue
+    │   │
+    │   ├── transporte/                  # Módulo de Transporte y Flota
+    │   │   ├── components/              # AsignarRecursosModal, CrearDespachoModal, ConfirmarEntregaModal
+    │   │   ├── services/                # transporteFlotaService.js, expedienteService.js
+    │   │   └── views/                   # TransporteFlotaView.vue
+    │   │
+    │   ├── finanzas/                    # Módulo de Finanzas y Tesorería
+    │   │   ├── components/              # RegistroPagoFullView.vue (validación anticipos y comprobantes)
+    │   │   ├── services/                # finanzasService.js, expedienteService.js
+    │   │   └── views/                   # FinanzasView.vue
+    │   │
+    │   ├── liquidacion/                 # Módulo de Liquidación Aduanera y Tributaria
+    │   │   └── views/                   # LiquidacionAduaneraView.vue
+    │   │
+    │   ├── legal/                       # Módulo de Asesoría Legal y Normativa
+    │   │   ├── components/              # AuditoriaExpedienteModal.vue
+    │   │   └── views/                   # LegalAuditoriaView.vue
     │   │
     │   └── documentos/                  # Módulo de Archivo Digital y Gestión Documental
     │       └── services/documentoService.js # Carga multipart, descarga y preview de archivos
@@ -497,10 +530,10 @@ router.beforeEach(async (to, from, next) => {
 
 ### 8.2 Matriz de Enrutamiento por Roles Institucionales
 
-| Rol Institucional           | Ruta de Inicio (`homePath`)   | Módulos y Rutas Autorizadas                                                                                                                    |
-| :-------------------------- | :---------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------- |
-| **`ADMINISTRADOR_TI`**      | `/administracion-ti/usuarios` | Acceso global irrestricto a todos los módulos y consolas TI (`/administracion-ti/*`, `/gerencia-general/*`, módulos operativos).               |
-| **`GERENTE_GENERAL`**       | `/gerencia-general/sedes`     | Cuadros de mando, sedes, catálogos, flota, choferes y conmutación de supervisión operativa.                                                    |
+| Rol Institucional           | Ruta de Inicio (`homePath`)    | Módulos y Rutas Autorizadas                                                                                                                    |
+| :-------------------------- | :----------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------- |
+| **`ADMINISTRADOR_TI`**      | `/administracion-ti/dashboard` | Acceso global irrestricto a todos los módulos y consolas TI (`/administracion-ti/*`, `/gerencia-general/*`, módulos operativos).               |
+| **`GERENTE_GENERAL`**       | `/gerencia-general/dashboard`  | Cuadros de mando, dashboard ejecutivo, sedes, catálogos, flota, choferes y conmutación de supervisión operativa.                               |
 | **`AGENTE_COMERCIAL`**      | `/recepcion-comercial`        | Bandeja de cotizaciones, calculadora aduanera y directorio de clientes/prospectos (`/recepcion-comercial`).                                    |
 | **`SUPERVISOR_ADUANERO`**   | `/gestion-aduanera`           | Revisión técnica de propuestas, apertura de expedientes DAM, asignación de canal SUNAT (`/gestion-aduanera`, `/gestion-aduanera/liquidacion`). |
 | **`AGENTE_ADUANERO`**       | `/agente-aduanero`            | Depósito temporal, control de pesaje balanza VGM y verificación de levante aduanero (`/agente-aduanero`).                                      |
@@ -537,13 +570,20 @@ router.beforeEach(async (to, from, next) => {
 
 ### 9.3 Administración TI y Consola del Sistema (`features/admin`)
 
-- **Gestión de Usuarios (`UserManagementView`):**
+- **Dashboard Ejecutivo TI (`AdminDashboardView.vue`):**  
+  Panel de control de infraestructura, métricas de actividad del sistema, estado de conexión de servicios y atajos de gobernanza.
+- **Gestión de Usuarios Operadores (`UserManagementView`):**
   - Resumen KPI en tiempo real: Usuarios Totales, Cuentas Activas, Cuentas Desactivadas y Roles del Sistema.
   - Búsqueda interactiva multitexto (usuario, nombres, correo, cargo, sede).
   - Modal para registro de nuevo operador (`UserRegistrationForm.vue`).
   - Modal para edición de datos y reasignación de rol o sede en caliente.
   - Acciones de baja lógica (`DELETE /api/v1/usuarios/{id}`) y reactivación (`PATCH /api/v1/usuarios/{id}/reactivar`).
   - Botón directo para descargar el padrón oficial generado en PDF por JasperReports en el backend.
+- **Gestión de Cuentas B2B del Portal (`PortalUserManagementView.vue`):**
+  - Directorio exclusivo para habilitar o suspender cuentas de acceso al Portal del Cliente B2B para importadores/exportadores.
+  - Modal de alta y vinculación a cliente (`PortalUserForm.vue`).
+  - Reseteo seguro de contraseña temporal (`PortalUserResetPasswordModal.vue`).
+  - Modal de auditoría y trazabilidad de accesos (`PortalUserAuditModal.vue`).
 - **Bitácora y Consola de Logs TI (`SystemLogsView`):**
   - Visor interactivo en vivo del archivo `sga-backend.log`.
   - Selector de profundidad de líneas (50, 100, 200, 500 líneas).
@@ -551,89 +591,104 @@ router.beforeEach(async (to, from, next) => {
 - **Sedes Territoriales (`SedesManagementView`):**
   - Directorio de agencias (Callao, Paita, Matarani, Aeropuerto Jorge Chávez).
   - Modal para alta de nueva sede (`SedeRegistrationForm.vue`) y exportación oficial en PDF.
-- **Catálogos Auxiliares (`CatalogosManagementView`):**
+- **Catálogos Auxiliares (`PuertosManagementView`, `TiposCargaManagementView`, `MercanciasManagementView`):**
   - Mantenimiento unificado de puertos/terminales marítimos y aéreos, tipos de carga aduanera y catálogo de mercancías con partidas NANDINA.
 
 ---
 
 ### 9.4 Gerencia General (`features/gerencia`)
 
-- **Padrón de Conductores Acreditados MTC (`GerenciaConductoresView`):**
+- **Dashboard Ejecutivo Gerencial (`GerenciaDashboardView.vue`):**  
+  Cuadros de mando consolidados con KPIs clave de agenciamiento aduanero, volumen financiero facturado, distribución de canales SUNAT y estado de flota.
+- **Padrón de Conductores Acreditados MTC:**
   - Directorio de choferes profesionales con tipo y vigencia de licencia de conducir MTC.
   - Monitoreo de estado operativo (`DISPONIBLE`, `EN_RUTA`, `DESCANSO`).
-- **Parque Automotor y Flota Terrestre (`GerenciaFlotaView`):**
+- **Parque Automotor y Flota Terrestre:**
   - Listado de tractocamiones, semirremolques y plataformas aduaneras.
   - Control de placas, número de ejes, capacidad de carga útil en toneladas y vigencia de pólizas de seguro SOAT.
 
 ---
 
-### 9.5 Recepción Comercial (`RecepcionComercialView.vue`)
+### 9.5 Recepción Comercial (`features/comercial`)
 
-- **Dashboard Comercial & Ventas:** Tarjetas de métricas consolidadas (Volumen cotizado en USD, Tasa de conversión, Propuestas en evaluación).
+- **Dashboard Comercial & Ventas (`RecepcionComercialView.vue`):**  
+  Tarjetas de métricas consolidadas (Volumen cotizado en USD, Tasa de conversión, Propuestas en evaluación).
 - **Calculadora y Asistente de Cotización en 4 Pasos (`CotizacionRegistrationForm.vue`):**
   1. _Paso 1 - Datos de la Operación:_ Selección de cliente (o creación rápida en modal), régimen (Importación para el Consumo / Exportación Definitiva), puerto de origen/destino y tipo de carga.
   2. _Paso 2 - Logística y Flete:_ Registro de valor FOB en USD, divisa, peso bruto en kilogramos, volumen en CBM y estimación de flete internacional.
   3. _Paso 3 - Tributos y Aranceles:_ Subpartida arancelaria NANDINA de 10 dígitos, porcentaje de Ad-Valórem (0%, 6%, 11%), cálculo automático de base imponible, IGV SUNAT, seguro y honorarios de agenciamiento.
-  4. _Paso 4 - Proforma y Emisión:_ Vista previa formal de la cotización comercial con código correlativo generado y desglose contable antes del guardado definitivo.
-- **Directorio de Clientes & Prospectos:** Cartera comercial con consulta y validación de RUC, Razón Social, dirección fiscal y contacto operativo.
+  4. _Paso 4 - Proforma y Emisión:_ Vista previa formal de la cotización comercial con código correlativo generado (`COT-YYYY-XXXX`) y desglose contable antes del guardado definitivo.
+- **Directorio de Clientes & Prospectos (`ClienteRegistrationForm.vue`):**  
+  Cartera comercial con consulta y validación de RUC, Razón Social, dirección fiscal y contacto operativo.
 
 ---
 
-### 9.6 Gestión Aduanera (`GestionAduaneraView.vue`)
+### 9.6 Gestión Aduanera (`features/aduanas`)
 
-- **Bandeja de Revisión Técnica de Cotizaciones:** Auditoría exhaustiva de propuestas formuladas por el área comercial. Permite aprobar, observar o rechazar técnicamente la operación.
-- **Apertura de Expediente Aduanero DAM (`AperturaExpedienteModal.vue`):**  
-  Aplica en interfaz la **Compuerta Financiera**: solo permite aperturar el expediente aduanero si la cotización cuenta con un pago o anticipo aprobado por Finanzas.
+- **Bandeja de Revisión Técnica de Cotizaciones (`GestionAduaneraView.vue`):**  
+  Auditoría exhaustiva de propuestas formuladas por el área comercial. Permite aprobar, observar o rechazar técnicamente la operación.
+- **Apertura de Expediente Aduanero DAM (`AperturaExpedienteModal.vue` / `AperturaExpedienteView.vue`):**  
+  Aplica en interfaz la **Compuerta Financiera**: solo permite aperturar el expediente aduanero si la cotización cuenta con un pago o anticipo aprobado por Finanzas. Genera código `EXP-YYYY-XXXX`.
 - **Control de Canal SUNAT y Levante (`CanalLevanteModal.vue`):**  
   Asignación del número de DAM oficial (118-YYYY-10-XXXXXX) y semáforo de riesgo SUNAT:
   - `VERDE`: Levante automático sin revisión documental ni física.
   - `NARANJA`: Revisión documental previa por vista de aduana.
   - `ROJO`: Reconocimiento físico obligatorio y verificación de precintos en depósito temporal.
+- **Operaciones de Cierre y Diligencias:**  
+  Modales para tránsito, diligencia de campo, solicitud de transporte y cierre formal del expediente aduanero.
 
 ---
 
-### 9.7 Agente Aduanero (`AgenteAduaneroView.vue`)
+### 9.7 Depósito Temporal y Almacén (`features/almacen`)
 
-- **Control de Depósito Temporal y Almacén:**
+- **Control de Depósito Temporal y Almacén (`AgenteAduaneroView.vue`):**
   - Registro de ingreso de carga al almacén aduanero (`IngresoAlmacenModal.vue`).
   - Registro obligatorio de pesaje en báscula certificada VGM (_Verified Gross Mass_) según enmienda SOLAS.
   - Autorización formal de salida de carga vinculando la validación del levante aduanero.
 
 ---
 
-### 9.8 Transporte y Flota (`TransporteFlotaView.vue`)
+### 9.8 Transporte y Flota (`features/transporte`)
 
 - **Programación de Despachos Terrestres (`CrearDespachoModal.vue`):**  
-  Generación de orden de transporte con código correlativo `DSP-YYYYMM-XXXX`.
+  Generación de orden de transporte con código correlativo de tracking `TRK-YYYY-XXXX`.
 - **Asignación de Recursos (`AsignarRecursosModal.vue`):**  
   Asigna chofer con licencia MTC vigente y tracto disponible.
-- **Control de Ruta y Tracking en Vivo:**
+- **Control de Ruta y Tracking en Vivo (`TransporteFlotaView.vue`):**
   - Marcado de salida del depósito temporal e inicio de tránsito a planta del cliente.
   - Registro de incidencias en ruta con notificación instantánea.
   - Confirmación de entrega conforme (`ConfirmarEntregaModal.vue`), liberando automáticamente el vehículo y al chofer para nuevos servicios.
 
 ---
 
-### 9.9 Finanzas (`FinanzasView.vue`)
+### 9.9 Finanzas y Tesorería (`features/finanzas`)
 
-- **Bandeja de Anticipos Pre-Expediente:**  
-  Inspección y validación de comprobantes de pago bancarios subidos por el cliente o área comercial. Su aprobación formal desbloquea la apertura del expediente aduanero.
-- **Emisión de Liquidación Financiera Final:**  
-  Consolidación de tributos SUNAT, gastos de almacenaje, fletes locales y honorarios profesionales con desglose de IGV (18%) y retención/detracción SPOT (12%).
+- **Bandeja de Anticipos Pre-Expediente (`FinanzasView.vue` & `RegistroPagoFullView.vue`):**  
+  Inspección y validación de comprobantes de pago bancarios subidos por el cliente o área comercial. Su aprobación formal desbloquea la compuerta financiera para apertura del expediente aduanero.
 - **Conciliación Bancaria y Métricas:**  
   Indicadores de volumen facturado, saldo por cobrar y cobranzas recaudadas en USD y PEN.
 
 ---
 
-### 9.10 Legal y Auditoría Normativa (`LegalAuditoriaView.vue`)
+### 9.10 Liquidación Aduanera y Tributaria (`features/liquidacion`)
 
-- Auditoría jurídica de expedientes aduaneros cerrados o en trámite.
-- Inspección de permisos sectoriales obligatorios (VUCE, DIGEMID para fármacos, SENASA para alimentos/agro, SUCAMEC para materiales restringidos).
-- Verificación de plazos máximos para evitar abandono legal de mercancías ante SUNAT.
+- **Liquidación Final y Cierre Contable (`LiquidacionAduaneraView.vue`):**  
+  - Consolidación de tributos SUNAT, gastos de almacenaje, fletes locales y honorarios profesionales con desglose de IGV (18%) y retención/detracción SPOT (12% cuando `totalPen >= 700.00`).
+  - Emisión de código correlativo `LIQ-YYYY-XXXX`.
+  - Generación de actas y constancias de pago.
 
 ---
 
-### 9.11 Archivo Documental Digital (`features/documentos`)
+### 9.11 Asesoría Legal y Auditoría Normativa (`features/legal`)
+
+- **Auditoría Regulatoria (`LegalAuditoriaView.vue` & `AuditoriaExpedienteModal.vue`):**  
+  - Fiscalización jurídica de expedientes aduaneros cerrados o en trámite.
+  - Inspección de permisos sectoriales obligatorios (VUCE, DIGEMID para fármacos, SENASA para alimentos/agro, SUCAMEC para materiales restringidos).
+  - Verificación de plazos máximos para evitar abandono legal de mercancías ante SUNAT.
+
+---
+
+### 9.12 Archivo Documental Digital (`features/documentos`)
 
 - Carga de archivos sustentatorios mediante zona interactiva de arrastre (_Drag & Drop_) o explorador del sistema (`DocumentosUploadPanel.vue`).
 - Clasificación por categorías normativas: Factura Comercial, Packing List, Conocimiento de Embarque (BL), DAM, Comprobante de Pago, Ticket de Balanza VGM.
@@ -727,3 +782,64 @@ npm run preview
 
 Una vez iniciado el servidor de desarrollo, la aplicación estará accesible en:  
 `http://localhost:5180` (o el puerto asignado por Vite, usualmente `5173`/`5180`).
+
+---
+
+## 12. Portal del Cliente B2B (`portal-cliente/`)
+
+### 12.1 Arquitectura y Estructura Modular
+
+El **Portal del Cliente** es una Single Page Application (SPA) independiente alojada en el directorio [`portal-cliente/`](file:///home/jiodev/Documents/Proyects/TransAduanas/portal-cliente), concebida específicamente para los clientes corporativos (importadores y exportadores) de TransAduanas.
+
+Implementa una arquitectura desacoplada basada en dominios de autoservicio:
+
+```
+portal-cliente/src/
+├── core/                                  # Infraestructura transversal del portal
+│   ├── api/apiClient.js                   # Instancia Axios con inyección de Bearer token y redirección en 401
+│   ├── layouts/PortalLayout.vue           # Shell corporativo (Topbar con RUC/Razón Social y navegación)
+│   ├── router/index.js                    # Enrutamiento protegido para clientes con Navigation Guards
+│   └── stores/authStore.js                # Pinia store de autenticación B2B y perfil empresarial
+│
+├── features/                              # Módulos de autoservicio B2B
+│   ├── auth/                              # Autenticación y cambio de credenciales
+│   │   └── views/
+│   │       ├── PortalLoginView.vue        # Login B2B (RUC/Usuario + Contraseña)
+│   │       └── PortalCambioPasswordObligatorioView.vue # Cambio forzoso de clave temporal
+│   ├── cotizaciones/                      # Proformas y cotizaciones aduaneras
+│   │   ├── services/portalCotizacionService.js
+│   │   └── views/CotizacionesListView.vue # Bandeja de cotizaciones y aceptación formal con 1 clic
+│   ├── expedientes/                       # Trazabilidad operativa de despachos
+│   │   ├── services/portalExpedienteService.js
+│   │   └── views/ExpedientesTrackingView.vue # Tracking en vivo (DAM, canal SUNAT, hitos y docs)
+│   ├── pagos/                             # Obligaciones financieras y comprobantes
+│   │   ├── services/portalPagoService.js
+│   │   └── views/
+│   │       ├── CobrosPagosView.vue        # Resumen financiero, anticipos y liquidaciones
+│   │       └── RegistrarPagoView.vue      # Carga multipart de vouchers y subsanación
+│   └── notificaciones/                    # Centro de avisos y notificaciones operativas
+│       ├── services/portalNotificationService.js
+│       └── views/PortalNotificacionesView.vue # Alertas de cambios de canal SUNAT, levante y pagos
+│
+└── shared/                                # Biblioteca de componentes reutilizables
+    ├── components/                        # BaseModal.vue, BasePagination.vue
+    ├── composables/                       # useNotification.js, useConfirmation.js, useTheme.js
+    └── utils/                             # download.js (descarga de BL, facturas, vouchers y actas)
+```
+
+### 12.2 Consumo de Servicios y Endpoints B2B
+
+El portal consume exclusivamente los endpoints del controlador `PortalController.java` bajo la ruta base `/api/v1/portal/**`:
+- **Autenticación y Perfil:** `/api/v1/portal/auth/login`, `/api/v1/portal/auth/cambiar-password`, `/api/v1/portal/perfil`
+- **Gestión de Cotizaciones:** `/api/v1/portal/cotizaciones`, `/api/v1/portal/cotizaciones/{id}`, `/api/v1/portal/cotizaciones/solicitar`, `/api/v1/portal/cotizaciones/{id}/aceptar`
+- **Trazabilidad de Expedientes y Documentos:** `/api/v1/portal/expedientes`, `/api/v1/portal/expedientes/{id}`, `/api/v1/portal/expedientes/{id}/documentos`
+- **Centro Financiero de Pagos:** `/api/v1/portal/pagos/resumen`, `/api/v1/portal/pagos/obligaciones-pendientes`, `/api/v1/portal/pagos/anticipos`, `/api/v1/portal/pagos/liquidaciones`, `/api/v1/portal/pagos/registrar-voucher`, `/api/v1/portal/pagos/upload-comprobante`, `/api/v1/portal/pagos/anticipos/{idPago}/corregir`
+- **Notificaciones en Tiempo Real:** `/api/v1/portal/notificaciones`, `/api/v1/portal/notificaciones/resumen`, `/api/v1/portal/notificaciones/{id}/leer`, `/api/v1/portal/notificaciones/marcar-todas-leidas`
+
+### 12.3 Sistema de Diseño Warm Editorial y Modo Oscuro
+
+El Portal del Cliente mantiene paridad visual estricta con el sistema principal:
+- **Tokens Warm Editorial:** Paleta cálida basada en variables CSS (`style.css` y `design-system.css`) con tonos arena (`#f6f3ee`), latte (`#ede6db`), crema (`#ebdcc9`) y espresso (`#352f2a`).
+- **Tipografía Dual:** Inter para interfaces de lectura y JetBrains Mono para RUC, números de DAM, subpartidas NANDINA y montos monetarios en USD y PEN.
+- **Preset PrimeVue Aura Personalizado:** Adaptado a los componentes corporativos sin sobrecarga de dependencias externas.
+- **Soporte Bidireccional Claro / Oscuro:** Alternancia nativa gobernada por el composable `useTheme.js`, sincronizada con la clase CSS `.dark-theme` sobre `<html>` y persistida en `localStorage`.

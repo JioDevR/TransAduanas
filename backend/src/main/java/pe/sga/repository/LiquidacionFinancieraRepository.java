@@ -1,13 +1,12 @@
 package pe.sga.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
 import pe.sga.entity.LiquidacionFinanciera;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
-@Repository
 public interface LiquidacionFinancieraRepository extends JpaRepository<LiquidacionFinanciera, Integer> {
 
     Optional<LiquidacionFinanciera> findByCodigoLiquidacion(String codigoLiquidacion);
@@ -20,5 +19,9 @@ public interface LiquidacionFinancieraRepository extends JpaRepository<Liquidaci
 
     List<LiquidacionFinanciera> findByEstadoPago(String estadoPago);
 
+    List<LiquidacionFinanciera> findByEstadoPagoIn(Collection<String> estadosPago);
+
     List<LiquidacionFinanciera> findByEstadoPagoNot(String estadoPago);
+
+    List<LiquidacionFinanciera> findByExpediente_Cliente_IdCliente(Integer idCliente);
 }

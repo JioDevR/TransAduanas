@@ -1,0 +1,1322 @@
+@import 'primeicons/primeicons.css';
+@import './assets/styles/design-system.css';
+
+/* ==========================================================================
+   WARM EDITORIAL DESIGN SYSTEM - SGA (SISTEMA DE GESTIÓN ADUANERA)
+   Inspirado en estética minimalista cálida: arena, latte y café espresso.
+   ========================================================================== */
+
+:root {
+  /* Paleta Base Cálida */
+  --color-bg-base: #f6f3ee;
+  --color-bg-sidebar: #ede6db;
+  --color-bg-surface: #ffffff;
+  --color-bg-hero: #ebdcc9;
+  --color-bg-subtle: #f2ebe1;
+  --color-bg-muted: #efe8de;
+
+  /* Bordes */
+  --color-border: #e4dacb;
+  --color-border-subtle: #ede5d8;
+  --color-border-strong: #d5c8b6;
+
+  /* Colores Principales */
+  --color-primary: #352f2a;          /* Espresso profundo para botones activos y destacados */
+  --color-primary-hover: #484039;
+  --color-primary-text: #ffffff;
+  --color-accent-kicker: #9a7f60;    /* Bronce/caramelo para subtítulos kicker en mayúsculas */
+
+  /* Tipografía */
+  --color-text-main: #2b2520;        /* Carbón tostado profundo para títulos y lectura */
+  --color-text-muted: #6f6356;       /* Gris cálido para textos secundarios */
+  --color-text-subtle: #998c7e;      /* Avena apagado para etiquetas y fechas */
+
+  /* Estados Funcionales Semánticos Suaves */
+  --color-success-bg: #eaf6ed;
+  --color-success-border: #bce5c6;
+  --color-success-text: #1e6638;
+
+  --color-warning-bg: #fdf5e6;
+  --color-warning-border: #f8dab3;
+  --color-warning-text: #8c5b16;
+
+  --color-danger: #b3261e;
+  --color-danger-bg: #fdf0f0;
+  --color-danger-border: #f6c8c8;
+  --color-danger-text: #9e2a2b;
+
+  --color-info-bg: #eef4fb;
+  --color-info-border: #cadff4;
+  --color-info-text: #21598f;
+
+  /* Tipografía Definitiva del Proyecto (Inter + JetBrains Mono) */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', Monaco, Consolas, 'Liberation Mono', monospace;
+
+  /* Escala Tipográfica Estandarizada */
+  --font-size-2xs: 0.6875rem; /* 11px - kickers, badges compactos, micro-etiquetas */
+  --font-size-xs: 0.75rem;    /* 12px - metadatos, tags, fechas */
+  --font-size-sm: 0.8125rem;  /* 13px - inputs, botones secundarios, tablas */
+  --font-size-base: 0.875rem; /* 14px - cuerpo de lectura principal */
+  --font-size-md: 0.9375rem;  /* 15px - subtítulos intermedios, badges destacados */
+  --font-size-lg: 1.125rem;   /* 18px - títulos de tarjetas y modales */
+  --font-size-xl: 1.25rem;    /* 20px - títulos de sección */
+  --font-size-2xl: 1.45rem;   /* 23.2px - título de topbar y KPIs */
+  --font-size-3xl: 1.875rem;  /* 30px - cifras maestras de dashboard */
+
+  /* Pesos Tipográficos */
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --font-weight-extrabold: 800;
+
+  /* Sistema de Espaciado Estándar (Rejilla armónica de 4px) */
+  --space-0: 0;
+  --space-1: 0.25rem;  /* 4px */
+  --space-2: 0.5rem;   /* 8px */
+  --space-3: 0.75rem;  /* 12px */
+  --space-4: 1rem;     /* 16px */
+  --space-5: 1.25rem;  /* 20px */
+  --space-6: 1.5rem;   /* 24px */
+  --space-8: 2rem;     /* 32px */
+  --space-10: 2.5rem;  /* 40px */
+  --space-12: 3rem;    /* 48px */
+  --space-16: 4rem;    /* 64px */
+
+  /* Brechas de Layout Estandarizadas */
+  --layout-page-gap: var(--space-6);    /* 24px */
+  --layout-section-gap: var(--space-5); /* 20px */
+  --layout-grid-gap: var(--space-4);    /* 16px */
+  --layout-controls-gap: var(--space-3);/* 12px */
+  --layout-inline-gap: var(--space-2);  /* 8px */
+
+  /* Radios */
+  --radius-xs: 0.25rem;
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-2xl: 1.25rem;
+  --radius-pill: 9999px;
+
+  /* Sombras Sutiles */
+  --shadow-subtle: 0 1px 3px rgba(45, 35, 25, 0.04), 0 1px 2px rgba(45, 35, 25, 0.02);
+  --shadow-card: 0 4px 16px -2px rgba(50, 40, 30, 0.04), 0 2px 6px -1px rgba(50, 40, 30, 0.02);
+  --shadow-elevated: 0 12px 28px -6px rgba(45, 35, 25, 0.08), 0 4px 10px -2px rgba(45, 35, 25, 0.03);
+
+  /* Transiciones */
+  --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* PrimeVue Design Tokens Overrides para Modo Claro Warm Editorial */
+  --p-content-background: #ffffff;
+  --p-content-hover-background: #f2ebe1;
+  --p-content-color: #2b2520;
+  --p-content-border-color: #e4dacb;
+  --p-paginator-background: #f2ebe1;
+  --p-paginator-color: #6f6356;
+  --p-paginator-border-color: #e4dacb;
+  --p-paginator-nav-button-background: #ffffff;
+  --p-paginator-nav-button-hover-background: #f2ebe1;
+  --p-paginator-nav-button-selected-background: #352f2a;
+  --p-paginator-nav-button-selected-color: #ffffff;
+  --p-paginator-current-page-report-color: #6f6356;
+  --p-datatable-header-cell-background: #f2ebe1;
+  --p-datatable-header-cell-border-color: #e4dacb;
+  --p-datatable-header-cell-color: #6f6356;
+  --p-datatable-row-background: #ffffff;
+  --p-datatable-row-color: #2b2520;
+  --p-datatable-row-border-color: #ede5d8;
+  --p-datatable-row-hover-background: #f2ebe1;
+  --p-datatable-row-hover-color: #2b2520;
+  --p-datatable-footer-cell-background: #f2ebe1;
+  --p-datatable-border-color: #e4dacb;
+}
+
+/* ==========================================================================
+   PALETA OSCURA EDITORIAL (GRIS TITANIO CÁLIDO & ARENA DORADA SGA)
+   Matices gris carbón pizarra con el tono arena amarillo cálido del sistema.
+   ========================================================================== */
+.dark-theme {
+  /* Paleta Base: Gris cálido (no negro absoluto) con matiz arena */
+  --color-bg-base: #1e1e1b;          /* Gris carbón cálido de fondo */
+  --color-bg-sidebar: #191815;       /* Gris titanio oscuro para sidebar */
+  --color-bg-surface: #282723;       /* Gris cálido para tarjetas, modales y tablas */
+  --color-bg-hero: #33312a;          /* Gris arena para el hero banner */
+  --color-bg-subtle: #2e2d27;        /* Gris suave para barras, headers de tabla y badges */
+  --color-bg-muted: #383630;         /* Gris medio para estados inactivos o hover */
+
+  /* Bordes de tono arena / piedra cálida */
+  --color-border: #444138;
+  --color-border-subtle: #36342c;
+  --color-border-strong: #5c564a;
+
+  /* Color Principal & Destacados: Tono Arena Amarillo del SGA */
+  --color-primary: #d6b476;          /* Arena dorada cálida luminosa */
+  --color-primary-hover: #e5c78f;    /* Arena dorada hover */
+  --color-primary-text: #1d1b15;     /* Texto carbón profundo sobre arena */
+  --color-accent-kicker: #e0c287;    /* Subtítulos kicker en arena dorada viva */
+
+  /* Tipografía */
+  --color-text-main: #f6f2ea;        /* Blanco marfil cálido para lectura cómoda */
+  --color-text-muted: #c4bcab;       /* Gris arena suave para textos secundarios */
+  --color-text-subtle: #968e7e;      /* Avena apagado para fechas y metadatos */
+
+  /* Estados Funcionales Semánticos en Modo Oscuro Cálido */
+  --color-success-bg: #1c2b1f;
+  --color-success-border: #2d5738;
+  --color-success-text: #7ee79d;
+
+  --color-warning-bg: #342914;
+  --color-warning-border: #695222;
+  --color-warning-text: #fcd34d;
+
+  --color-danger: #f2b8b5;
+  --color-danger-bg: #321818;
+  --color-danger-border: #652a2a;
+  --color-danger-text: #fca5a5;
+
+  --color-info-bg: #172635;
+  --color-info-border: #254b6d;
+  --color-info-text: #93c5fd;
+
+  /* Sombras oscuras */
+  --shadow-subtle: 0 1px 3px rgba(0, 0, 0, 0.35);
+  --shadow-card: 0 4px 16px -2px rgba(0, 0, 0, 0.45);
+  --shadow-elevated: 0 12px 28px -6px rgba(0, 0, 0, 0.55);
+
+  /* PrimeVue Design Tokens Overrides para garantizar Modo Oscuro */
+  --p-content-background: #282723;
+  --p-content-hover-background: #2e2d27;
+  --p-content-color: #f6f2ea;
+  --p-content-border-color: #444138;
+  --p-paginator-background: #2e2d27;
+  --p-paginator-color: #c4bcab;
+  --p-paginator-border-color: #444138;
+  --p-paginator-nav-button-background: #282723;
+  --p-paginator-nav-button-hover-background: #383630;
+  --p-paginator-nav-button-selected-background: #d6b476;
+  --p-paginator-nav-button-selected-color: #1d1b15;
+  --p-paginator-current-page-report-color: #c4bcab;
+  --p-datatable-header-cell-background: #2e2d27;
+  --p-datatable-header-cell-border-color: #444138;
+  --p-datatable-header-cell-color: #c4bcab;
+  --p-datatable-row-background: #282723;
+  --p-datatable-row-color: #f6f2ea;
+  --p-datatable-row-border-color: #36342c;
+  --p-datatable-row-hover-background: #2e2d27;
+  --p-datatable-row-hover-color: #f6f2ea;
+  --p-datatable-footer-cell-background: #2e2d27;
+  --p-datatable-border-color: #444138;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  width: 100%;
+  min-height: 100vh;
+  background-color: var(--color-bg-base);
+  color: var(--color-text-main);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  line-height: 1.5;
+}
+
+.font-mono {
+  font-family: var(--font-mono) !important;
+}
+
+.font-sans {
+  font-family: var(--font-sans) !important;
+}
+
+.text-pending {
+  color: var(--color-warning-text) !important;
+}
+
+.text-success {
+  color: var(--color-success-text) !important;
+}
+
+.text-muted {
+  color: var(--color-text-muted) !important;
+}
+
+#app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Scrollbars con tonos cálidos */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+::-webkit-scrollbar-track {
+  background: #ede6dc;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cfc2b0;
+  border-radius: 9999px;
+  border: 1px solid #ede6dc;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #baa994;
+}
+
+/* Enlaces */
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Inputs y Botones Globales */
+button, input, select, textarea {
+  font-family: inherit;
+}
+
+/* Botón estilo Kicker / Badge */
+.badge-kicker {
+  display: inline-block;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-accent-kicker);
+  margin-bottom: 0.35rem;
+}
+
+/* Botones estándar del lenguaje de diseño */
+.btn-espresso {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--color-primary);
+  color: var(--color-primary-text);
+  padding: 0.55rem 1.15rem;
+  border-radius: var(--radius-md);
+  font-size: 0.84rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  box-shadow: 0 2px 6px rgba(53, 47, 42, 0.2);
+}
+
+.btn-espresso:hover {
+  background: var(--color-primary-hover);
+  transform: translateY(-1px);
+}
+
+.btn-outline-warm {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: var(--color-bg-surface);
+  color: var(--color-text-main);
+  padding: 0.55rem 1rem;
+  border-radius: var(--radius-md);
+  font-size: 0.84rem;
+  font-weight: 500;
+  border: 1px solid var(--color-border);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.btn-outline-warm:hover:not(:disabled) {
+  background: var(--color-bg-subtle);
+  border-color: var(--color-border-strong);
+  color: var(--color-text-main);
+}
+
+.btn-outline-warm:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Pestañas de Navegación Globales con Soporte Claro / Oscuro Automático */
+.tabs-nav-bar {
+  display: flex;
+  gap: 0.75rem;
+  border-bottom: 2px solid var(--color-border-subtle);
+  padding-bottom: 0.25rem;
+}
+
+.tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  border: none;
+  background: transparent;
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -0.25rem;
+  transition: all var(--transition-fast);
+}
+
+.tab-btn:hover {
+  color: var(--color-text-main);
+  background: var(--color-bg-subtle);
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+}
+
+.tab-btn.active {
+  color: var(--color-text-main);
+  border-bottom-color: var(--color-primary);
+  background: var(--color-bg-surface);
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+  box-shadow: var(--shadow-subtle);
+}
+
+/* Badges de Estado Semánticos Globales */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.65rem;
+  border-radius: var(--radius-pill);
+  font-size: 0.725rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.status-pending {
+  background: var(--color-warning-bg);
+  color: var(--color-warning-text);
+  border: 1px solid var(--color-warning-border);
+}
+
+.status-approved {
+  background: var(--color-success-bg);
+  color: var(--color-success-text);
+  border: 1px solid var(--color-success-border);
+}
+
+.status-rejected {
+  background: var(--color-danger-bg);
+  color: var(--color-danger-text);
+  border: 1px solid var(--color-danger-border);
+}
+
+.status-progress {
+  background: var(--color-info-bg);
+  color: var(--color-info-text);
+  border: 1px solid var(--color-info-border);
+}
+
+/* Animaciones */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in {
+  animation: fadeIn 0.25s ease-out;
+}
+
+/* ==========================================================================
+   PERSONALIZACIÓN DE COMPONENTES PRIMEVUE (ESTÉTICA CÁLIDA SGA)
+   ========================================================================== */
+
+/* Diálogo de Confirmación y Modales PrimeVue */
+.p-dialog-mask {
+  background: rgba(45, 35, 25, 0.45) !important;
+  backdrop-filter: blur(6px) !important;
+}
+
+.p-dialog {
+  border: 1px solid var(--color-border) !important;
+  border-radius: var(--radius-xl) !important;
+  background: var(--color-bg-surface) !important;
+  box-shadow: var(--shadow-elevated) !important;
+  font-family: inherit !important;
+  overflow: hidden;
+}
+
+.p-dialog .p-dialog-header {
+  background: var(--color-bg-subtle) !important;
+  border-bottom: 1px solid var(--color-border-subtle) !important;
+  padding: 1.25rem 1.5rem !important;
+  color: var(--color-text-main) !important;
+  font-weight: 700 !important;
+}
+
+.p-dialog .p-dialog-title {
+  font-size: 1.15rem !important;
+  font-weight: 700 !important;
+  color: var(--color-text-main) !important;
+}
+
+.p-dialog .p-dialog-content {
+  padding: 1.5rem 1.5rem !important;
+  color: var(--color-text-muted) !important;
+  font-size: 0.9rem !important;
+  line-height: 1.5 !important;
+  background: var(--color-bg-surface) !important;
+}
+
+.p-dialog .p-dialog-footer {
+  background: var(--color-bg-subtle) !important;
+  border-top: 1px solid var(--color-border-subtle) !important;
+  padding: 1rem 1.5rem !important;
+  display: flex !important;
+  justify-content: flex-end !important;
+  gap: 0.75rem !important;
+}
+
+/* Toasts PrimeVue con diseño editorial */
+.p-toast {
+  font-family: inherit !important;
+  font-size: 0.875rem !important;
+}
+
+.p-toast-message {
+  border-radius: var(--radius-md) !important;
+  box-shadow: var(--shadow-elevated) !important;
+  margin-bottom: 0.75rem !important;
+}
+
+/* Inputs numéricos y textos PrimeVue */
+.p-inputnumber,
+.p-inputtext {
+  font-family: inherit !important;
+}
+
+.p-inputnumber-input {
+  background: var(--color-bg-surface) !important;
+  border: 1px solid var(--color-border) !important;
+  border-radius: var(--radius-md) !important;
+  padding: 0.65rem 0.85rem !important;
+  color: var(--color-text-main) !important;
+  font-size: 0.875rem !important;
+  font-family: inherit !important;
+  outline: none !important;
+  transition: all var(--transition-fast) !important;
+}
+
+.p-inputnumber-input:focus {
+  border-color: var(--color-primary) !important;
+  box-shadow: 0 0 0 3px rgba(53, 47, 42, 0.08) !important;
+}
+
+/* ==========================================================================
+   ESTÁNDAR DE ENTRADAS DE FORMULARIO Y SELECTORES DESPLEGABLES (SGA)
+   ========================================================================== */
+
+/* Selectores Desplegables Nativos y de Formulario */
+select,
+.form-select,
+.select-input,
+.filter-select,
+.form-select-styled,
+.select-styled {
+  font-family: var(--font-sans) !important;
+  font-size: var(--font-size-sm, 0.8125rem);
+  color: var(--color-text-main) !important;
+  background-color: var(--color-bg-surface) !important;
+  border: 1px solid var(--color-border) !important;
+  border-radius: var(--radius-md, 0.5rem) !important;
+  padding: 0.6rem 2.25rem 0.6rem 0.85rem !important;
+  line-height: 1.4 !important;
+  outline: none !important;
+  cursor: pointer !important;
+  transition: all var(--transition-fast) !important;
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236f6356'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2.2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 0.75rem center !important;
+  background-size: 1rem 1rem !important;
+}
+
+select:hover:not(:disabled),
+.form-select:hover:not(:disabled),
+.select-input:hover:not(:disabled),
+.filter-select:hover:not(:disabled),
+.form-select-styled:hover:not(:disabled),
+.select-styled:hover:not(:disabled) {
+  border-color: var(--color-border-strong) !important;
+  background-color: var(--color-bg-subtle) !important;
+}
+
+select:focus,
+.form-select:focus,
+.select-input:focus,
+.filter-select:focus,
+.form-select-styled:focus,
+.select-styled:focus {
+  border-color: var(--color-primary) !important;
+  box-shadow: 0 0 0 3px rgba(53, 47, 42, 0.08) !important;
+}
+
+select:disabled,
+.form-select:disabled,
+.select-input:disabled,
+.filter-select:disabled,
+.form-select-styled:disabled,
+.select-styled:disabled {
+  opacity: 0.55 !important;
+  cursor: not-allowed !important;
+  background-color: var(--color-bg-muted) !important;
+}
+
+/* Opciones internas del selector */
+select option,
+.form-select option,
+.select-input option,
+.filter-select option,
+.form-select-styled option,
+.select-styled option {
+  background-color: var(--color-bg-surface);
+  color: var(--color-text-main);
+  padding: 0.55rem 0.85rem;
+}
+
+/* Entradas de Texto y Textareas de Formulario */
+input.form-input,
+input.text-input,
+textarea.form-textarea,
+textarea.textarea-input {
+  font-family: var(--font-sans);
+  font-size: var(--font-size-sm, 0.8125rem);
+  color: var(--color-text-main);
+  background-color: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md, 0.5rem);
+  padding: 0.6rem 0.85rem;
+  line-height: 1.4;
+  outline: none;
+  transition: all var(--transition-fast);
+  width: 100%;
+}
+
+input.form-input:hover:not(:disabled),
+input.text-input:hover:not(:disabled),
+textarea.form-textarea:hover:not(:disabled),
+textarea.textarea-input:hover:not(:disabled) {
+  border-color: var(--color-border-strong);
+}
+
+input.form-input:focus,
+input.text-input:focus,
+textarea.form-textarea:focus,
+textarea.textarea-input:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(53, 47, 42, 0.08);
+}
+
+input.form-input:disabled,
+input.text-input:disabled,
+textarea.form-textarea:disabled,
+textarea.textarea-input:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  background-color: var(--color-bg-muted);
+}
+
+/* ==========================================================================
+   ADAPTACIONES DE COMPONENTES EN MODO OSCURO
+   ========================================================================== */
+
+/* Selectores y Desplegables en Modo Oscuro */
+.dark-theme select,
+.dark-theme .form-select,
+.dark-theme .select-input,
+.dark-theme .filter-select,
+.dark-theme .form-select-styled,
+.dark-theme .select-styled {
+  background-color: var(--color-bg-surface) !important;
+  border-color: var(--color-border) !important;
+  color: var(--color-text-main) !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23d6b476'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2.2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 0.75rem center !important;
+  background-size: 1rem 1rem !important;
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  padding-right: 2.25rem !important;
+}
+
+.dark-theme select:hover:not(:disabled),
+.dark-theme .form-select:hover:not(:disabled),
+.dark-theme .select-input:hover:not(:disabled),
+.dark-theme .filter-select:hover:not(:disabled),
+.dark-theme .form-select-styled:hover:not(:disabled),
+.dark-theme .select-styled:hover:not(:disabled) {
+  border-color: var(--color-border-strong) !important;
+  background-color: var(--color-bg-subtle) !important;
+}
+
+.dark-theme select:focus,
+.dark-theme .form-select:focus,
+.dark-theme .select-input:focus,
+.dark-theme .filter-select:focus,
+.dark-theme .form-select-styled:focus,
+.dark-theme .select-styled:focus {
+  border-color: var(--color-primary) !important;
+  box-shadow: 0 0 0 3px rgba(214, 180, 118, 0.15) !important;
+}
+
+.dark-theme select option,
+.dark-theme .form-select option,
+.dark-theme .select-input option,
+.dark-theme .filter-select option,
+.dark-theme .form-select-styled option,
+.dark-theme .select-styled option {
+  background-color: var(--color-bg-surface) !important;
+  color: var(--color-text-main) !important;
+  padding: 0.55rem 0.85rem;
+}
+
+/* Entradas de formulario en Modo Oscuro */
+.dark-theme input.form-input,
+.dark-theme input.text-input,
+.dark-theme textarea.form-textarea,
+.dark-theme textarea.textarea-input,
+.dark-theme .p-inputnumber-input,
+.dark-theme .p-inputtext {
+  background-color: var(--color-bg-surface) !important;
+  border-color: var(--color-border) !important;
+  color: var(--color-text-main) !important;
+}
+
+.dark-theme input.form-input:focus,
+.dark-theme input.text-input:focus,
+.dark-theme textarea.form-textarea:focus,
+.dark-theme textarea.textarea-input:focus,
+.dark-theme .p-inputnumber-input:focus {
+  border-color: var(--color-primary) !important;
+  box-shadow: 0 0 0 3px rgba(214, 180, 118, 0.15) !important;
+}
+
+/* Modales BaseModal */
+.dark-theme .base-modal {
+  background: rgba(0, 0, 0, 0.65);
+}
+
+.dark-theme .base-modal__header {
+  background: #1c1814;
+  border-bottom-color: var(--color-border-subtle);
+}
+
+.dark-theme .base-modal__icon {
+  background: #2a231d;
+  color: var(--color-primary);
+  border-color: var(--color-border);
+}
+
+.dark-theme .base-modal__close:hover:not(:disabled) {
+  background: #2c251e;
+  color: var(--color-text-main);
+}
+
+.dark-theme .btn-modal-cancel {
+  background: #241f1a;
+  border-color: var(--color-border);
+  color: var(--color-text-main);
+}
+
+.dark-theme .btn-modal-cancel:hover:not(:disabled) {
+  background: #2e2821;
+}
+
+/* PrimeVue Diálogos */
+.dark-theme .p-dialog {
+  background: var(--color-bg-surface) !important;
+  border-color: var(--color-border) !important;
+  box-shadow: var(--shadow-elevated) !important;
+}
+
+.dark-theme .p-dialog .p-dialog-header {
+  background: var(--color-bg-subtle) !important;
+  border-bottom-color: var(--color-border-subtle) !important;
+}
+
+.dark-theme .p-dialog .p-dialog-content {
+  background: var(--color-bg-surface) !important;
+}
+
+.dark-theme .p-dialog .p-dialog-footer {
+  background: var(--color-bg-subtle) !important;
+  border-top-color: var(--color-border-subtle) !important;
+}
+
+/* ==========================================================================
+   Tablas y Paginador (Estándar Global SGA Warm Editorial)
+   ========================================================================== */
+.table-card,
+.data-table-container,
+.content-table-card,
+.flota-table-card,
+.conductores-table-card {
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg, 12px);
+  overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+}
+
+.p-datatable,
+.custom-datatable {
+  background: transparent !important;
+}
+
+.p-datatable .p-datatable-table,
+.custom-datatable .p-datatable-table {
+  background: transparent !important;
+  border-collapse: separate;
+  border-spacing: 0;
+  width: 100%;
+}
+
+.p-datatable .p-datatable-thead > tr > th,
+.custom-datatable .p-datatable-thead > tr > th {
+  background: var(--color-bg-subtle) !important;
+  color: var(--color-text-muted) !important;
+  border-bottom: 1px solid var(--color-border) !important;
+  border-top: none !important;
+  border-left: none !important;
+  border-right: none !important;
+  font-size: 0.6875rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.06em !important;
+  text-transform: uppercase !important;
+  padding: 0.85rem 1rem !important;
+}
+
+.p-datatable .p-datatable-tbody > tr,
+.custom-datatable .p-datatable-tbody > tr {
+  background: var(--color-bg-surface) !important;
+  color: var(--color-text-main) !important;
+  border-bottom: 1px solid var(--color-border-subtle) !important;
+  transition: background var(--transition-fast) !important;
+}
+
+.p-datatable .p-datatable-tbody > tr:hover,
+.custom-datatable .p-datatable-tbody > tr:hover {
+  background: var(--color-bg-subtle) !important;
+}
+
+.p-datatable .p-datatable-tbody > tr > td,
+.custom-datatable .p-datatable-tbody > tr > td {
+  border-bottom: 1px solid var(--color-border-subtle) !important;
+  border-top: none !important;
+  border-left: none !important;
+  border-right: none !important;
+  color: var(--color-text-main) !important;
+  padding: 0.85rem 1rem !important;
+}
+
+.p-datatable .p-datatable-tbody > tr.row-inactive {
+  background: var(--color-bg-muted) !important;
+  opacity: 0.75;
+}
+
+/* Paginador PrimeVue Base */
+.p-paginator,
+.p-datatable .p-paginator {
+  background: var(--color-bg-subtle) !important;
+  border-top: 1px solid var(--color-border-subtle) !important;
+  border-bottom: none !important;
+  border-left: none !important;
+  border-right: none !important;
+  color: var(--color-text-muted) !important;
+  padding: 0.75rem 1.25rem !important;
+  gap: 0.35rem !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-wrap: wrap !important;
+}
+
+.p-paginator .p-paginator-first,
+.p-paginator .p-paginator-prev,
+.p-paginator .p-paginator-next,
+.p-paginator .p-paginator-last,
+.p-paginator .p-paginator-page,
+.p-paginator .p-paginator-element {
+  min-width: 32px !important;
+  height: 32px !important;
+  padding: 0 0.5rem !important;
+  border-radius: var(--radius-sm, 6px) !important;
+  background: var(--color-bg-surface) !important;
+  border: 1px solid var(--color-border) !important;
+  color: var(--color-text-main) !important;
+  font-size: 0.8125rem !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  transition: all var(--transition-fast) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.p-paginator .p-paginator-first:hover:not(:disabled):not(.p-disabled),
+.p-paginator .p-paginator-prev:hover:not(:disabled):not(.p-disabled),
+.p-paginator .p-paginator-next:hover:not(:disabled):not(.p-disabled),
+.p-paginator .p-paginator-last:hover:not(:disabled):not(.p-disabled),
+.p-paginator .p-paginator-page:hover:not(:disabled):not(.p-disabled) {
+  background: var(--color-bg-muted) !important;
+  border-color: var(--color-border-strong) !important;
+  color: var(--color-text-main) !important;
+}
+
+.p-paginator .p-paginator-page.p-paginator-page-selected,
+.p-paginator .p-paginator-page.p-highlight {
+  background: var(--color-primary) !important;
+  border-color: var(--color-primary) !important;
+  color: var(--color-primary-text, #ffffff) !important;
+  font-weight: 700 !important;
+}
+
+.p-paginator .p-paginator-first:disabled,
+.p-paginator .p-paginator-prev:disabled,
+.p-paginator .p-paginator-next:disabled,
+.p-paginator .p-paginator-last:disabled,
+.p-paginator .p-paginator-first.p-disabled,
+.p-paginator .p-paginator-prev.p-disabled,
+.p-paginator .p-paginator-next.p-disabled,
+.p-paginator .p-paginator-last.p-disabled {
+  opacity: 0.35 !important;
+  cursor: not-allowed !important;
+  background: var(--color-bg-subtle) !important;
+  border-color: transparent !important;
+  color: var(--color-text-subtle) !important;
+}
+
+.p-paginator .p-paginator-current {
+  color: var(--color-text-muted) !important;
+  font-size: 0.775rem !important;
+  font-weight: 500 !important;
+  margin-left: 0.75rem !important;
+}
+
+.p-paginator .p-select,
+.p-paginator .p-dropdown,
+.p-paginator .p-paginator-rpp-select {
+  height: 32px !important;
+  background: var(--color-bg-surface) !important;
+  border: 1px solid var(--color-border) !important;
+  color: var(--color-text-main) !important;
+  border-radius: var(--radius-sm, 6px) !important;
+  font-size: 0.8125rem !important;
+}
+
+/* Modificadores Modo Oscuro: Tablas & Paginador */
+.dark-theme .table-card,
+.dark-theme .data-table-container,
+.dark-theme .content-table-card,
+.dark-theme .flota-table-card,
+.dark-theme .conductores-table-card {
+  background: var(--color-bg-surface) !important;
+  border-color: var(--color-border) !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4) !important;
+}
+
+.dark-theme .table-toolbar {
+  background: var(--color-bg-subtle) !important;
+  border-bottom-color: var(--color-border-subtle) !important;
+}
+
+.dark-theme .search-input,
+.dark-theme .table-search-input,
+.dark-theme .filter-select {
+  background: var(--color-bg-surface) !important;
+  border-color: var(--color-border) !important;
+  color: var(--color-text-main) !important;
+}
+
+.dark-theme .filter-select option,
+.dark-theme select option {
+  background: var(--color-bg-surface) !important;
+  color: var(--color-text-main) !important;
+}
+
+.dark-theme .p-datatable .p-datatable-thead > tr > th,
+.dark-theme .custom-datatable .p-datatable-thead > tr > th {
+  background: var(--color-bg-subtle) !important;
+  color: var(--color-text-muted) !important;
+  border-bottom-color: var(--color-border) !important;
+}
+
+.dark-theme .p-datatable .p-datatable-tbody > tr,
+.dark-theme .custom-datatable .p-datatable-tbody > tr {
+  background: var(--color-bg-surface) !important;
+  color: var(--color-text-main) !important;
+  border-bottom-color: var(--color-border-subtle) !important;
+}
+
+.dark-theme .p-datatable .p-datatable-tbody > tr:hover,
+.dark-theme .custom-datatable .p-datatable-tbody > tr:hover {
+  background: var(--color-bg-subtle) !important;
+}
+
+.dark-theme .p-datatable .p-datatable-tbody > tr > td,
+.dark-theme .custom-datatable .p-datatable-tbody > tr > td {
+  border-bottom-color: var(--color-border-subtle) !important;
+  color: var(--color-text-main) !important;
+}
+
+.dark-theme .p-datatable .p-datatable-tbody > tr.row-inactive,
+.dark-theme .custom-datatable .p-datatable-tbody > tr.row-inactive {
+  background: var(--color-bg-muted) !important;
+  opacity: 0.75;
+}
+
+.dark-theme .p-datatable .p-datatable-empty-message td,
+.dark-theme .empty-state-box,
+.dark-theme .empty-state {
+  background: var(--color-bg-surface) !important;
+  color: var(--color-text-muted) !important;
+}
+
+/* Paginador en Modo Oscuro */
+.dark-theme .p-paginator,
+.dark-theme .p-datatable .p-paginator {
+  background: var(--color-bg-subtle) !important;
+  border-top-color: var(--color-border) !important;
+  color: var(--color-text-muted) !important;
+}
+
+.dark-theme .p-paginator .p-paginator-first,
+.dark-theme .p-paginator .p-paginator-prev,
+.dark-theme .p-paginator .p-paginator-next,
+.dark-theme .p-paginator .p-paginator-last,
+.dark-theme .p-paginator .p-paginator-page {
+  background: var(--color-bg-surface) !important;
+  border-color: var(--color-border) !important;
+  color: var(--color-text-main) !important;
+}
+
+.dark-theme .p-paginator .p-paginator-first:hover:not(:disabled):not(.p-disabled),
+.dark-theme .p-paginator .p-paginator-prev:hover:not(:disabled):not(.p-disabled),
+.dark-theme .p-paginator .p-paginator-next:hover:not(:disabled):not(.p-disabled),
+.dark-theme .p-paginator .p-paginator-last:hover:not(:disabled):not(.p-disabled),
+.dark-theme .p-paginator .p-paginator-page:hover:not(:disabled):not(.p-disabled) {
+  background: var(--color-bg-muted) !important;
+  border-color: var(--color-border-strong) !important;
+  color: var(--color-text-main) !important;
+}
+
+.dark-theme .p-paginator .p-paginator-page.p-paginator-page-selected,
+.dark-theme .p-paginator .p-paginator-page.p-highlight {
+  background: var(--color-primary) !important;
+  border-color: var(--color-primary) !important;
+  color: var(--color-primary-text) !important;
+  font-weight: 800 !important;
+}
+
+.dark-theme .p-paginator .p-paginator-first:disabled,
+.dark-theme .p-paginator .p-paginator-prev:disabled,
+.dark-theme .p-paginator .p-paginator-next:disabled,
+.dark-theme .p-paginator .p-paginator-last:disabled,
+.dark-theme .p-paginator .p-paginator-first.p-disabled,
+.dark-theme .p-paginator .p-paginator-prev.p-disabled,
+.dark-theme .p-paginator .p-paginator-next.p-disabled,
+.dark-theme .p-paginator .p-paginator-last.p-disabled {
+  opacity: 0.3 !important;
+  background: transparent !important;
+  border-color: transparent !important;
+  color: var(--color-text-subtle) !important;
+}
+
+.dark-theme .p-paginator .p-paginator-current {
+  color: var(--color-text-muted) !important;
+}
+
+.dark-theme .p-paginator .p-select,
+.dark-theme .p-paginator .p-dropdown,
+.dark-theme .p-paginator .p-paginator-rpp-select {
+  background: var(--color-bg-surface) !important;
+  border-color: var(--color-border) !important;
+  color: var(--color-text-main) !important;
+}
+
+.dark-theme .action-btn-outline {
+  background: var(--color-bg-surface);
+  border-color: var(--color-border);
+  color: var(--color-text-main);
+}
+
+.dark-theme .action-btn-outline:hover {
+  background: var(--color-bg-subtle);
+  border-color: var(--color-border-strong);
+  color: var(--color-text-main);
+}
+
+.dark-theme .base-pagination {
+  background: var(--color-bg-subtle) !important;
+  border-top-color: var(--color-border-subtle) !important;
+}
+
+.dark-theme .page-nav-btn {
+  background: var(--color-bg-surface) !important;
+  border-color: var(--color-border) !important;
+  color: var(--color-text-main) !important;
+}
+
+.dark-theme .page-nav-btn:hover:not(:disabled) {
+  background: var(--color-bg-muted) !important;
+  border-color: var(--color-border-strong) !important;
+}
+
+/* Layout y Sidebar */
+.dark-theme .app-topbar {
+  background: var(--color-bg-base);
+  border-bottom-color: var(--color-border);
+}
+
+.dark-theme .user-profile-header:hover,
+.dark-theme .user-profile-header.active {
+  background: var(--color-bg-subtle);
+}
+
+.dark-theme .user-dropdown-panel {
+  background: var(--color-bg-surface);
+  border-color: var(--color-border);
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.5);
+}
+
+.dark-theme .dropdown-header {
+  background: var(--color-bg-subtle);
+  border-bottom-color: var(--color-border-subtle);
+}
+
+.dark-theme .dropdown-divider {
+  background: var(--color-border);
+}
+
+.dark-theme .sidebar-module-selector-card {
+  background: var(--color-bg-subtle);
+  border-color: var(--color-border);
+}
+
+.dark-theme .module-custom-select {
+  background: var(--color-bg-surface);
+  border-color: var(--color-border);
+  color: var(--color-text-main);
+}
+
+.dark-theme .static-module-pill {
+  background: var(--color-bg-surface);
+  border-color: var(--color-border);
+  color: var(--color-text-main);
+}
+
+.dark-theme .nav-sub-btn {
+  color: var(--color-text-muted);
+}
+
+.dark-theme .nav-sub-btn .nav-num {
+  background: var(--color-bg-muted);
+  color: var(--color-accent-kicker);
+}
+
+.dark-theme .nav-sub-btn:hover {
+  background: var(--color-bg-subtle);
+  color: var(--color-text-main);
+}
+
+.dark-theme .nav-sub-btn.active {
+  background: var(--color-primary);
+  color: var(--color-primary-text);
+  border-color: var(--color-primary);
+}
+
+.dark-theme .nav-sub-btn.active .nav-num {
+  background: rgba(29, 27, 21, 0.25);
+  color: var(--color-primary-text);
+}
+
+/* Scrollbar en modo oscuro */
+.dark-theme ::-webkit-scrollbar-track {
+  background: var(--color-bg-base);
+}
+
+.dark-theme ::-webkit-scrollbar-thumb {
+  background: #474337;
+  border-color: var(--color-bg-base);
+}
+
+.dark-theme ::-webkit-scrollbar-thumb:hover {
+  background: #5c5647;
+}
+
+/* ==========================================================================
+   PRIMEVUE SELECT & OVERLAY PANEL (SISTEMA DE DISEÑO SGA & MODO OSCURO)
+   ========================================================================== */
+.p-select {
+  background: var(--color-bg-surface) !important;
+  border: 1px solid var(--color-border) !important;
+  border-radius: var(--radius-lg, 0.75rem) !important;
+  color: var(--color-text-main) !important;
+  transition: all var(--transition-fast) !important;
+}
+
+.p-select:hover {
+  border-color: var(--color-border-strong) !important;
+}
+
+.p-select:focus-within,
+.p-select.p-focus {
+  border-color: var(--color-primary) !important;
+  box-shadow: 0 0 0 2px var(--color-border-subtle) !important;
+}
+
+.p-select .p-select-label {
+  color: var(--color-text-main) !important;
+  font-size: var(--font-size-sm, 0.875rem) !important;
+}
+
+.p-select .p-select-label.p-placeholder {
+  color: var(--color-text-subtle) !important;
+}
+
+.p-select .p-select-dropdown {
+  color: var(--color-text-muted) !important;
+}
+
+/* Panel Overlay Desplegable Teleport */
+.p-select-overlay {
+  background: var(--color-bg-surface) !important;
+  border: 1px solid var(--color-border) !important;
+  border-radius: var(--radius-lg, 0.75rem) !important;
+  box-shadow: var(--shadow-elevated) !important;
+  color: var(--color-text-main) !important;
+  overflow: hidden;
+  z-index: 9999 !important;
+}
+
+.p-select-overlay .p-select-header {
+  background: var(--color-bg-subtle) !important;
+  border-bottom: 1px solid var(--color-border-subtle) !important;
+  padding: 0.65rem 0.85rem !important;
+  color: var(--color-text-main) !important;
+}
+
+.p-select-overlay .p-select-filter-input {
+  background: var(--color-bg-surface) !important;
+  border: 1px solid var(--color-border) !important;
+  border-radius: var(--radius-md, 0.5rem) !important;
+  color: var(--color-text-main) !important;
+  padding: 0.5rem 0.75rem !important;
+  font-size: var(--font-size-sm, 0.875rem) !important;
+  width: 100% !important;
+}
+
+.p-select-overlay .p-select-filter-input:focus {
+  outline: none !important;
+  border-color: var(--color-primary) !important;
+  box-shadow: 0 0 0 2px var(--color-border-subtle) !important;
+}
+
+.p-select-overlay .p-select-filter-icon {
+  color: var(--color-text-subtle) !important;
+}
+
+.p-select-overlay .p-select-list-container {
+  background: var(--color-bg-surface) !important;
+}
+
+.p-select-overlay .p-select-list {
+  background: var(--color-bg-surface) !important;
+  padding: 0.35rem !important;
+  list-style: none !important;
+}
+
+.p-select-overlay .p-select-option {
+  background: transparent !important;
+  color: var(--color-text-main) !important;
+  border-radius: var(--radius-md, 0.5rem) !important;
+  margin-bottom: 2px !important;
+  transition: all var(--transition-fast) !important;
+  padding: 0.5rem 0.75rem !important;
+}
+
+.p-select-overlay .p-select-option:hover,
+.p-select-overlay .p-select-option.p-focus {
+  background: var(--color-bg-subtle) !important;
+  color: var(--color-text-main) !important;
+}
+
+.p-select-overlay .p-select-option.p-select-option-selected {
+  background: var(--color-bg-muted) !important;
+  color: var(--color-primary) !important;
+  font-weight: 700 !important;
+}
+
+.p-select-overlay .p-select-empty-message {
+  color: var(--color-text-subtle) !important;
+  padding: 1rem !important;
+  text-align: center;
+  font-size: var(--font-size-sm, 0.875rem) !important;
+}
+
+/* Modificadores específicos para .dark-theme */
+.dark-theme .p-select {
+  background: var(--color-bg-surface) !important;
+  border-color: var(--color-border) !important;
+  color: var(--color-text-main) !important;
+}
+
+.dark-theme .p-select-overlay {
+  background: var(--color-bg-surface) !important;
+  border-color: var(--color-border) !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.65), 0 8px 10px -6px rgba(0, 0, 0, 0.5) !important;
+  color: var(--color-text-main) !important;
+}
+
+.dark-theme .p-select-overlay .p-select-header {
+  background: var(--color-bg-subtle) !important;
+  border-bottom-color: var(--color-border-subtle) !important;
+}
+
+.dark-theme .p-select-overlay .p-select-filter-input {
+  background: var(--color-bg-base) !important;
+  border-color: var(--color-border) !important;
+  color: var(--color-text-main) !important;
+}
+
+.dark-theme .p-select-overlay .p-select-filter-input:focus {
+  border-color: var(--color-primary) !important;
+}
+
+.dark-theme .p-select-overlay .p-select-list-container,
+.dark-theme .p-select-overlay .p-select-list {
+  background: var(--color-bg-surface) !important;
+}
+
+.dark-theme .p-select-overlay .p-select-option {
+  color: var(--color-text-main) !important;
+}
+
+.dark-theme .p-select-overlay .p-select-option:hover,
+.dark-theme .p-select-overlay .p-select-option.p-focus {
+  background: var(--color-bg-subtle) !important;
+  color: var(--color-primary) !important;
+}
+
+.dark-theme .p-select-overlay .p-select-option.p-select-option-selected {
+  background: var(--color-bg-muted) !important;
+  color: var(--color-primary) !important;
+}
+
+
+

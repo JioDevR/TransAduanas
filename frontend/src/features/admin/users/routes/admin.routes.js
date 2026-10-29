@@ -22,7 +22,17 @@ export const adminRoutes = [
     meta: {
       requiresAuth: true,
       roles: [ROLES.ADMINISTRADOR_TI, ROLES.GERENTE_GENERAL],
-      title: 'Administración TI - Usuarios - SGA'
+      title: 'Administración TI - Personal Interno - SGA'
+    }
+  },
+  {
+    path: '/administracion-ti/usuarios-portal',
+    name: 'AdminPortalUsers',
+    component: () => import('@/features/admin/portal-users/views/PortalUserManagementView.vue'),
+    meta: {
+      requiresAuth: true,
+      roles: [ROLES.ADMINISTRADOR_TI, ROLES.GERENTE_GENERAL],
+      title: 'Administración TI - Usuarios Portal Clientes B2B - SGA'
     }
   },
 

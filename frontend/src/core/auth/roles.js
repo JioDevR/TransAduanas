@@ -45,6 +45,10 @@ export const ROLE_HOME_PATH = {
   [ROLES.ASESOR_LEGAL]: '/legal-auditoria'
 }
 
+export function getHomeRouteForRole(role) {
+  return ROLE_HOME_PATH[role] || '/login'
+}
+
 export const ROLE_OPTIONS = [
   { value: ROLES.ADMINISTRADOR_TI, label: ROLE_LABELS[ROLES.ADMINISTRADOR_TI] },
   { value: ROLES.GERENTE_GENERAL, label: ROLE_LABELS[ROLES.GERENTE_GENERAL] },

@@ -35,6 +35,7 @@ public class CatalogoPuertoController {
     }
 
     @GetMapping("/exportar-pdf")
+    @org.springframework.security.access.prepost.PreAuthorize(pe.sga.config.SecurityRoles.ACCESS_SEDES_CATALOGOS_READ)
     public ResponseEntity<InputStreamResource> exportarPuertosPdf() {
         ByteArrayInputStream pdfStream = reporteJasperService.exportarPuertosPdf();
 

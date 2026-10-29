@@ -20,6 +20,10 @@ public final class SecurityRoles {
     public static final String HAS_ROLE_ADMIN_TI = "hasRole('" + ADMINISTRADOR_TI + "')";
     public static final String HAS_ROLE_GERENTE_GENERAL = "hasRole('" + GERENTE_GENERAL + "')";
     public static final String HAS_ANY_ADMIN = "hasAnyRole('" + ADMINISTRADOR_TI + "', '" + GERENTE_GENERAL + "')";
+    public static final String ACCESS_INTERNAL_STAFF = "hasAnyRole('" + ADMINISTRADOR_TI + "', '"
+            + GERENTE_GENERAL + "', '" + AGENTE_COMERCIAL + "', '" + SUPERVISOR_ADUANERO + "', '"
+            + AGENTE_ADUANERO + "', '" + SUPERVISOR_TRANSPORTE + "', '" + CONTADOR + "', '"
+            + ASESOR_LEGAL + "')";
 
     // Matriz de accesos por módulo/dominio:
 
@@ -32,7 +36,7 @@ public final class SecurityRoles {
     public static final String ACCESS_LOGS_READ = "hasRole('" + ADMINISTRADOR_TI + "')";
 
     // 2. Sedes y Catálogos auxiliares (Puerto, Tipo Carga, Mercancía)
-    public static final String ACCESS_SEDES_CATALOGOS_READ = "isAuthenticated()";
+    public static final String ACCESS_SEDES_CATALOGOS_READ = ACCESS_INTERNAL_STAFF;
     public static final String ACCESS_SEDES_CATALOGOS_WRITE = "hasAnyRole('" + ADMINISTRADOR_TI + "', '"
             + GERENTE_GENERAL + "')";
 

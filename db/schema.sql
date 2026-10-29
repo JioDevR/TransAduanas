@@ -12,6 +12,10 @@ SET FOREIGN_KEY_CHECKS = 0;
 -- Limpieza preventiva de tablas existentes
 DROP TABLE IF EXISTS cotizacion_pago;
 
+DROP TABLE IF EXISTS notificacion_cliente;
+
+DROP TABLE IF EXISTS usuario_cliente;
+
 DROP TABLE IF EXISTS documento_adjunto;
 
 DROP TABLE IF EXISTS liquidacion_financiera;
@@ -66,6 +70,7 @@ CREATE TABLE catalogo_tipo_carga (
     id_tipo_carga INT NOT NULL AUTO_INCREMENT,
     codigo VARCHAR(30) NOT NULL,
     nombre VARCHAR(100) NOT NULL,
+    descripcion VARCHAR(255) NULL,
     estado VARCHAR(20) NOT NULL DEFAULT 'ACTIVO',
     -- Llave primaria y restricciones
     PRIMARY KEY (id_tipo_carga),
@@ -92,17 +97,6 @@ CREATE TABLE catalogo_mercancia (
 -- 1. MÓDULO DE SEGURIDAD Y ACCESO TI
 -- =============================================================================
 
-CREATE TABLE rol (
-    -- Identificador y datos del rol
-    id_rol INT NOT NULL AUTO_INCREMENT,
-    nombre_rol VARCHAR(50) NOT NULL,
-    descripcion VARCHAR(255) NULL,
-    estado_activo BOOLEAN NOT NULL DEFAULT TRUE,
-    -- Llave primaria y restricciones
-    PRIMARY KEY (id_rol),
-    CONSTRAINT uq_rol_nombre UNIQUE (nombre_rol)
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
-
 CREATE TABLE sede (
     -- Identificador y datos de ubicación
     id_sede INT NOT NULL AUTO_INCREMENT,
@@ -121,7 +115,7 @@ CREATE TABLE sede (
 CREATE TABLE usuario (
     -- Identificador y relaciones organizacionales
     id_usuario INT NOT NULL AUTO_INCREMENT,
-    id_rol INT NOT NULL,
+    rol VARCHAR(50) NOT NULL,
     id_sede INT NULL,
     -- Credenciales de acceso
     username VARCHAR(50) NOT NULL,
@@ -143,7 +137,6 @@ CREATE TABLE usuario (
     PRIMARY KEY (id_usuario),
     CONSTRAINT uq_usuario_username UNIQUE (username),
     CONSTRAINT uq_usuario_correo UNIQUE (correo_institucional),
-    CONSTRAINT fk_usuario_rol FOREIGN KEY (id_rol) REFERENCES rol (id_rol) ON UPDATE CASCADE ON DELETE RESTRICT,
     CONSTRAINT fk_usuario_sede FOREIGN KEY (id_sede) REFERENCES sede (id_sede) ON UPDATE CASCADE ON DELETE SET NULL
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
@@ -161,12 +154,47 @@ CREATE TABLE cliente (
     direccion_fiscal VARCHAR(200) NULL,
     correo_contacto VARCHAR(100) NOT NULL,
     telefono_contacto VARCHAR(20) NULL,
-    -- Control y estado comercial
-    es_prospecto BOOLEAN NOT NULL DEFAULT TRUE,
+    -- Control y estado comercial (PROSPECTO, CLIENTE)
+    estado_cliente VARCHAR(30) NOT NULL DEFAULT 'PROSPECTO',
+    estado_activo BOOLEAN NOT NULL DEFAULT TRUE,
     -- Llave primaria y restricciones
     PRIMARY KEY (id_cliente),
     CONSTRAINT uq_cliente_num_doc UNIQUE (numero_documento)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+
+CREATE TABLE usuario_cliente (
+    -- Identificador y relación 1:1 con la empresa cliente
+    id_usuario_cliente INT NOT NULL AUTO_INCREMENT,
+    id_cliente INT NOT NULL,
+    -- Credenciales de acceso al portal B2B para la empresa
+    username VARCHAR(100) NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    -- Auditoría y estado
+    estado_activo BOOLEAN NOT NULL DEFAULT TRUE,
+    debe_cambiar_password BOOLEAN NOT NULL DEFAULT FALSE,
+    ultimo_acceso DATETIME NULL,
+    fecha_creacion DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    fecha_actualizacion DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    -- Llave primaria y restricciones (1 usuario general por empresa)
+    PRIMARY KEY (id_usuario_cliente),
+    CONSTRAINT uq_usrcli_cliente UNIQUE (id_cliente),
+    CONSTRAINT uq_usrcli_username UNIQUE (username),
+    CONSTRAINT fk_usrcli_cliente FOREIGN KEY (id_cliente) REFERENCES cliente (id_cliente) ON UPDATE CASCADE ON DELETE RESTRICT
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+
+CREATE TABLE notificacion_cliente (
+    id_notificacion INT NOT NULL AUTO_INCREMENT,
+    id_cliente INT NOT NULL,
+    titulo VARCHAR(150) NOT NULL,
+    mensaje TEXT NOT NULL,
+    tipo VARCHAR(50) NOT NULL DEFAULT 'SISTEMA',
+    leido BOOLEAN NOT NULL DEFAULT FALSE,
+    enlace VARCHAR(255) NULL,
+    fecha_creacion DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id_notificacion),
+    CONSTRAINT fk_notifcli_cliente FOREIGN KEY (id_cliente) REFERENCES cliente (id_cliente) ON UPDATE CASCADE ON DELETE RESTRICT
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+
 
 CREATE TABLE cotizacion (
     -- Identificador y relaciones comerciales
@@ -243,14 +271,14 @@ CREATE TABLE cotizacion_pago (
     fecha_validacion DATETIME NULL,
     observacion_finanzas TEXT NULL,
     -- Auditoría de registro
-    id_usuario_registro INT NOT NULL,
+    id_usuario_registro INT NULL,
     fecha_registro DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     -- Llave primaria y restricciones
     PRIMARY KEY (id_pago),
     CONSTRAINT uq_cotizacion_pago_codigo UNIQUE (codigo_pago),
     CONSTRAINT fk_pago_cotizacion FOREIGN KEY (id_cotizacion) REFERENCES cotizacion (id_cotizacion) ON UPDATE CASCADE ON DELETE RESTRICT,
     CONSTRAINT fk_pago_usuario_finanzas FOREIGN KEY (id_usuario_finanzas) REFERENCES usuario (id_usuario) ON UPDATE CASCADE ON DELETE SET NULL,
-    CONSTRAINT fk_pago_usuario_registro FOREIGN KEY (id_usuario_registro) REFERENCES usuario (id_usuario) ON UPDATE CASCADE ON DELETE RESTRICT,
+    CONSTRAINT fk_pago_usuario_registro FOREIGN KEY (id_usuario_registro) REFERENCES usuario (id_usuario) ON UPDATE CASCADE ON DELETE SET NULL,
     CONSTRAINT fk_pago_doc_comprobante FOREIGN KEY (id_documento_comprobante) REFERENCES documento_adjunto (id_documento) ON UPDATE CASCADE ON DELETE SET NULL
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
@@ -336,7 +364,7 @@ CREATE TABLE control_almacen (
     -- Llave primaria y restricciones
     PRIMARY KEY (id_control_almacen),
     CONSTRAINT uq_almacen_expediente UNIQUE (id_expediente),
-    CONSTRAINT fk_almacen_expediente FOREIGN KEY (id_expediente) REFERENCES expediente (id_expediente) ON UPDATE CASCADE ON DELETE CASCADE
+    CONSTRAINT fk_almacen_expediente FOREIGN KEY (id_expediente) REFERENCES expediente (id_expediente) ON UPDATE CASCADE ON DELETE RESTRICT
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- =============================================================================
@@ -418,7 +446,7 @@ CREATE TABLE despacho_transporte (
     PRIMARY KEY (id_despacho_transporte),
     CONSTRAINT uq_transporte_expediente UNIQUE (id_expediente),
     CONSTRAINT uq_transporte_tracking UNIQUE (codigo_tracking),
-    CONSTRAINT fk_transporte_expediente FOREIGN KEY (id_expediente) REFERENCES expediente (id_expediente) ON UPDATE CASCADE ON DELETE CASCADE,
+    CONSTRAINT fk_transporte_expediente FOREIGN KEY (id_expediente) REFERENCES expediente (id_expediente) ON UPDATE CASCADE ON DELETE RESTRICT,
     CONSTRAINT fk_transporte_conductor FOREIGN KEY (id_conductor) REFERENCES conductor (id_conductor) ON UPDATE CASCADE ON DELETE SET NULL,
     CONSTRAINT fk_transporte_unidad FOREIGN KEY (id_unidad) REFERENCES unidad_transporte (id_unidad) ON UPDATE CASCADE ON DELETE SET NULL,
     CONSTRAINT fk_despacho_doc_remision FOREIGN KEY (id_documento_remision) REFERENCES documento_adjunto (id_documento) ON UPDATE CASCADE ON DELETE SET NULL
@@ -517,15 +545,20 @@ CREATE INDEX idx_mercancia_estado ON catalogo_mercancia (estado);
 
 CREATE INDEX idx_mercancia_categoria ON catalogo_mercancia (categoria);
 
-CREATE INDEX idx_rol_estado ON rol (estado_activo);
-
 CREATE INDEX idx_sede_estado ON sede (estado);
 
-CREATE INDEX idx_usuario_rol ON usuario (id_rol);
+CREATE INDEX idx_usuario_rol ON usuario (rol);
 
 CREATE INDEX idx_usuario_sede ON usuario (id_sede);
 
 CREATE INDEX idx_usuario_estado ON usuario (estado_activo);
+
+-- Portal B2B de Clientes y Cartera Comercial
+CREATE INDEX idx_cliente_estado ON cliente (estado_cliente);
+
+CREATE INDEX idx_usrcli_empresa ON usuario_cliente (id_cliente);
+
+CREATE INDEX idx_usrcli_estado ON usuario_cliente (estado_activo);
 
 -- Marketing y Comercial (Cotizaciones y Pagos)
 CREATE INDEX idx_cotizacion_cliente ON cotizacion (id_cliente);
@@ -600,6 +633,10 @@ CREATE INDEX idx_doc_entidad ON documento_adjunto (
 CREATE INDEX idx_doc_categoria ON documento_adjunto (categoria);
 
 CREATE INDEX idx_doc_activo ON documento_adjunto (activo);
+
+-- Notificaciones del Portal Cliente B2B
+CREATE INDEX idx_notifcli_cliente ON notificacion_cliente (id_cliente);
+CREATE INDEX idx_notifcli_leido ON notificacion_cliente (id_cliente, leido);
 
 -- Rehabilitación de validación de claves foráneas
 SET FOREIGN_KEY_CHECKS = 1;

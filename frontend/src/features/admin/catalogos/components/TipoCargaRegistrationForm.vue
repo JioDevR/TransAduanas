@@ -143,7 +143,7 @@
               </div>
             </div>
 
-            <!-- Nombre / Descripción de la Carga -->
+            <!-- Nombre / Denominación de la Carga -->
             <div class="field-group">
               <label for="tc-nombre" class="field-label">Nombre Descriptivo de la Mercancía o Tipo de Carga *</label>
               <div class="input-icon-box">
@@ -161,6 +161,26 @@
               </div>
               <p class="field-helper-text">
                 Denominación clara del tipo de carga para los oficiales de aforo y vistas aduaneros.
+              </p>
+            </div>
+
+            <!-- Descripción Operativa / Alcance -->
+            <div class="field-group">
+              <label for="tc-descripcion" class="field-label">Descripción Operativa / Alcance</label>
+              <div class="input-icon-box">
+                <i class="pi pi-align-left input-icon"></i>
+                <input
+                  id="tc-descripcion"
+                  v-model.trim="form.descripcion"
+                  type="text"
+                  placeholder="Ej. Bultos en bodega aérea inferior, o contenedor exclusivo de 20/40 pies"
+                  class="form-input"
+                  maxlength="255"
+                  :disabled="submitting"
+                />
+              </div>
+              <p class="field-helper-text">
+                Detalle técnico o alcance de la modalidad de estiba (opcional).
               </p>
             </div>
           </div>
@@ -359,6 +379,11 @@
               <span class="detail-val">{{ form.tipoContenedorSugerido || 'No especificado' }}</span>
             </div>
 
+            <div v-if="form.descripcion" class="card-detail-item">
+              <span class="detail-label">Alcance:</span>
+              <span class="detail-val">{{ form.descripcion }}</span>
+            </div>
+
             <div class="card-detail-item">
               <span class="detail-label">Tara de Referencia:</span>
               <span class="detail-val highlight-val">{{ formatNumber(form.taraSugeridaKg) }} kg</span>
@@ -433,6 +458,7 @@ const errorMessage = ref('')
 const defaultForm = () => ({
   codigo: '',
   nombre: '',
+  descripcion: '',
   tipoContenedorSugerido: "20' Dry Standard",
   taraSugeridaKg: 2200,
   estado: 'ACTIVO'
@@ -472,6 +498,13 @@ const containerOptions = [
     icon: 'pi pi-truck'
   },
   {
+    value: 'Pallet / Contenedor ULD Aéreo',
+    label: 'Pallet / Contenedor ULD Aéreo',
+    desc: 'Elemento unitario aéreo IATA (PMC / AKE) para aeronaves',
+    tara: 120,
+    icon: 'pi pi-send'
+  },
+  {
     value: 'Tanque Cisterna / ISO Tank',
     label: 'Tanque Cisterna / ISO Tank',
     desc: 'Líquidos a granel y productos químicos',
@@ -495,6 +528,7 @@ watch(
       form.value = {
         codigo: newVal.codigo || '',
         nombre: newVal.nombre || '',
+        descripcion: newVal.descripcion || '',
         tipoContenedorSugerido: newVal.tipoContenedorSugerido || '',
         taraSugeridaKg: newVal.taraSugeridaKg !== undefined && newVal.taraSugeridaKg !== null ? newVal.taraSugeridaKg : 0,
         estado: newVal.estado || 'ACTIVO'
@@ -552,6 +586,7 @@ const handleSubmit = async () => {
     const payload = {
       codigo: form.value.codigo,
       nombre: form.value.nombre,
+      descripcion: form.value.descripcion ? form.value.descripcion.trim() : null,
       estado: form.value.estado
     }
 
@@ -606,7 +641,7 @@ defineExpose({
   background: var(--color-bg-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-xl, 1rem);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-subtle);
   flex-wrap: wrap;
 }
 
@@ -651,7 +686,7 @@ defineExpose({
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--color-primary);
-  background: var(--color-primary-subtle);
+  background: var(--color-bg-subtle);
   padding: 0.2rem 0.55rem;
   border-radius: var(--radius-sm, 0.25rem);
 }
@@ -669,13 +704,13 @@ defineExpose({
 }
 
 .mode-create {
-  background: var(--color-success-subtle);
-  color: var(--color-success);
+  background: var(--color-success-bg);
+  color: var(--color-success-text);
 }
 
 .mode-edit {
-  background: var(--color-warning-subtle);
-  color: var(--color-warning);
+  background: var(--color-warning-bg);
+  color: var(--color-warning-text);
 }
 
 .form-main-title {
@@ -731,10 +766,10 @@ defineExpose({
   border-radius: var(--radius-md, 0.5rem);
   border: none;
   background: var(--color-primary);
-  color: var(--color-primary-contrast);
+  color: var(--color-primary-text);
   cursor: pointer;
   transition: all var(--transition-fast);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-subtle);
 }
 
 .btn-espresso:hover:not(:disabled) {
@@ -755,10 +790,10 @@ defineExpose({
   align-items: center;
   gap: var(--space-3, 0.75rem);
   padding: var(--space-4, 1rem) var(--space-5, 1.25rem);
-  background: var(--color-danger-subtle);
-  border: 1px solid var(--color-danger);
+  background: var(--color-danger-bg);
+  border: 1px solid var(--color-danger-border);
   border-radius: var(--radius-lg, 0.75rem);
-  color: var(--color-danger);
+  color: var(--color-danger-text);
   font-size: var(--font-size-sm, 0.875rem);
 }
 
@@ -769,7 +804,7 @@ defineExpose({
 .error-close-btn {
   background: none;
   border: none;
-  color: var(--color-danger);
+  color: var(--color-danger-text);
   cursor: pointer;
   padding: 0.25rem;
 }
@@ -777,7 +812,7 @@ defineExpose({
 /* 2. Grid de Contenido */
 .form-content-grid {
   display: grid;
-  grid-template-columns: 1fr 380px;
+  grid-template-columns: 1fr 400px;
   gap: var(--space-6, 1.5rem);
   align-items: start;
 }
@@ -800,7 +835,7 @@ defineExpose({
   border: 1px solid var(--color-border);
   border-radius: var(--radius-xl, 1rem);
   padding: var(--space-6, 1.5rem) var(--space-8, 2rem);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-subtle);
 }
 
 .block-header {
@@ -936,7 +971,7 @@ defineExpose({
   outline: none;
   border-color: var(--color-primary);
   background: var(--color-bg-surface);
-  box-shadow: 0 0 0 2px var(--color-primary-subtle);
+  box-shadow: 0 0 0 2px var(--color-bg-subtle);
 }
 
 .code-input {
@@ -988,7 +1023,7 @@ defineExpose({
 }
 
 .shortcut-chip:hover {
-  background: var(--color-primary-subtle);
+  background: var(--color-bg-subtle);
   border-color: var(--color-primary);
   color: var(--color-primary);
 }
@@ -1020,7 +1055,7 @@ defineExpose({
 
 .container-option-card.selected {
   border-color: var(--color-primary);
-  background: var(--color-primary-subtle);
+  background: var(--color-bg-subtle);
   box-shadow: 0 0 0 1px var(--color-primary);
 }
 
@@ -1040,7 +1075,7 @@ defineExpose({
 
 .container-option-card.selected .option-icon-box {
   background: var(--color-primary);
-  color: var(--color-primary-contrast);
+  color: var(--color-primary-text);
   border-color: var(--color-primary);
 }
 
@@ -1109,7 +1144,7 @@ defineExpose({
 
 .status-option-card.selected {
   border-color: var(--color-primary);
-  background: var(--color-primary-subtle);
+  background: var(--color-bg-subtle);
   box-shadow: 0 0 0 1px var(--color-primary);
 }
 
@@ -1127,11 +1162,11 @@ defineExpose({
 }
 
 .dot-active {
-  background: var(--color-success);
+  background: var(--color-success-text);
 }
 
 .dot-inactive {
-  background: var(--color-danger);
+  background: var(--color-danger-text);
 }
 
 .status-card-title {
@@ -1163,7 +1198,7 @@ defineExpose({
   border: 1px solid var(--color-border);
   border-radius: var(--radius-xl, 1rem);
   padding: var(--space-6, 1.5rem);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-subtle);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1180,7 +1215,7 @@ defineExpose({
   font-weight: 800;
   letter-spacing: 0.1em;
   color: var(--color-primary);
-  background: var(--color-primary-subtle);
+  background: var(--color-bg-subtle);
   padding: 0.25rem 0.65rem;
   border-radius: var(--radius-full, 9999px);
   margin-bottom: var(--space-4, 1rem);
@@ -1194,7 +1229,7 @@ defineExpose({
   width: 4rem;
   height: 4rem;
   border-radius: var(--radius-lg, 0.75rem);
-  background: var(--color-primary-subtle);
+  background: var(--color-bg-subtle);
   color: var(--color-primary);
   border: 2px solid var(--color-border);
   display: flex;
@@ -1275,13 +1310,13 @@ defineExpose({
 }
 
 .badge-active {
-  background: var(--color-success-subtle);
-  color: var(--color-success);
+  background: var(--color-success-bg);
+  color: var(--color-success-text);
 }
 
 .badge-inactive {
-  background: var(--color-danger-subtle);
-  color: var(--color-danger);
+  background: var(--color-danger-bg);
+  color: var(--color-danger-text);
 }
 
 .card-footer-stamp {
@@ -1300,7 +1335,7 @@ defineExpose({
   border: 1px solid var(--color-border);
   border-radius: var(--radius-xl, 1rem);
   padding: var(--space-5, 1.25rem);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-subtle);
   display: flex;
   flex-direction: column;
   gap: var(--space-4, 1rem);
@@ -1337,7 +1372,7 @@ defineExpose({
 }
 
 .checklist-row.valid {
-  color: var(--color-success);
+  color: var(--color-success-text);
   font-weight: 600;
 }
 

@@ -1,9 +1,18 @@
 <template>
   <div class="ventas-view">
 
+    <!-- Vista Completa: Corrección Unificada de Cotización Observada -->
+    <CotizacionCorrectionView
+      v-if="showCorrectionView"
+      :cotizacion="selectedCotizacion"
+      :clientes="clientes"
+      @cancel="closeAllForms"
+      @saved="handleCotizacionSaved"
+    />
+
     <!-- Vista Completa: Formulario Maestro de Cotización Comercial (en Pasos) -->
     <CotizacionRegistrationForm
-      v-if="showCotizacionForm"
+      v-else-if="showCotizacionForm"
       :cotizacion-to-edit="selectedCotizacion"
       :clientes="clientes"
       @cancel="closeAllForms"
@@ -330,44 +339,114 @@
       <!-- ======================================================== -->
       <!-- SUB-OPCIÓN 02: REGISTRO DE COTIZACIONES COMERCIALES      -->
       <!-- ======================================================== -->
+      <!-- ======================================================== -->
+      <!-- SUB-OPCIÓN 02: REGISTRO DE COTIZACIONES COMERCIALES      -->
+      <!-- ======================================================== -->
       <div v-if="activeTab === 'cotizaciones'" class="tab-content-section fade-in">
-      <div class="section-header-row">
-        <div>
-          <span class="badge-kicker">PROPUESTAS ADUANERAS</span>
-          <h3 class="section-title">Registro de Cotizaciones Comerciales</h3>
+        <div class="section-header-row">
+          <div>
+            <span class="badge-kicker">PROPUESTAS ADUANERAS</span>
+            <h3 class="section-title">Registro de Cotizaciones Comerciales</h3>
+          </div>
+
+          <div class="section-controls">
+            <button type="button" class="btn-espresso" @click="openCreateCotizacion">
+              <i class="pi pi-plus"></i>
+              <span>+ Nueva Cotización</span>
+            </button>
+          </div>
         </div>
 
-        <div class="section-controls">
-          <select v-model="filterEstadoCotizacion" class="filter-select">
-            <option value="">Todos los Estados</option>
-            <option value="PENDIENTE">Pendientes de Revisión</option>
-            <option value="OBSERVADA">Observadas (Para Corrección)</option>
-            <option value="APROBADA">Aprobadas</option>
-            <option value="RECHAZADA">Rechazadas</option>
-            <option value="ANULADA">Anuladas</option>
-          </select>
+        <!-- Controles de Tabla: Buscar, Filtros y Ordenar por -->
+        <div class="table-controls-bar">
+          <div class="controls-left">
+            <!-- Campo de Búsqueda -->
+            <div class="search-box">
+              <i class="pi pi-search search-icon"></i>
+              <input
+                v-model.trim="searchCotizacion"
+                type="text"
+                placeholder="Buscar por N° cotización, cliente o RUC..."
+                class="search-input"
+              />
+              <button
+                v-if="searchCotizacion"
+                type="button"
+                class="clear-search-btn"
+                @click="searchCotizacion = ''"
+                title="Limpiar búsqueda"
+              >
+                <i class="pi pi-times"></i>
+              </button>
+            </div>
 
-          <button type="button" class="btn-outline-warm" @click="loadData" :disabled="loading">
-            <i :class="['pi pi-sync', { 'pi-spin': loading }]"></i>
-            <span>Actualizar</span>
-          </button>
+            <!-- Filtro Régimen Aduanero -->
+            <div class="filter-dropdown">
+              <select v-model="filterRegimenCotizacion" class="filter-select" title="Filtrar por régimen aduanero">
+                <option value="ALL">Todos los Regímenes</option>
+                <option value="IMPORTACION_DEFINITIVA">Importación (REG-10)</option>
+                <option value="EXPORTACION_DEFINITIVA">Exportación (REG-40)</option>
+              </select>
+            </div>
 
-          <button type="button" class="btn-espresso" @click="openCreateCotizacion">
-            <i class="pi pi-plus"></i>
-            <span>+ Nueva Cotización</span>
-          </button>
+            <!-- Filtro Estado Cotización -->
+            <div class="filter-dropdown">
+              <select v-model="filterEstadoCotizacion" class="filter-select" title="Filtrar por estado">
+                <option value="">Todos los Estados</option>
+                <option value="PENDIENTE">Pendientes de Revisión</option>
+                <option value="OBSERVADA">Observadas (Para Corrección)</option>
+                <option value="APROBADA">Aprobadas</option>
+                <option value="RECHAZADA">Rechazadas</option>
+                <option value="ANULADA">Anuladas</option>
+              </select>
+            </div>
+
+            <!-- Ordenar Por -->
+            <div class="sort-dropdown">
+              <select v-model="sortByCotizacion" class="filter-select sort-select" title="Ordenar resultados">
+                <option value="fecha-desc">Ordenar por: Fecha (Más recientes)</option>
+                <option value="fecha-asc">Ordenar por: Fecha (Más antiguas)</option>
+                <option value="monto-desc">Ordenar por: Monto (Mayor a menor)</option>
+                <option value="monto-asc">Ordenar por: Monto (Menor a mayor)</option>
+                <option value="codigo-asc">Ordenar por: N° Cotización (A - Z)</option>
+                <option value="cliente-asc">Ordenar por: Cliente (A - Z)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="controls-right">
+            <button
+              v-if="hasActiveCotizacionFilters"
+              type="button"
+              class="btn-clear-filters"
+              @click="resetCotizacionFilters"
+              title="Restablecer filtros"
+            >
+              <i class="pi pi-filter-slash"></i>
+              <span>Limpiar Filtros</span>
+            </button>
+
+            <button type="button" class="btn-outline-warm" @click="loadData" :disabled="loading" title="Actualizar datos">
+              <i :class="['pi pi-sync', { 'pi-spin': loading }]"></i>
+              <span>Actualizar</span>
+            </button>
+          </div>
         </div>
-      </div>
 
-      <!-- Tabla de Cotizaciones con PrimeVue DataTable -->
-      <div class="table-container">
-        <DataTable
-          :value="filteredCotizaciones"
-          :loading="loading"
-          responsiveLayout="scroll"
-          class="custom-datatable"
-          dataKey="idCotizacion"
-        >
+        <!-- Tabla de Cotizaciones con PrimeVue DataTable -->
+        <div class="table-container">
+          <DataTable
+            :value="filteredCotizaciones"
+            :loading="loading"
+            responsiveLayout="scroll"
+            class="custom-datatable"
+            dataKey="idCotizacion"
+            paginator
+            :rows="15"
+            :rowsPerPageOptions="[15, 30, 50]"
+            currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} cotizaciones"
+            paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown CurrentPageReport"
+          >
           <template #empty>
             <div class="empty-state">
               <i class="pi pi-file-edit empty-icon"></i>
@@ -392,7 +471,15 @@
             <template #body="{ data: c }">
               <div class="client-cell">
                 <span class="client-name">{{ c.clienteRazonSocial || 'Cliente N/A' }}</span>
-                <span class="client-sub">{{ c.clienteNumeroDocumento }}</span>
+                <div class="client-sub-meta">
+                  <span class="client-sub">{{ c.clienteNumeroDocumento }}</span>
+                  <span v-if="c.clienteTieneUsuario" class="portal-badge origin-badge origin-portal" title="Empresa formalizada con usuario activo en Portal B2B">
+                    <i class="pi pi-id-card"></i> Portal B2B
+                  </span>
+                  <span v-else class="presencial-badge origin-badge origin-presencial" title="Nuevo prospecto / Sin cuenta B2B (Atención y subsanación presencial con el vendedor)">
+                    <i class="pi pi-user"></i> Presencial
+                  </span>
+                </div>
               </div>
             </template>
           </Column>
@@ -486,11 +573,21 @@
 
 
                 <button
+                  v-if="(c.estado === 'REVISION' || c.estado === 'OBSERVADA') && !c.clienteTieneUsuario && (c.clienteTelefono || getClienteTelefono(c.idCliente))"
+                  type="button"
+                  class="action-btn-outline btn-whatsapp-action btn-whatsapp"
+                  title="Notificar observaciones por WhatsApp (Atención Presencial/Directa)"
+                  @click="notifyObservationViaWhatsApp(c)"
+                >
+                  <i class="pi pi-whatsapp"></i>
+                </button>
+
+                <button
                   v-if="c.estado === 'REVISION' || c.estado === 'OBSERVADA'"
                   type="button"
                   class="action-btn-outline observe-fix"
-                  title="Corregir observaciones y enviar nuevamente"
-                  @click="openEditCotizacion(c)"
+                  title="Corregir observaciones y enviar nuevamente a Supervisión"
+                  @click="openCorrectionCotizacion(c)"
                 >
                   <i class="pi pi-file-edit"></i>
                   <span>Corregir</span>
@@ -529,22 +626,80 @@
         </div>
 
         <div class="section-controls">
-          <input
-            v-model="searchCliente"
-            type="text"
-            placeholder="Buscar por RUC o razón social..."
-            class="search-mini-input"
-          />
-
-          <select v-model="filterTipoCliente" class="filter-select">
-            <option value="ALL">Todos (Clientes y Prospectos)</option>
-            <option value="PROSPECTO">Solo Prospectos</option>
-            <option value="CLIENTE">Clientes Efectivos</option>
-          </select>
-
           <button type="button" class="btn-espresso" @click="openCreateCliente">
             <i class="pi pi-plus"></i>
             <span>+ Nuevo Cliente</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Controles de Tabla: Buscar, Filtros y Ordenar por -->
+      <div class="table-controls-bar">
+        <div class="controls-left">
+          <!-- Campo de Búsqueda -->
+          <div class="search-box">
+            <i class="pi pi-search search-icon"></i>
+            <input
+              v-model.trim="searchCliente"
+              type="text"
+              placeholder="Buscar por RUC/DNI, razón social o contacto..."
+              class="search-input"
+            />
+            <button
+              v-if="searchCliente"
+              type="button"
+              class="clear-search-btn"
+              @click="searchCliente = ''"
+              title="Limpiar búsqueda"
+            >
+              <i class="pi pi-times"></i>
+            </button>
+          </div>
+
+          <!-- Filtro Tipo de Cliente -->
+          <div class="filter-dropdown">
+            <select v-model="filterTipoCliente" class="filter-select" title="Filtrar por clasificación">
+              <option value="ALL">Todos (Clientes y Prospectos)</option>
+              <option value="PROSPECTO">Solo Prospectos</option>
+              <option value="CLIENTE">Clientes Efectivos</option>
+            </select>
+          </div>
+
+          <!-- Filtro Estado Cliente -->
+          <div class="filter-dropdown">
+            <select v-model="filterEstadoCliente" class="filter-select" title="Filtrar por estado">
+              <option value="ALL">Todos los Estados</option>
+              <option value="ACTIVO">Solo Activos</option>
+              <option value="INACTIVO">Solo Inactivos</option>
+            </select>
+          </div>
+
+          <!-- Ordenar Por -->
+          <div class="sort-dropdown">
+            <select v-model="sortByCliente" class="filter-select sort-select" title="Ordenar clientes">
+              <option value="nombre-asc">Ordenar por: Razón Social (A - Z)</option>
+              <option value="nombre-desc">Ordenar por: Razón Social (Z - A)</option>
+              <option value="doc-asc">Ordenar por: Documento (A - Z)</option>
+              <option value="tipo-asc">Ordenar por: Clasificación (Prospectos primero)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="controls-right">
+          <button
+            v-if="hasActiveClienteFilters"
+            type="button"
+            class="btn-clear-filters"
+            @click="resetClienteFilters"
+            title="Restablecer filtros"
+          >
+            <i class="pi pi-filter-slash"></i>
+            <span>Limpiar Filtros</span>
+          </button>
+
+          <button type="button" class="btn-outline-warm" @click="loadData" :disabled="loading" title="Actualizar datos">
+            <i :class="['pi pi-sync', { 'pi-spin': loading }]"></i>
+            <span>Actualizar</span>
           </button>
         </div>
       </div>
@@ -557,6 +712,11 @@
           responsiveLayout="scroll"
           class="custom-datatable"
           dataKey="idCliente"
+          paginator
+          :rows="15"
+          :rowsPerPageOptions="[15, 30, 50]"
+          currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} clientes"
+          paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown CurrentPageReport"
         >
           <template #empty>
             <div class="empty-state">
@@ -579,7 +739,15 @@
             <template #body="{ data: cl }">
               <div class="client-cell">
                 <span class="client-name">{{ cl.razonSocial }}</span>
-                <span class="client-sub" v-if="cl.contactoRepresentante">Rep: {{ cl.contactoRepresentante }}</span>
+                <div class="client-sub-meta">
+                  <span class="client-sub" v-if="cl.contactoRepresentante">Rep: {{ cl.contactoRepresentante }}</span>
+                  <span v-if="clienteTieneUsuarioPortal(cl)" class="portal-badge origin-badge origin-portal" title="Empresa formalizada con usuario activo en Portal B2B">
+                    <i class="pi pi-id-card"></i> Portal B2B
+                  </span>
+                  <span v-else class="presencial-badge origin-badge origin-presencial" title="Nuevo prospecto / Sin cuenta B2B (Atención presencial con el vendedor)">
+                    <i class="pi pi-user"></i> Presencial
+                  </span>
+                </div>
               </div>
             </template>
           </Column>
@@ -636,27 +804,80 @@
           <span class="badge-kicker">SEGUIMIENTO OPERATIVO // VISIBILIDAD GLOBAL</span>
           <h3 class="section-title">Expedientes Aduaneros (Modo Consulta)</h3>
         </div>
+      </div>
 
-        <div class="section-controls">
-          <select v-model="filterEstadoExpediente" class="filter-select">
-            <option value="">Todos los Estados</option>
-            <option value="ASIGNADO">Asignado</option>
-            <option value="NUMERADO">Numerado</option>
-            <option value="EN_TRAMITE">En Trámite</option>
-            <option value="CON_CANAL">Con Canal SUNAT</option>
-            <option value="LEVANTE_AUTORIZADO">Levante Autorizado</option>
-            <option value="CONCLUIDO">Concluido</option>
-            <option value="ANULADO">Anulado</option>
-          </select>
+      <!-- Controles de Tabla: Buscar, Filtros y Ordenar por -->
+      <div class="table-controls-bar">
+        <div class="controls-left">
+          <!-- Campo de Búsqueda -->
+          <div class="search-box">
+            <i class="pi pi-search search-icon"></i>
+            <input
+              v-model.trim="searchExpediente"
+              type="text"
+              placeholder="Buscar por expediente, DAM, cotización o cliente..."
+              class="search-input"
+            />
+            <button
+              v-if="searchExpediente"
+              type="button"
+              class="clear-search-btn"
+              @click="searchExpediente = ''"
+              title="Limpiar búsqueda"
+            >
+              <i class="pi pi-times"></i>
+            </button>
+          </div>
 
-          <input
-            v-model="searchExpediente"
-            type="text"
-            placeholder="Buscar por expediente, DAM o cliente..."
-            class="search-mini-input"
-          />
+          <!-- Filtro Estado Expediente -->
+          <div class="filter-dropdown">
+            <select v-model="filterEstadoExpediente" class="filter-select" title="Filtrar por estado del expediente">
+              <option value="">Todos los Estados</option>
+              <option value="ASIGNADO">Asignado</option>
+              <option value="NUMERADO">Numerado</option>
+              <option value="EN_TRAMITE">En Trámite</option>
+              <option value="CON_CANAL">Con Canal SUNAT</option>
+              <option value="LEVANTE_AUTORIZADO">Levante Autorizado</option>
+              <option value="CONCLUIDO">Concluido</option>
+              <option value="ANULADO">Anulado</option>
+            </select>
+          </div>
 
-          <button type="button" class="btn-outline-warm" @click="loadData" :disabled="loading">
+          <!-- Filtro Canal SUNAT -->
+          <div class="filter-dropdown">
+            <select v-model="filterCanalExpediente" class="filter-select" title="Filtrar por canal SUNAT">
+              <option value="ALL">Todos los Canales</option>
+              <option value="VERDE">Canal Verde</option>
+              <option value="NARANJA">Canal Naranja</option>
+              <option value="ROJO">Canal Rojo</option>
+              <option value="PENDIENTE">Pendiente Asignación</option>
+            </select>
+          </div>
+
+          <!-- Ordenar Por -->
+          <div class="sort-dropdown">
+            <select v-model="sortByExpediente" class="filter-select sort-select" title="Ordenar expedientes">
+              <option value="fecha-desc">Ordenar por: Fecha (Recientes primero)</option>
+              <option value="fecha-asc">Ordenar por: Fecha (Antiguos primero)</option>
+              <option value="codigo-asc">Ordenar por: N° Expediente (A - Z)</option>
+              <option value="cliente-asc">Ordenar por: Cliente (A - Z)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="controls-right">
+          <button
+            v-if="hasActiveExpedienteFilters"
+            type="button"
+            class="btn-clear-filters"
+            @click="resetExpedienteFilters"
+            title="Restablecer filtros"
+          >
+            <i class="pi pi-filter-slash"></i>
+            <span>Limpiar Filtros</span>
+          </button>
+
+          <button type="button" class="btn-outline-warm" @click="loadData" :disabled="loading" title="Actualizar datos">
             <i :class="['pi pi-sync', { 'pi-spin': loading }]"></i>
             <span>Actualizar</span>
           </button>
@@ -671,6 +892,11 @@
           responsiveLayout="scroll"
           class="custom-datatable"
           dataKey="idExpediente"
+          paginator
+          :rows="15"
+          :rowsPerPageOptions="[15, 30, 50]"
+          currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} expedientes"
+          paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown CurrentPageReport"
         >
           <template #empty>
             <div class="empty-state">
@@ -754,6 +980,14 @@
         <div class="obs-box-header">
           <span class="badge-kicker">EXPEDIENTE N° {{ selectedObservationCotizacion.codigoCotizacion }}</span>
           <strong class="obs-box-title">{{ selectedObservationCotizacion.clienteRazonSocial || 'Cliente Asignado' }}</strong>
+          <div class="obs-client-status">
+            <span v-if="selectedObservationCotizacion.clienteTieneUsuario" class="portal-badge origin-badge origin-portal">
+              <i class="pi pi-id-card"></i> Cuenta B2B Activa — Notificación enviada al portal del cliente
+            </span>
+            <span v-else class="presencial-badge origin-badge origin-presencial">
+              <i class="pi pi-user"></i> Prospecto sin cuenta B2B — Coordinación presencial o directa con el vendedor
+            </span>
+          </div>
         </div>
         <div class="obs-box-body">
           <i class="pi pi-exclamation-triangle obs-box-icon"></i>
@@ -763,11 +997,20 @@
           </div>
         </div>
         <p class="obs-box-hint">
-          Haga clic en "Corregir Cotización" para realizar los ajustes solicitados. Una vez guardada, volverá automáticamente a Supervisión como Enviada.
+          Subsanar los puntos observados haciendo clic en "Corregir Cotización". Al guardar los cambios, la propuesta volverá automáticamente a la bandeja de Supervisión Aduanera para su reevaluación.
         </p>
       </div>
       <template #footer>
         <div class="dialog-footer-actions">
+          <button
+            v-if="selectedObservationCotizacion && !selectedObservationCotizacion.clienteTieneUsuario && (selectedObservationCotizacion.clienteTelefono || getClienteTelefono(selectedObservationCotizacion.idCliente))"
+            type="button"
+            class="btn-whatsapp-dialog btn-whatsapp-modal"
+            @click="notifyObservationViaWhatsApp(selectedObservationCotizacion)"
+          >
+            <i class="pi pi-whatsapp"></i>
+            <span>Notificar WhatsApp</span>
+          </button>
           <button type="button" class="btn-outline-warm" @click="showObservationDialog = false">
             <span>Cerrar</span>
           </button>
@@ -813,13 +1056,14 @@ import { useNotification } from '@/shared/composables/useNotification'
 import { useConfirmation } from '@/shared/composables/useConfirmation'
 import ClienteRegistrationForm from '../components/ClienteRegistrationForm.vue'
 import CotizacionRegistrationForm from '../components/CotizacionRegistrationForm.vue'
+import CotizacionCorrectionView from '../components/CotizacionCorrectionView.vue'
 import DocumentosManagerModal from '@/shared/components/DocumentosManagerModal.vue'
 
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
 const navigationStore = useNavigationStore()
-const { showSuccess, showError, showInfo } = useNotification()
+const { showSuccess, showError, showInfo, showWarn } = useNotification()
 const { confirmAction, confirmDelete } = useConfirmation()
 
 const activeTab = ref('dashboard')
@@ -829,6 +1073,7 @@ const showClienteForm = ref(false)
 const selectedCliente = ref(null)
 
 const showCotizacionForm = ref(false)
+const showCorrectionView = ref(false)
 const selectedCotizacion = ref(null)
 
 const navigateTo = (subOption) => {
@@ -890,12 +1135,40 @@ const openEditFromObservation = () => {
   if (selectedObservationCotizacion.value) {
     const c = selectedObservationCotizacion.value
     showObservationDialog.value = false
-    openEditCotizacion(c)
+    openCorrectionCotizacion(c)
   }
+}
+
+const clienteTieneUsuarioPortal = (cl) => {
+  if (!cl) return false
+  if (typeof cl.tieneUsuario === 'boolean') return cl.tieneUsuario
+  return cotizaciones.value.some(c => c.idCliente === cl.idCliente && c.clienteTieneUsuario)
+}
+
+const getClienteTelefono = (idCliente) => {
+  if (!idCliente || !clientes.value) return ''
+  const cli = clientes.value.find(item => item.idCliente === idCliente)
+  return cli?.telefonoContacto || ''
+}
+
+const notifyObservationViaWhatsApp = (cotizacion) => {
+  const tel = cotizacion.clienteTelefono || getClienteTelefono(cotizacion.idCliente) || ''
+  const digitsOnly = tel.replace(/[^0-9]/g, '')
+  if (!digitsOnly) {
+    showToast('El cliente no tiene registrado número de teléfono/celular de contacto.', 'warn')
+    return
+  }
+  const phone = digitsOnly.startsWith('51') ? digitsOnly : `51${digitsOnly}`
+  const reason = cotizacion.motivoObservacion || 'Se requieren ajustes documentarios y técnicos en la propuesta comercial.'
+  const msg = `Hola *${cotizacion.clienteRazonSocial || 'Estimado Cliente'}*, le saluda TransAduanas SGA.\n\nLe informamos que su cotización aduanera *${cotizacion.codigoCotizacion}* ha sido revisada por Supervisión Técnica y presenta la siguiente observación:\n\n📌 *Motivo:* ${reason}\n\nPor favor facilítenos los datos o documentos solicitados para subsanar la cotización y continuar con su trámite.\n\nAtentamente,\n*Área Comercial - TransAduanas*`
+
+  const url = `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`
+  window.open(url, '_blank')
 }
 
 // Cerrar todos los formularios de vista completa y volver a los listados
 const closeAllForms = () => {
+  showCorrectionView.value = false
   showCotizacionForm.value = false
   showClienteForm.value = false
   selectedCotizacion.value = null
@@ -956,15 +1229,90 @@ const cotizaciones = ref([])
 const clientes = ref([])
 const expedientesList = ref([])
 
+// Normalizador de texto para búsquedas (ignora tildes, mayúsculas y espacios extras)
+const normalizeSearchText = (text) => {
+  if (!text) return ''
+  return text
+    .toString()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim()
+}
+
+// Filtros y ordenación para Cotizaciones (Sub-opción 02)
+const searchCotizacion = ref('')
+const filterRegimenCotizacion = ref('ALL')
 const filterEstadoCotizacion = ref('')
+const sortByCotizacion = ref('fecha-desc')
+
+// Filtros y ordenación para Clientes (Sub-opción 03)
 const searchCliente = ref('')
 const filterTipoCliente = ref('ALL')
-const filterEstadoExpediente = ref('')
+const filterEstadoCliente = ref('ALL')
+const sortByCliente = ref('nombre-asc')
+
+// Filtros y ordenación para Expedientes (Sub-opción 04)
 const searchExpediente = ref('')
+const filterEstadoExpediente = ref('')
+const filterCanalExpediente = ref('ALL')
+const sortByExpediente = ref('fecha-desc')
+
+// Banderas de filtros activos
+const hasActiveCotizacionFilters = computed(() => {
+  return (
+    !!searchCotizacion.value ||
+    filterRegimenCotizacion.value !== 'ALL' ||
+    !!filterEstadoCotizacion.value ||
+    sortByCotizacion.value !== 'fecha-desc'
+  )
+})
+
+const hasActiveClienteFilters = computed(() => {
+  return (
+    !!searchCliente.value ||
+    filterTipoCliente.value !== 'ALL' ||
+    filterEstadoCliente.value !== 'ALL' ||
+    sortByCliente.value !== 'nombre-asc'
+  )
+})
+
+const hasActiveExpedienteFilters = computed(() => {
+  return (
+    !!searchExpediente.value ||
+    !!filterEstadoExpediente.value ||
+    filterCanalExpediente.value !== 'ALL' ||
+    sortByExpediente.value !== 'fecha-desc'
+  )
+})
+
+// Acciones de restablecimiento de filtros
+const resetCotizacionFilters = () => {
+  searchCotizacion.value = ''
+  filterRegimenCotizacion.value = 'ALL'
+  filterEstadoCotizacion.value = ''
+  sortByCotizacion.value = 'fecha-desc'
+}
+
+const resetClienteFilters = () => {
+  searchCliente.value = ''
+  filterTipoCliente.value = 'ALL'
+  filterEstadoCliente.value = 'ALL'
+  sortByCliente.value = 'nombre-asc'
+}
+
+const resetExpedienteFilters = () => {
+  searchExpediente.value = ''
+  filterEstadoExpediente.value = ''
+  filterCanalExpediente.value = 'ALL'
+  sortByExpediente.value = 'fecha-desc'
+}
 
 const showToast = (message, type = 'success') => {
   if (type === 'error') {
     showError(message)
+  } else if (type === 'warn' || type === 'warning') {
+    showWarn(message)
   } else if (type === 'info') {
     showInfo(message)
   } else {
@@ -1040,48 +1388,136 @@ const regimenBreakdown = computed(() => {
 })
 
 const filteredCotizaciones = computed(() => {
-  if (!filterEstadoCotizacion.value) return cotizaciones.value
-  if (filterEstadoCotizacion.value === 'ENVIADA' || filterEstadoCotizacion.value === 'PENDIENTE') {
-    return cotizaciones.value.filter((c) => c.estado === 'ENVIADA' || c.estado === 'PENDIENTE')
-  }
-  if (filterEstadoCotizacion.value === 'REVISION' || filterEstadoCotizacion.value === 'OBSERVADA') {
-    return cotizaciones.value.filter((c) => c.estado === 'REVISION' || c.estado === 'OBSERVADA')
-  }
-  return cotizaciones.value.filter((c) => c.estado === filterEstadoCotizacion.value)
+  let list = cotizaciones.value.filter((c) => {
+    // 1. Filtro Estado
+    if (filterEstadoCotizacion.value) {
+      if (filterEstadoCotizacion.value === 'ENVIADA' || filterEstadoCotizacion.value === 'PENDIENTE') {
+        if (c.estado !== 'ENVIADA' && c.estado !== 'PENDIENTE') return false
+      } else if (filterEstadoCotizacion.value === 'REVISION' || filterEstadoCotizacion.value === 'OBSERVADA') {
+        if (c.estado !== 'REVISION' && c.estado !== 'OBSERVADA') return false
+      } else if (c.estado !== filterEstadoCotizacion.value) {
+        return false
+      }
+    }
+
+    // 2. Filtro Régimen
+    if (filterRegimenCotizacion.value !== 'ALL') {
+      if (c.regimenAduanero !== filterRegimenCotizacion.value) return false
+    }
+
+    // 3. Búsqueda inteligente (ignora tildes, tokens)
+    const q = normalizeSearchText(searchCotizacion.value)
+    if (q) {
+      const tokens = q.split(/\s+/).filter(Boolean)
+      const corpus = normalizeSearchText(
+        `${c.codigoCotizacion || ''} ${c.clienteRazonSocial || ''} ${c.clienteNumeroDocumento || ''} ${c.regimenAduanero || ''} ${c.estado || ''}`
+      )
+      if (!tokens.every((t) => corpus.includes(t))) return false
+    }
+
+    return true
+  })
+
+  // 4. Ordenar
+  return list.sort((a, b) => {
+    switch (sortByCotizacion.value) {
+      case 'fecha-asc':
+        return new Date(a.fechaEmision || 0) - new Date(b.fechaEmision || 0)
+      case 'monto-desc':
+        return (Number(b.totalCotizado) || 0) - (Number(a.totalCotizado) || 0)
+      case 'monto-asc':
+        return (Number(a.totalCotizado) || 0) - (Number(b.totalCotizado) || 0)
+      case 'codigo-asc':
+        return (a.codigoCotizacion || '').localeCompare(b.codigoCotizacion || '')
+      case 'cliente-asc':
+        return (a.clienteRazonSocial || '').localeCompare(b.clienteRazonSocial || '')
+      case 'fecha-desc':
+      default:
+        return new Date(b.fechaEmision || 0) - new Date(a.fechaEmision || 0) || (b.idCotizacion || 0) - (a.idCotizacion || 0)
+    }
+  })
 })
 
 const filteredClientes = computed(() => {
-  return clientes.value.filter((cl) => {
-    const q = searchCliente.value.toLowerCase().trim()
-    const matchSearch =
-      !q ||
-      cl.razonSocial?.toLowerCase().includes(q) ||
-      cl.numeroDocumento?.includes(q)
+  let list = clientes.value.filter((cl) => {
+    // 1. Tipo
+    if (filterTipoCliente.value === 'PROSPECTO' && !cl.esProspecto) return false
+    if (filterTipoCliente.value === 'CLIENTE' && cl.esProspecto) return false
 
-    let matchType = true
-    if (filterTipoCliente.value === 'PROSPECTO') {
-      matchType = cl.esProspecto === true
-    } else if (filterTipoCliente.value === 'CLIENTE') {
-      matchType = cl.esProspecto === false
+    // 2. Estado
+    if (filterEstadoCliente.value === 'ACTIVO' && cl.estado === 'INACTIVO') return false
+    if (filterEstadoCliente.value === 'INACTIVO' && cl.estado !== 'INACTIVO') return false
+
+    // 3. Búsqueda inteligente
+    const q = normalizeSearchText(searchCliente.value)
+    if (q) {
+      const tokens = q.split(/\s+/).filter(Boolean)
+      const corpus = normalizeSearchText(
+        `${cl.numeroDocumento || ''} ${cl.razonSocial || ''} ${cl.contactoRepresentante || ''} ${cl.correoContacto || ''} ${cl.telefonoContacto || ''} ${cl.direccionFiscal || ''}`
+      )
+      if (!tokens.every((t) => corpus.includes(t))) return false
     }
 
-    return matchSearch && matchType
+    return true
+  })
+
+  // 4. Ordenar
+  return list.sort((a, b) => {
+    switch (sortByCliente.value) {
+      case 'nombre-desc':
+        return (b.razonSocial || '').localeCompare(a.razonSocial || '')
+      case 'doc-asc':
+        return (a.numeroDocumento || '').localeCompare(b.numeroDocumento || '')
+      case 'tipo-asc':
+        return (b.esProspecto ? 1 : 0) - (a.esProspecto ? 1 : 0)
+      case 'nombre-asc':
+      default:
+        return (a.razonSocial || '').localeCompare(b.razonSocial || '')
+    }
   })
 })
 
 const filteredExpedientes = computed(() => {
-  return expedientesList.value.filter((exp) => {
-    const matchStatus = !filterEstadoExpediente.value || exp.estadoExpediente === filterEstadoExpediente.value
-    const q = searchExpediente.value.toLowerCase().trim()
-    const matchSearch =
-      !q ||
-      exp.codigoExpediente?.toLowerCase().includes(q) ||
-      exp.codigoCotizacion?.toLowerCase().includes(q) ||
-      exp.clienteRazonSocial?.toLowerCase().includes(q) ||
-      exp.numeroDam?.toLowerCase().includes(q) ||
-      exp.numeroDeclaracion?.toLowerCase().includes(q)
+  let list = expedientesList.value.filter((exp) => {
+    // 1. Estado
+    if (filterEstadoExpediente.value && exp.estadoExpediente !== filterEstadoExpediente.value) return false
 
-    return matchStatus && matchSearch
+    // 2. Canal SUNAT
+    if (filterCanalExpediente.value !== 'ALL') {
+      const canal = (exp.canalSunat || 'PENDIENTE').toUpperCase()
+      if (filterCanalExpediente.value === 'PENDIENTE') {
+        if (canal !== 'PENDIENTE' && canal !== '') return false
+      } else if (canal !== filterCanalExpediente.value) {
+        return false
+      }
+    }
+
+    // 3. Búsqueda inteligente
+    const q = normalizeSearchText(searchExpediente.value)
+    if (q) {
+      const tokens = q.split(/\s+/).filter(Boolean)
+      const corpus = normalizeSearchText(
+        `${exp.codigoExpediente || ''} ${exp.codigoCotizacion || ''} ${exp.clienteRazonSocial || ''} ${exp.clienteNumeroDocumento || ''} ${exp.numeroDam || ''} ${exp.numeroDeclaracion || ''} ${exp.regimenAduanero || ''} ${exp.canalSunat || ''}`
+      )
+      if (!tokens.every((t) => corpus.includes(t))) return false
+    }
+
+    return true
+  })
+
+  // 4. Ordenar
+  return list.sort((a, b) => {
+    switch (sortByExpediente.value) {
+      case 'fecha-asc':
+        return new Date(a.fechaCreacion || a.fechaApertura || 0) - new Date(b.fechaCreacion || b.fechaApertura || 0)
+      case 'codigo-asc':
+        return (a.codigoExpediente || '').localeCompare(b.codigoExpediente || '')
+      case 'cliente-asc':
+        return (a.clienteRazonSocial || '').localeCompare(b.clienteRazonSocial || '')
+      case 'fecha-desc':
+      default:
+        return new Date(b.fechaCreacion || b.fechaApertura || 0) - new Date(a.fechaCreacion || a.fechaApertura || 0) || (b.idExpediente || 0) - (a.idExpediente || 0)
+    }
   })
 })
 
@@ -1158,7 +1594,19 @@ const openCreateCotizacion = () => {
   showCotizacionForm.value = true
 }
 
+const openCorrectionCotizacion = (cotizacion) => {
+  selectedCotizacion.value = { ...cotizacion }
+  showCorrectionView.value = true
+  showCotizacionForm.value = false
+  showClienteForm.value = false
+  showObservationDialog.value = false
+}
+
 const openEditCotizacion = (cotizacion) => {
+  if (cotizacion?.estado === 'REVISION' || cotizacion?.estado === 'OBSERVADA') {
+    openCorrectionCotizacion(cotizacion)
+    return
+  }
   selectedCotizacion.value = { ...cotizacion }
   showCotizacionForm.value = true
 }
@@ -1171,7 +1619,22 @@ const handleCotizacionSaved = async ({ isEdit, cotizacionId, payload, documentos
   try {
     if (isEdit) {
       await comercialService.updateCotizacion(cotizacionId, payload)
-      showToast('Cotización actualizada exitosamente.')
+      if (cotizacionId && documentos && documentos.length > 0) {
+        for (const doc of documentos) {
+          try {
+            await documentoService.upload([doc.file], {
+              categoria: doc.categoria,
+              descripcion: doc.descripcion || '',
+              entidadTipo: 'COTIZACION',
+              idEntidad: cotizacionId,
+              idUsuario: authStore.user?.idUsuario || 1
+            })
+          } catch (docErr) {
+            console.error('Error al subir documento sustentatorio en edición:', docErr)
+          }
+        }
+      }
+      showToast('Cotización actualizada y correcciones enviadas a Supervisión Aduanera.', 'success')
     } else {
       const created = await comercialService.createCotizacion(payload)
       const newId = created?.idCotizacion
@@ -1197,7 +1660,7 @@ const handleCotizacionSaved = async ({ isEdit, cotizacionId, payload, documentos
         showToast('Cotización registrada exitosamente.')
       }
     }
-    showCotizacionForm.value = false
+    closeAllForms()
     await loadData()
   } catch (err) {
     showToast(err.response?.data?.message || 'Error al guardar cotización.', 'error')
@@ -2192,5 +2655,215 @@ onMounted(() => {
   align-items: center;
   justify-content: flex-end;
   gap: var(--space-3, 0.75rem);
+}
+
+/* ==========================================================================
+   Controles de Tablas (Filtros, Búsqueda, Ordenación - Estilo Warm Editorial)
+   ========================================================================== */
+.table-controls-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg, 12px);
+  padding: 0.85rem 1.25rem;
+  box-shadow: var(--shadow-subtle);
+}
+
+.controls-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  flex: 1;
+}
+
+.controls-right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.search-box {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-width: 260px;
+  flex: 1;
+  max-width: 380px;
+}
+
+.search-icon {
+  position: absolute;
+  left: 0.85rem;
+  color: var(--color-text-subtle);
+  font-size: 0.85rem;
+  pointer-events: none;
+}
+
+.search-input {
+  width: 100%;
+  padding: 0.55rem 2rem 0.55rem 2.25rem;
+  background-color: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: 0.825rem;
+  color: var(--color-text-main);
+  outline: none;
+  transition: all var(--transition-fast);
+}
+
+.search-input:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(214, 180, 118, 0.2);
+}
+
+.clear-search-btn {
+  position: absolute;
+  right: 0.5rem;
+  background: transparent;
+  border: none;
+  color: var(--color-text-subtle);
+  cursor: pointer;
+  padding: 0.2rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.clear-search-btn:hover {
+  color: var(--color-text-main);
+}
+
+.filter-dropdown, .sort-dropdown {
+  position: relative;
+}
+
+.filter-select {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  font-family: var(--font-sans) !important;
+  font-size: var(--font-size-sm, 0.8125rem);
+  color: var(--color-text-main) !important;
+  background-color: var(--color-bg-surface) !important;
+  border: 1px solid var(--color-border) !important;
+  border-radius: var(--radius-md) !important;
+  padding: 0.55rem 2.25rem 0.55rem 0.85rem !important;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239a7f60' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 0.75rem center !important;
+  background-size: 0.9rem 0.9rem !important;
+  cursor: pointer;
+  outline: none;
+  transition: all var(--transition-fast);
+}
+
+.filter-select:focus {
+  border-color: var(--color-primary) !important;
+  box-shadow: 0 0 0 2px rgba(214, 180, 118, 0.2) !important;
+}
+
+.filter-select option {
+  background-color: var(--color-bg-surface);
+  color: var(--color-text-main);
+}
+
+.btn-clear-filters {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: var(--color-bg-subtle);
+  color: var(--color-text-muted);
+  border: 1px solid var(--color-border);
+  padding: 0.5rem 0.8rem;
+  border-radius: var(--radius-md);
+  font-size: 0.775rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.btn-clear-filters:hover {
+  background: var(--color-danger-bg);
+  color: var(--color-danger-text);
+  border-color: var(--color-danger-border);
+}
+
+.client-sub-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.15rem;
+}
+
+.portal-badge,
+.origin-badge.origin-portal {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 0.1rem 0.4rem;
+  border-radius: var(--radius-sm, 3px);
+  background: var(--color-info-bg);
+  color: var(--color-info-text);
+  border: 1px solid var(--color-info-border);
+}
+
+.presencial-badge,
+.origin-badge.origin-presencial {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 0.1rem 0.4rem;
+  border-radius: var(--radius-sm, 3px);
+  background: var(--color-warning-bg);
+  color: var(--color-warning-text);
+  border: 1px solid var(--color-warning-border);
+}
+
+.obs-client-status {
+  margin-top: 0.4rem;
+}
+
+.btn-whatsapp-action,
+.btn-whatsapp {
+  color: var(--color-success-text) !important;
+  border-color: var(--color-success-border) !important;
+}
+
+.btn-whatsapp-action:hover,
+.btn-whatsapp:hover {
+  background-color: #25d366 !important;
+  color: #ffffff !important;
+  border-color: #25d366 !important;
+}
+
+.btn-whatsapp-dialog,
+.btn-whatsapp-modal {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background-color: #25d366;
+  color: #ffffff;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-md, 4px);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.btn-whatsapp-dialog:hover,
+.btn-whatsapp-modal:hover {
+  background-color: #1ebd56;
 }
 </style>

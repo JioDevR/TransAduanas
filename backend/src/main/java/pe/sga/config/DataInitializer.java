@@ -6,39 +6,44 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import pe.sga.entity.CatalogoPuerto;
 import pe.sga.entity.CatalogoTipoCarga;
-import pe.sga.entity.Rol;
+import pe.sga.entity.Cliente;
 import pe.sga.entity.Sede;
 import pe.sga.entity.Usuario;
+import pe.sga.entity.UsuarioCliente;
 import pe.sga.entity.enums.RolUsuario;
 import pe.sga.repository.CatalogoPuertoRepository;
 import pe.sga.repository.CatalogoTipoCargaRepository;
-import pe.sga.repository.RolRepository;
+import pe.sga.repository.ClienteRepository;
 import pe.sga.repository.SedeRepository;
+import pe.sga.repository.UsuarioClienteRepository;
 import pe.sga.repository.UsuarioRepository;
 
 @Component
 @Slf4j
 public class DataInitializer implements CommandLineRunner {
 
-    private final RolRepository rolRepository;
     private final SedeRepository sedeRepository;
     private final UsuarioRepository usuarioRepository;
     private final CatalogoPuertoRepository puertoRepository;
     private final CatalogoTipoCargaRepository tipoCargaRepository;
+    private final ClienteRepository clienteRepository;
+    private final UsuarioClienteRepository usuarioClienteRepository;
     private final PasswordEncoder passwordEncoder;
 
     public DataInitializer(
-            RolRepository rolRepository,
             SedeRepository sedeRepository,
             UsuarioRepository usuarioRepository,
             CatalogoPuertoRepository puertoRepository,
             CatalogoTipoCargaRepository tipoCargaRepository,
+            ClienteRepository clienteRepository,
+            UsuarioClienteRepository usuarioClienteRepository,
             PasswordEncoder passwordEncoder) {
-        this.rolRepository = rolRepository;
         this.sedeRepository = sedeRepository;
         this.usuarioRepository = usuarioRepository;
         this.puertoRepository = puertoRepository;
         this.tipoCargaRepository = tipoCargaRepository;
+        this.clienteRepository = clienteRepository;
+        this.usuarioClienteRepository = usuarioClienteRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -46,19 +51,7 @@ public class DataInitializer implements CommandLineRunner {
     public void run(String... args) {
         log.info("Iniciando verificación e inicialización mínima del sistema SGA...");
 
-        // 1. Roles del sistema según enum RolUsuario (con sus nombres y etiquetas normativas)
-        for (RolUsuario rolEnum : RolUsuario.values()) {
-            if (!rolRepository.existsByNombreRol(rolEnum)) {
-                rolRepository.save(Rol.builder()
-                        .nombreRol(rolEnum)
-                        .descripcion(rolEnum.getEtiqueta())
-                        .estadoActivo(true)
-                        .build());
-            }
-        }
-        log.info("Roles del sistema verificados.");
-
-        // 2. Sede única de prueba
+        // 1. Sede única de prueba si no existen sedes
         Sede sedePrueba = sedeRepository.findAll().stream().findFirst().orElseGet(() -> {
             Sede nueva = Sede.builder()
                     .codigoSede("SED-PRUEBA")
@@ -73,7 +66,7 @@ public class DataInitializer implements CommandLineRunner {
             return sedeRepository.save(nueva);
         });
 
-        // 3. Catálogo de puertos: un único puerto de prueba
+        // 2. Catálogo de puertos: un único puerto de prueba si no existen
         if (puertoRepository.count() == 0) {
             puertoRepository.save(CatalogoPuerto.builder()
                     .codigoPuerto("PRUEBA")
@@ -85,7 +78,7 @@ public class DataInitializer implements CommandLineRunner {
             log.info("Catálogo de puertos: registrado puerto 'Prueba'.");
         }
 
-        // 4. Catálogo de tipos de carga: un único tipo de carga de prueba
+        // 3. Catálogo de tipos de carga: un único tipo de carga de prueba si no existen
         if (tipoCargaRepository.count() == 0) {
             tipoCargaRepository.save(CatalogoTipoCarga.builder()
                     .codigo("PRUEBA")
@@ -95,13 +88,10 @@ public class DataInitializer implements CommandLineRunner {
             log.info("Catálogo de tipos de carga: registrado tipo 'Prueba'.");
         }
 
-        // 5. Usuario Administrador único (admin)
+        // 4. Usuario Administrador único (admin)
         if (!usuarioRepository.existsByUsername("admin")) {
-            Rol rolAdminTi = rolRepository.findByNombreRol(RolUsuario.ADMINISTRADOR_TI)
-                    .orElseThrow(() -> new IllegalStateException("El rol ADMINISTRADOR_TI no fue encontrado en la base de datos"));
-
             usuarioRepository.save(Usuario.builder()
-                    .rol(rolAdminTi)
+                    .rol(RolUsuario.ADMINISTRADOR_TI)
                     .sede(sedePrueba)
                     .username("admin")
                     .passwordHash(passwordEncoder.encode("Password123!"))
@@ -118,6 +108,43 @@ public class DataInitializer implements CommandLineRunner {
             log.info("Usuario administrador 'admin' creado exitosamente.");
         }
 
+        // 5. Aprovisionamiento de cuentas demo del Portal del Cliente B2B si no existen
+        asegurarCuentaDemoPortal("20370146994", "Camposol S.A.", "Guillermo Lozano Benites",
+                "Carretera Panamericana Norte Km 497, Chao", "import.export@camposol.com.pe", "(044) 60-7000");
+        asegurarCuentaDemoPortal("20511894520", "LG Electronics Peru S.A.", "Ki Wook Kim",
+                "Av. Republica de Colombia 791, Piso 12, San Isidro, Lima", "logistica.lg@lge.com", "(01) 618-2000");
+
         log.info("Inicialización limpia del sistema SGA completada exitosamente.");
+    }
+
+    private void asegurarCuentaDemoPortal(String ruc, String razonSocial, String representante,
+                                          String direccion, String correo, String telefono) {
+        Cliente cliente = clienteRepository.findByNumeroDocumento(ruc).orElseGet(() -> {
+            Cliente nuevo = Cliente.builder()
+                    .tipoDocumento("RUC")
+                    .numeroDocumento(ruc)
+                    .razonSocial(razonSocial)
+                    .contactoRepresentante(representante)
+                    .direccionFiscal(direccion)
+                    .correoContacto(correo)
+                    .telefonoContacto(telefono)
+                    .estadoCliente("CLIENTE")
+                    .estadoActivo(true)
+                    .build();
+            log.info("Cliente demo '{}' ({}) creado para el Portal B2B.", razonSocial, ruc);
+            return clienteRepository.save(nuevo);
+        });
+
+        if (usuarioClienteRepository.findByCliente_IdCliente(cliente.getIdCliente()).isEmpty()
+                && !usuarioClienteRepository.existsByUsername(ruc)) {
+            usuarioClienteRepository.save(UsuarioCliente.builder()
+                    .cliente(cliente)
+                    .username(ruc)
+                    .passwordHash(passwordEncoder.encode("Password123!"))
+                    .estadoActivo(true)
+                    .debeCambiarPassword(false)
+                    .build());
+            log.info("Cuenta demo de Portal B2B creada exitosamente para RUC: {}", ruc);
+        }
     }
 }

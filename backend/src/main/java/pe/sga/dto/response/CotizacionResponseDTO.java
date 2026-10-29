@@ -19,6 +19,9 @@ public class CotizacionResponseDTO {
     private Integer idCliente;
     private String clienteRazonSocial;
     private String clienteNumeroDocumento;
+    private String clienteTelefono;
+    private String clienteCorreo;
+    private Boolean clienteTieneUsuario;
     private Integer idUsuarioComercial;
     private String usuarioComercialNombre;
 

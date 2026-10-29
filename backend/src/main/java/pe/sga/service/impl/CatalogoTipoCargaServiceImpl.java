@@ -53,6 +53,7 @@ public class CatalogoTipoCargaServiceImpl implements ICatalogoTipoCargaService {
         CatalogoTipoCarga entity = CatalogoTipoCarga.builder()
                 .codigo(dto.getCodigo().trim().toUpperCase())
                 .nombre(dto.getNombre().trim())
+                .descripcion(dto.getDescripcion() != null ? dto.getDescripcion().trim() : null)
                 .estado(dto.getEstado() != null ? dto.getEstado().trim().toUpperCase() : "ACTIVO")
                 .build();
 
@@ -66,6 +67,7 @@ public class CatalogoTipoCargaServiceImpl implements ICatalogoTipoCargaService {
                 .orElseThrow(() -> new ResourceNotFoundException("Tipo de carga no encontrado con ID: " + idTipoCarga));
 
         if (dto.getNombre() != null) entity.setNombre(dto.getNombre().trim());
+        if (dto.getDescripcion() != null) entity.setDescripcion(dto.getDescripcion().trim());
         if (dto.getEstado() != null) entity.setEstado(dto.getEstado().trim().toUpperCase());
 
         return mapToResponse(tipoCargaRepository.save(entity));
@@ -94,6 +96,7 @@ public class CatalogoTipoCargaServiceImpl implements ICatalogoTipoCargaService {
                 .idTipoCarga(tc.getIdTipoCarga())
                 .codigo(tc.getCodigo())
                 .nombre(tc.getNombre())
+                .descripcion(tc.getDescripcion())
                 .estado(tc.getEstado())
                 .build();
     }

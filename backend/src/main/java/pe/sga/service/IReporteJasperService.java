@@ -9,4 +9,8 @@ public interface IReporteJasperService {
     ByteArrayInputStream exportarSedesPdf();
 
     ByteArrayInputStream exportarPuertosPdf();
+
+    ByteArrayInputStream exportarTiposCargaPdf();
+
+    ByteArrayInputStream exportarMercanciasPdf();
 }

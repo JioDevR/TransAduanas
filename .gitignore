@@ -62,9 +62,43 @@ frontend/pnpm-debug.log*
 frontend/.vscode/
 
 # -----------------------------------------------------------------------------
+# Portal Cliente (Vue + Vite)
+# -----------------------------------------------------------------------------
+portal-cliente/node_modules/
+portal-cliente/dist/
+portal-cliente/dist-ssr/
+portal-cliente/*.local
+portal-cliente/.eslintcache
+portal-cliente/npm-debug.log*
+portal-cliente/yarn-debug.log*
+portal-cliente/yarn-error.log*
+portal-cliente/pnpm-debug.log*
+portal-cliente/.vscode/
+
+# -----------------------------------------------------------------------------
+# Global Node / JS patterns
+# -----------------------------------------------------------------------------
+**/node_modules/
+**/dist/
+**/dist-ssr/
+
+
+# -----------------------------------------------------------------------------
+# Landing (Astro + Vue)
+# -----------------------------------------------------------------------------
+landing/node_modules/
+landing/dist/
+landing/.astro/
+landing/.env
+landing/.env.production
+landing/.vscode/
+
+# -----------------------------------------------------------------------------
 # Database local dumps or temporary files
 # -----------------------------------------------------------------------------
 database/*.tmp
 database/*.bak
 backup*.sql
 *.sql.bak
+**/superpowers/
+.$Diagrama de procesos.drawio.bkp

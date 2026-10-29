@@ -170,8 +170,8 @@
           responsiveLayout="scroll"
           class="custom-datatable p-datatable-sm"
           paginator
-          :rows="10"
-          :rowsPerPageOptions="[10, 20, 50]"
+          :rows="15"
+          :rowsPerPageOptions="[15, 30, 50]"
           currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} sedes"
           paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown CurrentPageReport"
         >
@@ -291,7 +291,7 @@ import Column from 'primevue/column'
 import Tag from 'primevue/tag'
 import SedeRegistrationForm from '../components/SedeRegistrationForm.vue'
 import sedeService from '../services/sedeService'
-import { downloadBlob } from '@/shared/utils/download'
+import { downloadBlob, openBlobInNewTab } from '@/shared/utils/download'
 
 const sedes = ref([])
 const loading = ref(false)
@@ -385,7 +385,7 @@ const handleExportPdf = async () => {
   exportingPdf.value = true
   try {
     const blob = await sedeService.downloadPdf()
-    downloadBlob(blob, `reporte-sedes-operativas-${new Date().toISOString().slice(0, 10)}.pdf`)
+    openBlobInNewTab(blob)
   } catch (err) {
     console.error('Error al descargar reporte de sedes:', err)
   } finally {
@@ -793,7 +793,7 @@ onMounted(() => {
 
 .filter-select {
   padding: 0.6rem 0.85rem;
-  background: var(--color-bg-subtle);
+  background-color: var(--color-bg-subtle);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   color: var(--color-text-main);

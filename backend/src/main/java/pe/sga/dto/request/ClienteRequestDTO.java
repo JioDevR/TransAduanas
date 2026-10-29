@@ -39,8 +39,16 @@ public class ClienteRequestDTO {
     private String telefonoContacto;
 
     @Builder.Default
+    private String estadoCliente = "PROSPECTO";
+
+    @Builder.Default
     private Boolean esProspecto = true;
 
     @Builder.Default
     private Boolean estadoActivo = true;
+
+    // Credenciales del Portal B2B para la empresa
+    private String username;
+
+    private String password;
 }

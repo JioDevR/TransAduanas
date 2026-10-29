@@ -264,7 +264,7 @@ const {
   nextPage,
   goToPage,
   resetPage
-} = usePagination(filteredUsers, 8)
+} = usePagination(filteredUsers, 15)
 
 // Resetear a primera página al buscar o cambiar filtros
 watch([searchQuery, selectedRoleFilter, statusFilter], () => {

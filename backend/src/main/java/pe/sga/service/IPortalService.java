@@ -28,6 +28,8 @@ public interface IPortalService {
 
     PortalResumenFinancieroDTO obtenerResumenFinanciero(Integer idCliente);
 
+    List<PortalObligacionPagoDTO> listarObligacionesPendientes(Integer idCliente);
+
     List<PortalPagoAnticipoDTO> listarAnticipos(Integer idCliente);
 
     List<PortalLiquidacionDTO> listarLiquidaciones(Integer idCliente);

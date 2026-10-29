@@ -148,6 +148,15 @@ public class PortalController {
         return ResponseEntity.ok(ApiResponseDTO.ok("Resumen financiero consolidado", resumen));
     }
 
+    @GetMapping("/pagos/obligaciones-pendientes")
+    @PreAuthorize("hasRole('CLIENTE_PORTAL')")
+    public ResponseEntity<ApiResponseDTO<List<PortalObligacionPagoDTO>>> listarObligacionesPendientes(
+            @AuthenticationPrincipal UsuarioCliente usuarioCliente) {
+        Integer idCliente = resolverIdCliente(usuarioCliente);
+        List<PortalObligacionPagoDTO> obligaciones = portalService.listarObligacionesPendientes(idCliente);
+        return ResponseEntity.ok(ApiResponseDTO.ok("Obligaciones financieras pendientes recuperadas", obligaciones));
+    }
+
     @GetMapping("/pagos/anticipos")
     @PreAuthorize("hasRole('CLIENTE_PORTAL')")
     public ResponseEntity<ApiResponseDTO<List<PortalPagoAnticipoDTO>>> listarAnticipos(

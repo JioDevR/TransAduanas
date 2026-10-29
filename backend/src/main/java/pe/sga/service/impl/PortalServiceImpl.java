@@ -24,7 +24,9 @@ import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -319,6 +321,82 @@ public class PortalServiceImpl implements IPortalService {
 
     @Override
     @Transactional(readOnly = true)
+    public List<PortalObligacionPagoDTO> listarObligacionesPendientes(Integer idCliente) {
+        validarCliente(idCliente);
+        List<Cotizacion> cotizaciones = cotizacionRepository.findByCliente_IdCliente(idCliente);
+        List<PortalObligacionPagoDTO> lista = new ArrayList<>();
+
+        for (Cotizacion c : cotizaciones) {
+            if (c.getEstado() == EstadoCotizacion.ANULADA || c.getEstado() == EstadoCotizacion.RECHAZADA) {
+                continue;
+            }
+
+            Optional<Expediente> expOpt = expedienteRepository.findByCotizacion_IdCotizacion(c.getIdCotizacion());
+            BigDecimal saldoCot = c.getSaldoPendiente() != null ? c.getSaldoPendiente() : BigDecimal.ZERO;
+            BigDecimal totalCot = c.getTotalCotizado() != null ? c.getTotalCotizado() : BigDecimal.ZERO;
+            BigDecimal abonadoCot = c.getTotalAbonado() != null ? c.getTotalAbonado() : BigDecimal.ZERO;
+
+            if (expOpt.isPresent()) {
+                Expediente exp = expOpt.get();
+                Optional<LiquidacionFinanciera> liqOpt = liquidacionFinancieraRepository.findByExpediente_IdExpediente(exp.getIdExpediente());
+                BigDecimal liqUsd = liqOpt.map(l -> l.getTotalGeneralUsd() != null ? l.getTotalGeneralUsd() : BigDecimal.ZERO).orElse(BigDecimal.ZERO);
+
+                BigDecimal totalConsolidado = totalCot.add(liqUsd);
+                BigDecimal saldoConsolidado = saldoCot.add(liqUsd);
+
+                if (saldoConsolidado.compareTo(BigDecimal.ZERO) > 0) {
+                    BigDecimal sugerido = saldoConsolidado.divide(new BigDecimal("2"), 2, RoundingMode.HALF_UP);
+                    lista.add(PortalObligacionPagoDTO.builder()
+                            .tipoObligacion("EXPEDIENTE_HEREDADO")
+                            .idReferencia(exp.getIdExpediente())
+                            .idCotizacion(c.getIdCotizacion())
+                            .idExpediente(exp.getIdExpediente())
+                            .codigo(exp.getCodigoExpediente())
+                            .codigoCotizacion(c.getCodigoCotizacion())
+                            .codigoExpediente(exp.getCodigoExpediente())
+                            .descripcion(c.getMercancia() != null ? c.getMercancia().getNombre() : "Despacho Aduanero")
+                            .numeroDam(exp.getNumeroDam())
+                            .canalSunat(exp.getCanalSunat() != null ? exp.getCanalSunat().name() : null)
+                            .totalContratadoUsd(totalConsolidado.setScale(2, RoundingMode.HALF_UP))
+                            .totalAmortizadoUsd(abonadoCot.setScale(2, RoundingMode.HALF_UP))
+                            .saldoPendienteUsd(saldoConsolidado.setScale(2, RoundingMode.HALF_UP))
+                            .montoSugeridoAnticipoUsd(sugerido)
+                            .estadoPago(c.getEstadoPago())
+                            .tieneExpediente(true)
+                            .fechaReferencia(exp.getFechaApertura())
+                            .build());
+                }
+            } else {
+                if (saldoCot.compareTo(BigDecimal.ZERO) > 0) {
+                    BigDecimal sugerido = saldoCot.divide(new BigDecimal("2"), 2, RoundingMode.HALF_UP);
+                    lista.add(PortalObligacionPagoDTO.builder()
+                            .tipoObligacion("ANTICIPO_COTIZACION")
+                            .idReferencia(c.getIdCotizacion())
+                            .idCotizacion(c.getIdCotizacion())
+                            .idExpediente(null)
+                            .codigo(c.getCodigoCotizacion())
+                            .codigoCotizacion(c.getCodigoCotizacion())
+                            .codigoExpediente(null)
+                            .descripcion(c.getMercancia() != null ? c.getMercancia().getNombre() : "Cotización de Servicio")
+                            .numeroDam(null)
+                            .canalSunat(null)
+                            .totalContratadoUsd(totalCot.setScale(2, RoundingMode.HALF_UP))
+                            .totalAmortizadoUsd(abonadoCot.setScale(2, RoundingMode.HALF_UP))
+                            .saldoPendienteUsd(saldoCot.setScale(2, RoundingMode.HALF_UP))
+                            .montoSugeridoAnticipoUsd(sugerido)
+                            .estadoPago(c.getEstadoPago())
+                            .tieneExpediente(false)
+                            .fechaReferencia(c.getFechaEmision() != null ? c.getFechaEmision().atStartOfDay() : null)
+                            .build());
+                }
+            }
+        }
+
+        return lista;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<PortalPagoAnticipoDTO> listarAnticipos(Integer idCliente) {
         validarCliente(idCliente);
         return cotizacionPagoRepository.findByCotizacion_Cliente_IdClienteOrderByFechaRegistroDesc(idCliente).stream()
@@ -338,7 +416,6 @@ public class PortalServiceImpl implements IPortalService {
     @Override
     @Transactional
     public PortalPagoAnticipoDTO registrarVoucherPago(Integer idCliente, PortalRegistroVoucherDTO dto, Integer idUsuarioCliente) {
-
 
         if ("LIQUIDACION_EXPEDIENTE".equalsIgnoreCase(dto.getTipoObligacion())) {
             LiquidacionFinanciera liquidacion = liquidacionFinancieraRepository.findById(dto.getIdReferencia())
@@ -363,7 +440,7 @@ public class PortalServiceImpl implements IPortalService {
                     .codigoCotizacion(liquidacion.getCodigoLiquidacion())
                     .tipoAbono("LIQUIDACION_FINAL")
                     .montoAbonado(dto.getMontoAbonado())
-                    .moneda(dto.getMoneda())
+                    .moneda("USD")
                     .metodoPago(dto.getMetodoPago())
                     .bancoOrigen(dto.getBancoOrigen())
                     .bancoDestino(dto.getBancoDestino())
@@ -374,12 +451,24 @@ public class PortalServiceImpl implements IPortalService {
                     .build();
         }
 
-        // Por defecto: ANTICIPO_COTIZACION
-        Cotizacion cotizacion = cotizacionRepository.findById(dto.getIdReferencia())
-                .orElseThrow(() -> new ResourceNotFoundException("Cotización no encontrada con ID: " + dto.getIdReferencia()));
-
-        if (cotizacion.getCliente() == null || !cotizacion.getCliente().getIdCliente().equals(idCliente)) {
-            throw new BadRequestException("La cotización indicada no corresponde a su empresa");
+        Cotizacion cotizacion;
+        if ("EXPEDIENTE".equalsIgnoreCase(dto.getTipoObligacion()) || "EXPEDIENTE_HEREDADO".equalsIgnoreCase(dto.getTipoObligacion())) {
+            Expediente exp = expedienteRepository.findById(dto.getIdReferencia())
+                    .orElseThrow(() -> new ResourceNotFoundException("Expediente no encontrado con ID: " + dto.getIdReferencia()));
+            if (exp.getCliente() == null || !exp.getCliente().getIdCliente().equals(idCliente)) {
+                throw new BadRequestException("El expediente indicado no corresponde a su empresa");
+            }
+            cotizacion = exp.getCotizacion();
+            if (cotizacion == null) {
+                throw new BadRequestException("El expediente no tiene cotización asociada");
+            }
+        } else {
+            // ANTICIPO_COTIZACION
+            cotizacion = cotizacionRepository.findById(dto.getIdReferencia())
+                    .orElseThrow(() -> new ResourceNotFoundException("Cotización no encontrada con ID: " + dto.getIdReferencia()));
+            if (cotizacion.getCliente() == null || !cotizacion.getCliente().getIdCliente().equals(idCliente)) {
+                throw new BadRequestException("La cotización indicada no corresponde a su empresa");
+            }
         }
 
         String codigoPago = "PAG-" + LocalDate.now().getYear() + "-" + String.format("%04d", cotizacionPagoRepository.count() + 1);

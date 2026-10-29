@@ -12,6 +12,7 @@ import pe.sga.entity.DocumentoAdjunto;
 import pe.sga.entity.Usuario;
 import pe.sga.entity.enums.EstadoCotizacion;
 import pe.sga.entity.enums.EstadoPagoCotizacion;
+import pe.sga.entity.enums.RolUsuario;
 import pe.sga.exception.BadRequestException;
 import pe.sga.exception.ResourceNotFoundException;
 import pe.sga.entity.NotificacionCliente;
@@ -134,8 +135,18 @@ public class CotizacionPagoServiceImpl implements ICotizacionPagoService {
         CotizacionPago pago = cotizacionPagoRepository.findById(idPago)
                 .orElseThrow(() -> new ResourceNotFoundException("Pago no encontrado con ID: " + idPago));
 
-        Usuario finanzas = usuarioRepository.findById(idUsuarioFinanzas != null ? idUsuarioFinanzas : 1)
-                .orElseThrow(() -> new ResourceNotFoundException("Usuario de finanzas no encontrado con ID: " + idUsuarioFinanzas));
+        Usuario finanzas = null;
+        if (idUsuarioFinanzas != null && usuarioRepository.existsById(idUsuarioFinanzas)) {
+            finanzas = usuarioRepository.findById(idUsuarioFinanzas).get();
+        } else {
+            finanzas = usuarioRepository.findAll().stream()
+                    .filter(u -> RolUsuario.CONTADOR.equals(u.getRol()) || RolUsuario.ADMINISTRADOR_TI.equals(u.getRol()))
+                    .findFirst()
+                    .orElseGet(() -> usuarioRepository.findAll().stream().findFirst().orElse(null));
+        }
+        if (finanzas == null) {
+            throw new ResourceNotFoundException("No se encontró ningún usuario habilitado para validar el pago");
+        }
 
         String accion = dto.getAccion().toUpperCase();
         Cotizacion cotizacion = pago.getCotizacion();

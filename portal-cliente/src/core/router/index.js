@@ -1,24 +1,18 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/core/stores/authStore'
 import PortalLayout from '@/core/layouts/PortalLayout.vue'
-import PortalLoginView from '@/features/auth/views/PortalLoginView.vue'
-import PortalCambioPasswordObligatorioView from '@/features/auth/views/PortalCambioPasswordObligatorioView.vue'
-import CotizacionesListView from '@/features/cotizaciones/views/CotizacionesListView.vue'
-import ExpedientesTrackingView from '@/features/expedientes/views/ExpedientesTrackingView.vue'
-import CobrosPagosView from '@/features/pagos/views/CobrosPagosView.vue'
-import PortalNotificacionesView from '@/features/notificaciones/views/PortalNotificacionesView.vue'
 
 const routes = [
   {
     path: '/login',
     name: 'Login',
-    component: PortalLoginView,
+    component: () => import('@/features/auth/views/PortalLoginView.vue'),
     meta: { title: 'Iniciar Sesión — Portal TransAduanas', public: true }
   },
   {
     path: '/cambiar-password-obligatorio',
     name: 'CambioPasswordObligatorio',
-    component: PortalCambioPasswordObligatorioView,
+    component: () => import('@/features/auth/views/PortalCambioPasswordObligatorioView.vue'),
     meta: { title: 'Actualización Obligatoria de Contraseña — Portal TransAduanas', requiresAuth: true }
   },
   {
@@ -33,19 +27,19 @@ const routes = [
       {
         path: 'cotizaciones',
         name: 'Cotizaciones',
-        component: CotizacionesListView,
+        component: () => import('@/features/cotizaciones/views/CotizacionesListView.vue'),
         meta: { title: 'Mis Cotizaciones — Portal TransAduanas' }
       },
       {
         path: 'expedientes',
         name: 'Expedientes',
-        component: ExpedientesTrackingView,
+        component: () => import('@/features/expedientes/views/ExpedientesTrackingView.vue'),
         meta: { title: 'Expedientes & Tracking DAM — Portal TransAduanas' }
       },
       {
         path: 'pagos',
         name: 'Pagos',
-        component: CobrosPagosView,
+        component: () => import('@/features/pagos/views/CobrosPagosView.vue'),
         meta: { title: 'Cobros y Pagos — Portal TransAduanas' }
       },
       {
@@ -57,7 +51,7 @@ const routes = [
       {
         path: 'notificaciones',
         name: 'Notificaciones',
-        component: PortalNotificacionesView,
+        component: () => import('@/features/notificaciones/views/PortalNotificacionesView.vue'),
         meta: { title: 'Notificaciones & Avisos — Portal TransAduanas' }
       }
     ]

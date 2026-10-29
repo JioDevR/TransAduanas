@@ -89,7 +89,7 @@
         </form>
 
         <!-- Sugerencia / Credenciales de Prueba -->
-        <div class="demo-box">
+        <div v-if="isDev" class="demo-box">
           <div class="demo-title">
             <i class="pi pi-info-circle"></i>
             <span>Cuentas de demostración disponibles:</span>
@@ -119,6 +119,7 @@ import { useAuthStore } from '@/core/stores/authStore'
 
 const router = useRouter()
 const authStore = useAuthStore()
+const isDev = import.meta.env.DEV
 
 const form = reactive({
   username: '',

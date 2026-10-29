@@ -40,6 +40,7 @@
   --color-warning-border: #f8dab3;
   --color-warning-text: #8c5b16;
 
+  --color-danger: #b3261e;
   --color-danger-bg: #fdf0f0;
   --color-danger-border: #f6c8c8;
   --color-danger-text: #9e2a2b;
@@ -171,6 +172,7 @@
   --color-warning-border: #695222;
   --color-warning-text: #fcd34d;
 
+  --color-danger: #f2b8b5;
   --color-danger-bg: #321818;
   --color-danger-border: #652a2a;
   --color-danger-text: #fca5a5;

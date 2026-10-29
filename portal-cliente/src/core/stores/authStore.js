@@ -3,8 +3,18 @@ import { ref, computed } from 'vue'
 import apiClient from '@/core/api/apiClient'
 
 export const useAuthStore = defineStore('auth', () => {
+  const loadStoredUser = () => {
+    try {
+      const raw = localStorage.getItem('sga_portal_user')
+      return raw ? JSON.parse(raw) : null
+    } catch {
+      localStorage.removeItem('sga_portal_user')
+      return null
+    }
+  }
+
   const token = ref(localStorage.getItem('sga_portal_token') || null)
-  const user = ref(JSON.parse(localStorage.getItem('sga_portal_user') || 'null'))
+  const user = ref(loadStoredUser())
   const loading = ref(false)
   const error = ref(null)
 

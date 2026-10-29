@@ -58,6 +58,16 @@ export const almacenService = {
   },
 
   /**
+   * Registrar retiro de almacén
+   * @param {Number} id ID del registro de almacén
+   * @param {Object} data Datos adicionales de retiro
+   */
+  async registrarRetiro(id, data = {}) {
+    const response = await apiClient.post(`/operaciones/almacen/${id}/retiro`, data)
+    return response.data?.data || response.data
+  },
+
+  /**
    * Anulación lógica del registro de almacén
    * @param {Number} id ID del registro
    */

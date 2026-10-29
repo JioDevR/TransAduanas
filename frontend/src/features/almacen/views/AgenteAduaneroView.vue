@@ -1080,11 +1080,11 @@ const onIngresoSaved = (creado) => {
 
 const handleAutorizarSalida = async (item) => {
   confirmAction({
-    title: 'Autorizar Salida de Almacén',
+    header: 'Autorizar Salida de Almacén',
     message: `¿Confirma que la carga ${item.ticketBalanzaVgm} cuenta con Levante Aduanero y pase de salida válido?`,
     icon: 'pi pi-check-circle',
     acceptClass: 'p-button-success',
-    accept: async () => {
+    onAccept: async () => {
       try {
         await almacenService.autorizarSalida(item.idControlAlmacen)
         showSuccess(`Salida autorizada para el ticket ${item.ticketBalanzaVgm}`)
@@ -1098,11 +1098,11 @@ const handleAutorizarSalida = async (item) => {
 
 const handleRegistrarRetiro = async (item) => {
   confirmAction({
-    title: 'Confirmar Retiro Físico',
+    header: 'Confirmar Retiro Físico',
     message: `¿Confirma la entrega física de la carga ${item.ticketBalanzaVgm} a la unidad de transporte?`,
     icon: 'pi pi-sign-out',
     acceptClass: 'p-button-primary',
-    accept: async () => {
+    onAccept: async () => {
       try {
         await almacenService.registrarRetiro(item.idControlAlmacen)
         showSuccess(`Carga ${item.ticketBalanzaVgm} retirada formalmente del depósito temporal`)
@@ -1114,20 +1114,20 @@ const handleRegistrarRetiro = async (item) => {
   })
 }
 
-const handleDeleteAlmacen = (item) => {
-  confirmDelete({
-    title: 'Anular Registro de Almacén',
-    message: `¿Está seguro de anular el control de almacén para el ticket ${item.ticketBalanzaVgm}?`,
-    accept: async () => {
-      try {
-        await almacenService.deleteAlmacen(item.idControlAlmacen)
-        showSuccess('Registro de almacén anulado exitosamente.')
-        loadData()
-      } catch (err) {
-        showError(err.response?.data?.message || 'Error al anular el registro de almacén.')
-      }
+const handleDeleteAlmacen = async (item) => {
+  const confirmed = await confirmDelete(
+    `¿Está seguro de anular el control de almacén para el ticket ${item.ticketBalanzaVgm}?`,
+    'Anular Registro de Almacén'
+  )
+  if (confirmed) {
+    try {
+      await almacenService.deleteAlmacen(item.idControlAlmacen)
+      showSuccess('Registro de almacén anulado exitosamente.')
+      loadData()
+    } catch (err) {
+      showError(err.response?.data?.message || 'Error al anular el registro de almacén.')
     }
-  })
+  }
 }
 
 // Helpers
@@ -1188,6 +1188,16 @@ const getDaysBadgeClass = (days) => {
   if (days <= 5) return 'days-warning'
   return 'days-ok'
 }
+
+watch(
+  () => route.query.tab,
+  (newTab) => {
+    if (newTab && ['despachos', 'almacen'].includes(newTab)) {
+      currentTab.value = newTab
+    }
+  },
+  { immediate: true }
+)
 
 onMounted(() => {
   loadData()

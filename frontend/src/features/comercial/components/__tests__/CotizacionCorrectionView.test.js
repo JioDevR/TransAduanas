@@ -1,7 +1,10 @@
-import { describe, it, expect } from 'vitest'
-import { ref } from 'vue'
+import { describe, it, expect, vi } from 'vitest'
+import { ref, createSSRApp, h } from 'vue'
+import { renderToString } from 'vue/server-renderer'
+import PrimeVue from 'primevue/config'
 import CotizacionCorrectionView from '../CotizacionCorrectionView.vue'
 import { useCotizacionCorrection } from '../../composables/useCotizacionCorrection'
+import { documentoService } from '@/features/documentos/services/documentoService'
 
 describe('CotizacionCorrectionView Component & Flow', () => {
   it('exporta un componente Vue 3 válido con props y emits esperados', () => {
@@ -143,5 +146,52 @@ describe('CotizacionCorrectionView Component & Flow', () => {
     expect(montoIgv.value).toBe(0)
     expect(montoPercepcion.value).toBe(0)
     expect(form.value.montoTributosEstimado).toBe(0)
+  })
+
+  it('invoca documentoService.downloadDocumento con id y nombre original al descargar', async () => {
+    const downloadSpy = vi.spyOn(documentoService, 'downloadDocumento').mockResolvedValue(true)
+    let exposedInstance = null
+
+    const originalSetup = CotizacionCorrectionView.setup
+    CotizacionCorrectionView.setup = (props, ctx) => {
+      const wrappedCtx = {
+        ...ctx,
+        expose: (exposed) => {
+          exposedInstance = exposed
+          if (ctx.expose) ctx.expose(exposed)
+        }
+      }
+      return originalSetup(props, wrappedCtx)
+    }
+
+    try {
+      const app = createSSRApp({
+        render() {
+          return h(CotizacionCorrectionView, {
+            cotizacion: { idCotizacion: 101 }
+          })
+        }
+      })
+      app.use(PrimeVue)
+      await renderToString(app)
+
+      expect(exposedInstance).toBeDefined()
+      expect(typeof exposedInstance.handleDownloadDoc).toBe('function')
+      await exposedInstance.handleDownloadDoc({
+        idDocumento: 42,
+        nombreOriginal: 'factura_comercial.pdf'
+      })
+
+      expect(downloadSpy).toHaveBeenCalledWith(42, 'factura_comercial.pdf')
+
+      await exposedInstance.handleDownloadDoc({
+        idDocumento: 43
+      })
+
+      expect(downloadSpy).toHaveBeenCalledWith(43, 'documento.pdf')
+    } finally {
+      CotizacionCorrectionView.setup = originalSetup
+      downloadSpy.mockRestore()
+    }
   })
 })

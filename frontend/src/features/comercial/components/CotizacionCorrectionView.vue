@@ -937,15 +937,7 @@ const loadExistingDocuments = async () => {
 
 const handleDownloadDoc = async (doc) => {
   try {
-    const blob = await documentoService.download(doc.idDocumento)
-    const url = window.URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = doc.nombreOriginal || doc.nombreArchivo || 'documento.pdf'
-    document.body.appendChild(a)
-    a.click()
-    a.remove()
-    window.URL.revokeObjectURL(url)
+    await documentoService.downloadDocumento(doc.idDocumento, doc.nombreOriginal || 'documento.pdf')
   } catch (err) {
     console.error('Error al descargar archivo:', err)
   }
@@ -1044,6 +1036,10 @@ const handleSubmitCorrection = () => {
 onMounted(() => {
   loadCatalogos()
   loadExistingDocuments()
+})
+
+defineExpose({
+  handleDownloadDoc
 })
 </script>
 

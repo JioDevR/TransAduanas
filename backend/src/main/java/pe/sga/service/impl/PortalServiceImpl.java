@@ -13,6 +13,7 @@ import pe.sga.entity.*;
 import pe.sga.entity.enums.EstadoCotizacion;
 import pe.sga.entity.enums.EstadoPagoCotizacion;
 import pe.sga.entity.enums.RolUsuario;
+import pe.sga.entity.enums.TipoAbonoCotizacion;
 import pe.sga.exception.BadRequestException;
 import pe.sga.exception.ResourceNotFoundException;
 import pe.sga.repository.*;
@@ -382,24 +383,31 @@ public class PortalServiceImpl implements IPortalService {
         }
 
         String codigoPago = "PAG-" + LocalDate.now().getYear() + "-" + String.format("%04d", cotizacionPagoRepository.count() + 1);
-        BigDecimal tipoCambio = new BigDecimal("3.7500");
-        BigDecimal montoPen = "USD".equalsIgnoreCase(dto.getMoneda())
-                ? dto.getMontoAbonado().multiply(tipoCambio).setScale(2, RoundingMode.HALF_UP)
-                : dto.getMontoAbonado();
+        BigDecimal tipoCambio = new BigDecimal("1.0000");
+        BigDecimal montoUsd = dto.getMontoAbonado();
 
         DocumentoAdjunto comprobante = null;
         if (dto.getIdDocumentoComprobante() != null) {
             comprobante = documentoRepository.findById(dto.getIdDocumentoComprobante()).orElse(null);
         }
 
+        TipoAbonoCotizacion tipoAbono = (cotizacion.getSaldoPendiente() != null
+                && dto.getMontoAbonado().compareTo(cotizacion.getSaldoPendiente()) >= 0)
+                ? TipoAbonoCotizacion.PAGO_TOTAL
+                : TipoAbonoCotizacion.ADELANTO;
+
+        Usuario usuarioResp = cotizacion.getUsuarioComercial() != null
+                ? cotizacion.getUsuarioComercial()
+                : usuarioRepository.findAll().stream().findFirst().orElse(null);
+
         CotizacionPago pago = CotizacionPago.builder()
                 .cotizacion(cotizacion)
                 .codigoPago(codigoPago)
-                .tipoAbono(pe.sga.entity.enums.TipoAbonoCotizacion.ADELANTO)
-                .montoAbonado(dto.getMontoAbonado())
-                .moneda(dto.getMoneda() != null ? dto.getMoneda().trim().toUpperCase() : "USD")
+                .tipoAbono(tipoAbono)
+                .montoAbonado(montoUsd)
+                .moneda("USD")
                 .tipoCambio(tipoCambio)
-                .montoEquivalentePen(montoPen)
+                .montoEquivalentePen(montoUsd)
                 .metodoPago(dto.getMetodoPago())
                 .bancoOrigen(dto.getBancoOrigen())
                 .bancoDestino(dto.getBancoDestino())
@@ -407,8 +415,9 @@ public class PortalServiceImpl implements IPortalService {
                 .fechaOperacion(dto.getFechaOperacion())
                 .documentoComprobante(comprobante)
                 .estadoPago(EstadoPagoCotizacion.PENDIENTE_REVISION)
-                .usuarioRegistro(null)
+                .usuarioRegistro(usuarioResp)
                 .fechaRegistro(LocalDateTime.now())
+                .observacionFinanzas(dto.getObservaciones())
                 .build();
 
         CotizacionPago guardado = cotizacionPagoRepository.save(pago);

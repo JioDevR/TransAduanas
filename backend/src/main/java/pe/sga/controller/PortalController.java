@@ -199,7 +199,7 @@ public class PortalController {
                 "Voucher de abono bancario registrado por cliente en portal B2B",
                 EntidadDocumento.CLIENTE,
                 idCliente,
-                1
+                null
         );
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponseDTO.ok("Voucher almacenado exitosamente", docs.get(0)));

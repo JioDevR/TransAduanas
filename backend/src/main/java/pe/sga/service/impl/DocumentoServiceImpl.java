@@ -50,8 +50,13 @@ public class DocumentoServiceImpl implements IDocumentoService {
             Integer idEntidad,
             Integer idUsuario
     ) {
-        Usuario usuario = usuarioRepository.findById(idUsuario != null ? idUsuario : 1)
-                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con ID: " + idUsuario));
+        Usuario usuario = null;
+        if (idUsuario != null && usuarioRepository.existsById(idUsuario)) {
+            usuario = usuarioRepository.findById(idUsuario).get();
+        } else {
+            usuario = usuarioRepository.findAll().stream().findFirst()
+                    .orElseThrow(() -> new ResourceNotFoundException("No se encontró ningún usuario del sistema registrado"));
+        }
 
         Cotizacion cotizacion = null;
         Expediente expediente = null;

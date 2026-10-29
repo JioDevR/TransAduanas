@@ -48,8 +48,13 @@ public class CotizacionPagoServiceImpl implements ICotizacionPagoService {
             throw new BadRequestException("Solo se pueden registrar pagos para cotizaciones que han sido APROBADAS técnicamente. Estado actual: " + cotizacion.getEstado());
         }
 
-        Usuario usuario = usuarioRepository.findById(idUsuarioRegistro != null ? idUsuarioRegistro : 1)
-                .orElseThrow(() -> new ResourceNotFoundException("Usuario de registro no encontrado con ID: " + idUsuarioRegistro));
+        Usuario usuario = null;
+        if (idUsuarioRegistro != null && usuarioRepository.existsById(idUsuarioRegistro)) {
+            usuario = usuarioRepository.findById(idUsuarioRegistro).get();
+        } else {
+            usuario = usuarioRepository.findAll().stream().findFirst()
+                    .orElse(null);
+        }
 
         DocumentoAdjunto documentoComprobante = null;
         if (dto.getIdDocumentoComprobante() != null) {

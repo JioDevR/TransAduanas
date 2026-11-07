@@ -12,7 +12,7 @@ import java.util.*;
 import com.fasterxml.jackson.databind.*;
 import static org.junit.jupiter.api.Assertions.*;
 @SpringBootTest(webEnvironment=SpringBootTest.WebEnvironment.RANDOM_PORT,properties={
- "spring.config.import=", "spring.datasource.url=jdbc:h2:mem:qa_multinivel;MODE=MySQL;DB_CLOSE_DELAY=-1", 
+ "spring.config.import=", "spring.datasource.url=jdbc:h2:mem:qa_multinivel;MODE=MySQL;DB_CLOSE_DELAY=-1",
  "spring.datasource.driver-class-name=org.h2.Driver", "spring.datasource.username=sa", "spring.datasource.password=",
  "spring.jpa.hibernate.ddl-auto=create-drop", "spring.jpa.database-platform=org.hibernate.dialect.H2Dialect",
  "spring.jpa.show-sql=false", "spring.jpa.properties.hibernate.format_sql=false",

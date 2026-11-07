@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<testsuite name="pe.sga.functional.AcceptanceBusinessTest" time="19.577" tests="4" errors="0" skipped="0" failures="0">
+  <testcase name="AC01_dadoProspectoCuandoFormalizaEntoncesEsCliente" classname="pe.sga.functional.AcceptanceBusinessTest" time="1.592" />
+  <testcase name="AC04_dadoDocumentoCuandoOtroClienteDescargaEntoncesDenegado" classname="pe.sga.functional.AcceptanceBusinessTest" time="0.501" />
+  <testcase name="AC02_dadoClienteInactivoCuandoReactivaEntoncesVisible" classname="pe.sga.functional.AcceptanceBusinessTest" time="0.218" />
+  <testcase name="AC03_dadoPortalCuandoConsultaEntoncesPerfilPropio" classname="pe.sga.functional.AcceptanceBusinessTest" time="0.189" />
+</testsuite>

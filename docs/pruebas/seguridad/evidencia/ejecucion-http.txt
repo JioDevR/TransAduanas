@@ -1,0 +1,13 @@
+SEC05 Falló HTTP 200 type=application/json
+SEC03 Pasó HTTP 403 type=application/json María Salas de la Torre, agente comercial. Lucía Mendoza Vargas, administradora, recibió 200 en la misma ruta.
+SEC01 Pasó HTTP 401 type=application/json;charset=UTF-8
+SEC02 Pasó HTTP 401 type=application/json;charset=UTF-8
+SEC04 Falló HTTP 200 type=application/json Suplantación de Lucía Mendoza Vargas en el laboratorio con la clave JWT de respaldo.
+SEC10 Pasó HTTP 200 type=application/pdf | HTTP 403 type=application/json Ana Torres Velarde, propietaria, y Diego Paredes Ríos, de otra empresa, probaron la misma descarga.
+SEC06 Falló HTTP 500 type=application/json | HTTP 500 type=application/json | HTTP 500 type=application/json | HTTP 500 type=application/json Clientes visibles antes=4; después=4
+SEC07 Pasó HTTP 401 type=application/json
+SEC08 Pasó HTTP 403 type=(ausente) Access-Control-Allow-Origin=(ausente)
+SEC09 Pasó 20/20 HTTP 401 p95=3.1 ms max=3.4 ms
+FFUF -noninteractive -s -w work\seguridad-evidencias\rutas-ffuf.txt -u http://127.0.0.1:63940/api/v1/FUZZ -mc all -t 1 -rate 4 -timeout 5 -of json -o work\seguridad-evidencias\ffuf-rutas.json
+FFUF health=200 | clientes=401 | usuarios=401 | auth/me=403 | portal/perfil=401 | ruta-inexistente-seguridad=401
+ZAP: revisar zap-pasivo.json

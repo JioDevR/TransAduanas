@@ -1,0 +1,625 @@
+{
+  "fuente": "https://api.osv.dev/v1/querybatch",
+  "inventario": [
+    {
+      "componente": "org.springframework.boot:spring-boot-starter-data-jpa",
+      "version": "4.1.2",
+      "avisos": []
+    },
+    {
+      "componente": "org.springframework.boot:spring-boot-starter",
+      "version": "4.1.2",
+      "avisos": []
+    },
+    {
+      "componente": "org.springframework.boot:spring-boot-starter-logging",
+      "version": "4.1.2",
+      "avisos": []
+    },
+    {
+      "componente": "ch.qos.logback:logback-classic",
+      "version": "1.5.38",
+      "avisos": []
+    },
+    {
+      "componente": "ch.qos.logback:logback-core",
+      "version": "1.5.38",
+      "avisos": []
+    },
+    {
+      "componente": "org.apache.logging.log4j:log4j-to-slf4j",
+      "version": "2.25.5",
+      "avisos": []
+    },
+    {
+      "componente": "org.apache.logging.log4j:log4j-api",
+      "version": "2.25.5",
+      "avisos": []
+    },
+    {
+      "componente": "org.slf4j:jul-to-slf4j",
+      "version": "2.0.20",
+      "avisos": []
+    },
+    {
+      "componente": "org.springframework.boot:spring-boot-autoconfigure",
+      "version": "4.1.2",
+      "avisos": []
+    },
+    {
+      "componente": "jakarta.annotation:jakarta.annotation-api",
+      "version": "3.0.0",
+      "avisos": []
+    },
+    {
+      "componente": "org.yaml:snakeyaml",
+      "version": "2.6",
+      "avisos": []
+    },
+    {
+      "componente": "org.springframework.boot:spring-boot-starter-jdbc",
+      "version": "4.1.2",
+      "avisos": []
+    },
+    {
+      "componente": "com.zaxxer:HikariCP",
+      "version": "7.0.2",
+      "avisos": []
+    },
+    {
+      "componente": "org.slf4j:slf4j-api",
+      "version": "2.0.20",
+      "avisos": []
+    },
+    {
+      "componente": "org.springframework.boot:spring-boot-data-jpa",
+      "version": "4.1.2",
+      "avisos": []
+    },
+    {
+      "componente": "org.springframework.boot:spring-boot-data-commons",
+      "version": "4.1.2",
+      "avisos": []
+    },
+    {
+      "componente": "org.springframework.boot:spring-boot-persistence",
+      "version": "4.1.2",
+      "avisos": []
+    },
+    {
+      "componente": "org.springframework.data:spring-data-commons",
+      "version": "4.1.2",
+      "avisos": []
+    },
+    {
+      "componente": "org.springframework.boot:spring-boot-hibernate",
+      "version": "4.1.2",
+      "avisos": []
+    },
+    {
+      "componente": "org.springframework.boot:spring-boot-jpa",
+      "version": "4.1.2",
+      "avisos": []
+    },
+    {
+      "componente": "jakarta.persistence:jakarta.persistence-api",
+      "version": "3.2.0",
+      "avisos": []
+    },
+    {
+      "componente": "org.hibernate.orm:hibernate-core",
+      "version": "7.4.13.Final",
+      "avisos": []
+    },
+    {
+      "componente": "jakarta.transaction:jakarta.transaction-api",
+      "version": "2.0.1",
+      "avisos": []
+    },
+    {
+      "componente": "org.hibernate.models:hibernate-models",
+      "version": "1.1.2",
+      "avisos": []
+    },
+    {
+      "componente": "jakarta.xml.bind:jakarta.xml.bind-api",
+      "version": "4.0.5",
+      "avisos": []
+    },
+    {
+      "componente": "jakarta.activation:jakarta.activation-api",
+      "version": "2.1.4",
+      "avisos": []
+    },
+    {
+      "componente": "org.glassfish.jaxb:jaxb-runtime",
+      "version": "4.0.9",
+      "avisos": []
+    },
+    {
+      "componente": "org.glassfish.jaxb:jaxb-core",
+      "version": "4.0.9",
+      "avisos": []
+    },
+    {
+      "componente": "org.eclipse.angus:angus-activation",
+      "version": "2.0.3",
+      "avisos": []
+    },
+    {
+      "componente": "org.glassfish.jaxb:txw2",
+      "version": "4.0.9",
+      "avisos": []
+    },
+    {
+      "componente": "com.sun.istack:istack-commons-runtime",
+      "version": "4.1.2",
+      "avisos": []
+    },
+    {
+      "componente": "jakarta.inject:jakarta.inject-api",
+      "version": "2.0.1",
+      "avisos": []
+    },
+    {
+      "componente": "org.springframework:spring-orm",
+      "version": "7.0.10",
+      "avisos": []
+    },
+    {
+      "componente": "org.springframework.data:spring-data-jpa",
+      "version": "4.1.2",
+      "avisos": []
+    },
+    {
+      "componente": "org.springframework:spring-tx",
+      "version": "7.0.10",
+      "avisos": []
+    },
+    {
+      "componente": "org.antlr:antlr4-runtime",
+      "version": "4.13.2",
+      "avisos": []
+    },
+    {
+      "componente": "org.springframework:spring-aspects",
+      "version": "7.0.10",
+      "avisos": []
+    },
+    {
+      "componente": "org.aspectj:aspectjweaver",
+      "version": "1.9.25.1",
+      "avisos": []
+    },
+    {
+      "componente": "org.springframework.boot:spring-boot-jdbc",
+      "version": "4.1.2",
+      "avisos": []
+    },
+    {
+      "componente": "org.springframework.boot:spring-boot-sql",
+      "version": "4.1.2",
+      "avisos": []
+    },
+    {
+      "componente": "org.springframework.boot:spring-boot-transaction",
+      "version": "4.1.2",
+      "avisos": []
+    },
+    {
+      "componente": "org.springframework:spring-jdbc",
+      "version": "7.0.10",
+      "avisos": []
+    },
+    {
+      "componente": "org.springframework.boot:spring-boot-starter-security",
+      "version": "4.1.2",
+      "avisos": []
+    },
+    {
+      "componente": "org.springframework.boot:spring-boot-security",
+      "version": "4.1.2",
+      "avisos": []
+    },
+    {
+      "componente": "org.springframework.security:spring-security-config",
+      "version": "7.1.2",
+      "avisos": []
+    },
+    {
+      "componente": "org.springframework.security:spring-security-core",
+      "version": "7.1.2",
+      "avisos": []
+    },
+    {
+      "componente": "org.springframework.security:spring-security-crypto",
+      "version": "7.1.2",
+      "avisos": []
+    },
+    {
+      "componente": "org.springframework.security:spring-security-web",
+      "version": "7.1.2",
+      "avisos": []
+    },
+    {
+      "componente": "org.springframework:spring-aop",
+      "version": "7.0.10",
+      "avisos": []
+    },
+    {
+      "componente": "org.springframework:spring-beans",
+      "version": "7.0.10",
+      "avisos": []
+    },
+    {
+      "componente": "org.springframework.boot:spring-boot-starter-validation",
+      "version": "4.1.2",
+      "avisos": []
+    },
+    {
+      "componente": "org.springframework.boot:spring-boot-validation",
+      "version": "4.1.2",
+      "avisos": []
+    },
+    {
+      "componente": "org.apache.tomcat.embed:tomcat-embed-el",
+      "version": "11.0.27",
+      "avisos": []
+    },
+    {
+      "componente": "org.hibernate.validator:hibernate-validator",
+      "version": "9.1.5.Final",
+      "avisos": []
+    },
+    {
+      "componente": "jakarta.validation:jakarta.validation-api",
+      "version": "3.1.1",
+      "avisos": []
+    },
+    {
+      "componente": "org.jboss.logging:jboss-logging",
+      "version": "3.6.3.Final",
+      "avisos": []
+    },
+    {
+      "componente": "com.fasterxml:classmate",
+      "version": "1.7.3",
+      "avisos": []
+    },
+    {
+      "componente": "org.springframework.boot:spring-boot-starter-webmvc",
+      "version": "4.1.2",
+      "avisos": []
+    },
+    {
+      "componente": "org.springframework.boot:spring-boot-starter-jackson",
+      "version": "4.1.2",
+      "avisos": []
+    },
+    {
+      "componente": "org.springframework.boot:spring-boot-jackson",
+      "version": "4.1.2",
+      "avisos": []
+    },
+    {
+      "componente": "tools.jackson.core:jackson-databind",
+      "version": "3.1.7",
+      "avisos": []
+    },
+    {
+      "componente": "tools.jackson.core:jackson-core",
+      "version": "3.1.7",
+      "avisos": []
+    },
+    {
+      "componente": "org.springframework.boot:spring-boot-starter-tomcat",
+      "version": "4.1.2",
+      "avisos": []
+    },
+    {
+      "componente": "org.springframework.boot:spring-boot-starter-tomcat-runtime",
+      "version": "4.1.2",
+      "avisos": []
+    },
+    {
+      "componente": "org.springframework.boot:spring-boot-web-server",
+      "version": "4.1.2",
+      "avisos": []
+    },
+    {
+      "componente": "org.apache.tomcat.embed:tomcat-embed-core",
+      "version": "11.0.27",
+      "avisos": []
+    },
+    {
+      "componente": "org.apache.tomcat.embed:tomcat-embed-websocket",
+      "version": "11.0.27",
+      "avisos": []
+    },
+    {
+      "componente": "org.springframework.boot:spring-boot-tomcat",
+      "version": "4.1.2",
+      "avisos": []
+    },
+    {
+      "componente": "org.springframework.boot:spring-boot-http-converter",
+      "version": "4.1.2",
+      "avisos": []
+    },
+    {
+      "componente": "org.springframework:spring-web",
+      "version": "7.0.10",
+      "avisos": []
+    },
+    {
+      "componente": "org.springframework.boot:spring-boot-webmvc",
+      "version": "4.1.2",
+      "avisos": []
+    },
+    {
+      "componente": "org.springframework.boot:spring-boot-servlet",
+      "version": "4.1.2",
+      "avisos": []
+    },
+    {
+      "componente": "org.springframework:spring-webmvc",
+      "version": "7.0.10",
+      "avisos": []
+    },
+    {
+      "componente": "com.mysql:mysql-connector-j",
+      "version": "9.7.0",
+      "avisos": []
+    },
+    {
+      "componente": "org.projectlombok:lombok",
+      "version": "1.18.48",
+      "avisos": []
+    },
+    {
+      "componente": "net.sf.jasperreports:jasperreports",
+      "version": "7.0.8",
+      "avisos": []
+    },
+    {
+      "componente": "commons-logging:commons-logging",
+      "version": "1.3.6",
+      "avisos": []
+    },
+    {
+      "componente": "org.apache.commons:commons-collections4",
+      "version": "4.5.0",
+      "avisos": []
+    },
+    {
+      "componente": "com.fasterxml.jackson.core:jackson-core",
+      "version": "2.21.7",
+      "avisos": []
+    },
+    {
+      "componente": "com.fasterxml.jackson.core:jackson-annotations",
+      "version": "2.21",
+      "avisos": []
+    },
+    {
+      "componente": "com.fasterxml.jackson.core:jackson-databind",
+      "version": "2.21.7",
+      "avisos": []
+    },
+    {
+      "componente": "com.fasterxml.jackson.dataformat:jackson-dataformat-xml",
+      "version": "2.21.7",
+      "avisos": []
+    },
+    {
+      "componente": "org.codehaus.woodstox:stax2-api",
+      "version": "4.2.2",
+      "avisos": []
+    },
+    {
+      "componente": "com.fasterxml.woodstox:woodstox-core",
+      "version": "7.1.1",
+      "avisos": []
+    },
+    {
+      "componente": "org.apache.xmlgraphics:batik-anim",
+      "version": "1.19",
+      "avisos": []
+    },
+    {
+      "componente": "org.apache.xmlgraphics:batik-css",
+      "version": "1.19",
+      "avisos": []
+    },
+    {
+      "componente": "org.apache.xmlgraphics:batik-dom",
+      "version": "1.19",
+      "avisos": []
+    },
+    {
+      "componente": "org.apache.xmlgraphics:batik-ext",
+      "version": "1.19",
+      "avisos": []
+    },
+    {
+      "componente": "org.apache.xmlgraphics:batik-shared-resources",
+      "version": "1.19",
+      "avisos": []
+    },
+    {
+      "componente": "org.apache.xmlgraphics:batik-bridge",
+      "version": "1.19",
+      "avisos": []
+    },
+    {
+      "componente": "org.apache.xmlgraphics:batik-script",
+      "version": "1.19",
+      "avisos": []
+    },
+    {
+      "componente": "org.apache.xmlgraphics:batik-xml",
+      "version": "1.19",
+      "avisos": []
+    },
+    {
+      "componente": "org.apache.xmlgraphics:xmlgraphics-commons",
+      "version": "2.11",
+      "avisos": []
+    },
+    {
+      "componente": "commons-io:commons-io",
+      "version": "2.17.0",
+      "avisos": []
+    },
+    {
+      "componente": "org.apache.xmlgraphics:batik-svg-dom",
+      "version": "1.19",
+      "avisos": []
+    },
+    {
+      "componente": "org.apache.xmlgraphics:batik-awt-util",
+      "version": "1.19",
+      "avisos": []
+    },
+    {
+      "componente": "org.apache.xmlgraphics:batik-gvt",
+      "version": "1.19",
+      "avisos": []
+    },
+    {
+      "componente": "org.apache.xmlgraphics:batik-util",
+      "version": "1.19",
+      "avisos": []
+    },
+    {
+      "componente": "org.apache.xmlgraphics:batik-constants",
+      "version": "1.19",
+      "avisos": []
+    },
+    {
+      "componente": "org.apache.xmlgraphics:batik-i18n",
+      "version": "1.19",
+      "avisos": []
+    },
+    {
+      "componente": "org.apache.xmlgraphics:batik-parser",
+      "version": "1.19",
+      "avisos": []
+    },
+    {
+      "componente": "xml-apis:xml-apis-ext",
+      "version": "1.3.04",
+      "avisos": []
+    },
+    {
+      "componente": "org.apache.commons:commons-beanutils2",
+      "version": "2.0.0-M2",
+      "avisos": []
+    },
+    {
+      "componente": "org.apache.commons:commons-lang3",
+      "version": "3.20.0",
+      "avisos": []
+    },
+    {
+      "componente": "net.sf.jasperreports:jasperreports-pdf",
+      "version": "7.0.8",
+      "avisos": []
+    },
+    {
+      "componente": "com.github.librepdf:openpdf",
+      "version": "1.3.43.jaspersoft.2",
+      "avisos": []
+    },
+    {
+      "componente": "com.adobe.xmp:xmpcore",
+      "version": "6.1.11",
+      "avisos": []
+    },
+    {
+      "componente": "net.sf.jasperreports:jasperreports-jdt",
+      "version": "7.0.8",
+      "avisos": []
+    },
+    {
+      "componente": "org.eclipse.jdt:ecj",
+      "version": "3.21.0",
+      "avisos": []
+    },
+    {
+      "componente": "io.jsonwebtoken:jjwt-api",
+      "version": "0.13.0",
+      "avisos": []
+    },
+    {
+      "componente": "io.jsonwebtoken:jjwt-impl",
+      "version": "0.13.0",
+      "avisos": []
+    },
+    {
+      "componente": "io.jsonwebtoken:jjwt-jackson",
+      "version": "0.13.0",
+      "avisos": []
+    },
+    {
+      "componente": "org.springframework.boot:spring-boot-starter-thymeleaf",
+      "version": "4.1.2",
+      "avisos": []
+    },
+    {
+      "componente": "org.springframework.boot:spring-boot-thymeleaf",
+      "version": "4.1.2",
+      "avisos": []
+    },
+    {
+      "componente": "org.thymeleaf:thymeleaf-spring6",
+      "version": "3.1.5.RELEASE",
+      "avisos": []
+    },
+    {
+      "componente": "org.thymeleaf:thymeleaf",
+      "version": "3.1.5.RELEASE",
+      "avisos": []
+    },
+    {
+      "componente": "org.attoparser:attoparser",
+      "version": "2.0.7.RELEASE",
+      "avisos": []
+    },
+    {
+      "componente": "org.unbescape:unbescape",
+      "version": "1.1.6.RELEASE",
+      "avisos": []
+    },
+    {
+      "componente": "com.openhtmltopdf:openhtmltopdf-pdfbox",
+      "version": "1.0.10",
+      "avisos": []
+    },
+    {
+      "componente": "org.apache.pdfbox:pdfbox",
+      "version": "2.0.24",
+      "avisos": []
+    },
+    {
+      "componente": "org.apache.pdfbox:fontbox",
+      "version": "2.0.24",
+      "avisos": []
+    },
+    {
+      "componente": "org.apache.pdfbox:xmpbox",
+      "version": "2.0.24",
+      "avisos": []
+    },
+    {
+      "componente": "com.openhtmltopdf:openhtmltopdf-core",
+      "version": "1.0.10",
+      "avisos": []
+    },
+    {
+      "componente": "de.rototor.pdfbox:graphics2d",
+      "version": "0.32",
+      "avisos": []
+    }
+  ]
+}

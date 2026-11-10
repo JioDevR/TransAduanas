@@ -37,12 +37,12 @@ Copia **todo** el bloque en una terminal PowerShell. Usa la ruta de tu clon en l
     node $script $backend $cp "$resultado\http.json" 2>&1 |
         Tee-Object -FilePath "$resultado\ejecucion-http.txt"
     if ($LASTEXITCODE -ne 0) { throw "La ejecución se interrumpió. Revisa $resultado\ejecucion-http.txt." }
-    Get-Content "$resultado\http.json" -Raw | ConvertFrom-Json |
-        Sort-Object id | Format-Table id, resultado, observado -Wrap
+    $casos = Get-Content -LiteralPath "$resultado\http.json" -Raw -Encoding UTF8 | ConvertFrom-Json
+    $casos | Sort-Object id | Format-Table id, resultado, observado -Wrap
 }
 ```
 
-Para la captura, muestra `SEC03` (403 para María), `SEC04` (200 con el JWT de respaldo), `SEC06` (cuatro respuestas 500) y `SEC10` (200 para Ana y 403 para Diego). Esta ejecución HTTP usa H2.
+Captura la tabla de `SEC01` a `SEC10`. Para mostrarla otra vez, pega las dos últimas líneas del bloque en la misma terminal. En la ejecución de referencia, `SEC04`, `SEC05` y `SEC06` figuran como `Falló` porque reprodujeron hallazgos. Esta ejecución HTTP usa H2.
 
 ## 2. Frontend SGA en navegador
 
@@ -56,12 +56,12 @@ Set-Location $backend
 node "$kit\seguridad-http.mjs" $backend $cp "$resultado\http-frontend.json" --frontend 2>&1 |
   Tee-Object -FilePath "$resultado\ejecucion-frontend.txt"
 if ($LASTEXITCODE -ne 0) { throw 'Revisa ejecucion-frontend.txt.' }
-Get-Content "$resultado\frontend-resultados.json" -Raw | ConvertFrom-Json |
-  Format-Table id, resultado, observado -Wrap
+$casosFrontend = Get-Content -LiteralPath "$resultado\frontend-resultados.json" -Raw -Encoding UTF8 | ConvertFrom-Json
+$casosFrontend | Sort-Object id | Format-Table id, resultado, observado -Wrap
 Invoke-Item $resultado
 ```
 
-En la terminal verás `FE01` a `FE08`. Abre `frontend-FE01-sin-sesion.png`, `frontend-FE02-login-rechazado.png`, `frontend-FE04-rol-comercial.png` y `frontend-FE07-sesion-cerrada.png`. Usa también la tabla de la terminal para demostrar la contraseña oculta (`FE06`) y el rechazo de una redirección externa (`FE08`). Las pruebas visuales corresponden al SGA interno. Para portal y landing se conservan los informes de dependencias.
+Captura la tabla de `FE01` a `FE08`. El último comando abre la carpeta de resultados. Allí están `frontend-FE01-sin-sesion.png`, `frontend-FE02-login-rechazado.png`, `frontend-FE04-rol-comercial.png` y `frontend-FE07-sesion-cerrada.png`. La tabla también documenta los casos que no generan imagen, como la contraseña oculta (`FE06`) y el rechazo de una redirección externa (`FE08`). Las pruebas visuales corresponden al SGA interno. Para portal y landing se conservan los informes de dependencias.
 
 ## 3. Base de datos MySQL
 
@@ -76,11 +76,13 @@ Set-Location $raiz
 node "$kit\seguridad-mysql.mjs" $mysqlBin $raiz $resultado 2>&1 |
   Tee-Object -FilePath "$resultado\ejecucion-mysql.txt"
 if ($LASTEXITCODE -ne 0) { throw 'Revisa ejecucion-mysql.txt y los logs en mysql-aislado-*.' }
-Get-Content "$resultado\mysql-resultados.json" -Raw | ConvertFrom-Json |
-  Format-Table id, esperado, observado, resultado -Wrap
+$casosMySQL = Get-Content -LiteralPath "$resultado\mysql-resultados.json" -Raw -Encoding UTF8 | ConvertFrom-Json
+$casosMySQL | Sort-Object id | Format-Table id, esperado, observado, resultado -Wrap
+$conteo = $casosMySQL | Where-Object id -eq 'BD06'
+"BD06 | Filas antes: $($conteo.esperado) | Filas después: $($conteo.observado)"
 ```
 
-Para la captura, muestra `1045` (contraseña incorrecta), `1142` (operaciones sin permiso), `1143` (columna restringida) y `BD06 filas antes=1 después=1`. El conteo viene de `SELECT COUNT(*) FROM SGAdb.cliente` ejecutado antes y después de los intentos de insertar y borrar. Los permisos se configuraron en la cuenta del laboratorio. Para auditar los permisos del usuario de producción se necesita una revisión aparte.
+En una sola imagen, captura la tabla de `BD01` a `BD08` y la línea `BD06 | Filas antes: 1 | Filas después: 1`. El conteo viene de `SELECT COUNT(*) FROM SGAdb.cliente` ejecutado antes y después de los intentos de insertar y borrar. Los permisos se configuraron en la cuenta del laboratorio.
 
 ## 4. Sistema integrado
 
@@ -93,11 +95,11 @@ Set-Location $backend
 node "$kit\seguridad-http.mjs" $backend $cp "$resultado\http-sistema.json" --sistema 2>&1 |
   Tee-Object -FilePath "$resultado\ejecucion-sistema.txt"
 if ($LASTEXITCODE -ne 0) { throw 'Revisa ejecucion-sistema.txt.' }
-$casosSistema = Get-Content "$resultado\sistema-resultados.json" -Raw -Encoding UTF8 | ConvertFrom-Json
-$casosSistema | Sort-Object id | Format-Table id, esperado, observado, resultado -Wrap
+$casosSistema = Get-Content -LiteralPath "$resultado\sistema-resultados.json" -Raw -Encoding UTF8 | ConvertFrom-Json
+$casosSistema | Sort-Object id | Format-Table id, resultado, observado -Wrap
 ```
 
-Captura `SIS04` a `SIS08`. Muestran la baja denegada a María, la baja autorizada, el rechazo del token anterior, la reactivación y el bloqueo del comprobante de otra empresa.
+Captura la tabla de `SIS01` a `SIS08`. Para explicar el flujo de la cuenta, señala `SIS04` a `SIS08`.
 
 ## 5. Prueba general sin Postman
 
@@ -111,7 +113,7 @@ $codigo = $LASTEXITCODE
 "Código de la prueba general: $codigo"
 ```
 
-Captura las cuatro líneas finales con los totales por componente y `Resultado general`. El código `1` significa que se ejecutaron todos los casos y hubo hallazgos. El código `2` indica una ejecución incompleta. El resumen JSON está en la carpeta `general-*` cuya ruta imprime la terminal.
+Captura las seis líneas del resumen. Incluye las cuatro de Backend, Frontend SGA, Base de datos MySQL y Sistema, además de `Resultado general` y `Código de la prueba general`. El código `1` significa que se ejecutaron todos los casos y hubo hallazgos. El código `2` indica una ejecución incompleta. El resumen JSON está en la carpeta `general-*` cuya ruta imprime la terminal.
 
 ## 6. Postman
 
@@ -134,10 +136,21 @@ node "$kit\seguridad-http.mjs" $backend $cp "$resultado\http-postman.json" --pos
 ```
 
 1. Deja la terminal abierta. El ejecutor imprime la ruta de `postman-local.postman_environment.json`.
-2. En Postman Desktop, pulsa **Import** e importa dos archivos: `docs\pruebas\seguridad\TransAduanas.postman_collection.json` del clon y el entorno local que imprimió la terminal.
+2. En Postman Desktop, pulsa **Import**. Importa `docs\pruebas\seguridad\TransAduanas.postman_collection.json` desde el clon y luego el entorno local que imprimió la terminal.
 3. Selecciona **TransAduanas local - descartar al terminar** como entorno activo.
-4. Pulsa **Run collection** y ejecuta las cuatro carpetas en el orden indicado. Muestra los **16 casos y 32 aserciones** en el resumen. Ejecuta la carpeta de datos completa para que el conteo se compruebe después de los intentos de alta.
-5. Vuelve a PowerShell y pulsa **Ctrl+C**. Elimina el entorno importado de Postman. Contiene tokens temporales de laboratorio, así que evita mostrar sus valores en las capturas o compartirlo.
+4. Abre **TransAduanas - Seguridad por componente**, pulsa **Run** y selecciona **Run manually**. Ejecuta una iteración con las 16 solicitudes seleccionadas. Conserva el orden de **Base de datos por API** para que el conteo se compruebe después de los intentos de alta.
+5. Toma las cinco capturas indicadas abajo antes de cerrar el laboratorio.
+6. Vuelve a PowerShell y pulsa **Ctrl+C**. Elimina de Postman el entorno importado. Evita mostrar o compartir sus tokens temporales.
+
+| Captura | Qué mostrar |
+| --- | --- |
+| Resumen | Nombre de la colección y los resultados de las 16 solicitudes. En la ejecución de referencia, las 32 aserciones pasaron. |
+| Backend | `BE04`, origen CORS externo. Estado `403` y las dos aserciones. |
+| Frontend | `FE04`, usuario comercial por el proxy del SGA. Estado `403` y las dos aserciones. |
+| Base de datos por API | `BD04`, conteo posterior sin nuevas altas. Estado `200` y las dos aserciones. Ábrelo desde la ejecución completa. |
+| Sistema | `SIS02`, Diego intenta descargar el comprobante de Ana. Estado `403` y las dos aserciones. |
+
+Abre los casos individuales desde los resultados de la ejecución. Procura que se vean el nombre del caso, el estado HTTP y las aserciones, sin mostrar el encabezado `Authorization` ni los valores de los tokens.
 
 En Postman, Frontend prueba la respuesta HTML y el proxy HTTP de Vite. Base de datos comprueba registros **a través de la API con H2**. Para capturar la navegación real y los permisos SQL directos, usa los apartados 2 y 3.
 

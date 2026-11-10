@@ -1,122 +1,161 @@
 # Pruebas de seguridad de TransAduanas
 
-## Entorno y datos
+Probamos la API en una copia local con una base H2 en memoria. El script arranca el backend en un puerto libre de `127.0.0.1` y lo detiene al terminar. Para estas pruebas no necesitas levantar MySQL, Docker ni los frontends.
 
-- Laboratorio local en 127.0.0.1 con puerto aleatorio, JDK 21, Node.js 24, Spring Boot y H2 temporal. El ejecutor usa los binarios de la copia incluida en el ZIP y genera contraseñas al azar para las cuentas ficticias. La base H2 se elimina al cerrar Java.
-- María Salas de la Torre, agente comercial, y Lucía Mendoza Vargas, administradora. Ana Torres Velarde representa a Transportes Costa del Sur S.A.C. y Diego Paredes Ríos a Comercial Bahía Clara S.A.C. Todos son datos inventados.
-- El caso de contraseña predeterminada usa la cuenta admin que crea el proyecto. El caso de firma JWT arranca con el valor de respaldo del proyecto y genera el token solo dentro del laboratorio. Usa este ejecutor exclusivamente sobre una copia local con datos desechables.
-- La evidencia no incluye contraseñas generadas ni tokens. No se modificó MySQL ni se ejecutó Postman.
+Los usuarios y empresas son ficticios. María Salas de la Torre tiene el rol de agente comercial y Lucía Mendoza Vargas el de administradora. Ana Torres Velarde y Diego Paredes Ríos pertenecen a empresas distintas. La cuenta `admin` del proyecto se usa para comprobar la contraseña predeterminada y preparar los datos.
 
-## Cómo repetirlo en PowerShell
+## 1. Abre la rama y verifica las versiones
 
-1. Extrae TransAduanas en una carpeta de laboratorio. Los scripts están en docs/pruebas/seguridad. Descarga ffuf para Windows y, si quieres reproducir el análisis pasivo, la versión multiplataforma de ZAP. Extrae ambos.
-2. Abre PowerShell en la raíz de TransAduanas. Cambia las tres rutas de ejemplo de acuerdo con tu equipo.
+En VS Code, abre la **carpeta principal de TransAduanas**, la que contiene `backend` y `app-sga`. Abre **Terminal → Nueva terminal** y elige **PowerShell**. Ejecuta:
 
 ```powershell
-$kit = (Resolve-Path .\docs\pruebas\seguridad).Path
-$ffuf = 'C:\Herramientas\ffuf\ffuf.exe'
-$zap = 'C:\Herramientas\ZAP_2.17.0\zap-2.17.0.jar'
-$backend = (Resolve-Path .\backend).Path
-$resultado = Join-Path (Get-Location).Path 'evidencia-seguridad'
-New-Item -ItemType Directory -Force -Path $resultado | Out-Null
-cd $backend
-.\mvnw.cmd -B compile dependency:build-classpath "-DincludeScope=test" "-Dmdep.outputFile=target/dependencias-seguridad.txt"
-if ($LASTEXITCODE -ne 0) { throw 'Maven no completó la preparación' }
-$deps = (Get-Content .\target\dependencias-seguridad.txt -Raw).Trim()
+git fetch origin
+if ($LASTEXITCODE -ne 0) { throw 'No se pudo consultar origin.' }
+git switch pruebas/seguridad-transaduanas
+if ($LASTEXITCODE -ne 0) { throw 'No se pudo cambiar de rama.' }
+git pull --ff-only origin pruebas/seguridad-transaduanas
+if ($LASTEXITCODE -ne 0) { throw 'No se pudo actualizar la rama.' }
+git branch --show-current
+java -version
+node -v
+npm.cmd -v
+```
+
+La rama debe ser `pruebas/seguridad-transaduanas`. Usa **JDK 21** y **Node.js 24**. Si `git switch` se detiene por cambios locales, guárdalos antes de cambiar de rama. Si acabas de instalar Java o Node, cierra VS Code y ábrelo otra vez para actualizar el PATH.
+
+## 2. Compila el backend y prepara el classpath
+
+Pega este bloque desde la **carpeta principal**. Maven necesita Internet la primera vez. Deja abierta la misma terminal para los pasos siguientes, porque usan las variables de este bloque.
+
+```powershell
+$raiz = (Get-Location).Path
+$backend = (Resolve-Path .\backend -ErrorAction Stop).Path
+$kit = (Resolve-Path .\docs\pruebas\seguridad -ErrorAction Stop).Path
+$resultado = Join-Path $backend 'target\seguridad-local'
+New-Item -ItemType Directory -Path $resultado -Force | Out-Null
+$archivoDeps = Join-Path $resultado 'dependencias.txt'
 $cp = Join-Path $resultado 'classpath-local.txt'
-"$backend\target\classes;$deps" | Set-Content -Encoding utf8 $cp
-node "$kit\seguridad-http.mjs" $backend $cp "$resultado\http.json" $ffuf $zap 2>&1 |
+
+Set-Location $backend
+.\mvnw.cmd -v
+if ($LASTEXITCODE -ne 0) { throw 'El Maven Wrapper no arrancó. Revisa el error de arriba.' }
+
+.\mvnw.cmd -B compile dependency:build-classpath "-DincludeScope=test" "-Dmdep.outputFile=$archivoDeps"
+if ($LASTEXITCODE -ne 0) { throw 'Maven falló. Corrige el primer error antes de ejecutar las pruebas.' }
+
+$deps = (Get-Content -LiteralPath $archivoDeps -Raw -ErrorAction Stop).Trim()
+"$backend\target\classes;$deps" | Set-Content -LiteralPath $cp -Encoding utf8
+```
+
+Verifica que Maven muestre **Java 21** y termine con **BUILD SUCCESS**. El alcance `test` del classpath incluye H2. Si Maven está usando otro JDK, verifica `$env:JAVA_HOME` y vuelve a ejecutar `.\mvnw.cmd -v` antes de compilar.
+
+## 3. Ejecuta los 10 casos HTTP
+
+Sigue en la **misma terminal**, dentro de `backend`:
+
+```powershell
+node "$kit\seguridad-http.mjs" $backend $cp "$resultado\http.json" 2>&1 |
   Tee-Object -FilePath "$resultado\ejecucion-http.txt"
+if ($LASTEXITCODE -ne 0) { throw 'El script se interrumpió. Revisa ejecucion-http.txt.' }
+Get-Content "$resultado\http.json" -Raw | ConvertFrom-Json |
+  Sort-Object id | Format-Table id, resultado, observado -Wrap
 ```
 
-- Si tienes ffuf pero no ZAP, omite el último argumento. Para probar solo la API, omite ambos argumentos.
-- Si las clases de la copia ya están compiladas, puedes ejecutar solo el objetivo Maven dependency:build-classpath. En esta revisión el entorno de Windows impidió recompilar Java por permisos, así que las pruebas de HTTP se ejecutaron sobre los binarios de la copia. Se verificó por separado que Maven sí genera el classpath.
-- El ejecutor imprime el estado y el código observado. La matriz adjunta incluye el criterio esperado. Un Falló en SEC04, SEC05 o SEC06 es un hallazgo de seguridad, aunque Node pueda terminar con código de salida 0. Revisa el JSON y la tabla de abajo.
-- Para capturas propias, muestra la terminal al terminar, luego abre http.json, ffuf-rutas.json o zap-pasivo.json. El puerto y los tiempos varían. No compartas classpath-local.txt.
+Abre `backend\target\seguridad-local\ejecucion-http.txt` para la captura. En la versión evaluada aparecieron diez casos. `SEC04`, `SEC05` y `SEC06` salieron como `Falló` porque reprodujeron problemas del proyecto. Un error de arranque o de preparación del laboratorio aparece como un error del script y puede dejar la lista incompleta.
 
-### Dependencias del backend (Maven y OSV)
+## 4. Ejecuta ffuf y ZAP si los vas a mostrar
 
-Desde backend, en la misma sesión PowerShell:
+Descarga el ZIP de **ffuf para Windows** y la edición **Crossplatform de ZAP**. Extrae ambos. Para ZAP conserva toda la carpeta extraída, incluidos sus complementos. [Descargas de ffuf](https://github.com/ffuf/ffuf/releases) · [Descargas de ZAP](https://www.zaproxy.org/download/)
+
+En la **misma terminal**, pega el bloque. Cuando te pregunte, escribe la ruta completa del archivo, sin comillas. Para usar solo ffuf, deja en blanco la ruta de ZAP.
 
 ```powershell
+$ffuf = Read-Host 'Ruta completa de ffuf.exe'
+if (-not (Test-Path -LiteralPath $ffuf -PathType Leaf)) { throw 'No se encontró ffuf.exe.' }
+$zap = Read-Host 'Ruta completa de zap-2.17.0.jar (Enter para omitir ZAP)'
+$opciones = @((Resolve-Path -LiteralPath $ffuf).Path)
+if ($zap) {
+  if (-not (Test-Path -LiteralPath $zap -PathType Leaf)) { throw 'No se encontró el JAR de ZAP.' }
+  $opciones += (Resolve-Path -LiteralPath $zap).Path
+}
+
+node "$kit\seguridad-http.mjs" $backend $cp "$resultado\http-herramientas.json" @opciones 2>&1 |
+  Tee-Object -FilePath "$resultado\ejecucion-herramientas.txt"
+if ($LASTEXITCODE -ne 0) { throw 'Revisa ejecucion-herramientas.txt y, si usaste ZAP, ejecucion-zap.txt.' }
+```
+
+Este bloque vuelve a arrancar el laboratorio y genera `ffuf-rutas.json`. Si incluiste ZAP, también genera `zap-pasivo.json` y `ejecucion-zap.txt`. Busca `Automation plan succeeded!` en el log. La ejecución registrada cubrió seis rutas con ffuf y tres peticiones anónimas con ZAP. Una ruta inventada también devolvió `401`, así que ese código por sí solo no confirma que la ruta exista.
+
+## 5. Revisa las dependencias y la configuración
+
+**Backend.** En la misma terminal, desde `backend`:
+
+```powershell
+Set-Location $backend
 .\mvnw.cmd -B dependency:tree "-Dscope=runtime" "-DoutputType=json" "-DoutputFile=$resultado\backend-runtime.json"
+if ($LASTEXITCODE -ne 0) { throw 'Maven no generó el árbol de dependencias.' }
 node "$kit\seguridad-osv.mjs" "$resultado\backend-runtime.json" "$resultado\osv-backend.json"
+if ($LASTEXITCODE -ne 0) { throw 'La consulta a OSV falló. Revisa el mensaje de Node.' }
 ```
 
-OSV recibe coordenadas y versiones de paquetes Maven. El resultado refleja lo que devolvió la base de avisos el día de la consulta.
-
-### Dependencias web (npm)
-
-Desde la raíz del proyecto, después de volver con cd ..:
+**Frontends.** Este bloque vuelve a la carpeta principal y entra a cada aplicación. Usa los archivos `package-lock.json` del repositorio.
 
 ```powershell
-foreach ($app in 'app-sga','app-portal-cliente','landing') {
-  Push-Location $app
-  npm.cmd audit --omit=dev --json > "$resultado\npm-audit-$app.json"
-  "$app código=$LASTEXITCODE"
-  Pop-Location
+Set-Location $raiz
+foreach ($app in 'app-sga', 'app-portal-cliente', 'landing') {
+  Push-Location (Join-Path $raiz $app)
+  try {
+    npm.cmd audit --omit=dev --json > "$resultado\npm-audit-$app.json"
+    $codigo = $LASTEXITCODE
+    $informe = Get-Content "$resultado\npm-audit-$app.json" -Raw | ConvertFrom-Json
+    if ($informe.error -or -not $informe.metadata) { throw "npm audit no completó la revisión de $app." }
+    "$app | código $codigo | alertas $($informe.metadata.vulnerabilities.total)"
+  } finally {
+    Pop-Location
+  }
 }
 ```
 
-### Configuración
+Un código `1` acompañado de un informe válido indica que npm encontró alertas. En la ejecución guardada, SGA y el portal registraron el mismo aviso alto de `follow-redirects`. Landing registró cero. OSV no devolvió avisos para las 124 dependencias Maven consultadas. [Aviso de follow-redirects](https://github.com/advisories/GHSA-mrwp-f3q8-3g9p)
 
-Con Python 3, desde la raíz:
+**Configuración.** Si tienes Python 3, desde la carpeta principal:
 
 ```powershell
-python "$kit\check-config.py" . > "$resultado\configuracion.json"
+Set-Location $raiz
+python --version
+python "$kit\check-config.py" $raiz | Set-Content -Encoding utf8 "$resultado\configuracion.json"
+if ($LASTEXITCODE -ne 0) { throw 'Falló la revisión de configuración.' }
 ```
 
-## Casos de la guía adaptados al proyecto
+## Resultados guardados
 
-| ID | Qué se prueba | Esperado | Observado |
+| Caso | Qué se probó | Esperado | Observado |
 | --- | --- | --- | --- |
 | SEC01 | Listar usuarios sin token | 401 | 401 |
 | SEC02 | Listar usuarios con JWT inválido | 401 | 401 |
-| SEC03 | María intenta listar usuarios | 403, con un 200 de Lucía como control positivo | 403; Lucía recibió 200 |
-| SEC04 | Token emitido fuera del login con el secreto de respaldo, usando el nombre de usuario de Lucía | 401 | 200 |
-| SEC05 | Inicio de sesión con la contraseña demo de admin | 401 | 200 |
-| SEC06 | María envía JSON truncado, array, objeto donde se espera texto y un campo @type acompañado de un tipo incompatible | 400 por solicitud y sin nuevas filas visibles | 500 en los cuatro casos; el listado quedó igual |
-| SEC07 | Variante SQLi sobre el nombre de usuario de María | 401 | 401 |
-| SEC08 | Preflight CORS con origen no autorizado | 403 sin permitir el origen | 403 sin la cabecera |
-| SEC09 | 20 solicitudes secuenciales con token inválido | 20 respuestas 401 | 20 respuestas 401 |
-| SEC10 | Ana descarga su comprobante y Diego intenta descargar exactamente el mismo documento desde otra empresa | 200 para Ana y rechazo para Diego | 200 PDF para Ana y 403 para Diego |
+| SEC03 | María y Lucía intentaron listar usuarios | 403 para María y 200 para Lucía | 403 y 200 |
+| SEC04 | JWT de Lucía firmado fuera del login con la clave de respaldo | 401 | 200 |
+| SEC05 | Login con la contraseña predeterminada de admin | 401 | 200 |
+| SEC06 | María envió cuatro cuerpos JSON inválidos | 400 en cada solicitud | Cuatro respuestas 500. La cantidad de clientes visibles quedó igual. |
+| SEC07 | Variante de inyección SQL en el nombre de usuario del login | 401 | 401 |
+| SEC08 | Solicitud CORS desde un origen ajeno | 403 sin permitir el origen | 403 sin cabecera de origen permitido |
+| SEC09 | 20 solicitudes seguidas con token inválido | 20 respuestas 401 | 20 respuestas 401 |
+| SEC10 | Ana y Diego intentaron descargar el comprobante de Ana | 200 para Ana y rechazo para Diego | 200 para Ana y 403 para Diego |
 
-En SEC06 se verificó deserialización de tipos JSON y manejo de errores. La prueba no demuestra ejecución de código. SEC07 cubre una variante de SQLi en el login. SEC09 es una comprobación pequeña de robustez; no mide capacidad máxima ni resistencia a DoS.
+Las salidas de la ejecución original están en [evidencia/](evidencia/). Para comparar tu ejecución, usa [la matriz de resultados](evidencia/matriz-seguridad.csv). La ráfaga de SEC09 solo comprueba las 20 solicitudes del caso. ZAP analizó las respuestas de tres rutas anónimas y no reportó alertas de sitio en esa muestra.
 
-## Qué aporta cada enlace del PDF
+## Enlaces del PDF
 
-- Pág. 27, Zenmap es la interfaz de Nmap para inventariar puertos. https://nmap.org/zenmap/
-- Pág. 29, OWASP Top 10 es una referencia de categorías de riesgo. https://owasp.org/Top10/
-- Pág. 31, Burp Suite permite interceptar y repetir solicitudes en pruebas manuales. https://portswigger.net/burp
-- Pág. 33, ffuf sirve para reemplazar FUZZ por cada valor de una lista. Se ejecutó sobre seis rutas locales con un hilo y límite de 4 solicitudes por segundo. https://www.kali.org/tools/ffuf/ y https://github.com/ffuf/ffuf/releases
-- Pág. 35, JMeter sirve para diseñar pruebas de carga con concurrencia y métricas. https://jmeter.apache.org/
-- Pág. 36, Arachni es un escáner web. El enlace del PDF apunta a una página del proveedor. https://ecsypno.com/pages/arachni-web-application-security-scanner-framework
-- Pág. 38, snyk test consulta vulnerabilidades en dependencias. Se usaron npm audit y OSV para esta fase. https://docs.snyk.io/developer-tools/snyk-cli/commands/test
-- Pág. 46, las direcciones app:8080 y target son ejemplos. El comando ZAP de la guía corresponde a un escaneo pasivo con descubrimiento. En Windows se usó un plan del Automation Framework con tres solicitudes directas locales y análisis pasivo. https://www.zaproxy.org/docs/automate/automation-framework/
-- Pág. 46, sqlmap automatiza pruebas de inyección SQL. La variante de login de este laboratorio se hizo por HTTP con Node.js. https://sqlmap.org/
-- Consultas de avisos de backend. https://google.github.io/osv.dev/post-v1-querybatch/
-- Auditoría de dependencias npm. https://docs.npmjs.com/cli/v11/commands/npm-audit/
-- Aviso de follow-redirects. https://github.com/advisories/GHSA-mrwp-f3q8-3g9p
+| Página | Herramienta o referencia | Uso en esta revisión |
+| --- | --- | --- |
+| 27 | [Zenmap/Nmap](https://nmap.org/zenmap/) | Referencia para revisar puertos. |
+| 29 | [OWASP Top 10](https://owasp.org/Top10/) | Referencia para clasificar riesgos web. |
+| 31 | [Burp Suite](https://portswigger.net/burp) | Referencia para interceptar y repetir peticiones. |
+| 33 | [ffuf](https://www.kali.org/tools/ffuf/) | Se ejecutó con una lista de seis rutas. |
+| 35 | [JMeter](https://jmeter.apache.org/) | Referencia para pruebas de carga. |
+| 36 | [Arachni](https://ecsypno.com/pages/arachni-web-application-security-scanner-framework) | Referencia de un escáner web. |
+| 38 | [Snyk](https://docs.snyk.io/developer-tools/snyk-cli/commands/test) | Referencia para revisar dependencias. Se usaron npm audit y OSV. |
+| 46 | [ZAP](https://www.zaproxy.org/docs/automate/automation-framework/) | Se ejecutó un plan pasivo con tres peticiones. |
+| 46 | [sqlmap](https://sqlmap.org/) | Referencia de inyección SQL. El caso SEC07 se ejecutó con Node.js. |
 
-## Qué puedes mostrar en tu trabajo
-
-1. Objetivo y alcance. Verificar acceso por rol, aislamiento entre clientes, autenticación y manejo de entradas en el backend local, más revisión de configuración y dependencias.
-2. Evidencia de autorización. Captura SEC03 junto con SEC10. Los controles positivos muestran que las rutas y el documento eran accesibles para sus propietarios o roles autorizados.
-3. Hallazgos. Eliminar el secreto JWT de respaldo y exigir uno externo. Limitar las cuentas demo a un perfil local. Responder 400 a errores de lectura de JSON, sin detalles internos.
-4. Vulnerabilidades de dependencias. npm audit reportó una alerta alta de follow-redirects en SGA y portal y cero en landing. OSV respondió sin avisos para las 124 coordenadas Maven de ejecución consultadas. No se comprobó explotabilidad de la alerta npm en navegador.
-5. Cobertura. Las pruebas fueron de laboratorio. Quedaron fuera un escaneo web activo, pruebas XSS en navegador, carga sostenida y CI. Postman queda para una etapa posterior.
-
-## Inventario de evidencia de esta ejecución
-
-- http.json y ejecucion-http.txt. Diez casos HTTP, siete conformes y tres hallazgos. SEC09 registró p95 de 3.1 ms en la ráfaga local.
-- matriz-seguridad.csv. Resultados para consultar al preparar el documento.
-- ffuf-rutas.json y rutas-ffuf.txt. Seis solicitudes de reconocimiento. Salud devolvió 200, las rutas privadas rechazaron y la ruta inventada recibió 401, así que un 401 por sí solo no confirma que exista una ruta.
-- zap-pasivo.json, zap-plan.yaml y ejecucion-zap.txt. ZAP 2.17.0 completó el plan en tres endpoints anónimos y no reportó alertas de sitio. El log registró que faltaban Firefox/geckodriver para integración con navegador. El plan de solicitudes directas y escaneo pasivo terminó correctamente. No es una evaluación de la interfaz ni un escaneo activo.
-- backend-runtime.json, osv-backend.json y ejecucion-osv.txt. Se consultaron 124 coordenadas Maven de ejecución, con cero avisos devueltos.
-- npm-audit-*.json. Una alerta alta en SGA, una en portal y cero en landing. Es el mismo aviso, no dos vulnerabilidades distintas.
-- configuracion.json y check-config.py. Cinco patrones de configuración detectados, con ruta y número de línea.
-- seguridad-http.mjs y seguridad-osv.mjs. Ejecutores.
-- Zenmap/Nmap, Burp, JMeter, Arachni, Snyk y sqlmap quedaron como referencias revisadas. No hay resultados atribuidos a esas herramientas.
-
-Proyecto revisado: rama incluida pruebas/controladores-multinivel, referencia 5b8b29d022d4f335df96129b0814f9704e5b06d7.
-ZIP original SHA-256: 491ED668E020385378E24163F0FB654B9223B8AEF6D71C021EDF8F4DBD84F01C.
+La evidencia original se obtuvo sobre los binarios del ZIP, porque el entorno de revisión dio un error de permisos al recompilar. El árbol Maven y el classpath sí se generaron y se usaron para ejecutar las pruebas. La revisión cubrió la referencia `5b8b29d022d4f335df96129b0814f9704e5b06d7`. Postman queda para una etapa posterior.

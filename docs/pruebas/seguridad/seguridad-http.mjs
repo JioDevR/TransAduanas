@@ -2,6 +2,7 @@ import { readFileSync, writeFileSync, mkdirSync, mkdtempSync } from 'node:fs'
 import { spawn, execFile } from 'node:child_process'
 import { createHmac, randomBytes } from 'node:crypto'
 import { resolve, dirname } from 'node:path'
+import { setTimeout as delay } from 'node:timers/promises'
 import { promisify } from 'node:util'
 const args = process.argv.slice(2)
 const [backendPath, cpPath, outputPath, ffufPath, zapJar] = args.filter(arg => !arg.startsWith('--'))
@@ -29,27 +30,34 @@ const child = spawn('java',['-cp',cp,'pe.sga.SgaApplication','--server.address=1
 let startup = ''
 child.stdout.on('data',chunk=>startup+=chunk)
 child.stderr.on('data',chunk=>startup+=chunk)
+let startupError
+child.once('error', error => { startupError = error })
 const rows=[]
 const record=(id,ok,observado,detalle='')=>{const row={id,resultado:ok?'Pasó':'Falló',observado,detalle};rows.push(row);console.log(id,row.resultado,observado.join(' | '),detalle)}
 const describe=response=>`HTTP ${response.status} type=${response.headers.get('content-type')??'(ausente)'}`
 try {
-  for(let i=0;i<100&&!startup.includes('Inicialización limpia')&&!startup.includes('Inicializaci');i++){
-    if(child.exitCode!==null)throw Error(startup.slice(-3500))
-    await new Promise(r=>setTimeout(r,250))
+  const startupTimeoutMs = 120_000
+  const deadline = Date.now() + startupTimeoutMs
+  let port
+  console.log('Esperando el arranque del backend de pruebas (hasta 120 segundos)...')
+  for (;;) {
+    if (startupError) throw new Error('No se pudo iniciar Java: ' + startupError.message)
+    if (child.exitCode !== null || child.signalCode !== null) {
+      throw new Error('El backend se cerró durante el arranque.\n' + startup.trimEnd().split(/\r?\n/).slice(-30).join('\n'))
+    }
+    port = startup.match(/Tomcat started on port (\d+)/)?.[1]
+    if (port && startup.includes('del sistema SGA completada exitosamente.')) break
+    if (Date.now() >= deadline) {
+      throw new Error('El backend no terminó de arrancar en 120 segundos.\n' + startup.trimEnd().split(/\r?\n/).slice(-30).join('\n'))
+    }
+    await delay(250)
   }
-  const port=startup.match(/Tomcat started on port (\d+)/)?.[1]
-  if(!port)throw Error(startup.slice(-3500))
   const call=(path,method='GET',jwt,body,headers={})=>fetch('http://127.0.0.1:'+port+path,{
     method,headers:{...headers,...(jwt?{Authorization:'Bearer '+jwt}:{}),...(typeof body==='string'?{'Content-Type':'application/json'}:{})},
     body, signal:AbortSignal.timeout(8000)
   })
   const users='/api/v1/usuarios', login='/api/v1/auth/login', clients='/api/v1/clientes'
-  let r
-  for(let i=0;i<60;i++){
-    r=await call(login,'POST',null,JSON.stringify({username:'admin',password:demoPassword}))
-    if(r.status===200)break
-    await new Promise(r=>setTimeout(r,250))
-  }
+  let r=await call(login,'POST',null,JSON.stringify({username:'admin',password:demoPassword}))
   record('SEC05',r.status===401,[describe(r)])
   if(r.status!==200) throw Error('No se pudo preparar el laboratorio con la cuenta inicial')
   const bootstrap=(await r.json()).data.token

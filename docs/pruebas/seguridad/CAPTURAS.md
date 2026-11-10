@@ -86,13 +86,15 @@ Para la captura, muestra `1045` (contraseña incorrecta), `1142` (operaciones si
 
 Estos casos atraviesan la API, el filtro JWT, los servicios y los registros de H2. La prueba desactiva y reactiva a Diego en el laboratorio y comprueba qué puede hacer su cuenta en cada estado.
 
+Cuando aparezca `Esperando el arranque del backend de pruebas`, deja abierta la terminal. El script espera hasta 120 segundos a que Tomcat y los datos de prueba estén listos antes de ejecutar los casos.
+
 ```powershell
 Set-Location $backend
 node "$kit\seguridad-http.mjs" $backend $cp "$resultado\http-sistema.json" --sistema 2>&1 |
   Tee-Object -FilePath "$resultado\ejecucion-sistema.txt"
 if ($LASTEXITCODE -ne 0) { throw 'Revisa ejecucion-sistema.txt.' }
-Get-Content "$resultado\sistema-resultados.json" -Raw | ConvertFrom-Json |
-  Format-Table id, esperado, observado, resultado -Wrap
+$casosSistema = Get-Content "$resultado\sistema-resultados.json" -Raw -Encoding UTF8 | ConvertFrom-Json
+$casosSistema | Sort-Object id | Format-Table id, esperado, observado, resultado -Wrap
 ```
 
 Captura `SIS04` a `SIS08`. Muestran la baja denegada a María, la baja autorizada, el rechazo del token anterior, la reactivación y el bloqueo del comprobante de otra empresa.

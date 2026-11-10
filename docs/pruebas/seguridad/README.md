@@ -4,6 +4,16 @@ Probamos la API en una copia local con una base H2 en memoria. El script arranca
 
 Los usuarios y empresas son ficticios. María Salas de la Torre tiene el rol de agente comercial y Lucía Mendoza Vargas el de administradora. Ana Torres Velarde y Diego Paredes Ríos pertenecen a empresas distintas. La cuenta `admin` del proyecto se usa para comprobar la contraseña predeterminada y preparar los datos.
 
+## Resultados por componente
+
+| Componente | Pruebas ejecutadas | Resultado |
+| --- | --- | --- |
+| Backend Spring Boot | 10 casos HTTP con H2. | 7 pasaron. Se reprodujeron los hallazgos de SEC04, SEC05 y SEC06. |
+| Frontend SGA | 5 casos en navegador con Playwright y el backend local. | 5 pasaron. Incluyen login, navegación por rol y respuesta 403 de la API desde el navegador. |
+| Base de datos | 6 casos con SQL directo en MySQL 8.4.13, en una instancia separada y con el esquema del proyecto. | 6 pasaron. La cuenta de lectura no pudo insertar, leer usuarios ni consultar otro esquema. El conteo de clientes fue 1 antes y 1 después. |
+
+Sigue [Capturas de seguridad en Windows](CAPTURAS.md) para repetir los tres bloques desde un clon, ver qué capturar y ordenar la exposición en siete fases. MySQL se probó aparte. El backend de las pruebas HTTP y del navegador usa H2. También se guardaron los reportes de ffuf, ZAP pasivo y dependencias.
+
 ## 1. Abre la rama y verifica las versiones
 
 En VS Code, abre la **carpeta principal de TransAduanas**, la que contiene `backend` y `app-sga`. Abre **Terminal → Nueva terminal** y elige **PowerShell**. Ejecuta:

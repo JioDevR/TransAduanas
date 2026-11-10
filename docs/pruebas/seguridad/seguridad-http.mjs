@@ -3,7 +3,8 @@ import { spawn, execFile } from 'node:child_process'
 import { createHmac, randomBytes } from 'node:crypto'
 import { resolve, dirname } from 'node:path'
 import { promisify } from 'node:util'
-const [backendPath, cpPath, outputPath, ffufPath, zapJar] = process.argv.slice(2)
+const args = process.argv.slice(2)
+const [backendPath, cpPath, outputPath, ffufPath, zapJar] = args.filter(arg => arg !== '--frontend')
 const backend = resolve(backendPath)
 const cp = readFileSync(cpPath, 'utf8').trim()
 const secret = readFileSync(resolve(backend,'src/main/resources/application.properties'),'utf8')
@@ -57,6 +58,7 @@ try {
     {username:'lucia.mendoza',nombres:'Lucía',apellidos:'Mendoza Vargas',rol:'ADMINISTRADOR_TI',numeroDocumento:'99000042'}
   ]
   const accounts={}
+  let mariaPassword
   for(const person of people){
     const password=randomBytes(24).toString('base64url')+'!A9'
     const created=await call(users,'POST',bootstrap,JSON.stringify({...person,password,
@@ -65,6 +67,7 @@ try {
     const authenticated=await call(login,'POST',null,JSON.stringify({username:person.username,password}))
     if(authenticated.status!==200)throw Error('Login de '+person.username+' devolvió '+authenticated.status)
     accounts[person.username]=(await authenticated.json()).data.token
+    if (person.username === 'maria.salas') mariaPassword = password
   }
   const admin=accounts['lucia.mendoza']
   const maria=accounts['maria.salas']
@@ -135,6 +138,14 @@ try {
   }
   times.sort((a,b)=>a-b)
   record('SEC09',codes.every(x=>x===401),[`${codes.filter(x=>x===401).length}/20 HTTP 401 p95=${times[18].toFixed(1)} ms max=${times[19].toFixed(1)} ms`])
+  if(args.includes('--frontend')){
+    const { testFrontend } = await import('./seguridad-frontend.mjs')
+    await testFrontend({
+      repository: dirname(backend), backendUrl: 'http://127.0.0.1:' + port,
+      output: dirname(resolve(outputPath)), password: mariaPassword,
+      wrongPassword: randomBytes(24).toString('base64url')
+    })
+  }
   if(ffufPath){
     const directory=dirname(resolve(outputPath))
     const words=resolve(directory,'rutas-ffuf.txt')

@@ -1,0 +1,32 @@
+[
+  {
+    "id": "FE01",
+    "esperado": "Ruta privada redirige a /login",
+    "observado": "/login",
+    "resultado": "Pasó"
+  },
+  {
+    "id": "FE02",
+    "esperado": "HTTP 401 y sin token",
+    "observado": "HTTP 401, token presente: false",
+    "resultado": "Pasó"
+  },
+  {
+    "id": "FE03",
+    "esperado": "HTTP 200 y acceso a Recepción Comercial",
+    "observado": "HTTP 200, /recepcion-comercial",
+    "resultado": "Pasó"
+  },
+  {
+    "id": "FE04",
+    "esperado": "María vuelve a Recepción Comercial al intentar Finanzas",
+    "observado": "/recepcion-comercial",
+    "resultado": "Pasó"
+  },
+  {
+    "id": "FE05",
+    "esperado": "La API deniega el acceso directo con el JWT de María",
+    "observado": "HTTP 403",
+    "resultado": "Pasó"
+  }
+]

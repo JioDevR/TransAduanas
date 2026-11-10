@@ -3,21 +3,43 @@
 Desde la carpeta donde quieres guardar el repositorio, ejecuta en PowerShell:
 
 ```powershell
-git clone --branch pruebas/seguridad-transaduanas --single-branch https://github.com/JioDevR/TransAduanas.git
-cd TransAduanas
+git clone --branch pruebas/seguridad-transaduanas --single-branch https://github.com/JioDevR/TransAduanas.git TransAduanas-seguridad
+cd .\TransAduanas-seguridad
 ```
 
-Abre esa carpeta en VS Code. Ejecuta el bloque [Compila el backend y prepara el classpath](README.md#2-compila-el-backend-y-prepara-el-classpath) del README. Verifica Java 21 y `BUILD SUCCESS`. Conserva la misma terminal para que se mantengan las variables de los siguientes bloques.
+Abre el clon en VS Code. Si ya lo tenías, entra en la rama `pruebas/seguridad-transaduanas` y ejecuta `git pull --ff-only` desde el clon para actualizar la guía.
 
 ## 1. Backend
 
+Copia **todo** el bloque en una terminal PowerShell. Usa la ruta de tu clon en la primera asignación de `$raiz`. El ejemplo apunta a `Music\TransAduanas-seguridad`. Este bloque prepara las variables, compila con Maven y ejecuta los diez casos de backend. Conserva la misma terminal para los demás apartados. Si abres otra terminal, vuelve a pegar el bloque completo.
+
 ```powershell
-Set-Location $backend
-node "$kit\seguridad-http.mjs" $backend $cp "$resultado\http.json" 2>&1 |
-  Tee-Object -FilePath "$resultado\ejecucion-http.txt"
-if ($LASTEXITCODE -ne 0) { throw 'Revisa ejecucion-http.txt.' }
-Get-Content "$resultado\http.json" -Raw | ConvertFrom-Json |
-  Sort-Object id | Format-Table id, resultado, observado -Wrap
+. {
+    $raiz = "$env:USERPROFILE\Music\TransAduanas-seguridad"
+    $backend = Join-Path $raiz 'backend'
+    $kit = Join-Path $raiz 'docs\pruebas\seguridad'
+    $script = Join-Path $kit 'seguridad-http.mjs'
+    if (-not (Test-Path -LiteralPath $script -PathType Leaf)) {
+        throw "No encontré $script. Corrige la ruta de la primera asignación."
+    }
+
+    $resultado = Join-Path $backend 'target\seguridad-local'
+    New-Item -ItemType Directory -Path $resultado -Force -ErrorAction Stop | Out-Null
+    $archivoDeps = Join-Path $resultado 'dependencias.txt'
+    $cp = Join-Path $resultado 'classpath-local.txt'
+
+    Set-Location -LiteralPath $backend -ErrorAction Stop
+    .\mvnw.cmd -B compile dependency:build-classpath "-DincludeScope=test" "-Dmdep.outputFile=$archivoDeps"
+    if ($LASTEXITCODE -ne 0) { throw 'Maven falló. Revisa el primer ERROR de la salida.' }
+    $deps = (Get-Content -LiteralPath $archivoDeps -Raw -ErrorAction Stop).Trim()
+    "$backend\target\classes;$deps" | Set-Content -LiteralPath $cp -Encoding utf8 -ErrorAction Stop
+
+    node $script $backend $cp "$resultado\http.json" 2>&1 |
+        Tee-Object -FilePath "$resultado\ejecucion-http.txt"
+    if ($LASTEXITCODE -ne 0) { throw "La ejecución se interrumpió. Revisa $resultado\ejecucion-http.txt." }
+    Get-Content "$resultado\http.json" -Raw | ConvertFrom-Json |
+        Sort-Object id | Format-Table id, resultado, observado -Wrap
+}
 ```
 
 Para la captura, muestra `SEC03` (403 para María), `SEC04` (200 con el JWT de respaldo), `SEC06` (cuatro respuestas 500) y `SEC10` (200 para Ana y 403 para Diego). Esta ejecución HTTP usa H2.
@@ -77,7 +99,7 @@ Captura `SIS04` a `SIS08`. Muestran la baja denegada a María, la baja autorizad
 
 ## 5. Prueba general sin Postman
 
-Después de preparar el classpath y ejecutar `npm.cmd ci` en `app-sga`, vuelve a la terminal con las variables del README. Usa la ruta de MySQL del apartado 3:
+Después de ejecutar el bloque 1 y `npm.cmd ci` en `app-sga`, vuelve a esa misma terminal. Usa la ruta de MySQL del apartado 3:
 
 ```powershell
 Set-Location $raiz

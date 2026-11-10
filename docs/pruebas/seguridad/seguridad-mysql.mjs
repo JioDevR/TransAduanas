@@ -86,6 +86,8 @@ try {
   record('BD03', '1142', viewer("INSERT INTO SGAdb.cliente (tipo_documento, numero_documento, razon_social) VALUES ('RUC','20990000042','Comercial Bahia Clara S.A.C.');"))
   record('BD04', '1142', viewer('SELECT username FROM SGAdb.usuario;'))
   record('BD05', '1142', viewer('SELECT id FROM laboratorio_reservado.control;'))
+  record('BD07', '1143', viewer('SELECT correo_contacto FROM SGAdb.cliente;'))
+  record('BD08', '1142', viewer('DELETE FROM SGAdb.cliente WHERE id_cliente = 1;'))
   record('BD06', before, admin(count))
   console.log('BD06 filas antes=' + before + ' después=' + cases.at(-1).observado)
 } finally {
@@ -99,4 +101,4 @@ try {
   }
   writeFileSync(join(output, 'mysql-resultados.json'), JSON.stringify(cases, null, 2))
 }
-if (cases.length !== 6 || cases.some(row => row.resultado === 'Falló')) process.exitCode = 1
+if (cases.length !== 8 || cases.some(row => row.resultado === 'Falló')) process.exitCode = 1

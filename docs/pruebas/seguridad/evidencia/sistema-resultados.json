@@ -1,0 +1,50 @@
+[
+  {
+    "id": "SIS01",
+    "esperado": "Los perfiles recuperan el ID de su propia empresa",
+    "observado": "HTTP 200 y 200, empresas 3 y 4",
+    "resultado": "Pasó"
+  },
+  {
+    "id": "SIS02",
+    "esperado": "La sesión interna no puede abrir el perfil B2B",
+    "observado": "HTTP 403",
+    "resultado": "Pasó"
+  },
+  {
+    "id": "SIS03",
+    "esperado": "La sesión B2B no puede listar usuarios internos",
+    "observado": "HTTP 403",
+    "resultado": "Pasó"
+  },
+  {
+    "id": "SIS04",
+    "esperado": "María no puede desactivar a Diego y Diego conserva acceso",
+    "observado": "baja HTTP 403, perfil HTTP 200",
+    "resultado": "Pasó"
+  },
+  {
+    "id": "SIS05",
+    "esperado": "La baja autorizada bloquea el JWT anterior",
+    "observado": "baja HTTP 200, perfil HTTP 401",
+    "resultado": "Pasó"
+  },
+  {
+    "id": "SIS06",
+    "esperado": "La cuenta inactiva tampoco puede iniciar sesión",
+    "observado": "HTTP 401",
+    "resultado": "Pasó"
+  },
+  {
+    "id": "SIS07",
+    "esperado": "La reactivación autorizada permite un nuevo login y recuperar el perfil propio",
+    "observado": "reactivación HTTP 200, login HTTP 200, perfil HTTP 200",
+    "resultado": "Pasó"
+  },
+  {
+    "id": "SIS08",
+    "esperado": "Reactivar a Diego no le da acceso al comprobante de Ana",
+    "observado": "Diego HTTP 403, Ana HTTP 200",
+    "resultado": "Pasó"
+  }
+]

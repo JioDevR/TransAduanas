@@ -1,0 +1,43 @@
+newman
+
+TransAduanas - 4 casos de seguridad
+
+→ PM01 Sin token
+  GET http://127.0.0.1:53334/api/v1/usuarios [401 Unauthorized, 567B, 27ms]
+  √  HTTP 401
+  √  No entrega datos protegidos
+
+→ PM02 JWT inválido
+  GET http://127.0.0.1:53334/api/v1/usuarios [401 Unauthorized, 567B, 4ms]
+  √  HTTP 401
+  √  No entrega datos protegidos
+
+→ PM03 Login incorrecto
+  POST http://127.0.0.1:53334/api/v1/auth/login [401 Unauthorized, 575B, 63ms]
+  √  HTTP 401
+  √  No entrega datos protegidos
+
+→ PM04 Origen CORS ajeno
+  OPTIONS http://127.0.0.1:53334/api/v1/usuarios [403 Forbidden, 418B, 3ms]
+  √  HTTP 403
+  √  El origen no recibe autorización CORS
+
+┌─────────────────────────┬──────────────────┬──────────────────┐
+│                         │         executed │           failed │
+├─────────────────────────┼──────────────────┼──────────────────┤
+│              iterations │                1 │                0 │
+├─────────────────────────┼──────────────────┼──────────────────┤
+│                requests │                4 │                0 │
+├─────────────────────────┼──────────────────┼──────────────────┤
+│            test-scripts │                4 │                0 │
+├─────────────────────────┼──────────────────┼──────────────────┤
+│      prerequest-scripts │                0 │                0 │
+├─────────────────────────┼──────────────────┼──────────────────┤
+│              assertions │                8 │                0 │
+├─────────────────────────┴──────────────────┴──────────────────┤
+│ total run duration: 323ms                                     │
+├───────────────────────────────────────────────────────────────┤
+│ total data received: 416B (approx)                            │
+├───────────────────────────────────────────────────────────────┤
+│ average response time: 24ms [min: 3ms, max: 63ms, s.d.: 24ms] │
+└───────────────────────────────────────────────────────────────┘

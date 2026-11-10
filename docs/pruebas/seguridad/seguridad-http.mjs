@@ -4,7 +4,7 @@ import { createHmac, randomBytes } from 'node:crypto'
 import { resolve, dirname } from 'node:path'
 import { promisify } from 'node:util'
 const args = process.argv.slice(2)
-const [backendPath, cpPath, outputPath, ffufPath, zapJar] = args.filter(arg => arg !== '--frontend')
+const [backendPath, cpPath, outputPath, ffufPath, zapJar] = args.filter(arg => !arg.startsWith('--'))
 const backend = resolve(backendPath)
 const cp = readFileSync(cpPath, 'utf8').trim()
 const secret = readFileSync(resolve(backend,'src/main/resources/application.properties'),'utf8')
@@ -39,6 +39,11 @@ try {
   }
   const port=startup.match(/Tomcat started on port (\d+)/)?.[1]
   if(!port)throw Error(startup.slice(-3500))
+  if (args.includes('--postman-servidor')) {
+    console.log('baseUrl de Postman: http://127.0.0.1:' + port)
+    console.log('Mantén esta terminal abierta. Pulsa Ctrl+C al terminar.')
+    await new Promise(done => process.once('SIGINT', done))
+  } else {
   const call=(path,method='GET',jwt,body,headers={})=>fetch('http://127.0.0.1:'+port+path,{
     method,headers:{...headers,...(jwt?{Authorization:'Bearer '+jwt}:{}),...(typeof body==='string'?{'Content-Type':'application/json'}:{})},
     body, signal:AbortSignal.timeout(8000)
@@ -101,6 +106,9 @@ try {
       correoElectronico:contact.username+'@transaduanas.example',debeCambiarPassword:false
     }))
     if(created.status!==201)throw Error('Alta portal '+contact.username+': '+created.status)
+    contact.idUsuarioCliente=(await created.json()).data.idUsuarioCliente
+    contact.idCliente=idCliente
+    contact.password=password
     const session=await call('/api/v1/portal/auth/login','POST',null,JSON.stringify({username:contact.username,password}))
     if(session.status!==200)throw Error('Login portal '+contact.username+': '+session.status)
     contact.token=(await session.json()).data.token
@@ -145,6 +153,18 @@ try {
       output: dirname(resolve(outputPath)), password: mariaPassword,
       wrongPassword: randomBytes(24).toString('base64url')
     })
+  }
+  if (args.includes('--sistema')) {
+    const { testSistema } = await import('./seguridad-sistema.mjs')
+    await testSistema({ call, admin, maria, portalAccounts, download, output: dirname(resolve(outputPath)) })
+  }
+  if (args.includes('--postman')) {
+    const directory=dirname(resolve(outputPath))
+    const cli=resolve(directory,'postman-tools/node_modules/newman/bin/newman.js')
+    const collection=resolve(backend,'../docs/pruebas/seguridad/TransAduanas.postman_collection.json')
+    const run=await promisify(execFile)(process.execPath,[cli,'run',collection,'--env-var','baseUrl=http://127.0.0.1:'+port,
+      '--reporters','cli,json','--reporter-json-export',resolve(directory,'postman-resultados.json'),'--color','off'],{timeout:45000})
+    console.log(run.stdout.trim())
   }
   if(ffufPath){
     const directory=dirname(resolve(outputPath))
@@ -200,10 +220,11 @@ ${requests}
       throw Error('ZAP terminó con error. Revisa ejecucion-zap.txt')
     }
   }
+  }
 } catch(error) {
   console.error(error)
   process.exitCode=1
 } finally {
-  writeFileSync(outputPath,JSON.stringify(rows,null,2))
+  if (!args.includes('--postman-servidor')) writeFileSync(outputPath,JSON.stringify(rows,null,2))
   child.kill()
 }

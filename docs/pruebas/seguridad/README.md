@@ -9,10 +9,12 @@ Los usuarios y empresas son ficticios. María Salas de la Torre tiene el rol de 
 | Componente | Pruebas ejecutadas | Resultado |
 | --- | --- | --- |
 | Backend Spring Boot | 10 casos HTTP con H2. | 7 pasaron. Se reprodujeron los hallazgos de SEC04, SEC05 y SEC06. |
-| Frontend SGA | 5 casos en navegador con Playwright y el backend local. | 5 pasaron. Incluyen login, navegación por rol y respuesta 403 de la API desde el navegador. |
-| Base de datos | 6 casos con SQL directo en MySQL 8.4.13, en una instancia separada y con el esquema del proyecto. | 6 pasaron. La cuenta de lectura no pudo insertar, leer usuarios ni consultar otro esquema. El conteo de clientes fue 1 antes y 1 después. |
+| Frontend SGA | 8 casos en navegador con Playwright y el backend local. | 8 pasaron. Se verificaron sesión, navegación, contraseña oculta y redirección externa. |
+| Base de datos | 8 casos con SQL directo en MySQL 8.4.13, en una instancia separada y con el esquema del proyecto. | 8 pasaron. El usuario de lectura no pudo insertar, borrar ni leer una columna restringida. El conteo fue 1 antes y 1 después. |
+| Sistema | 8 casos con Spring Boot, JWT y datos en H2. | 8 pasaron. Se comprobó el flujo de baja y reactivación de una cuenta del portal y la separación entre empresas. |
+| Postman | 4 solicitudes de la colección, ejecutadas por Newman. | 4 solicitudes y 8 aserciones, sin fallos. |
 
-Sigue [Capturas de seguridad en Windows](CAPTURAS.md) para repetir los tres bloques desde un clon, ver qué capturar y ordenar la exposición en siete fases. MySQL se probó aparte. El backend de las pruebas HTTP y del navegador usa H2. También se guardaron los reportes de ffuf, ZAP pasivo y dependencias.
+Sigue [Capturas de seguridad en Windows](CAPTURAS.md) para repetir los casos desde un clon y tomar tus capturas en terminal, navegador y Postman Desktop. MySQL se probó aparte. Las pruebas HTTP, de navegador y de sistema usan H2. Los reportes de ffuf, ZAP pasivo y dependencias siguen disponibles.
 
 ## 1. Abre la rama y verifica las versiones
 

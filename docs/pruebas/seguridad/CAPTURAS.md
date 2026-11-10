@@ -39,7 +39,7 @@ Get-Content "$resultado\frontend-resultados.json" -Raw | ConvertFrom-Json |
 Invoke-Item $resultado
 ```
 
-Abre las capturas `frontend-FE01-sin-sesion.png`, `frontend-FE02-login-rechazado.png` y `frontend-FE04-rol-comercial.png`. Muestran la redirección al login, el rechazo de credenciales y el regreso a Recepción Comercial al intentar entrar a Finanzas. La terminal también registra el inicio de sesión válido y el 403 de la API de usuarios desde el navegador. Las pruebas visuales corresponden al SGA interno. Para portal y landing se conservan los informes de dependencias.
+En la terminal verás `FE01` a `FE08`. Abre `frontend-FE01-sin-sesion.png`, `frontend-FE02-login-rechazado.png`, `frontend-FE04-rol-comercial.png` y `frontend-FE07-sesion-cerrada.png`. Usa también la tabla de la terminal para demostrar la contraseña oculta (`FE06`) y el rechazo de una redirección externa (`FE08`). Las pruebas visuales corresponden al SGA interno. Para portal y landing se conservan los informes de dependencias.
 
 ## 3. Base de datos MySQL
 
@@ -58,9 +58,50 @@ Get-Content "$resultado\mysql-resultados.json" -Raw | ConvertFrom-Json |
   Format-Table id, esperado, observado, resultado -Wrap
 ```
 
-Para la captura, muestra `1045` (contraseña incorrecta), `1142` (operaciones sin permiso) y `BD06 filas antes=1 después=1`. El conteo viene de `SELECT COUNT(*) FROM SGAdb.cliente` ejecutado antes y después del intento de insertar. Los permisos se configuraron en la cuenta del laboratorio. Para auditar los permisos del usuario de producción se necesita una revisión aparte.
+Para la captura, muestra `1045` (contraseña incorrecta), `1142` (operaciones sin permiso), `1143` (columna restringida) y `BD06 filas antes=1 después=1`. El conteo viene de `SELECT COUNT(*) FROM SGAdb.cliente` ejecutado antes y después de los intentos de insertar y borrar. Los permisos se configuraron en la cuenta del laboratorio. Para auditar los permisos del usuario de producción se necesita una revisión aparte.
 
-## 4. Orden para exponer las siete fases
+## 4. Sistema integrado
+
+Estos casos atraviesan la API, el filtro JWT, los servicios y los registros de H2. La prueba desactiva y reactiva a Diego en el laboratorio y comprueba qué puede hacer su cuenta en cada estado.
+
+```powershell
+Set-Location $backend
+node "$kit\seguridad-http.mjs" $backend $cp "$resultado\http-sistema.json" --sistema 2>&1 |
+  Tee-Object -FilePath "$resultado\ejecucion-sistema.txt"
+if ($LASTEXITCODE -ne 0) { throw 'Revisa ejecucion-sistema.txt.' }
+Get-Content "$resultado\sistema-resultados.json" -Raw | ConvertFrom-Json |
+  Format-Table id, esperado, observado, resultado -Wrap
+```
+
+Captura `SIS04` a `SIS08`. Muestran la baja denegada a María, la baja autorizada, el rechazo del token anterior, la reactivación y el bloqueo del comprobante de otra empresa.
+
+## 5. Postman
+
+Para repetir los cuatro casos por consola con Newman:
+
+```powershell
+Set-Location $backend
+npm.cmd install --prefix "$resultado\postman-tools" newman@6.2.1 --no-audit --no-fund
+if ($LASTEXITCODE -ne 0) { throw 'No se pudo instalar Newman.' }
+node "$kit\seguridad-http.mjs" $backend $cp "$resultado\http-postman.json" --postman 2>&1 |
+  Tee-Object -FilePath "$resultado\ejecucion-postman.txt"
+if ($LASTEXITCODE -ne 0) { throw 'Revisa ejecucion-postman.txt.' }
+```
+
+Para sacar una captura en la aplicación **Postman Desktop**, arranca solo el servidor de laboratorio con este comando:
+
+```powershell
+Set-Location $backend
+node "$kit\seguridad-http.mjs" $backend $cp "$resultado\http-postman.json" --postman-servidor
+```
+
+1. Deja esa terminal abierta y copia la dirección que imprime en `baseUrl de Postman`.
+2. En Postman, pulsa **Import** y abre `docs\pruebas\seguridad\TransAduanas.postman_collection.json` del clon.
+3. Abre la colección y en **Variables** cambia `baseUrl` a la dirección copiada, sin `/` al final. Guarda el cambio.
+4. Pulsa **Run collection** y ejecuta los cuatro casos. Para la captura, muestra el resumen de **8 aserciones**, o abre cada petición y muestra el estado HTTP y sus pruebas. Los estados esperados son `401`, `401`, `401` y `403`.
+5. Vuelve a PowerShell y pulsa **Ctrl+C** para detener el laboratorio.
+
+## 6. Orden para exponer las siete fases
 
 | Fase | Qué mostrar |
 | --- | --- |

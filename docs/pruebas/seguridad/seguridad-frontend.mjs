@@ -2,17 +2,28 @@ import { existsSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 
-export async function testFrontend({ repository, backendUrl, output, password, wrongPassword }) {
+export async function startFrontend(repository, backendUrl) {
   const root = resolve(repository, 'app-sga')
   const modulePath = name => pathToFileURL(join(root, 'node_modules', name)).href
   const { createServer } = await import(modulePath('vite/dist/node/index.js'))
-  const { chromium } = await import(modulePath('playwright/index.mjs'))
   const vite = await createServer({
     root,
     configFile: join(root, 'vite.config.js'),
     define: { 'import.meta.env.VITE_API_URL': JSON.stringify('/api/v1') },
     server: { host: '127.0.0.1', port: 0, proxy: { '/api': { target: backendUrl, changeOrigin: false } } }
   })
+  try {
+    await vite.listen()
+    return { url: 'http://127.0.0.1:' + vite.httpServer.address().port, close: () => vite.close() }
+  } catch (error) {
+    await vite.close()
+    throw error
+  }
+}
+
+export async function testFrontend({ repository, backendUrl, output, password, wrongPassword }) {
+  const { chromium } = await import(pathToFileURL(resolve(repository, 'app-sga/node_modules/playwright/index.mjs')).href)
+  const frontend = await startFrontend(repository, backendUrl)
   const rows = []
   let browser
   function record(id, expected, actual, ok) {
@@ -20,8 +31,7 @@ export async function testFrontend({ repository, backendUrl, output, password, w
     console.log(id, rows.at(-1).resultado, '|', actual)
   }
   try {
-    await vite.listen()
-    const url = 'http://127.0.0.1:' + vite.httpServer.address().port
+    const { url } = frontend
     const installed = [
       process.env.SEGURIDAD_BROWSER,
       'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe',
@@ -85,7 +95,7 @@ export async function testFrontend({ repository, backendUrl, output, password, w
       redirectedLogin === 200 && new URL(page.url()).origin === url)
   } finally {
     if (browser) await browser.close()
-    await vite.close()
+    await frontend.close()
     writeFileSync(join(output, 'frontend-resultados.json'), JSON.stringify(rows, null, 2))
   }
   if (rows.length !== 8 || rows.some(row => row.resultado === 'Falló')) process.exitCode = 1

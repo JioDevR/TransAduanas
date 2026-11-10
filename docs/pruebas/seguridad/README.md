@@ -12,9 +12,9 @@ Los usuarios y empresas son ficticios. María Salas de la Torre tiene el rol de 
 | Frontend SGA | 8 casos en navegador con Playwright y el backend local. | 8 pasaron. Se verificaron sesión, navegación, contraseña oculta y redirección externa. |
 | Base de datos | 8 casos con SQL directo en MySQL 8.4.13, en una instancia separada y con el esquema del proyecto. | 8 pasaron. El usuario de lectura no pudo insertar, borrar ni leer una columna restringida. El conteo fue 1 antes y 1 después. |
 | Sistema | 8 casos con Spring Boot, JWT y datos en H2. | 8 pasaron. Se comprobó el flujo de baja y reactivación de una cuenta del portal y la separación entre empresas. |
-| Postman | 4 solicitudes de la colección, ejecutadas por Newman. | 4 solicitudes y 8 aserciones, sin fallos. |
+| Postman | 16 solicitudes en cuatro carpetas, ejecutadas por Newman. | 32 aserciones sin fallos. |
 
-Sigue [Capturas de seguridad en Windows](CAPTURAS.md) para repetir los casos desde un clon y tomar tus capturas en terminal, navegador y Postman Desktop. MySQL se probó aparte. Las pruebas HTTP, de navegador y de sistema usan H2. Los reportes de ffuf, ZAP pasivo y dependencias siguen disponibles.
+La prueba general ejecutó 34 casos sin Postman. Pasaron 31 y se reprodujeron tres hallazgos. Consulta [los archivos que controlan la seguridad](ARCHIVOS-SEGURIDAD.md) y [los comandos para tomar capturas](CAPTURAS.md). MySQL se probó aparte. Las pruebas HTTP, de navegador y de sistema usan H2. Los reportes de ffuf, ZAP pasivo y dependencias siguen disponibles.
 
 ## 1. Abre la rama y verifica las versiones
 

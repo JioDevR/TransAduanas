@@ -1,119 +1,443 @@
 {
   "info": {
-    "name": "TransAduanas - 4 casos de seguridad",
+    "name": "TransAduanas - Seguridad por componente",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
-  "variable": [
-    {
-      "key": "baseUrl",
-      "value": "http://127.0.0.1:8085"
-    }
-  ],
   "item": [
     {
-      "name": "PM01 Sin token",
-      "request": {
-        "method": "GET",
-        "url": "{{baseUrl}}/api/v1/usuarios",
-        "header": []
-      },
-      "event": [
+      "name": "Backend",
+      "item": [
         {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "pm.test(\"HTTP 401\", () => pm.response.to.have.status(401));",
-              "pm.test(\"No entrega datos protegidos\", () => { pm.expect(pm.response.json().success).to.equal(false); pm.expect(pm.response.json().data).to.equal(null); });"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "name": "PM02 JWT inválido",
-      "request": {
-        "method": "GET",
-        "url": "{{baseUrl}}/api/v1/usuarios",
-        "header": [
-          {
-            "key": "Authorization",
-            "value": "Bearer not.a.jwt"
-          }
-        ]
-      },
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "pm.test(\"HTTP 401\", () => pm.response.to.have.status(401));",
-              "pm.test(\"No entrega datos protegidos\", () => { pm.expect(pm.response.json().success).to.equal(false); pm.expect(pm.response.json().data).to.equal(null); });"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "name": "PM03 Login incorrecto",
-      "request": {
-        "method": "POST",
-        "url": "{{baseUrl}}/api/v1/auth/login",
-        "header": [
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\"username\":\"admin\",\"password\":\"credencial-incorrecta-para-este-caso\"}"
-        }
-      },
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "pm.test(\"HTTP 401\", () => pm.response.to.have.status(401));",
-              "pm.test(\"No entrega datos protegidos\", () => { pm.expect(pm.response.json().success).to.equal(false); pm.expect(pm.response.json().data).to.equal(null); });"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "name": "PM04 Origen CORS ajeno",
-      "request": {
-        "method": "OPTIONS",
-        "url": "{{baseUrl}}/api/v1/usuarios",
-        "header": [
-          {
-            "key": "Origin",
-            "value": "https://untrusted.example"
+          "name": "BE01 Ruta privada sin token",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/v1/usuarios",
+            "header": []
           },
-          {
-            "key": "Access-Control-Request-Method",
-            "value": "GET"
-          },
-          {
-            "key": "Access-Control-Request-Headers",
-            "value": "Authorization"
-          }
-        ]
-      },
-      "event": [
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 401\", () => pm.response.to.have.status(401));",
+                  "pm.test(\"Verificación del caso\", () => { pm.expect(pm.response.json().data).to.equal(null); });"
+                ]
+              }
+            }
+          ]
+        },
         {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "pm.test(\"HTTP 403\", () => pm.response.to.have.status(403));",
-              "pm.test(\"El origen no recibe autorización CORS\", () => pm.expect(pm.response.headers.has(\"Access-Control-Allow-Origin\")).to.equal(false));"
+          "name": "BE02 JWT inválido",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/v1/usuarios",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer not.a.jwt"
+              }
             ]
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 401\", () => pm.response.to.have.status(401));",
+                  "pm.test(\"Verificación del caso\", () => { pm.expect(pm.response.json().success).to.equal(false); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "BE03 Contraseña incorrecta",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/v1/auth/login",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"username\":\"admin\",\"password\":\"credencial-incorrecta-para-este-caso\"}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 401\", () => pm.response.to.have.status(401));",
+                  "pm.test(\"Verificación del caso\", () => { pm.expect(pm.response.json().data).to.equal(null); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "BE04 Origen CORS externo",
+          "request": {
+            "method": "OPTIONS",
+            "url": "{{baseUrl}}/api/v1/usuarios",
+            "header": [
+              {
+                "key": "Origin",
+                "value": "https://untrusted.example"
+              },
+              {
+                "key": "Access-Control-Request-Method",
+                "value": "GET"
+              },
+              {
+                "key": "Access-Control-Request-Headers",
+                "value": "Authorization"
+              }
+            ]
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 403\", () => pm.response.to.have.status(403));",
+                  "pm.test(\"Verificación del caso\", () => { pm.expect(pm.response.headers.has('Access-Control-Allow-Origin')).to.equal(false); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Frontend",
+      "item": [
+        {
+          "name": "FE01 Shell del login",
+          "request": {
+            "method": "GET",
+            "url": "{{frontendUrl}}/login",
+            "header": []
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Verificación del caso\", () => { pm.expect(pm.response.headers.get('Content-Type')).to.include('text/html'); pm.expect(pm.response.text()).to.include('<div id=\"app\"></div>'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "FE02 Ruta Finanzas entrega solo el shell",
+          "request": {
+            "method": "GET",
+            "url": "{{frontendUrl}}/finanzas",
+            "header": []
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Verificación del caso\", () => { pm.expect(pm.response.text()).to.include('<div id=\"app\"></div>'); pm.expect(pm.response.text()).not.to.include('maria.salas'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "FE03 Login incorrecto por el proxy del SGA",
+          "request": {
+            "method": "POST",
+            "url": "{{frontendUrl}}/api/v1/auth/login",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"username\":\"maria.salas\",\"password\":\"credencial-incorrecta-para-este-caso\"}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 401\", () => pm.response.to.have.status(401));",
+                  "pm.test(\"Verificación del caso\", () => { pm.expect(pm.response.json().data).to.equal(null); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "FE04 Usuario comercial por el proxy del SGA",
+          "request": {
+            "method": "GET",
+            "url": "{{frontendUrl}}/api/v1/usuarios",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{mariaToken}}"
+              }
+            ]
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 403\", () => pm.response.to.have.status(403));",
+                  "pm.test(\"Verificación del caso\", () => { pm.expect(pm.response.json().data).to.equal(null); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Base de datos por API",
+      "item": [
+        {
+          "name": "BD01 Lectura del cliente sembrado",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/v1/clientes/{{anaClientId}}",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{mariaToken}}"
+              }
+            ]
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Verificación del caso\", () => { const cliente = pm.response.json().data; pm.expect(cliente.idCliente).to.equal(Number(pm.environment.get('anaClientId'))); pm.expect(cliente.numeroDocumento).to.equal('20990000041'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "BD02 Alta duplicada",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/v1/clientes",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{mariaToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"tipoDocumento\":\"RUC\",\"numeroDocumento\":\"20990000041\",\"razonSocial\":\"Transportes Costa del Sur S.A.C.\",\"correoContacto\":\"ana.torres@costadelsur.example\"}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Verificación del caso\", () => { pm.expect(pm.response.json().message).to.include('Ya existe un cliente'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "BD03 Alta desde cuenta del portal",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/v1/clientes",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{anaToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"tipoDocumento\":\"RUC\",\"numeroDocumento\":\"20990000049\",\"razonSocial\":\"Servicios Brisa Sur S.A.C.\",\"correoContacto\":\"ventas@brisasur.example\"}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 403\", () => pm.response.to.have.status(403));",
+                  "pm.test(\"Verificación del caso\", () => { pm.expect(pm.response.json().data).to.equal(null); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "BD04 Conteo posterior sin nuevas altas",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/v1/clientes",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{mariaToken}}"
+              }
+            ]
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Verificación del caso\", () => { const clientes = pm.response.json().data; pm.expect(clientes).to.have.lengthOf(Number(pm.environment.get('expectedClients'))); pm.expect(clientes.some(c => c.numeroDocumento === '20990000049')).to.equal(false); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Sistema",
+      "item": [
+        {
+          "name": "SIS01 Ana descarga su comprobante",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}{{downloadPath}}",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{anaToken}}"
+              }
+            ]
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Verificación del caso\", () => { pm.expect(pm.response.headers.get('Content-Type')).to.include('application/pdf'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "SIS02 Diego no descarga el comprobante de Ana",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}{{downloadPath}}",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{diegoToken}}"
+              }
+            ]
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 403\", () => pm.response.to.have.status(403));",
+                  "pm.test(\"Verificación del caso\", () => { pm.expect(pm.response.headers.get('Content-Type')).not.to.include('application/pdf'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "SIS03 Cuenta portal rechazada en API interna",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/v1/usuarios",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{anaToken}}"
+              }
+            ]
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 403\", () => pm.response.to.have.status(403));",
+                  "pm.test(\"Verificación del caso\", () => { pm.expect(pm.response.json().data).to.equal(null); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "SIS04 Cuenta interna rechazada en perfil B2B",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/v1/portal/perfil",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{mariaToken}}"
+              }
+            ]
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 403\", () => pm.response.to.have.status(403));",
+                  "pm.test(\"Verificación del caso\", () => { pm.expect(pm.response.json().data).to.equal(null); });"
+                ]
+              }
+            }
+          ]
         }
       ]
     }

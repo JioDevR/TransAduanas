@@ -1,43 +1,17 @@
-newman
-
-TransAduanas - 4 casos de seguridad
-
-→ PM01 Sin token
-  GET http://127.0.0.1:53334/api/v1/usuarios [401 Unauthorized, 567B, 27ms]
-  √  HTTP 401
-  √  No entrega datos protegidos
-
-→ PM02 JWT inválido
-  GET http://127.0.0.1:53334/api/v1/usuarios [401 Unauthorized, 567B, 4ms]
-  √  HTTP 401
-  √  No entrega datos protegidos
-
-→ PM03 Login incorrecto
-  POST http://127.0.0.1:53334/api/v1/auth/login [401 Unauthorized, 575B, 63ms]
-  √  HTTP 401
-  √  No entrega datos protegidos
-
-→ PM04 Origen CORS ajeno
-  OPTIONS http://127.0.0.1:53334/api/v1/usuarios [403 Forbidden, 418B, 3ms]
-  √  HTTP 403
-  √  El origen no recibe autorización CORS
-
-┌─────────────────────────┬──────────────────┬──────────────────┐
-│                         │         executed │           failed │
-├─────────────────────────┼──────────────────┼──────────────────┤
-│              iterations │                1 │                0 │
-├─────────────────────────┼──────────────────┼──────────────────┤
-│                requests │                4 │                0 │
-├─────────────────────────┼──────────────────┼──────────────────┤
-│            test-scripts │                4 │                0 │
-├─────────────────────────┼──────────────────┼──────────────────┤
-│      prerequest-scripts │                0 │                0 │
-├─────────────────────────┼──────────────────┼──────────────────┤
-│              assertions │                8 │                0 │
-├─────────────────────────┴──────────────────┴──────────────────┤
-│ total run duration: 323ms                                     │
-├───────────────────────────────────────────────────────────────┤
-│ total data received: 416B (approx)                            │
-├───────────────────────────────────────────────────────────────┤
-│ average response time: 24ms [min: 3ms, max: 63ms, s.d.: 24ms] │
-└───────────────────────────────────────────────────────────────┘
+BE01 Ruta privada sin token | HTTP 401 | Pasó, Pasó
+BE02 JWT inválido | HTTP 401 | Pasó, Pasó
+BE03 Contraseña incorrecta | HTTP 401 | Pasó, Pasó
+BE04 Origen CORS externo | HTTP 403 | Pasó, Pasó
+FE01 Shell del login | HTTP 200 | Pasó, Pasó
+FE02 Ruta Finanzas entrega solo el shell | HTTP 200 | Pasó, Pasó
+FE03 Login incorrecto por el proxy del SGA | HTTP 401 | Pasó, Pasó
+FE04 Usuario comercial por el proxy del SGA | HTTP 403 | Pasó, Pasó
+BD01 Lectura del cliente sembrado | HTTP 200 | Pasó, Pasó
+BD02 Alta duplicada | HTTP 400 | Pasó, Pasó
+BD03 Alta desde cuenta del portal | HTTP 403 | Pasó, Pasó
+BD04 Conteo posterior sin nuevas altas | HTTP 200 | Pasó, Pasó
+SIS01 Ana descarga su comprobante | HTTP 200 | Pasó, Pasó
+SIS02 Diego no descarga el comprobante de Ana | HTTP 403 | Pasó, Pasó
+SIS03 Cuenta portal rechazada en API interna | HTTP 403 | Pasó, Pasó
+SIS04 Cuenta interna rechazada en perfil B2B | HTTP 403 | Pasó, Pasó
+Postman/Newman: 16 solicitudes; 32 aserciones; 0 fallos.

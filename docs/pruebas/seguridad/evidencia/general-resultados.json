@@ -1,0 +1,33 @@
+{
+  "estado": "Completo con hallazgos",
+  "componentes": [
+    {
+      "componente": "Backend",
+      "esperados": 10,
+      "ejecutados": 10,
+      "conformes": 7,
+      "noConformes": 3
+    },
+    {
+      "componente": "Frontend SGA",
+      "esperados": 8,
+      "ejecutados": 8,
+      "conformes": 8,
+      "noConformes": 0
+    },
+    {
+      "componente": "Base de datos MySQL",
+      "esperados": 8,
+      "ejecutados": 8,
+      "conformes": 8,
+      "noConformes": 0
+    },
+    {
+      "componente": "Sistema",
+      "esperados": 8,
+      "ejecutados": 8,
+      "conformes": 8,
+      "noConformes": 0
+    }
+  ]
+}

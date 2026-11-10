@@ -39,11 +39,6 @@ try {
   }
   const port=startup.match(/Tomcat started on port (\d+)/)?.[1]
   if(!port)throw Error(startup.slice(-3500))
-  if (args.includes('--postman-servidor')) {
-    console.log('baseUrl de Postman: http://127.0.0.1:' + port)
-    console.log('Mantén esta terminal abierta. Pulsa Ctrl+C al terminar.')
-    await new Promise(done => process.once('SIGINT', done))
-  } else {
   const call=(path,method='GET',jwt,body,headers={})=>fetch('http://127.0.0.1:'+port+path,{
     method,headers:{...headers,...(jwt?{Authorization:'Bearer '+jwt}:{}),...(typeof body==='string'?{'Content-Type':'application/json'}:{})},
     body, signal:AbortSignal.timeout(8000)
@@ -158,13 +153,14 @@ try {
     const { testSistema } = await import('./seguridad-sistema.mjs')
     await testSistema({ call, admin, maria, portalAccounts, download, output: dirname(resolve(outputPath)) })
   }
-  if (args.includes('--postman')) {
-    const directory=dirname(resolve(outputPath))
-    const cli=resolve(directory,'postman-tools/node_modules/newman/bin/newman.js')
-    const collection=resolve(backend,'../docs/pruebas/seguridad/TransAduanas.postman_collection.json')
-    const run=await promisify(execFile)(process.execPath,[cli,'run',collection,'--env-var','baseUrl=http://127.0.0.1:'+port,
-      '--reporters','cli,json','--reporter-json-export',resolve(directory,'postman-resultados.json'),'--color','off'],{timeout:45000})
-    console.log(run.stdout.trim())
+  if (args.includes('--postman') || args.includes('--postman-servidor')) {
+    const { testPostman } = await import('./seguridad-postman.mjs')
+    const [ana, diego] = portalAccounts
+    await testPostman({ repository: dirname(backend), output: dirname(resolve(outputPath)),
+      interactive: args.includes('--postman-servidor'), variables: {
+        baseUrl: 'http://127.0.0.1:' + port, mariaToken: maria, anaToken: ana.token, diegoToken: diego.token,
+        anaClientId: ana.idCliente, expectedClients: await list(), downloadPath: download
+      } })
   }
   if(ffufPath){
     const directory=dirname(resolve(outputPath))
@@ -219,7 +215,6 @@ ${requests}
       writeFileSync(resolve(directory,'ejecucion-zap.txt'),String(error.stdout ?? '')+'\n'+String(error.stderr ?? '')+'\n'+error.message)
       throw Error('ZAP terminó con error. Revisa ejecucion-zap.txt')
     }
-  }
   }
 } catch(error) {
   console.error(error)

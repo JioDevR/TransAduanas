@@ -1,1481 +1,231 @@
 {
-  "collection": {
-    "item": [
-      {
-        "id": "61a2c20e-7283-4cf5-8765-475ef9cfe9af",
-        "name": "PM01 Sin token",
-        "request": {
-          "url": {
-            "path": [
-              "api",
-              "v1",
-              "usuarios"
-            ],
-            "host": [
-              "{{baseUrl}}"
-            ],
-            "query": [],
-            "variable": []
-          },
-          "method": "GET"
+  "solicitudes": 16,
+  "aserciones": 32,
+  "fallos": 0,
+  "casos": [
+    {
+      "caso": "BE01 Ruta privada sin token",
+      "http": 401,
+      "aserciones": [
+        {
+          "nombre": "HTTP 401",
+          "paso": true
         },
-        "response": [],
-        "event": [
-          {
-            "listen": "test",
-            "script": {
-              "id": "6ae4e357-02d4-439a-84db-361118d8fc8e",
-              "type": "text/javascript",
-              "exec": [
-                "pm.test(\"HTTP 401\", () => pm.response.to.have.status(401));",
-                "pm.test(\"No entrega datos protegidos\", () => { pm.expect(pm.response.json().success).to.equal(false); pm.expect(pm.response.json().data).to.equal(null); });"
-              ],
-              "_lastExecutionId": "3d3f1e04-c237-441b-8752-74e3523aa1d2"
-            }
-          }
-        ]
-      },
-      {
-        "id": "53767f0e-b757-46e7-9253-c8d204f1b26d",
-        "name": "PM02 JWT inválido",
-        "request": {
-          "url": {
-            "path": [
-              "api",
-              "v1",
-              "usuarios"
-            ],
-            "host": [
-              "{{baseUrl}}"
-            ],
-            "query": [],
-            "variable": []
-          },
-          "header": [
-            {
-              "key": "Authorization",
-              "value": "Bearer not.a.jwt"
-            }
-          ],
-          "method": "GET"
+        {
+          "nombre": "Verificación del caso",
+          "paso": true
+        }
+      ]
+    },
+    {
+      "caso": "BE02 JWT inválido",
+      "http": 401,
+      "aserciones": [
+        {
+          "nombre": "HTTP 401",
+          "paso": true
         },
-        "response": [],
-        "event": [
-          {
-            "listen": "test",
-            "script": {
-              "id": "dea16efa-1962-4aee-b72c-9c14dd6ef173",
-              "type": "text/javascript",
-              "exec": [
-                "pm.test(\"HTTP 401\", () => pm.response.to.have.status(401));",
-                "pm.test(\"No entrega datos protegidos\", () => { pm.expect(pm.response.json().success).to.equal(false); pm.expect(pm.response.json().data).to.equal(null); });"
-              ],
-              "_lastExecutionId": "99979661-ea57-4408-9343-4482e8d4cfaa"
-            }
-          }
-        ]
-      },
-      {
-        "id": "b02e37d3-8f14-40ca-8f74-260f707724b7",
-        "name": "PM03 Login incorrecto",
-        "request": {
-          "url": {
-            "path": [
-              "api",
-              "v1",
-              "auth",
-              "login"
-            ],
-            "host": [
-              "{{baseUrl}}"
-            ],
-            "query": [],
-            "variable": []
-          },
-          "header": [
-            {
-              "key": "Content-Type",
-              "value": "application/json"
-            }
-          ],
-          "method": "POST",
-          "body": {
-            "mode": "raw",
-            "raw": "{\"username\":\"admin\",\"password\":\"credencial-incorrecta-para-este-caso\"}"
-          }
+        {
+          "nombre": "Verificación del caso",
+          "paso": true
+        }
+      ]
+    },
+    {
+      "caso": "BE03 Contraseña incorrecta",
+      "http": 401,
+      "aserciones": [
+        {
+          "nombre": "HTTP 401",
+          "paso": true
         },
-        "response": [],
-        "event": [
-          {
-            "listen": "test",
-            "script": {
-              "id": "73396abf-1226-4e30-9174-7443f7b7a70a",
-              "type": "text/javascript",
-              "exec": [
-                "pm.test(\"HTTP 401\", () => pm.response.to.have.status(401));",
-                "pm.test(\"No entrega datos protegidos\", () => { pm.expect(pm.response.json().success).to.equal(false); pm.expect(pm.response.json().data).to.equal(null); });"
-              ],
-              "_lastExecutionId": "625c4f00-ce83-4361-a02f-d95338f552cd"
-            }
-          }
-        ]
-      },
-      {
-        "id": "3c86df2c-75a3-4c4b-8941-154155f21b00",
-        "name": "PM04 Origen CORS ajeno",
-        "request": {
-          "url": {
-            "path": [
-              "api",
-              "v1",
-              "usuarios"
-            ],
-            "host": [
-              "{{baseUrl}}"
-            ],
-            "query": [],
-            "variable": []
-          },
-          "header": [
-            {
-              "key": "Origin",
-              "value": "https://untrusted.example"
-            },
-            {
-              "key": "Access-Control-Request-Method",
-              "value": "GET"
-            },
-            {
-              "key": "Access-Control-Request-Headers",
-              "value": "Authorization"
-            }
-          ],
-          "method": "OPTIONS"
+        {
+          "nombre": "Verificación del caso",
+          "paso": true
+        }
+      ]
+    },
+    {
+      "caso": "BE04 Origen CORS externo",
+      "http": 403,
+      "aserciones": [
+        {
+          "nombre": "HTTP 403",
+          "paso": true
         },
-        "response": [],
-        "event": [
-          {
-            "listen": "test",
-            "script": {
-              "id": "f4275444-7552-4cb6-866d-575a9bd91d5b",
-              "type": "text/javascript",
-              "exec": [
-                "pm.test(\"HTTP 403\", () => pm.response.to.have.status(403));",
-                "pm.test(\"El origen no recibe autorización CORS\", () => pm.expect(pm.response.headers.has(\"Access-Control-Allow-Origin\")).to.equal(false));"
-              ],
-              "_lastExecutionId": "942b3671-ed0b-4394-bec7-2b6c80887a89"
-            }
-          }
-        ]
-      }
-    ],
-    "event": [],
-    "variable": [
-      {
-        "type": "any",
-        "value": "http://127.0.0.1:8085",
-        "key": "baseUrl"
-      }
-    ],
-    "info": {
-      "_postman_id": "43a04926-4c73-4b85-9e02-c322300cdd30",
-      "name": "TransAduanas - 4 casos de seguridad",
-      "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+        {
+          "nombre": "Verificación del caso",
+          "paso": true
+        }
+      ]
+    },
+    {
+      "caso": "FE01 Shell del login",
+      "http": 200,
+      "aserciones": [
+        {
+          "nombre": "HTTP 200",
+          "paso": true
+        },
+        {
+          "nombre": "Verificación del caso",
+          "paso": true
+        }
+      ]
+    },
+    {
+      "caso": "FE02 Ruta Finanzas entrega solo el shell",
+      "http": 200,
+      "aserciones": [
+        {
+          "nombre": "HTTP 200",
+          "paso": true
+        },
+        {
+          "nombre": "Verificación del caso",
+          "paso": true
+        }
+      ]
+    },
+    {
+      "caso": "FE03 Login incorrecto por el proxy del SGA",
+      "http": 401,
+      "aserciones": [
+        {
+          "nombre": "HTTP 401",
+          "paso": true
+        },
+        {
+          "nombre": "Verificación del caso",
+          "paso": true
+        }
+      ]
+    },
+    {
+      "caso": "FE04 Usuario comercial por el proxy del SGA",
+      "http": 403,
+      "aserciones": [
+        {
+          "nombre": "HTTP 403",
+          "paso": true
+        },
+        {
+          "nombre": "Verificación del caso",
+          "paso": true
+        }
+      ]
+    },
+    {
+      "caso": "BD01 Lectura del cliente sembrado",
+      "http": 200,
+      "aserciones": [
+        {
+          "nombre": "HTTP 200",
+          "paso": true
+        },
+        {
+          "nombre": "Verificación del caso",
+          "paso": true
+        }
+      ]
+    },
+    {
+      "caso": "BD02 Alta duplicada",
+      "http": 400,
+      "aserciones": [
+        {
+          "nombre": "HTTP 400",
+          "paso": true
+        },
+        {
+          "nombre": "Verificación del caso",
+          "paso": true
+        }
+      ]
+    },
+    {
+      "caso": "BD03 Alta desde cuenta del portal",
+      "http": 403,
+      "aserciones": [
+        {
+          "nombre": "HTTP 403",
+          "paso": true
+        },
+        {
+          "nombre": "Verificación del caso",
+          "paso": true
+        }
+      ]
+    },
+    {
+      "caso": "BD04 Conteo posterior sin nuevas altas",
+      "http": 200,
+      "aserciones": [
+        {
+          "nombre": "HTTP 200",
+          "paso": true
+        },
+        {
+          "nombre": "Verificación del caso",
+          "paso": true
+        }
+      ]
+    },
+    {
+      "caso": "SIS01 Ana descarga su comprobante",
+      "http": 200,
+      "aserciones": [
+        {
+          "nombre": "HTTP 200",
+          "paso": true
+        },
+        {
+          "nombre": "Verificación del caso",
+          "paso": true
+        }
+      ]
+    },
+    {
+      "caso": "SIS02 Diego no descarga el comprobante de Ana",
+      "http": 403,
+      "aserciones": [
+        {
+          "nombre": "HTTP 403",
+          "paso": true
+        },
+        {
+          "nombre": "Verificación del caso",
+          "paso": true
+        }
+      ]
+    },
+    {
+      "caso": "SIS03 Cuenta portal rechazada en API interna",
+      "http": 403,
+      "aserciones": [
+        {
+          "nombre": "HTTP 403",
+          "paso": true
+        },
+        {
+          "nombre": "Verificación del caso",
+          "paso": true
+        }
+      ]
+    },
+    {
+      "caso": "SIS04 Cuenta interna rechazada en perfil B2B",
+      "http": 403,
+      "aserciones": [
+        {
+          "nombre": "HTTP 403",
+          "paso": true
+        },
+        {
+          "nombre": "Verificación del caso",
+          "paso": true
+        }
+      ]
     }
-  },
-  "environment": {
-    "id": "728ff95f-0523-4128-8972-68ca244c6f61",
-    "values": [
-      {
-        "type": "any",
-        "value": "http://127.0.0.1:53334",
-        "key": "baseUrl"
-      }
-    ]
-  },
-  "globals": {
-    "id": "40395b03-dd94-4b60-9fbf-8425d536c875",
-    "values": []
-  },
-  "run": {
-    "stats": {
-      "iterations": {
-        "total": 1,
-        "pending": 0,
-        "failed": 0
-      },
-      "items": {
-        "total": 4,
-        "pending": 0,
-        "failed": 0
-      },
-      "scripts": {
-        "total": 4,
-        "pending": 0,
-        "failed": 0
-      },
-      "prerequests": {
-        "total": 4,
-        "pending": 0,
-        "failed": 0
-      },
-      "requests": {
-        "total": 4,
-        "pending": 0,
-        "failed": 0
-      },
-      "tests": {
-        "total": 4,
-        "pending": 0,
-        "failed": 0
-      },
-      "assertions": {
-        "total": 8,
-        "pending": 0,
-        "failed": 0
-      },
-      "testScripts": {
-        "total": 4,
-        "pending": 0,
-        "failed": 0
-      },
-      "prerequestScripts": {
-        "total": 0,
-        "pending": 0,
-        "failed": 0
-      }
-    },
-    "timings": {
-      "responseAverage": 24.25,
-      "responseMin": 3,
-      "responseMax": 63,
-      "responseSd": 24.34517405975977,
-      "dnsAverage": 0,
-      "dnsMin": 0,
-      "dnsMax": 0,
-      "dnsSd": 0,
-      "firstByteAverage": 0,
-      "firstByteMin": 0,
-      "firstByteMax": 0,
-      "firstByteSd": 0,
-      "started": 1794289102367,
-      "completed": 1794289102690
-    },
-    "executions": [
-      {
-        "cursor": {
-          "position": 0,
-          "iteration": 0,
-          "length": 4,
-          "cycles": 1,
-          "empty": false,
-          "eof": false,
-          "bof": true,
-          "cr": false,
-          "ref": "7c4b8f55-c7e6-4536-85a5-589bcaa531f5",
-          "httpRequestId": "b6e7a710-701a-4af9-9bcb-d05478e6f916"
-        },
-        "item": {
-          "id": "61a2c20e-7283-4cf5-8765-475ef9cfe9af",
-          "name": "PM01 Sin token",
-          "request": {
-            "url": {
-              "path": [
-                "api",
-                "v1",
-                "usuarios"
-              ],
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "query": [],
-              "variable": []
-            },
-            "method": "GET"
-          },
-          "response": [],
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "id": "6ae4e357-02d4-439a-84db-361118d8fc8e",
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test(\"HTTP 401\", () => pm.response.to.have.status(401));",
-                  "pm.test(\"No entrega datos protegidos\", () => { pm.expect(pm.response.json().success).to.equal(false); pm.expect(pm.response.json().data).to.equal(null); });"
-                ],
-                "_lastExecutionId": "3d3f1e04-c237-441b-8752-74e3523aa1d2"
-              }
-            }
-          ]
-        },
-        "request": {
-          "url": {
-            "protocol": "http",
-            "port": "53334",
-            "path": [
-              "api",
-              "v1",
-              "usuarios"
-            ],
-            "host": [
-              "127",
-              "0",
-              "0",
-              "1"
-            ],
-            "query": [],
-            "variable": []
-          },
-          "header": [
-            {
-              "key": "User-Agent",
-              "value": "PostmanRuntime/7.39.1",
-              "system": true
-            },
-            {
-              "key": "Accept",
-              "value": "*/*",
-              "system": true
-            },
-            {
-              "key": "Cache-Control",
-              "value": "no-cache",
-              "system": true
-            },
-            {
-              "key": "Postman-Token",
-              "value": "c4dbe53e-a4ff-453d-a224-5ccf95552480",
-              "system": true
-            },
-            {
-              "key": "Host",
-              "value": "127.0.0.1:53334",
-              "system": true
-            },
-            {
-              "key": "Accept-Encoding",
-              "value": "gzip, deflate, br",
-              "system": true
-            },
-            {
-              "key": "Connection",
-              "value": "keep-alive",
-              "system": true
-            }
-          ],
-          "method": "GET"
-        },
-        "response": {
-          "id": "51a6cb41-8a9e-456d-b131-5f0db649d947",
-          "status": "Unauthorized",
-          "code": 401,
-          "header": [
-            {
-              "key": "Vary",
-              "value": "Origin"
-            },
-            {
-              "key": "Vary",
-              "value": "Access-Control-Request-Method"
-            },
-            {
-              "key": "Vary",
-              "value": "Access-Control-Request-Headers"
-            },
-            {
-              "key": "X-Content-Type-Options",
-              "value": "nosniff"
-            },
-            {
-              "key": "X-XSS-Protection",
-              "value": "0"
-            },
-            {
-              "key": "Cache-Control",
-              "value": "no-cache, no-store, max-age=0, must-revalidate"
-            },
-            {
-              "key": "Pragma",
-              "value": "no-cache"
-            },
-            {
-              "key": "Expires",
-              "value": "0"
-            },
-            {
-              "key": "X-Frame-Options",
-              "value": "DENY"
-            },
-            {
-              "key": "Content-Type",
-              "value": "application/json;charset=UTF-8"
-            },
-            {
-              "key": "Content-Length",
-              "value": "127"
-            },
-            {
-              "key": "Date",
-              "value": "Tue, 10 Nov 2026 05:38:22 GMT"
-            },
-            {
-              "key": "Keep-Alive",
-              "value": "timeout=60"
-            },
-            {
-              "key": "Connection",
-              "value": "keep-alive"
-            }
-          ],
-          "stream": {
-            "type": "Buffer",
-            "data": [
-              123,
-              34,
-              115,
-              117,
-              99,
-              99,
-              101,
-              115,
-              115,
-              34,
-              58,
-              102,
-              97,
-              108,
-              115,
-              101,
-              44,
-              34,
-              109,
-              101,
-              115,
-              115,
-              97,
-              103,
-              101,
-              34,
-              58,
-              34,
-              78,
-              111,
-              32,
-              97,
-              117,
-              116,
-              101,
-              110,
-              116,
-              105,
-              99,
-              97,
-              100,
-              111,
-              58,
-              32,
-              116,
-              111,
-              107,
-              101,
-              110,
-              32,
-              114,
-              101,
-              113,
-              117,
-              101,
-              114,
-              105,
-              100,
-              111,
-              32,
-              111,
-              32,
-              105,
-              110,
-              118,
-              195,
-              161,
-              108,
-              105,
-              100,
-              111,
-              34,
-              44,
-              34,
-              100,
-              97,
-              116,
-              97,
-              34,
-              58,
-              110,
-              117,
-              108,
-              108,
-              44,
-              34,
-              116,
-              105,
-              109,
-              101,
-              115,
-              116,
-              97,
-              109,
-              112,
-              34,
-              58,
-              34,
-              50,
-              48,
-              50,
-              54,
-              45,
-              49,
-              49,
-              45,
-              49,
-              48,
-              84,
-              48,
-              48,
-              58,
-              51,
-              56,
-              58,
-              50,
-              50,
-              46,
-              51,
-              57,
-              49,
-              53,
-              49,
-              52,
-              51,
-              34,
-              125
-            ]
-          },
-          "cookie": [],
-          "responseTime": 27,
-          "responseSize": 127
-        },
-        "id": "61a2c20e-7283-4cf5-8765-475ef9cfe9af",
-        "assertions": [
-          {
-            "assertion": "HTTP 401",
-            "skipped": false
-          },
-          {
-            "assertion": "No entrega datos protegidos",
-            "skipped": false
-          }
-        ]
-      },
-      {
-        "cursor": {
-          "ref": "4bb2b335-ce2a-429a-aaff-83f98c323134",
-          "length": 4,
-          "cycles": 1,
-          "position": 1,
-          "iteration": 0,
-          "httpRequestId": "01173923-0e76-4934-ac17-3faabc71acf0"
-        },
-        "item": {
-          "id": "53767f0e-b757-46e7-9253-c8d204f1b26d",
-          "name": "PM02 JWT inválido",
-          "request": {
-            "url": {
-              "path": [
-                "api",
-                "v1",
-                "usuarios"
-              ],
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "query": [],
-              "variable": []
-            },
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer not.a.jwt"
-              }
-            ],
-            "method": "GET"
-          },
-          "response": [],
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "id": "dea16efa-1962-4aee-b72c-9c14dd6ef173",
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test(\"HTTP 401\", () => pm.response.to.have.status(401));",
-                  "pm.test(\"No entrega datos protegidos\", () => { pm.expect(pm.response.json().success).to.equal(false); pm.expect(pm.response.json().data).to.equal(null); });"
-                ],
-                "_lastExecutionId": "99979661-ea57-4408-9343-4482e8d4cfaa"
-              }
-            }
-          ]
-        },
-        "request": {
-          "url": {
-            "protocol": "http",
-            "port": "53334",
-            "path": [
-              "api",
-              "v1",
-              "usuarios"
-            ],
-            "host": [
-              "127",
-              "0",
-              "0",
-              "1"
-            ],
-            "query": [],
-            "variable": []
-          },
-          "header": [
-            {
-              "key": "Authorization",
-              "value": "Bearer not.a.jwt"
-            },
-            {
-              "key": "User-Agent",
-              "value": "PostmanRuntime/7.39.1",
-              "system": true
-            },
-            {
-              "key": "Accept",
-              "value": "*/*",
-              "system": true
-            },
-            {
-              "key": "Cache-Control",
-              "value": "no-cache",
-              "system": true
-            },
-            {
-              "key": "Postman-Token",
-              "value": "84fc07a2-1d73-432b-a37a-bf9034e68127",
-              "system": true
-            },
-            {
-              "key": "Host",
-              "value": "127.0.0.1:53334",
-              "system": true
-            },
-            {
-              "key": "Accept-Encoding",
-              "value": "gzip, deflate, br",
-              "system": true
-            },
-            {
-              "key": "Connection",
-              "value": "keep-alive",
-              "system": true
-            }
-          ],
-          "method": "GET"
-        },
-        "response": {
-          "id": "7eeb1472-8b1e-4689-875f-b3f38be7b458",
-          "status": "Unauthorized",
-          "code": 401,
-          "header": [
-            {
-              "key": "Vary",
-              "value": "Origin"
-            },
-            {
-              "key": "Vary",
-              "value": "Access-Control-Request-Method"
-            },
-            {
-              "key": "Vary",
-              "value": "Access-Control-Request-Headers"
-            },
-            {
-              "key": "X-Content-Type-Options",
-              "value": "nosniff"
-            },
-            {
-              "key": "X-XSS-Protection",
-              "value": "0"
-            },
-            {
-              "key": "Cache-Control",
-              "value": "no-cache, no-store, max-age=0, must-revalidate"
-            },
-            {
-              "key": "Pragma",
-              "value": "no-cache"
-            },
-            {
-              "key": "Expires",
-              "value": "0"
-            },
-            {
-              "key": "X-Frame-Options",
-              "value": "DENY"
-            },
-            {
-              "key": "Content-Type",
-              "value": "application/json;charset=UTF-8"
-            },
-            {
-              "key": "Content-Length",
-              "value": "127"
-            },
-            {
-              "key": "Date",
-              "value": "Tue, 10 Nov 2026 05:38:22 GMT"
-            },
-            {
-              "key": "Keep-Alive",
-              "value": "timeout=60"
-            },
-            {
-              "key": "Connection",
-              "value": "keep-alive"
-            }
-          ],
-          "stream": {
-            "type": "Buffer",
-            "data": [
-              123,
-              34,
-              115,
-              117,
-              99,
-              99,
-              101,
-              115,
-              115,
-              34,
-              58,
-              102,
-              97,
-              108,
-              115,
-              101,
-              44,
-              34,
-              109,
-              101,
-              115,
-              115,
-              97,
-              103,
-              101,
-              34,
-              58,
-              34,
-              78,
-              111,
-              32,
-              97,
-              117,
-              116,
-              101,
-              110,
-              116,
-              105,
-              99,
-              97,
-              100,
-              111,
-              58,
-              32,
-              116,
-              111,
-              107,
-              101,
-              110,
-              32,
-              114,
-              101,
-              113,
-              117,
-              101,
-              114,
-              105,
-              100,
-              111,
-              32,
-              111,
-              32,
-              105,
-              110,
-              118,
-              195,
-              161,
-              108,
-              105,
-              100,
-              111,
-              34,
-              44,
-              34,
-              100,
-              97,
-              116,
-              97,
-              34,
-              58,
-              110,
-              117,
-              108,
-              108,
-              44,
-              34,
-              116,
-              105,
-              109,
-              101,
-              115,
-              116,
-              97,
-              109,
-              112,
-              34,
-              58,
-              34,
-              50,
-              48,
-              50,
-              54,
-              45,
-              49,
-              49,
-              45,
-              49,
-              48,
-              84,
-              48,
-              48,
-              58,
-              51,
-              56,
-              58,
-              50,
-              50,
-              46,
-              52,
-              55,
-              48,
-              52,
-              49,
-              50,
-              57,
-              34,
-              125
-            ]
-          },
-          "cookie": [],
-          "responseTime": 4,
-          "responseSize": 127
-        },
-        "id": "53767f0e-b757-46e7-9253-c8d204f1b26d",
-        "assertions": [
-          {
-            "assertion": "HTTP 401",
-            "skipped": false
-          },
-          {
-            "assertion": "No entrega datos protegidos",
-            "skipped": false
-          }
-        ]
-      },
-      {
-        "cursor": {
-          "ref": "63af73c0-8597-492c-bc60-32fe45a6985f",
-          "length": 4,
-          "cycles": 1,
-          "position": 2,
-          "iteration": 0,
-          "httpRequestId": "4197f35a-4e67-4a2b-9dec-a925992a804e"
-        },
-        "item": {
-          "id": "b02e37d3-8f14-40ca-8f74-260f707724b7",
-          "name": "PM03 Login incorrecto",
-          "request": {
-            "url": {
-              "path": [
-                "api",
-                "v1",
-                "auth",
-                "login"
-              ],
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "query": [],
-              "variable": []
-            },
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "method": "POST",
-            "body": {
-              "mode": "raw",
-              "raw": "{\"username\":\"admin\",\"password\":\"credencial-incorrecta-para-este-caso\"}"
-            }
-          },
-          "response": [],
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "id": "73396abf-1226-4e30-9174-7443f7b7a70a",
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test(\"HTTP 401\", () => pm.response.to.have.status(401));",
-                  "pm.test(\"No entrega datos protegidos\", () => { pm.expect(pm.response.json().success).to.equal(false); pm.expect(pm.response.json().data).to.equal(null); });"
-                ],
-                "_lastExecutionId": "625c4f00-ce83-4361-a02f-d95338f552cd"
-              }
-            }
-          ]
-        },
-        "request": {
-          "url": {
-            "protocol": "http",
-            "port": "53334",
-            "path": [
-              "api",
-              "v1",
-              "auth",
-              "login"
-            ],
-            "host": [
-              "127",
-              "0",
-              "0",
-              "1"
-            ],
-            "query": [],
-            "variable": []
-          },
-          "header": [
-            {
-              "key": "Content-Type",
-              "value": "application/json"
-            },
-            {
-              "key": "User-Agent",
-              "value": "PostmanRuntime/7.39.1",
-              "system": true
-            },
-            {
-              "key": "Accept",
-              "value": "*/*",
-              "system": true
-            },
-            {
-              "key": "Cache-Control",
-              "value": "no-cache",
-              "system": true
-            },
-            {
-              "key": "Postman-Token",
-              "value": "8b5745bd-b8aa-4006-ac75-50906bcad00e",
-              "system": true
-            },
-            {
-              "key": "Host",
-              "value": "127.0.0.1:53334",
-              "system": true
-            },
-            {
-              "key": "Accept-Encoding",
-              "value": "gzip, deflate, br",
-              "system": true
-            },
-            {
-              "key": "Connection",
-              "value": "keep-alive",
-              "system": true
-            },
-            {
-              "key": "Content-Length",
-              "value": "70",
-              "system": true
-            }
-          ],
-          "method": "POST",
-          "body": {
-            "mode": "raw",
-            "raw": "{\"username\":\"admin\",\"password\":\"credencial-incorrecta-para-este-caso\"}"
-          }
-        },
-        "response": {
-          "id": "7632157d-f61a-44f9-aa01-e0c9c985bdf0",
-          "status": "Unauthorized",
-          "code": 401,
-          "header": [
-            {
-              "key": "Vary",
-              "value": "Origin"
-            },
-            {
-              "key": "Vary",
-              "value": "Access-Control-Request-Method"
-            },
-            {
-              "key": "Vary",
-              "value": "Access-Control-Request-Headers"
-            },
-            {
-              "key": "X-Content-Type-Options",
-              "value": "nosniff"
-            },
-            {
-              "key": "X-XSS-Protection",
-              "value": "0"
-            },
-            {
-              "key": "Cache-Control",
-              "value": "no-cache, no-store, max-age=0, must-revalidate"
-            },
-            {
-              "key": "Pragma",
-              "value": "no-cache"
-            },
-            {
-              "key": "Expires",
-              "value": "0"
-            },
-            {
-              "key": "X-Frame-Options",
-              "value": "DENY"
-            },
-            {
-              "key": "Content-Type",
-              "value": "application/json"
-            },
-            {
-              "key": "Transfer-Encoding",
-              "value": "chunked"
-            },
-            {
-              "key": "Date",
-              "value": "Tue, 10 Nov 2026 05:38:22 GMT"
-            },
-            {
-              "key": "Keep-Alive",
-              "value": "timeout=60"
-            },
-            {
-              "key": "Connection",
-              "value": "keep-alive"
-            }
-          ],
-          "stream": {
-            "type": "Buffer",
-            "data": [
-              123,
-              34,
-              115,
-              117,
-              99,
-              99,
-              101,
-              115,
-              115,
-              34,
-              58,
-              102,
-              97,
-              108,
-              115,
-              101,
-              44,
-              34,
-              109,
-              101,
-              115,
-              115,
-              97,
-              103,
-              101,
-              34,
-              58,
-              34,
-              67,
-              114,
-              101,
-              100,
-              101,
-              110,
-              99,
-              105,
-              97,
-              108,
-              101,
-              115,
-              32,
-              105,
-              110,
-              118,
-              195,
-              161,
-              108,
-              105,
-              100,
-              97,
-              115,
-              58,
-              32,
-              117,
-              115,
-              117,
-              97,
-              114,
-              105,
-              111,
-              32,
-              111,
-              32,
-              99,
-              111,
-              110,
-              116,
-              114,
-              97,
-              115,
-              101,
-              195,
-              177,
-              97,
-              32,
-              105,
-              110,
-              99,
-              111,
-              114,
-              114,
-              101,
-              99,
-              116,
-              111,
-              115,
-              34,
-              44,
-              34,
-              100,
-              97,
-              116,
-              97,
-              34,
-              58,
-              110,
-              117,
-              108,
-              108,
-              44,
-              34,
-              116,
-              105,
-              109,
-              101,
-              115,
-              116,
-              97,
-              109,
-              112,
-              34,
-              58,
-              34,
-              50,
-              48,
-              50,
-              54,
-              45,
-              49,
-              49,
-              45,
-              49,
-              48,
-              84,
-              48,
-              48,
-              58,
-              51,
-              56,
-              58,
-              50,
-              50,
-              46,
-              53,
-              57,
-              56,
-              55,
-              49,
-              55,
-              49,
-              34,
-              125
-            ]
-          },
-          "cookie": [],
-          "responseTime": 63,
-          "responseSize": 142
-        },
-        "id": "b02e37d3-8f14-40ca-8f74-260f707724b7",
-        "assertions": [
-          {
-            "assertion": "HTTP 401",
-            "skipped": false
-          },
-          {
-            "assertion": "No entrega datos protegidos",
-            "skipped": false
-          }
-        ]
-      },
-      {
-        "cursor": {
-          "ref": "a7d7808b-160a-40b7-9c48-d3e7f8875098",
-          "length": 4,
-          "cycles": 1,
-          "position": 3,
-          "iteration": 0,
-          "httpRequestId": "e842103c-477b-4ac9-a64d-491c9546ab7e"
-        },
-        "item": {
-          "id": "3c86df2c-75a3-4c4b-8941-154155f21b00",
-          "name": "PM04 Origen CORS ajeno",
-          "request": {
-            "url": {
-              "path": [
-                "api",
-                "v1",
-                "usuarios"
-              ],
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "query": [],
-              "variable": []
-            },
-            "header": [
-              {
-                "key": "Origin",
-                "value": "https://untrusted.example"
-              },
-              {
-                "key": "Access-Control-Request-Method",
-                "value": "GET"
-              },
-              {
-                "key": "Access-Control-Request-Headers",
-                "value": "Authorization"
-              }
-            ],
-            "method": "OPTIONS"
-          },
-          "response": [],
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "id": "f4275444-7552-4cb6-866d-575a9bd91d5b",
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test(\"HTTP 403\", () => pm.response.to.have.status(403));",
-                  "pm.test(\"El origen no recibe autorización CORS\", () => pm.expect(pm.response.headers.has(\"Access-Control-Allow-Origin\")).to.equal(false));"
-                ],
-                "_lastExecutionId": "942b3671-ed0b-4394-bec7-2b6c80887a89"
-              }
-            }
-          ]
-        },
-        "request": {
-          "url": {
-            "protocol": "http",
-            "port": "53334",
-            "path": [
-              "api",
-              "v1",
-              "usuarios"
-            ],
-            "host": [
-              "127",
-              "0",
-              "0",
-              "1"
-            ],
-            "query": [],
-            "variable": []
-          },
-          "header": [
-            {
-              "key": "Origin",
-              "value": "https://untrusted.example"
-            },
-            {
-              "key": "Access-Control-Request-Method",
-              "value": "GET"
-            },
-            {
-              "key": "Access-Control-Request-Headers",
-              "value": "Authorization"
-            },
-            {
-              "key": "User-Agent",
-              "value": "PostmanRuntime/7.39.1",
-              "system": true
-            },
-            {
-              "key": "Accept",
-              "value": "*/*",
-              "system": true
-            },
-            {
-              "key": "Cache-Control",
-              "value": "no-cache",
-              "system": true
-            },
-            {
-              "key": "Postman-Token",
-              "value": "78f4a68a-401f-4553-ae58-dc78aab9aa5f",
-              "system": true
-            },
-            {
-              "key": "Host",
-              "value": "127.0.0.1:53334",
-              "system": true
-            },
-            {
-              "key": "Accept-Encoding",
-              "value": "gzip, deflate, br",
-              "system": true
-            },
-            {
-              "key": "Connection",
-              "value": "keep-alive",
-              "system": true
-            }
-          ],
-          "method": "OPTIONS"
-        },
-        "response": {
-          "id": "9eee6172-4dba-4bb0-8064-cd78d420d0d7",
-          "status": "Forbidden",
-          "code": 403,
-          "header": [
-            {
-              "key": "Vary",
-              "value": "Origin"
-            },
-            {
-              "key": "Vary",
-              "value": "Access-Control-Request-Method"
-            },
-            {
-              "key": "Vary",
-              "value": "Access-Control-Request-Headers"
-            },
-            {
-              "key": "X-Content-Type-Options",
-              "value": "nosniff"
-            },
-            {
-              "key": "X-XSS-Protection",
-              "value": "0"
-            },
-            {
-              "key": "Cache-Control",
-              "value": "no-cache, no-store, max-age=0, must-revalidate"
-            },
-            {
-              "key": "Pragma",
-              "value": "no-cache"
-            },
-            {
-              "key": "Expires",
-              "value": "0"
-            },
-            {
-              "key": "X-Frame-Options",
-              "value": "DENY"
-            },
-            {
-              "key": "Transfer-Encoding",
-              "value": "chunked"
-            },
-            {
-              "key": "Date",
-              "value": "Tue, 10 Nov 2026 05:38:22 GMT"
-            },
-            {
-              "key": "Keep-Alive",
-              "value": "timeout=60"
-            },
-            {
-              "key": "Connection",
-              "value": "keep-alive"
-            }
-          ],
-          "stream": {
-            "type": "Buffer",
-            "data": [
-              73,
-              110,
-              118,
-              97,
-              108,
-              105,
-              100,
-              32,
-              67,
-              79,
-              82,
-              83,
-              32,
-              114,
-              101,
-              113,
-              117,
-              101,
-              115,
-              116
-            ]
-          },
-          "cookie": [],
-          "responseTime": 3,
-          "responseSize": 20
-        },
-        "id": "3c86df2c-75a3-4c4b-8941-154155f21b00",
-        "assertions": [
-          {
-            "assertion": "HTTP 403",
-            "skipped": false
-          },
-          {
-            "assertion": "El origen no recibe autorización CORS",
-            "skipped": false
-          }
-        ]
-      }
-    ],
-    "transfers": {
-      "responseTotal": 416
-    },
-    "failures": [],
-    "error": null
-  }
+  ]
 }

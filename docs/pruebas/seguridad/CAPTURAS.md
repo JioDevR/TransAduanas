@@ -75,9 +75,23 @@ Get-Content "$resultado\sistema-resultados.json" -Raw | ConvertFrom-Json |
 
 Captura `SIS04` a `SIS08`. Muestran la baja denegada a María, la baja autorizada, el rechazo del token anterior, la reactivación y el bloqueo del comprobante de otra empresa.
 
-## 5. Postman
+## 5. Prueba general sin Postman
 
-Para repetir los cuatro casos por consola con Newman:
+Después de preparar el classpath y ejecutar `npm.cmd ci` en `app-sga`, vuelve a la terminal con las variables del README. Usa la ruta de MySQL del apartado 3:
+
+```powershell
+Set-Location $raiz
+node "$kit\seguridad-general.mjs" $backend $cp $mysqlBin $resultado 2>&1 |
+  Tee-Object -FilePath "$resultado\ejecucion-general.txt"
+$codigo = $LASTEXITCODE
+"Código de la prueba general: $codigo"
+```
+
+Captura las cuatro líneas finales con los totales por componente y `Resultado general`. El código `1` significa que se ejecutaron todos los casos y hubo hallazgos. El código `2` indica una ejecución incompleta. El resumen JSON está en la carpeta `general-*` cuya ruta imprime la terminal.
+
+## 6. Postman
+
+Para repetir los **16 casos** por consola con Newman, ejecuta primero `npm.cmd ci` en `app-sga`, como en el apartado 2. La colección se divide en Backend, Frontend, Base de datos por API y Sistema, con cuatro casos por carpeta:
 
 ```powershell
 Set-Location $backend
@@ -95,13 +109,15 @@ Set-Location $backend
 node "$kit\seguridad-http.mjs" $backend $cp "$resultado\http-postman.json" --postman-servidor
 ```
 
-1. Deja esa terminal abierta y copia la dirección que imprime en `baseUrl de Postman`.
-2. En Postman, pulsa **Import** y abre `docs\pruebas\seguridad\TransAduanas.postman_collection.json` del clon.
-3. Abre la colección y en **Variables** cambia `baseUrl` a la dirección copiada, sin `/` al final. Guarda el cambio.
-4. Pulsa **Run collection** y ejecuta los cuatro casos. Para la captura, muestra el resumen de **8 aserciones**, o abre cada petición y muestra el estado HTTP y sus pruebas. Los estados esperados son `401`, `401`, `401` y `403`.
-5. Vuelve a PowerShell y pulsa **Ctrl+C** para detener el laboratorio.
+1. Deja la terminal abierta. El ejecutor imprime la ruta de `postman-local.postman_environment.json`.
+2. En Postman Desktop, pulsa **Import** e importa dos archivos: `docs\pruebas\seguridad\TransAduanas.postman_collection.json` del clon y el entorno local que imprimió la terminal.
+3. Selecciona **TransAduanas local - descartar al terminar** como entorno activo.
+4. Pulsa **Run collection** y ejecuta las cuatro carpetas en el orden indicado. Muestra los **16 casos y 32 aserciones** en el resumen. Ejecuta la carpeta de datos completa para que el conteo se compruebe después de los intentos de alta.
+5. Vuelve a PowerShell y pulsa **Ctrl+C**. Elimina el entorno importado de Postman. Contiene tokens temporales de laboratorio, así que evita mostrar sus valores en las capturas o compartirlo.
 
-## 6. Orden para exponer las siete fases
+En Postman, Frontend prueba la respuesta HTML y el proxy HTTP de Vite. Base de datos comprueba registros **a través de la API con H2**. Para capturar la navegación real y los permisos SQL directos, usa los apartados 2 y 3.
+
+## 7. Orden para exponer las siete fases
 
 | Fase | Qué mostrar |
 | --- | --- |

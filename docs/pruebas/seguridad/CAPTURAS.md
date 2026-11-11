@@ -190,6 +190,12 @@ Abre los casos individuales desde los resultados de la ejecución. Procura que s
 
 En Postman, Frontend prueba la respuesta HTML y el proxy HTTP de Vite. Base de datos comprueba registros **a través de la API con H2**. Para capturar la navegación real y los permisos SQL directos, usa los apartados 2 y 3.
 
+### Revisión de configuración con Python
+
+Abre [el bloque completo de configuración del README](README.md#5-revisa-las-dependencias-y-la-configuración) y copia todo el bloque que empieza con `& {`. Prepara sus propias rutas y comprueba Python antes de ejecutar `check-config.py`, por lo que puedes usar una terminal nueva.
+
+La tabla final muestra `CFG01` a `CFG05`, el archivo y la línea revisada. Guarda una captura de esa tabla. El informe queda en `backend\target\seguridad-local\configuracion.json` dentro del clon.
+
 ## 7. Consultar resultados guardados
 
 Abre PowerShell en la carpeta principal del clon. Cambia el valor de `$archivo` según la tabla para mostrar la salida de tu ejecución. Este bloque solo lee el archivo.
@@ -225,7 +231,7 @@ Para la prueba general, el resumen de terminal queda en `backend\target\segurida
 | Vulnerabilidades | [README, análisis de dependencias y ZAP](README.md). Muestra el informe de la herramienta y el alcance que se examinó. |
 | Seguridad | Backend, `SEC01` a `SEC03`. Muestra las respuestas de autenticación y autorización. Añade las tablas del SGA, MySQL y sistema para documentar cada componente. |
 | Deserialización | Backend, `SEC06`. Muestra las respuestas HTTP observadas con JSON inválido y el conteo antes y después en la salida de terminal. |
-| Configuración | [README, revisión de configuración](README.md). Muestra `configuracion.json` y la referencia al archivo que revisa cada caso. |
+| Configuración | [README, revisión de configuración](README.md#5-revisa-las-dependencias-y-la-configuración). Muestra la tabla `CFG01` a `CFG05` y conserva `configuracion.json`. |
 | Fuzzing | [README, búsqueda de rutas con ffuf](README.md). Muestra `ffuf-rutas.json` y el listado de rutas usado en esa ejecución. |
 | Otros | Backend, `SEC09`, y el resumen de la prueba general. Muestra el resultado de las 20 solicitudes secuenciales y los totales por componente. |
 

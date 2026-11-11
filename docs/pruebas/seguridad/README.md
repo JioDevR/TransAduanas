@@ -132,14 +132,40 @@ foreach ($app in 'app-sga', 'app-portal-cliente', 'landing') {
 
 Un código `1` acompañado de un informe válido indica que npm encontró alertas. En la ejecución guardada, SGA y el portal registraron el mismo aviso alto de `follow-redirects`. Landing registró cero. OSV no devolvió avisos para las 124 dependencias Maven consultadas. [Aviso de follow-redirects](https://github.com/advisories/GHSA-mrwp-f3q8-3g9p)
 
-**Configuración.** Si tienes Python 3, desde la carpeta principal:
+**Configuración.** Con Python 3 instalado, copia el bloque completo en PowerShell. Cambia la ruta de la primera asignación si guardaste el clon en otra carpeta. Puedes ejecutarlo desde una terminal nueva.
 
 ```powershell
-Set-Location $raiz
-python --version
-python "$kit\check-config.py" $raiz | Set-Content -Encoding utf8 "$resultado\configuracion.json"
-if ($LASTEXITCODE -ne 0) { throw 'Falló la revisión de configuración.' }
+& {
+    $raiz = "$env:USERPROFILE\Music\TransAduanas-seguridad"
+    $script = Join-Path $raiz 'docs\pruebas\seguridad\check-config.py'
+    $resultado = Join-Path $raiz 'backend\target\seguridad-local'
+
+    if (-not (Test-Path -LiteralPath $script -PathType Leaf)) {
+        throw "No encontré $script. Corrige la ruta del proyecto en la primera asignación."
+    }
+    $python = Get-Command python -CommandType Application -ErrorAction Stop
+    New-Item -ItemType Directory -Path $resultado -Force -ErrorAction Stop |
+        Out-Null
+
+    & $python.Source --version
+    if ($LASTEXITCODE -ne 0) {
+        throw 'Python no pudo arrancar. Revisa su instalación y vuelve a abrir la terminal.'
+    }
+    $salida = & $python.Source $script $raiz
+    if ($LASTEXITCODE -ne 0) {
+        throw 'Falló la revisión de configuración. Revisa el mensaje de Python.'
+    }
+
+    $casos = ($salida -join [Environment]::NewLine) |
+        ConvertFrom-Json -ErrorAction Stop
+    $archivo = Join-Path $resultado 'configuracion.json'
+    $salida | Set-Content -LiteralPath $archivo -Encoding UTF8 -ErrorAction Stop
+    $casos | Sort-Object id | Format-Table id, estado, archivo, linea, detalle -Wrap
+    "Informe guardado en $archivo"
+}
 ```
+
+Captura la tabla de `CFG01` a `CFG05`. `Patrón confirmado` indica que el script encontró la configuración descrita en el código. El archivo JSON conserva el detalle de cada coincidencia.
 
 ## Resultados guardados
 

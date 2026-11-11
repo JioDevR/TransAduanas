@@ -889,6 +889,7 @@ import CierreExpedienteModal from '../components/CierreExpedienteModal.vue'
 import DocumentosManagerModal from '@/shared/components/DocumentosManagerModal.vue'
 import AuditoriaExpedienteModal from '../components/AuditoriaExpedienteModal.vue'
 import { getCredencialesPostAprobacionNotification } from '@/features/aduanas/utils/aprobacionAduaneraUtils'
+import { filtrarCotizacionesParaSupervision } from '../utils/supervisionCotizacionUtils'
 
 
 const route = useRoute()
@@ -1171,7 +1172,7 @@ const loadData = async () => {
       gestionAduaneraService.getCotizaciones(),
       expedienteService.getExpedientes()
     ])
-    if (cotsRes.status === 'fulfilled') cotizaciones.value = cotsRes.value || []
+    if (cotsRes.status === 'fulfilled') cotizaciones.value = filtrarCotizacionesParaSupervision(cotsRes.value || [])
     if (expsRes.status === 'fulfilled') expedientes.value = expsRes.value || []
 
     const firstFailure = [cotsRes, expsRes].find((r) => r.status === 'rejected')

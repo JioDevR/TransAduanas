@@ -297,7 +297,13 @@
                     <span class="regimen-tag">{{ formatRegimen(c.regimenAduanero) }}</span>
                   </td>
                   <td>
-                    <span class="total-amount font-mono">${{ Number(c.totalCotizado || 0).toLocaleString('en-US', { minimumFractionDigits: 2 }) }}</span>
+                    <Tag
+                      v-if="Number(c.totalCotizado || 0) <= 0"
+                      value="Por liquidar ($0.00)"
+                      severity="warn"
+                      rounded
+                    />
+                    <span v-else class="total-amount font-mono">${{ Number(c.totalCotizado || 0).toLocaleString('en-US', { minimumFractionDigits: 2 }) }}</span>
                   </td>
                   <td>
                     <span class="date-text">{{ c.fechaEmision }}</span>
@@ -323,10 +329,10 @@
                       <button
                         type="button"
                         class="action-btn-outline"
-                        title="Editar cotización"
+                        :title="Number(c.totalCotizado || 0) <= 0 ? 'Completar cotización' : 'Editar cotización'"
                         @click="openEditCotizacion(c)"
                       >
-                        Editar
+                        {{ Number(c.totalCotizado || 0) <= 0 ? 'Completar' : 'Editar' }}
                       </button>
                     </div>
                   </td>
@@ -516,7 +522,13 @@
 
           <Column header="Total Cotizado">
             <template #body="{ data: c }">
-              <span class="total-amount">${{ Number(c.totalCotizado || 0).toLocaleString('en-US', { minimumFractionDigits: 2 }) }}</span>
+              <Tag
+                v-if="Number(c.totalCotizado || 0) <= 0"
+                value="Por liquidar ($0.00)"
+                severity="warn"
+                rounded
+              />
+              <span v-else class="total-amount">${{ Number(c.totalCotizado || 0).toLocaleString('en-US', { minimumFractionDigits: 2 }) }}</span>
             </template>
           </Column>
 
@@ -620,10 +632,10 @@
                   v-else
                   type="button"
                   class="action-btn-outline"
-                  title="Editar cotización"
+                  :title="Number(c.totalCotizado || 0) <= 0 ? 'Completar cotización' : 'Editar cotización'"
                   @click="openEditCotizacion(c)"
                 >
-                  Editar
+                  {{ Number(c.totalCotizado || 0) <= 0 ? 'Completar' : 'Editar' }}
                 </button>
                 <button
                   v-if="!c.tieneExpediente && c.estado !== 'APROBADA'"
@@ -951,8 +963,19 @@
           <Column header="FOB / Total Estimado">
             <template #body="{ data: s }">
               <div class="client-cell">
-                <span class="total-amount">${{ Number(s.totalCotizado || 0).toLocaleString('en-US', { minimumFractionDigits: 2 }) }}</span>
-                <span class="client-sub">FOB: ${{ Number(s.valorFob || 0).toLocaleString('en-US', { minimumFractionDigits: 2 }) }}</span>
+                <template v-if="Number(s.totalCotizado || 0) <= 0">
+                  <Tag value="Por liquidar" severity="warn" rounded />
+                  <span class="client-sub">
+                    FOB: ${{ Number(s.valorFob || 0).toLocaleString('en-US', { minimumFractionDigits: 2 }) }}
+                    <template v-if="Number(s.montoFleteEstimado || 0) > 0">
+                      • Flete decl.: ${{ Number(s.montoFleteEstimado || 0).toLocaleString('en-US', { minimumFractionDigits: 2 }) }}
+                    </template>
+                  </span>
+                </template>
+                <template v-else>
+                  <span class="total-amount">${{ Number(s.totalCotizado || 0).toLocaleString('en-US', { minimumFractionDigits: 2 }) }}</span>
+                  <span class="client-sub">FOB: ${{ Number(s.valorFob || 0).toLocaleString('en-US', { minimumFractionDigits: 2 }) }}</span>
+                </template>
               </div>
             </template>
           </Column>

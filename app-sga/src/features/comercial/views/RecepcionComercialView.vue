@@ -1011,12 +1011,11 @@
                 <button
                   type="button"
                   class="btn-espresso btn-sm"
-                  :disabled="claimingId === s.idCotizacion"
-                  title="Tomar esta solicitud y moverla a Mis Cotizaciones"
-                  @click="handleTomarSolicitud(s)"
+                  title="Abrir cotización para revisar y liquidar precios antes de tomarla"
+                  @click="openEditCotizacion(s)"
                 >
-                  <i :class="['pi', claimingId === s.idCotizacion ? 'pi-spin pi-spinner' : 'pi-user-plus']"></i>
-                  <span>Tomar Solicitud</span>
+                  <i class="pi pi-pencil"></i>
+                  <span>Revisar y Liquidar</span>
                 </button>
               </div>
             </template>
@@ -1711,6 +1710,9 @@ const handleQuickClientCreated = async (newClient) => {
 
 const handleCotizacionSaved = async ({ isEdit, cotizacionId, payload, documentos, done }) => {
   try {
+    const wasUnassigned = isEdit && selectedCotizacion.value && !selectedCotizacion.value.idUsuarioComercial
+    const wasObservada = isEdit && selectedCotizacion.value && (selectedCotizacion.value.estado === 'OBSERVADA' || selectedCotizacion.value.estado === 'REVISION')
+
     if (isEdit) {
       await comercialService.updateCotizacion(cotizacionId, payload)
       if (cotizacionId && documentos && documentos.length > 0) {
@@ -1728,7 +1730,13 @@ const handleCotizacionSaved = async ({ isEdit, cotizacionId, payload, documentos
           }
         }
       }
-      showToast('Cotización actualizada y correcciones enviadas a Supervisión Aduanera.', 'success')
+      if (wasUnassigned) {
+        showToast('Solicitud liquidada y asignada exitosamente a su cartera comercial.', 'success')
+      } else if (wasObservada) {
+        showToast('Cotización actualizada y correcciones enviadas a Supervisión Aduanera.', 'success')
+      } else {
+        showToast('Cotización actualizada correctamente.', 'success')
+      }
     } else {
       const created = await comercialService.createCotizacion(payload)
       const newId = created?.idCotizacion

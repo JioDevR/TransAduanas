@@ -188,10 +188,24 @@ public class CotizacionServiceImpl implements ICotizacionService {
         Cotizacion cotizacion = cotizacionRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Cotización no encontrada con id: " + id));
 
-        validarAccesoCotizacion(cotizacion, usuarioActual, false);
-
         if (cotizacion.getUsuarioComercial() == null) {
-            cotizacion.setUsuarioComercial(resolverUsuarioComercialCreacion(dto, usuarioActual));
+            Usuario asesorDestino = resolverUsuarioComercialCreacion(dto, usuarioActual);
+            int claimed = cotizacionRepository.asignarSiSinAsignar(id, asesorDestino);
+            if (claimed == 0) {
+                Cotizacion existente = cotizacionRepository.findById(id)
+                        .orElseThrow(() -> new ResourceNotFoundException("Cotización no encontrada con id: " + id));
+                if (existente.getEstado() == EstadoCotizacion.ANULADA) {
+                    throw new BadRequestException("No se puede editar una cotización anulada");
+                }
+                String asignadoA = existente.getUsuarioComercial() != null
+                        ? ": " + existente.getUsuarioComercial().getNombreCompleto()
+                        : "";
+                throw new BadRequestException("Esta solicitud ya fue tomada por otro asesor comercial" + asignadoA);
+            }
+            cotizacion = cotizacionRepository.findById(id)
+                    .orElseThrow(() -> new ResourceNotFoundException("Cotización no encontrada con id: " + id));
+        } else {
+            validarAccesoCotizacion(cotizacion, usuarioActual, false);
         }
 
         if (cotizacion.getEstado() == EstadoCotizacion.APROBADA || cotizacion.getEstado() == EstadoCotizacion.ANULADA) {

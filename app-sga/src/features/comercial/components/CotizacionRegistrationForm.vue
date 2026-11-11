@@ -3,12 +3,25 @@
     <!-- 1. Header Bar Modular de Navegación y Acciones -->
     <CotizacionFormHeader
       :is-edit-mode="isEditMode"
+      :is-unassigned-claim="isUnassignedClaim"
       :codigo-cotizacion="form.codigoCotizacion"
       :submitting="submitting"
       :is-form-ready="isFormReady"
       @cancel="$emit('cancel')"
       @submit="handleSubmit"
     />
+
+    <!-- Banner de Solicitud Sin Asignar (Portal B2B) -->
+    <div v-if="isUnassignedClaim" class="unassigned-claim-banner">
+      <i class="pi pi-info-circle unassigned-icon"></i>
+      <div class="unassigned-body">
+        <span class="unassigned-kicker">SOLICITUD B2B EN ESPERA DE LIQUIDACIÓN COMERCIAL</span>
+        <strong class="unassigned-title">Esta cotización fue generada por el cliente y aún no tiene asesor asignado:</strong>
+        <p class="unassigned-note">
+          Revise los datos operativos y la documentación sustentatoria en los pasos 01 a 03, y defina los honorarios, seguro y aranceles en el paso 04. Al presionar <strong>"Tomar y Guardar Cotización"</strong>, la solicitud se asignará formalmente a su cartera comercial.
+        </p>
+      </div>
+    </div>
 
     <!-- Banner de Error si la validación falla -->
     <div v-if="errorMessage" class="error-banner">
@@ -867,7 +880,7 @@
 
           <div class="block-body">
             <DocumentosUploadPanel
-              :mode="isEditMode ? 'live' : 'deferred'"
+              :mode="isUnassignedClaim ? 'deferred' : (isEditMode ? 'live' : 'deferred')"
               v-model="queuedDocs"
               :entidad-tipo="'COTIZACION'"
               :id-entidad="props.cotizacionToEdit?.idCotizacion"
@@ -1375,6 +1388,7 @@ const onDestinoDepartamentoChange = () => {
 const form = ref(defaultForm())
 
 const isEditMode = computed(() => !!props.cotizacionToEdit && !!props.cotizacionToEdit.idCotizacion)
+const isUnassignedClaim = computed(() => isEditMode.value && !props.cotizacionToEdit?.idUsuarioComercial)
 
 // Computed de Entidades Seleccionadas
 const selectedClientObject = computed(() => {
@@ -1526,6 +1540,11 @@ watch(
     seguroManual.value = false
 
     if (val && val.idCotizacion) {
+      if (!val.idUsuarioComercial) {
+        currentStep.value = 4
+      } else {
+        currentStep.value = 1
+      }
       form.value = {
         codigoCotizacion: val.codigoCotizacion || '',
         idCliente: val.idCliente || '',
@@ -2011,6 +2030,49 @@ defineExpose({
   border: 1px solid var(--color-warning-border);
   border-radius: var(--radius-lg, 0.75rem);
   color: var(--color-warning-text);
+}
+
+.unassigned-claim-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-4, 1rem);
+  padding: var(--space-4, 1rem) var(--space-5, 1.25rem);
+  background: var(--color-info-bg);
+  border: 1px solid var(--color-info-border);
+  border-radius: var(--radius-lg, 0.75rem);
+  color: var(--color-info-text);
+}
+
+.unassigned-icon {
+  font-size: 1.5rem;
+  margin-top: 0.15rem;
+  flex-shrink: 0;
+}
+
+.unassigned-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.unassigned-kicker {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  opacity: 0.9;
+}
+
+.unassigned-title {
+  font-size: 0.9375rem;
+  font-weight: 700;
+}
+
+.unassigned-note {
+  margin: 0.25rem 0 0;
+  font-size: 0.875rem;
+  line-height: 1.45;
+  font-weight: 500;
 }
 
 .revision-icon {

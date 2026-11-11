@@ -42,12 +42,17 @@ public class PortalCotizacionDTO {
     private BigDecimal montoFlete;
     private BigDecimal montoSeguroEstimado;
     private BigDecimal montoHonorarios;
+    private BigDecimal costoTransporteInterno;
     private BigDecimal tasaAdvalorem;
     private BigDecimal tasaPercepcion;
     private BigDecimal montoTributos;
     private BigDecimal totalCotizado;
     private Integer validezDias;
     private LocalDate fechaEmision;
+
+    // Asesor Comercial
+    private Integer idUsuarioComercial;
+    private String usuarioComercialNombre;
 
     // Estados
     private String estado;

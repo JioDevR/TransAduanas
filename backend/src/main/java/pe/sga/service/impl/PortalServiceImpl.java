@@ -178,17 +178,19 @@ public class PortalServiceImpl implements IPortalService {
                 ? puertoRepository.findById(dto.getIdPuertoDestino()).orElse(null)
                 : null;
 
-        BigDecimal fob = dto.getValorFob() != null ? dto.getValorFob() : BigDecimal.ZERO;
-        BigDecimal fleteEstimado = fob.multiply(new BigDecimal("0.10")).setScale(2, RoundingMode.HALF_UP);
-        BigDecimal honorariosEstimados = new BigDecimal("500.00");
-        BigDecimal seguroEstimado = fob.multiply(new BigDecimal("0.0075")).setScale(2, RoundingMode.HALF_UP);
-        BigDecimal tasaAdv = mercancia != null && mercancia.getArancelBasePct() != null ? mercancia.getArancelBasePct() : BigDecimal.ZERO;
-        BigDecimal cif = fob.add(fleteEstimado).add(seguroEstimado);
-        BigDecimal advalorem = cif.multiply(tasaAdv.divide(new BigDecimal("100"), 4, RoundingMode.HALF_UP)).setScale(2, RoundingMode.HALF_UP);
-        BigDecimal baseIgv = cif.add(advalorem);
-        BigDecimal igv = baseIgv.multiply(new BigDecimal("0.18")).setScale(2, RoundingMode.HALF_UP);
-        BigDecimal tributosEstimados = advalorem.add(igv);
-        BigDecimal totalEstimado = fleteEstimado.add(honorariosEstimados).add(tributosEstimados);
+        BigDecimal fob = dto.getValorFob() != null ? dto.getValorFob().setScale(2, RoundingMode.HALF_UP) : BigDecimal.ZERO;
+        BigDecimal flete = dto.getMontoFleteEstimado() != null ? dto.getMontoFleteEstimado().setScale(2, RoundingMode.HALF_UP) : BigDecimal.ZERO;
+        int validez = dto.getValidezDias() != null ? dto.getValidezDias() : 15;
+        boolean conTransporte = Boolean.TRUE.equals(dto.getServicioTransporte());
+
+        String origenDepto = conTransporte && dto.getOrigenDepartamento() != null ? dto.getOrigenDepartamento().trim().toUpperCase() : null;
+        String origenProv = conTransporte && dto.getOrigenProvincia() != null ? dto.getOrigenProvincia().trim().toUpperCase() : null;
+        String destinoDepto = conTransporte && dto.getDestinoDepartamento() != null ? dto.getDestinoDepartamento().trim().toUpperCase() : null;
+        String destinoProv = conTransporte && dto.getDestinoProvincia() != null ? dto.getDestinoProvincia().trim().toUpperCase() : null;
+
+        String obs = (dto.getObservaciones() != null && !dto.getObservaciones().isBlank())
+                ? "Solicitud generada desde el Portal del Cliente: " + dto.getObservaciones().trim()
+                : "Solicitud registrada por el cliente desde Portal B2B";
 
         Cotizacion cotizacion = Cotizacion.builder()
                 .codigoCotizacion(codigoCotizacion)
@@ -199,27 +201,27 @@ public class PortalServiceImpl implements IPortalService {
                 .regimenAduanero(dto.getRegimenAduanero() != null ? dto.getRegimenAduanero().trim().toUpperCase() : "IMPORTACION_DEFINITIVA")
                 .puertoEnvio(puertoEnvio)
                 .puertoDestino(puertoDestino)
-                .servicioTransporte(Boolean.TRUE.equals(dto.getServicioTransporte()))
-                .origenDepartamento(dto.getOrigenDepartamento())
-                .origenProvincia(dto.getOrigenProvincia())
-                .destinoDepartamento(dto.getDestinoDepartamento())
-                .destinoProvincia(dto.getDestinoProvincia())
+                .servicioTransporte(conTransporte)
+                .origenDepartamento(origenDepto)
+                .origenProvincia(origenProv)
+                .destinoDepartamento(destinoDepto)
+                .destinoProvincia(destinoProv)
                 .costoTransporteInterno(BigDecimal.ZERO)
                 .valorFob(fob)
-                .montoFleteEstimado(fleteEstimado)
-                .montoHonorariosEstimado(honorariosEstimados)
-                .montoSeguroEstimado(seguroEstimado)
-                .tasaAdValorem(tasaAdv)
-                .tasaPercepcion(new BigDecimal("3.50"))
-                .montoTributosEstimado(tributosEstimados)
-                .totalCotizado(totalEstimado)
-                .validezDias(15)
+                .montoFleteEstimado(flete)
+                .montoHonorariosEstimado(BigDecimal.ZERO)
+                .montoSeguroEstimado(BigDecimal.ZERO)
+                .tasaAdValorem(BigDecimal.ZERO)
+                .tasaPercepcion(BigDecimal.ZERO)
+                .montoTributosEstimado(BigDecimal.ZERO)
+                .totalCotizado(BigDecimal.ZERO)
+                .validezDias(validez)
                 .fechaEmision(LocalDate.now())
                 .estado(EstadoCotizacion.PENDIENTE)
                 .estadoPago("SIN_PAGO")
                 .totalAbonado(BigDecimal.ZERO)
-                .saldoPendiente(totalEstimado)
-                .observaciones(dto.getObservaciones() != null ? "Solicitud generada desde el Portal del Cliente: " + dto.getObservaciones() : "Solicitud registrada por el cliente desde Portal B2B")
+                .saldoPendiente(BigDecimal.ZERO)
+                .observaciones(obs)
                 .build();
 
         Cotizacion guardada = cotizacionRepository.save(cotizacion);
@@ -655,6 +657,9 @@ public class PortalServiceImpl implements IPortalService {
                 .origenProvincia(c.getOrigenProvincia())
                 .destinoDepartamento(c.getDestinoDepartamento())
                 .destinoProvincia(c.getDestinoProvincia())
+                .costoTransporteInterno(c.getCostoTransporteInterno())
+                .idUsuarioComercial(c.getUsuarioComercial() != null ? c.getUsuarioComercial().getIdUsuario() : null)
+                .usuarioComercialNombre(c.getUsuarioComercial() != null ? c.getUsuarioComercial().getNombreCompleto() : null)
                 .valorFob(c.getValorFob())
                 .montoFlete(c.getMontoFleteEstimado())
                 .montoSeguroEstimado(c.getMontoSeguroEstimado())

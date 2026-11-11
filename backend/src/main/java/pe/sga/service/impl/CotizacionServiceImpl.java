@@ -190,6 +190,10 @@ public class CotizacionServiceImpl implements ICotizacionService {
 
         validarAccesoCotizacion(cotizacion, usuarioActual, false);
 
+        if (cotizacion.getUsuarioComercial() == null) {
+            cotizacion.setUsuarioComercial(resolverUsuarioComercialCreacion(dto, usuarioActual));
+        }
+
         if (cotizacion.getEstado() == EstadoCotizacion.APROBADA || cotizacion.getEstado() == EstadoCotizacion.ANULADA) {
             throw new BadRequestException("No se puede editar una cotización en estado: " + cotizacion.getEstado());
         }
@@ -268,6 +272,10 @@ public class CotizacionServiceImpl implements ICotizacionService {
             dto.getEstado() != EstadoCotizacion.OBSERVADA &&
             dto.getEstado() != EstadoCotizacion.RECHAZADA) {
             throw new BadRequestException("El estado de revisión debe ser APROBADA, OBSERVADA o RECHAZADA");
+        }
+
+        if (dto.getEstado() == EstadoCotizacion.APROBADA && (cotizacion.getUsuarioComercial() == null || cotizacion.getTotalCotizado() == null || cotizacion.getTotalCotizado().compareTo(BigDecimal.ZERO) <= 0)) {
+            throw new BadRequestException("La cotización debe contar con asesor comercial asignado y liquidación económica mayor a $0.00 antes de aprobarse");
         }
 
         if (dto.getEstado() == EstadoCotizacion.OBSERVADA && (dto.getMotivoObservacion() == null || dto.getMotivoObservacion().trim().isEmpty())) {
@@ -439,14 +447,17 @@ public class CotizacionServiceImpl implements ICotizacionService {
             return usuarioRepository.findById(usuarioActual.getIdUsuario())
                     .orElseThrow(() -> new ResourceNotFoundException("Usuario comercial no encontrado con id: " + usuarioActual.getIdUsuario()));
         }
-        Integer idComercial = dto.getIdUsuarioComercial() != null
-                ? dto.getIdUsuarioComercial()
-                : (usuarioActual != null ? usuarioActual.getIdUsuario() : null);
-        if (idComercial == null) {
-            throw new BadRequestException("El idUsuarioComercial es obligatorio");
+        if (dto != null && dto.getIdUsuarioComercial() != null) {
+            Optional<Usuario> usuarioOpt = usuarioRepository.findById(dto.getIdUsuarioComercial());
+            if (usuarioOpt.isPresent() && Boolean.TRUE.equals(usuarioOpt.get().getEstadoActivo())) {
+                return usuarioOpt.get();
+            }
         }
-        return usuarioRepository.findById(idComercial)
-                .orElseThrow(() -> new ResourceNotFoundException("Usuario comercial no encontrado con id: " + idComercial));
+        if (usuarioActual != null && usuarioActual.getIdUsuario() != null) {
+            return usuarioRepository.findById(usuarioActual.getIdUsuario())
+                    .orElseThrow(() -> new ResourceNotFoundException("Usuario comercial no encontrado con id: " + usuarioActual.getIdUsuario()));
+        }
+        throw new BadRequestException("El idUsuarioComercial es obligatorio");
     }
 
     private String generarCodigoCotizacion() {
@@ -526,11 +537,12 @@ public class CotizacionServiceImpl implements ICotizacionService {
             cotizacion.setMontoTributosEstimado(tributos);
             BigDecimal totalFinal = dto.getTotalCotizado() != null && dto.getTotalCotizado().compareTo(BigDecimal.ZERO) > 0 ? dto.getTotalCotizado() : total;
             cotizacion.setTotalCotizado(totalFinal);
-
-            BigDecimal abonado = cotizacion.getTotalAbonado() != null ? cotizacion.getTotalAbonado() : BigDecimal.ZERO;
-            BigDecimal saldo = totalFinal.subtract(abonado);
-            cotizacion.setSaldoPendiente(saldo.compareTo(BigDecimal.ZERO) < 0 ? BigDecimal.ZERO : saldo);
         }
+
+        BigDecimal totalActual = cotizacion.getTotalCotizado() != null ? cotizacion.getTotalCotizado() : BigDecimal.ZERO;
+        BigDecimal abonado = cotizacion.getTotalAbonado() != null ? cotizacion.getTotalAbonado() : BigDecimal.ZERO;
+        BigDecimal saldo = totalActual.subtract(abonado);
+        cotizacion.setSaldoPendiente(saldo.compareTo(BigDecimal.ZERO) < 0 ? BigDecimal.ZERO : saldo);
     }
 
     private List<CotizacionResponseDTO> mapListToResponse(List<Cotizacion> cotizaciones) {

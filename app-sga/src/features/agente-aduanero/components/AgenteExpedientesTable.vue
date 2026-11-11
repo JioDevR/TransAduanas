@@ -16,6 +16,8 @@
         responsiveLayout="scroll"
         class="custom-datatable"
         dataKey="idExpediente"
+        :paginator="expedientes.length > 10"
+        :rows="10"
       >
         <template #empty>
           <div class="empty-state">
@@ -216,7 +218,12 @@ const isExport = (exp) => {
 
 const formatDateShort = (dateStr) => {
   if (!dateStr) return '—'
-  return new Date(dateStr).toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric' })
+  const clean = dateStr.includes('T') ? dateStr.split('T')[0] : dateStr.split(' ')[0]
+  const parts = clean.split('-')
+  if (parts.length === 3) {
+    return `${parts[2]}/${parts[1]}/${parts[0]}`
+  }
+  return dateStr
 }
 
 const getCanalSeverity = (canal) => {

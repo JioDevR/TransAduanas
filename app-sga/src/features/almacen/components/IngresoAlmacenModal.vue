@@ -175,6 +175,10 @@ const props = defineProps({
   visible: {
     type: Boolean,
     default: false
+  },
+  expediente: {
+    type: Object,
+    default: null
   }
 })
 
@@ -212,7 +216,12 @@ const loadAuxData = async () => {
     if (sedesList.value.length > 0 && !form.value.idSedeDeposito) {
       form.value.idSedeDeposito = sedesList.value[0].idSede
     }
-    if (expedientesList.value.length > 0 && !form.value.idExpediente) {
+    if (props.expediente?.idExpediente) {
+      form.value.idExpediente = props.expediente.idExpediente
+      if (!expedientesList.value.some((e) => e.idExpediente === props.expediente.idExpediente)) {
+        expedientesList.value.unshift(props.expediente)
+      }
+    } else if (expedientesList.value.length > 0 && !form.value.idExpediente) {
       form.value.idExpediente = expedientesList.value[0].idExpediente
     }
   } catch (err) {
@@ -226,6 +235,9 @@ watch(
     if (newVal) {
       errorMessage.value = ''
       form.value = defaultForm()
+      if (props.expediente?.idExpediente) {
+        form.value.idExpediente = props.expediente.idExpediente
+      }
       loadAuxData()
     }
   }

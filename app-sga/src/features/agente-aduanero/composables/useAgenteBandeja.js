@@ -48,10 +48,8 @@ export function useAgenteBandeja() {
           params.idAgente = Number(selectedAgenteId.value)
         }
       } else {
-        const idAgente = authStore.user?.idUsuario
-        if (idAgente) {
-          params.idAgente = idAgente
-        }
+        const idAgente = authStore.user?.idUsuario || -1
+        params.idAgente = idAgente
       }
 
       const data = await expedienteService.getExpedientes(params)

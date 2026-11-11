@@ -30,7 +30,7 @@
 
       <!-- 3. Diligencia / Aforo Físico SUNAT (Canal Naranja/Rojo) -->
       <button
-        v-if="expediente.canalSunat === 'ROJO' || expediente.canalSunat === 'NARANJA' || expediente.estadoExpediente === 'INSPECCION'"
+        v-if="(expediente.canalSunat === 'ROJO' || expediente.canalSunat === 'NARANJA' || expediente.estadoExpediente === 'INSPECCION') && expediente.estadoExpediente !== 'CERRADO' && expediente.estadoExpediente !== 'ANULADO'"
         type="button"
         class="action-btn-outline observe"
         title="Registrar Acta de Diligencia / Aforo SUNAT"
@@ -95,7 +95,7 @@
 
       <!-- 2. Registrar Diligencia / Intervención de Campo (Canal Naranja/Rojo) -->
       <button
-        v-if="expediente.canalSunat === 'ROJO' || expediente.canalSunat === 'NARANJA' || expediente.estadoExpediente === 'INSPECCION'"
+        v-if="(expediente.canalSunat === 'ROJO' || expediente.canalSunat === 'NARANJA' || expediente.estadoExpediente === 'INSPECCION') && expediente.estadoExpediente !== 'CERRADO' && expediente.estadoExpediente !== 'ANULADO'"
         type="button"
         class="action-btn-outline observe"
         title="Registrar Acta de Diligencia / Aforo Físico SUNAT"
@@ -195,7 +195,7 @@ const isExport = computed(() => {
 
 const isEmbarcado = computed(() => {
   const obs = props.expediente?.observaciones || ''
-  return Boolean(props.expediente?.naveViaje || props.expediente?.fechaZarpeEtd || obs.includes('EMBARQUE CONFIRMADO'))
+  return obs.includes('EMBARQUE CONFIRMADO')
 })
 
 const isRecepcionado = computed(() => {

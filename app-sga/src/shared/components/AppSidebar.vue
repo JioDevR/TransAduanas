@@ -258,8 +258,23 @@
       <!-- ======================================================== -->
       <!-- SUB-OPCIONES: 03 GESTIÓN ADUANERA -->
       <!-- ======================================================== -->
+      <!-- SUB-OPCIONES: 03 GESTIÓN ADUANERA -->
+      <!-- ======================================================== -->
       <ul v-else-if="navigationStore.currentModule === 'gestion-aduanera'" class="nav-list">
-        <!-- Sub-opción 01: Bandeja de Cotizaciones -->
+        <!-- Sub-opción 01: Dashboard Operativo -->
+        <li class="nav-item">
+          <button
+            type="button"
+            :class="['nav-sub-btn', { active: navigationStore.gestionAduaneraSubOption === 'dashboard' }]"
+            @click="handleGestionAduaneraSubClick('dashboard')"
+            :title="isCollapsed ? 'Dashboard Operativo' : ''"
+          >
+            <span class="nav-num">01</span>
+            <span v-if="!isCollapsed" class="nav-label">Dashboard Operativo</span>
+          </button>
+        </li>
+
+        <!-- Sub-opción 02: Bandeja de Cotizaciones -->
         <li class="nav-item">
           <button
             type="button"
@@ -267,12 +282,12 @@
             @click="handleGestionAduaneraSubClick('cotizaciones')"
             :title="isCollapsed ? 'Bandeja de Cotizaciones' : ''"
           >
-            <span class="nav-num">01</span>
+            <span class="nav-num">02</span>
             <span v-if="!isCollapsed" class="nav-label">Bandeja Cotizaciones</span>
           </button>
         </li>
 
-        <!-- Sub-opción 02: Apertura de Expedientes -->
+        <!-- Sub-opción 03: Apertura de Expedientes -->
         <li class="nav-item">
           <button
             type="button"
@@ -280,12 +295,12 @@
             @click="handleGestionAduaneraSubClick('apertura')"
             :title="isCollapsed ? 'Apertura de Expedientes Aduaneros' : ''"
           >
-            <span class="nav-num">02</span>
+            <span class="nav-num">03</span>
             <span v-if="!isCollapsed" class="nav-label">Apertura Expedientes</span>
           </button>
         </li>
 
-        <!-- Sub-opción 03: Gestión de Expedientes -->
+        <!-- Sub-opción 04: Gestión de Expedientes -->
         <li class="nav-item">
           <button
             type="button"
@@ -293,12 +308,12 @@
             @click="handleGestionAduaneraSubClick('expedientes')"
             :title="isCollapsed ? 'Gestión de Expedientes' : ''"
           >
-            <span class="nav-num">03</span>
+            <span class="nav-num">04</span>
             <span v-if="!isCollapsed" class="nav-label">Gestión de Expedientes</span>
           </button>
         </li>
 
-        <!-- Sub-opción 04: Declaraciones DAM (Liquidación) -->
+        <!-- Sub-opción 05: Declaraciones DAM (Liquidación) -->
         <li class="nav-item">
           <button
             type="button"
@@ -306,12 +321,12 @@
             @click="handleGestionAduaneraSubClick('declaraciones')"
             :title="isCollapsed ? 'Declaraciones DAM' : ''"
           >
-            <span class="nav-num">04</span>
+            <span class="nav-num">05</span>
             <span v-if="!isCollapsed" class="nav-label">Declaraciones DAM</span>
           </button>
         </li>
 
-        <!-- Sub-opción 05: Clasificación Arancelaria -->
+        <!-- Sub-opción 06: Clasificación Arancelaria -->
         <li class="nav-item">
           <button
             type="button"
@@ -319,12 +334,12 @@
             @click="handleGestionAduaneraSubClick('clasificacion')"
             :title="isCollapsed ? 'Clasificación Arancelaria' : ''"
           >
-            <span class="nav-num">05</span>
+            <span class="nav-num">06</span>
             <span v-if="!isCollapsed" class="nav-label">Clasificación Arancelaria</span>
           </button>
         </li>
 
-        <!-- Sub-opción 06: Cálculo de Tributos -->
+        <!-- Sub-opción 07: Cálculo de Tributos -->
         <li class="nav-item">
           <button
             type="button"
@@ -332,7 +347,7 @@
             @click="handleGestionAduaneraSubClick('tributos')"
             :title="isCollapsed ? 'Cálculo de Tributos' : ''"
           >
-            <span class="nav-num">06</span>
+            <span class="nav-num">07</span>
             <span v-if="!isCollapsed" class="nav-label">Cálculo de Tributos</span>
           </button>
         </li>
@@ -342,40 +357,52 @@
       <!-- SUB-OPCIONES: 04 AGENTE ADUANERO -->
       <!-- ======================================================== -->
       <ul v-else-if="navigationStore.currentModule === 'agente-aduanero'" class="nav-list">
-        <!-- Sub-opción 01: Dashboard de Almacén -->
+        <!-- Sub-opción 01: Todos Mis Despachos -->
         <li class="nav-item">
           <button
             type="button"
-            :class="['nav-sub-btn', { active: navigationStore.agenteAduaneroSubOption === 'almacen' }]"
-            @click="handleAgenteAduaneroSubClick('almacen')"
-            :title="isCollapsed ? 'Dashboard de Almacén' : ''"
+            :class="['nav-sub-btn', { active: navigationStore.agenteAduaneroSubOption === 'todos' }]"
+            @click="handleAgenteAduaneroSubClick('todos')"
+            :title="isCollapsed ? 'Todos Mis Despachos' : ''"
           >
             <span class="nav-num">01</span>
-            <span v-if="!isCollapsed" class="nav-label">Dashboard de Almacén</span>
+            <span v-if="!isCollapsed" class="nav-label">Todos Mis Despachos</span>
           </button>
         </li>
-        <!-- Sub-opción 02: Recepción Contenedores -->
+        <!-- Sub-opción 02: En Tránsito / Arribo -->
         <li class="nav-item">
           <button
             type="button"
-            :class="['nav-sub-btn', { active: navigationStore.agenteAduaneroSubOption === 'recepcion' }]"
-            @click="handleAgenteAduaneroSubClick('recepcion')"
-            :title="isCollapsed ? 'Recepción Contenedores' : ''"
+            :class="['nav-sub-btn', { active: navigationStore.agenteAduaneroSubOption === 'transito' }]"
+            @click="handleAgenteAduaneroSubClick('transito')"
+            :title="isCollapsed ? 'En Tránsito / Arribo' : ''"
           >
             <span class="nav-num">02</span>
-            <span v-if="!isCollapsed" class="nav-label">Recepción Contenedores</span>
+            <span v-if="!isCollapsed" class="nav-label">En Tránsito / Arribo</span>
           </button>
         </li>
-        <!-- Sub-opción 03: Control de Bultos & Salidas -->
+        <!-- Sub-opción 03: Aforo & Diligencia SUNAT -->
         <li class="nav-item">
           <button
             type="button"
-            :class="['nav-sub-btn', { active: navigationStore.agenteAduaneroSubOption === 'bultos' }]"
-            @click="handleAgenteAduaneroSubClick('bultos')"
-            :title="isCollapsed ? 'Control de Bultos' : ''"
+            :class="['nav-sub-btn', { active: navigationStore.agenteAduaneroSubOption === 'inspeccion' }]"
+            @click="handleAgenteAduaneroSubClick('inspeccion')"
+            :title="isCollapsed ? 'Aforo & Diligencia SUNAT' : ''"
           >
             <span class="nav-num">03</span>
-            <span v-if="!isCollapsed" class="nav-label">Control de Bultos</span>
+            <span v-if="!isCollapsed" class="nav-label">Aforo & Diligencia SUNAT</span>
+          </button>
+        </li>
+        <!-- Sub-opción 04: Con Levante & Despacho -->
+        <li class="nav-item">
+          <button
+            type="button"
+            :class="['nav-sub-btn', { active: navigationStore.agenteAduaneroSubOption === 'levante' }]"
+            @click="handleAgenteAduaneroSubClick('levante')"
+            :title="isCollapsed ? 'Con Levante & Despacho' : ''"
+          >
+            <span class="nav-num">04</span>
+            <span v-if="!isCollapsed" class="nav-label">Con Levante & Despacho</span>
           </button>
         </li>
       </ul>
@@ -473,7 +500,20 @@
           </button>
         </li>
 
-        <!-- Sub-opción 02: Pagos Pre-Expedientes (Cotizaciones Aprobadas) -->
+        <!-- Sub-opción 02: Revisión de Abonos B2B -->
+        <li class="nav-item">
+          <button
+            type="button"
+            :class="['nav-sub-btn', { active: navigationStore.finanzasSubOption === 'abonos-b2b' }]"
+            @click="handleFinanzasSubClick('abonos-b2b')"
+            :title="isCollapsed ? 'Revisión de Abonos B2B' : ''"
+          >
+            <span class="nav-num">02</span>
+            <span v-if="!isCollapsed" class="nav-label">Revisión de Abonos B2B</span>
+          </button>
+        </li>
+
+        <!-- Sub-opción 03: Pagos Pre-Expedientes (Cotizaciones Aprobadas) -->
         <li class="nav-item">
           <button
             type="button"
@@ -481,12 +521,12 @@
             @click="handleFinanzasSubClick('pre-expedientes')"
             :title="isCollapsed ? 'Pagos Pre-Expedientes' : ''"
           >
-            <span class="nav-num">02</span>
+            <span class="nav-num">03</span>
             <span v-if="!isCollapsed" class="nav-label">Pagos Pre-Expedientes</span>
           </button>
         </li>
 
-        <!-- Sub-opción 03: Liquidación de Cuentas -->
+        <!-- Sub-opción 04: Liquidación de Cuentas -->
         <li class="nav-item">
           <button
             type="button"
@@ -494,12 +534,12 @@
             @click="handleFinanzasSubClick('liquidaciones')"
             :title="isCollapsed ? 'Liquidación de Cuentas' : ''"
           >
-            <span class="nav-num">03</span>
+            <span class="nav-num">04</span>
             <span v-if="!isCollapsed" class="nav-label">Liquidación de Cuentas</span>
           </button>
         </li>
 
-        <!-- Sub-opción 04: Facturación & Conciliación -->
+        <!-- Sub-opción 05: Facturación & Conciliación -->
         <li class="nav-item">
           <button
             type="button"
@@ -507,12 +547,12 @@
             @click="handleFinanzasSubClick('conciliacion')"
             :title="isCollapsed ? 'Facturación & Conciliación' : ''"
           >
-            <span class="nav-num">04</span>
+            <span class="nav-num">05</span>
             <span v-if="!isCollapsed" class="nav-label">Facturación & Conciliación</span>
           </button>
         </li>
 
-        <!-- Sub-opción 05: Acción Rápida - Registrar Anticipo / Abono -->
+        <!-- Sub-opción 06: Acción Rápida - Registrar Anticipo / Abono -->
         <li class="nav-item">
           <button
             type="button"
@@ -629,7 +669,7 @@ const handleModuleSelectChange = () => {
       router.push('/gestion-aduanera')
     }
   } else if (mod === 'agente-aduanero') {
-    navigationStore.setAgenteAduaneroSubOption('almacen')
+    navigationStore.setAgenteAduaneroSubOption('todos')
     if (route.path !== '/agente-aduanero') {
       router.push('/agente-aduanero')
     }

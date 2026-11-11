@@ -221,39 +221,39 @@ const isRecepcionado = computed(() => {
   font-size: 0.6875rem;
   font-weight: 700;
   border-radius: 4px;
-  border: 1px solid var(--color-border, #cbd5e1);
-  background: var(--color-surface, #ffffff);
-  color: var(--color-text-primary, #334155);
+  border: 1px solid var(--color-border, #444138);
+  background: var(--color-bg-base, #1e1e1b);
+  color: var(--color-text-main, #f6f2ea);
   cursor: pointer;
   white-space: nowrap;
   transition: all 0.15s ease;
 }
 
 .action-btn-outline:hover {
-  background: #f8fafc;
-  border-color: #94a3b8;
+  background: var(--color-bg-subtle, #2e2d27);
+  border-color: var(--color-border-strong, #5c564a);
 }
 
 .action-btn-outline.approve {
-  border-color: #86efac;
-  color: #15803d;
-  background: #f0fdf4;
+  border-color: var(--color-success-border, #2d5738);
+  color: var(--color-success-text, #7ee79d);
+  background: var(--color-success-bg, #1c2b1f);
 }
 
 .action-btn-outline.approve:hover {
-  background: #dcfce7;
+  background: rgba(16, 185, 129, 0.25);
   border-color: #4ade80;
 }
 
 .action-btn-outline.observe {
-  border-color: #fde047;
-  color: #a16207;
-  background: #fefce8;
+  border-color: var(--color-warning-border, #695222);
+  color: var(--color-warning-text, #fcd34d);
+  background: var(--color-warning-bg, #342914);
 }
 
 .action-btn-outline.observe:hover {
-  background: #fef9c3;
-  border-color: #eab308;
+  background: rgba(245, 158, 11, 0.25);
+  border-color: #f59e0b;
 }
 
 .action-btn-icon {
@@ -263,17 +263,17 @@ const isRecepcionado = computed(() => {
   width: 28px;
   height: 28px;
   border-radius: 4px;
-  border: 1px solid var(--color-border, #cbd5e1);
-  background: var(--color-surface, #ffffff);
-  color: var(--color-text-muted, #64748b);
+  border: 1px solid var(--color-border, #444138);
+  background: var(--color-bg-base, #1e1e1b);
+  color: var(--color-text-muted, #c4bcab);
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .action-btn-icon:hover {
-  color: var(--color-accent, #c96442);
-  border-color: var(--color-accent, #c96442);
-  background: #fdfaf8;
+  color: var(--color-primary, #d6b476);
+  border-color: var(--color-primary, #d6b476);
+  background: var(--color-bg-subtle, #2e2d27);
 }
 
 .action-btn-primary {
@@ -283,15 +283,15 @@ const isRecepcionado = computed(() => {
   width: 28px;
   height: 28px;
   border-radius: 4px;
-  border: 1px solid var(--color-accent, #c96442);
-  background: var(--color-accent, #c96442);
-  color: #ffffff;
+  border: 1px solid var(--color-primary, #d6b476);
+  background: var(--color-primary, #d6b476);
+  color: var(--color-primary-text, #1d1b15);
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .action-btn-primary:hover {
-  background: #b55435;
-  border-color: #b55435;
+  background: var(--color-primary-hover, #e5c78f);
+  border-color: var(--color-primary-hover, #e5c78f);
 }
 </style>

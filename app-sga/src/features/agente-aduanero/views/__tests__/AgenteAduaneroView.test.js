@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import AgenteAduaneroView from '../AgenteAduaneroView.vue'
+import AgenteDashboardPanel from '../../components/AgenteDashboardPanel.vue'
 import AgenteHeaderToolbar from '../../components/AgenteHeaderToolbar.vue'
 import AgenteKpiGrid from '../../components/AgenteKpiGrid.vue'
 import AgenteExpedientesTable from '../../components/AgenteExpedientesTable.vue'
@@ -10,6 +11,12 @@ describe('Portal Agente Aduanero - Definición de Componentes', () => {
     expect(AgenteAduaneroView).toBeDefined()
     expect(typeof AgenteAduaneroView).toBe('object')
     expect(AgenteAduaneroView.__name).toBe('AgenteAduaneroView')
+  })
+
+  it('exporta AgenteDashboardPanel como un componente Vue 3 válido', () => {
+    expect(AgenteDashboardPanel).toBeDefined()
+    expect(typeof AgenteDashboardPanel).toBe('object')
+    expect(AgenteDashboardPanel.__name).toBe('AgenteDashboardPanel')
   })
 
   it('exporta AgenteHeaderToolbar como un componente Vue 3 válido', () => {

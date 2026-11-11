@@ -357,7 +357,19 @@
       <!-- SUB-OPCIONES: 04 AGENTE ADUANERO -->
       <!-- ======================================================== -->
       <ul v-else-if="navigationStore.currentModule === 'agente-aduanero'" class="nav-list">
-        <!-- Sub-opción 01: Todos Mis Despachos -->
+        <!-- Sub-opción 01: Dashboard Operativo -->
+        <li class="nav-item">
+          <button
+            type="button"
+            :class="['nav-sub-btn', { active: navigationStore.agenteAduaneroSubOption === 'dashboard' }]"
+            @click="handleAgenteAduaneroSubClick('dashboard')"
+            :title="isCollapsed ? 'Dashboard Operativo' : ''"
+          >
+            <span class="nav-num">01</span>
+            <span v-if="!isCollapsed" class="nav-label">Dashboard Operativo</span>
+          </button>
+        </li>
+        <!-- Sub-opción 02: Todos Mis Despachos -->
         <li class="nav-item">
           <button
             type="button"
@@ -365,11 +377,11 @@
             @click="handleAgenteAduaneroSubClick('todos')"
             :title="isCollapsed ? 'Todos Mis Despachos' : ''"
           >
-            <span class="nav-num">01</span>
+            <span class="nav-num">02</span>
             <span v-if="!isCollapsed" class="nav-label">Todos Mis Despachos</span>
           </button>
         </li>
-        <!-- Sub-opción 02: En Tránsito / Arribo -->
+        <!-- Sub-opción 03: En Tránsito / Arribo -->
         <li class="nav-item">
           <button
             type="button"
@@ -377,11 +389,11 @@
             @click="handleAgenteAduaneroSubClick('transito')"
             :title="isCollapsed ? 'En Tránsito / Arribo' : ''"
           >
-            <span class="nav-num">02</span>
+            <span class="nav-num">03</span>
             <span v-if="!isCollapsed" class="nav-label">En Tránsito / Arribo</span>
           </button>
         </li>
-        <!-- Sub-opción 03: Aforo & Diligencia SUNAT -->
+        <!-- Sub-opción 04: Aforo & Diligencia SUNAT -->
         <li class="nav-item">
           <button
             type="button"
@@ -389,11 +401,11 @@
             @click="handleAgenteAduaneroSubClick('inspeccion')"
             :title="isCollapsed ? 'Aforo & Diligencia SUNAT' : ''"
           >
-            <span class="nav-num">03</span>
+            <span class="nav-num">04</span>
             <span v-if="!isCollapsed" class="nav-label">Aforo & Diligencia SUNAT</span>
           </button>
         </li>
-        <!-- Sub-opción 04: Con Levante & Despacho -->
+        <!-- Sub-opción 05: Con Levante & Despacho -->
         <li class="nav-item">
           <button
             type="button"
@@ -401,7 +413,7 @@
             @click="handleAgenteAduaneroSubClick('levante')"
             :title="isCollapsed ? 'Con Levante & Despacho' : ''"
           >
-            <span class="nav-num">04</span>
+            <span class="nav-num">05</span>
             <span v-if="!isCollapsed" class="nav-label">Con Levante & Despacho</span>
           </button>
         </li>
@@ -669,7 +681,7 @@ const handleModuleSelectChange = () => {
       router.push('/gestion-aduanera')
     }
   } else if (mod === 'agente-aduanero') {
-    navigationStore.setAgenteAduaneroSubOption('todos')
+    navigationStore.setAgenteAduaneroSubOption('dashboard')
     if (route.path !== '/agente-aduanero') {
       router.push('/agente-aduanero')
     }
@@ -766,8 +778,10 @@ const handleGestionAduaneraSubClick = (subOption) => {
 const handleAgenteAduaneroSubClick = (subOption) => {
   navigationStore.setActiveModule('agente-aduanero')
   navigationStore.setAgenteAduaneroSubOption(subOption)
-  if (route.path !== '/agente-aduanero' || route.query.tab !== subOption) {
-    router.push({ path: '/agente-aduanero', query: { tab: subOption } })
+  const targetQuery = subOption === 'dashboard' ? {} : { tab: subOption }
+  const currentTab = route.query.tab || 'dashboard'
+  if (route.path !== '/agente-aduanero' || currentTab !== subOption) {
+    router.push({ path: '/agente-aduanero', query: targetQuery })
   }
 }
 

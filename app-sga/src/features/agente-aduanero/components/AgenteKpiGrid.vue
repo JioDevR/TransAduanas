@@ -11,7 +11,7 @@
         <i class="pi pi-folder-open kpi-icon accent"></i>
       </div>
       <div class="kpi-main-stat">
-        <span class="kpi-value font-mono">{{ counts.todos }}</span>
+        <span class="kpi-value font-mono text-accent">{{ counts.todos }}</span>
         <span class="kpi-badge accent">En Bandeja</span>
       </div>
       <div class="kpi-footer-note">
@@ -34,7 +34,7 @@
         <span class="kpi-badge pending">En Nave / Recojo</span>
       </div>
       <div class="kpi-footer-note">
-        <span>Aguardando arribo o numeración DAM</span>
+        <span>Aguardando arribo o DAM</span>
       </div>
     </div>
 
@@ -53,7 +53,7 @@
         <span class="kpi-badge warning">Canal Naranja/Rojo</span>
       </div>
       <div class="kpi-footer-note">
-        <span>Requiere diligencia documental o física</span>
+        <span>Requiere diligencia</span>
       </div>
     </div>
 
@@ -72,7 +72,7 @@
         <span class="kpi-badge success">Listo Salida</span>
       </div>
       <div class="kpi-footer-note">
-        <span>Liberado para retiro o embarque</span>
+        <span>Liberado para retiro/embarque</span>
       </div>
     </div>
   </div>
@@ -106,8 +106,8 @@ defineEmits(['select-tab'])
 }
 
 .kpi-card {
-  background: var(--color-surface, #ffffff);
-  border: 1px solid var(--color-border, #e5e7eb);
+  background: var(--color-bg-surface, #282723);
+  border: 1px solid var(--color-border, #444138);
   border-radius: 8px;
   padding: 1rem 1.25rem;
   display: flex;
@@ -116,12 +116,12 @@ defineEmits(['select-tab'])
   cursor: pointer;
   transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
   user-select: none;
-  position: relative;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
 .kpi-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
 }
 
 .kpi-card.active {
@@ -129,23 +129,23 @@ defineEmits(['select-tab'])
 }
 
 .kpi-card.accent-card.active {
-  border-color: var(--color-accent, #c96442);
-  background: #fdfaf8;
+  border-color: var(--color-accent-copper, #fb923c);
+  background: rgba(251, 146, 60, 0.08);
 }
 
 .kpi-card.pending-card.active {
-  border-color: #0284c7;
-  background: #f0f9ff;
+  border-color: var(--color-info-text, #93c5fd);
+  background: rgba(147, 197, 253, 0.08);
 }
 
 .kpi-card.warning-card.active {
-  border-color: #d97706;
-  background: #fffbeb;
+  border-color: var(--color-warning-text, #fcd34d);
+  background: rgba(252, 211, 77, 0.08);
 }
 
 .kpi-card.success-card.active {
-  border-color: #16a34a;
-  background: #f0fdf4;
+  border-color: var(--color-success-text, #7ee79d);
+  background: rgba(126, 231, 157, 0.08);
 }
 
 .kpi-card-header {
@@ -159,13 +159,13 @@ defineEmits(['select-tab'])
   font-family: var(--font-mono, monospace);
   font-size: 0.6875rem;
   font-weight: 700;
-  color: var(--color-text-muted, #94a3b8);
+  color: var(--color-text-subtle, #968e7e);
 }
 
 .kpi-label {
   font-size: 0.8125rem;
-  font-weight: 600;
-  color: var(--color-text-primary, #1e293b);
+  font-weight: 700;
+  color: var(--color-text-main, #f6f2ea);
   flex: 1;
   margin-left: 0.5rem;
 }
@@ -174,10 +174,10 @@ defineEmits(['select-tab'])
   font-size: 1rem;
 }
 
-.kpi-icon.accent { color: var(--color-accent, #c96442); }
-.kpi-icon.pending { color: #0284c7; }
-.kpi-icon.warning { color: #d97706; }
-.kpi-icon.success { color: #16a34a; }
+.kpi-icon.accent { color: var(--color-accent-copper, #fb923c); }
+.kpi-icon.pending { color: var(--color-info-text, #93c5fd); }
+.kpi-icon.warning { color: var(--color-warning-text, #fcd34d); }
+.kpi-icon.success { color: var(--color-success-text, #7ee79d); }
 
 .kpi-main-stat {
   display: flex;
@@ -187,15 +187,16 @@ defineEmits(['select-tab'])
 }
 
 .kpi-value {
-  font-size: 1.75rem;
+  font-size: 1.85rem;
   font-weight: 800;
   line-height: 1;
-  color: var(--color-text-primary, #1e293b);
+  font-family: var(--font-mono, monospace);
 }
 
-.kpi-value.text-pending { color: #0284c7; }
-.kpi-value.text-warning { color: #d97706; }
-.kpi-value.text-success { color: #16a34a; }
+.kpi-value.text-accent { color: var(--color-accent-copper, #fb923c); }
+.kpi-value.text-pending { color: var(--color-info-text, #93c5fd); }
+.kpi-value.text-warning { color: var(--color-warning-text, #fcd34d); }
+.kpi-value.text-success { color: var(--color-success-text, #7ee79d); }
 
 .kpi-badge {
   font-size: 0.6875rem;
@@ -207,29 +208,33 @@ defineEmits(['select-tab'])
 }
 
 .kpi-badge.accent {
-  background: #fdf0ec;
-  color: var(--color-accent, #c96442);
+  background: rgba(251, 146, 60, 0.15);
+  color: var(--color-accent-copper, #fb923c);
+  border: 1px solid rgba(251, 146, 60, 0.3);
 }
 
 .kpi-badge.pending {
-  background: #e0f2fe;
-  color: #0369a1;
+  background: var(--color-info-bg, #172635);
+  color: var(--color-info-text, #93c5fd);
+  border: 1px solid var(--color-info-border, #254b6d);
 }
 
 .kpi-badge.warning {
-  background: #fef3c7;
-  color: #b45309;
+  background: var(--color-warning-bg, #342914);
+  color: var(--color-warning-text, #fcd34d);
+  border: 1px solid var(--color-warning-border, #695222);
 }
 
 .kpi-badge.success {
-  background: #dcfce7;
-  color: #15803d;
+  background: var(--color-success-bg, #1c2b1f);
+  color: var(--color-success-text, #7ee79d);
+  border: 1px solid var(--color-success-border, #2d5738);
 }
 
 .kpi-footer-note {
   font-size: 0.6875rem;
-  color: var(--color-text-muted, #64748b);
-  border-top: 1px dashed var(--color-border, #e5e7eb);
+  color: var(--color-text-subtle, #968e7e);
+  border-top: 1px dashed var(--color-border, #444138);
   padding-top: 0.5rem;
   margin-top: 0.25rem;
 }

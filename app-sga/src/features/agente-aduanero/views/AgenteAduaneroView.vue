@@ -1,40 +1,54 @@
 <template>
   <div class="agente-portal-view fade-in">
-    <!-- 1. Barra de Herramientas y Filtros Superiores -->
-    <AgenteHeaderToolbar
-      v-model:searchQuery="searchQuery"
-      v-model:filterRegimen="filterRegimen"
-      v-model:filterCanal="filterCanal"
-      v-model:selectedAgenteId="selectedAgenteId"
+    <!-- ============================================================== -->
+    <!-- CASO A: DASHBOARD INICIAL DEL AGENTE (SOLO AQUÍ ESTÁN LOS KPIS)-->
+    <!-- ============================================================== -->
+    <AgenteDashboardPanel
+      v-if="activeTab === 'dashboard'"
+      :expedientes="expedientes"
+      :counts="kpiCounts"
+      :selectedAgenteId="selectedAgenteId"
       :agentesList="agentesList"
       :esSupervisorOAdmin="esSupervisorOAdmin"
       :loading="loading"
+      @navigate="handleTabChange"
       @refresh="loadData"
+      @update:selectedAgenteId="selectedAgenteId = $event"
     />
 
-    <!-- 2. Tarjetas KPI Interactivas / Filtros Rápidos de Fases -->
-    <AgenteKpiGrid
-      :counts="kpiCounts"
-      :activeTab="activeTab"
-      @select-tab="handleTabChange"
-    />
+    <!-- ============================================================== -->
+    <!-- CASO B: BANDEJA DE EXPEDIENTES (TODOS, TRÁNSITO, AFORO, LEVANTE)-->
+    <!-- ============================================================== -->
+    <template v-else>
+      <!-- 1. Barra de Herramientas y Filtros Superiores -->
+      <AgenteHeaderToolbar
+        v-model:searchQuery="searchQuery"
+        v-model:filterRegimen="filterRegimen"
+        v-model:filterCanal="filterCanal"
+        v-model:selectedAgenteId="selectedAgenteId"
+        :agentesList="agentesList"
+        :esSupervisorOAdmin="esSupervisorOAdmin"
+        :loading="loading"
+        @refresh="loadData"
+      />
 
-    <!-- 3. Tabla Principal de Expedientes Asignados -->
-    <AgenteExpedientesTable
-      :expedientes="filteredExpedientes"
-      :loading="loading"
-      @transito="openTransitoModal"
-      @diligencia="openDiligenciaModal"
-      @solicitar-transporte="openSolicitudTransporteModal"
-      @retiro-directo="openRetiroDirectoModal"
-      @ingreso-almacen="openIngresoAlmacenModal"
-      @recojo-exportacion="openRecojoExportacionModal"
-      @ingreso-origen="openIngresoOrigenModal"
-      @embarque="openEmbarqueModal"
-      @recepcion-exterior="openRecepcionExteriorModal"
-      @documentos="openDocumentosExpediente"
-      @detalle="openDetalleExp"
-    />
+      <!-- 2. Tabla Principal de Expedientes Asignados -->
+      <AgenteExpedientesTable
+        :expedientes="filteredExpedientes"
+        :loading="loading"
+        @transito="openTransitoModal"
+        @diligencia="openDiligenciaModal"
+        @solicitar-transporte="openSolicitudTransporteModal"
+        @retiro-directo="openRetiroDirectoModal"
+        @ingreso-almacen="openIngresoAlmacenModal"
+        @recojo-exportacion="openRecojoExportacionModal"
+        @ingreso-origen="openIngresoOrigenModal"
+        @embarque="openEmbarqueModal"
+        @recepcion-exterior="openRecepcionExteriorModal"
+        @documentos="openDocumentosExpediente"
+        @detalle="openDetalleExp"
+      />
+    </template>
 
     <!-- ============================================================== -->
     <!-- MODALES OPERATIVOS AUXILIARES (IMPORTACIÓN Y COMUNES)           -->
@@ -146,8 +160,8 @@ import { useNavigationStore } from '@/core/stores/navigationStore'
 import { useAgenteBandeja } from '../composables/useAgenteBandeja'
 
 // Componentes de la vista
+import AgenteDashboardPanel from '../components/AgenteDashboardPanel.vue'
 import AgenteHeaderToolbar from '../components/AgenteHeaderToolbar.vue'
-import AgenteKpiGrid from '../components/AgenteKpiGrid.vue'
 import AgenteExpedientesTable from '../components/AgenteExpedientesTable.vue'
 
 // Modales operativos compartidos
@@ -172,6 +186,7 @@ const { showSuccess, showError } = useNotification()
 const {
   loading,
   errorMessage,
+  expedientes,
   agentesList,
   activeTab,
   filterRegimen,
@@ -340,9 +355,12 @@ watch(selectedAgenteId, () => {
 watch(
   () => route.query.tab,
   (newTab) => {
-    if (newTab && ['todos', 'transito', 'inspeccion', 'levante'].includes(newTab)) {
+    if (newTab && ['dashboard', 'todos', 'transito', 'inspeccion', 'levante'].includes(newTab)) {
       cambiarTab(newTab)
       navigationStore.setAgenteAduaneroSubOption(newTab)
+    } else if (!newTab) {
+      cambiarTab('dashboard')
+      navigationStore.setAgenteAduaneroSubOption('dashboard')
     }
   },
   { immediate: true }

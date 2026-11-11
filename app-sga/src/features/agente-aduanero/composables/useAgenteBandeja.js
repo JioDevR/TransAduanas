@@ -11,8 +11,8 @@ export function useAgenteBandeja() {
   const expedientes = ref([])
   const agentesList = ref([])
 
-  // Pestaña activa ('todos' | 'transito' | 'inspeccion' | 'levante')
-  const activeTab = ref('todos')
+  // Pestaña activa ('dashboard' | 'todos' | 'transito' | 'inspeccion' | 'levante')
+  const activeTab = ref('dashboard')
 
   // Filtros reactivos
   const filterRegimen = ref('')

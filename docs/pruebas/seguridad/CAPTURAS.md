@@ -7,11 +7,18 @@ git clone --branch pruebas/seguridad-transaduanas --single-branch https://github
 cd .\TransAduanas-seguridad
 ```
 
-Abre el clon en VS Code. Si ya lo tenías, entra en la rama `pruebas/seguridad-transaduanas` y ejecuta `git pull --ff-only` desde el clon para actualizar la guía.
+Abre el clon en VS Code. Si ya lo tenías, abre PowerShell en la carpeta del proyecto y actualiza la rama:
 
-## 1. Backend
+```powershell
+git switch pruebas/seguridad-transaduanas
+git pull --ff-only origin pruebas/seguridad-transaduanas
+```
 
-Copia **todo** el bloque en una terminal PowerShell. Usa la ruta de tu clon en la primera asignación de `$raiz`. El ejemplo apunta a `Music\TransAduanas-seguridad`. Este bloque prepara las variables, compila con Maven y ejecuta los diez casos de backend. Conserva la misma terminal para los demás apartados. Si abres otra terminal, vuelve a pegar el bloque completo.
+## Preparación común
+
+Usa PowerShell con JDK 21 y Node.js 24. El bloque prepara las variables y compila con Maven. Cambia la primera ruta si guardaste el clon en otra carpeta. Ejecuta este bloque una vez por terminal, incluso si vas directo a Postman.
+
+La primera compilación puede descargar Maven y las dependencias del proyecto. Continúa cuando aparezca `BUILD SUCCESS`.
 
 ```powershell
 . {
@@ -33,7 +40,18 @@ Copia **todo** el bloque en una terminal PowerShell. Usa la ruta de tu clon en l
     if ($LASTEXITCODE -ne 0) { throw 'Maven falló. Revisa el primer ERROR de la salida.' }
     $deps = (Get-Content -LiteralPath $archivoDeps -Raw -ErrorAction Stop).Trim()
     "$backend\target\classes;$deps" | Set-Content -LiteralPath $cp -Encoding utf8 -ErrorAction Stop
+}
+```
 
+Si Node muestra `Cannot find module 'C:\seguridad-http.mjs'`, vuelve a pegar la preparación completa en esa terminal y continúa con el apartado que necesitas.
+
+## 1. Backend
+
+Ejecuta este bloque en la misma terminal para obtener los diez resultados:
+
+```powershell
+. {
+    Set-Location -LiteralPath $backend -ErrorAction Stop
     node $script $backend $cp "$resultado\http.json" 2>&1 |
         Tee-Object -FilePath "$resultado\ejecucion-http.txt"
     if ($LASTEXITCODE -ne 0) { throw "La ejecución se interrumpió. Revisa $resultado\ejecucion-http.txt." }
@@ -103,9 +121,13 @@ Captura la tabla de `SIS01` a `SIS08`. Para explicar el flujo de la cuenta, señ
 
 ## 5. Prueba general sin Postman
 
-Después de ejecutar el bloque 1 y `npm.cmd ci` en `app-sga`, vuelve a esa misma terminal. Usa la ruta de MySQL del apartado 3:
+Después de la preparación común y de instalar las dependencias de `app-sga` con `npm.cmd ci`, vuelve a esa misma terminal. Usa la ruta de MySQL del apartado 3:
 
 ```powershell
+$mysqlBin = 'C:\Program Files\MySQL\MySQL Server 8.4\bin'
+if (-not (Test-Path (Join-Path $mysqlBin 'mysqld.exe'))) {
+  throw 'Corrige la ruta de la carpeta bin de MySQL en la primera línea.'
+}
 Set-Location $raiz
 node "$kit\seguridad-general.mjs" $backend $cp $mysqlBin $resultado 2>&1 |
   Tee-Object -FilePath "$resultado\ejecucion-general.txt"
@@ -117,7 +139,17 @@ Captura las seis líneas del resumen. Incluye las cuatro de Backend, Frontend SG
 
 ## 6. Postman
 
-Para repetir los **16 casos** por consola con Newman, ejecuta primero `npm.cmd ci` en `app-sga`, como en el apartado 2. La colección se divide en Backend, Frontend, Base de datos por API y Sistema, con cuatro casos por carpeta:
+Después de la preparación común, instala las dependencias de `app-sga`. Este paso sirve para Newman y Postman Desktop:
+
+```powershell
+Set-Location -LiteralPath (Join-Path $raiz 'app-sga') -ErrorAction Stop
+npm.cmd ci
+if ($LASTEXITCODE -ne 0) { throw 'npm ci falló en app-sga.' }
+```
+
+### Por consola con Newman
+
+La colección contiene **16 solicitudes**. Hay cuatro por bloque (Backend, Frontend, Base de datos por API y Sistema).
 
 ```powershell
 Set-Location $backend
@@ -128,19 +160,23 @@ node "$kit\seguridad-http.mjs" $backend $cp "$resultado\http-postman.json" --pos
 if ($LASTEXITCODE -ne 0) { throw 'Revisa ejecucion-postman.txt.' }
 ```
 
-Para sacar una captura en la aplicación **Postman Desktop**, arranca solo el servidor de laboratorio con este comando:
+### En Postman Desktop
+
+Para sacar la captura en la aplicación, arranca el servidor de laboratorio en la misma terminal:
 
 ```powershell
 Set-Location $backend
 node "$kit\seguridad-http.mjs" $backend $cp "$resultado\http-postman.json" --postman-servidor
 ```
 
-1. Deja la terminal abierta. El ejecutor imprime la ruta de `postman-local.postman_environment.json`.
-2. En Postman Desktop, pulsa **Import**. Importa `docs\pruebas\seguridad\TransAduanas.postman_collection.json` desde el clon y luego el entorno local que imprimió la terminal.
-3. Selecciona **TransAduanas local - descartar al terminar** como entorno activo.
-4. Abre **TransAduanas - Seguridad por componente**, pulsa **Run** y selecciona **Run manually**. Ejecuta una iteración con las 16 solicitudes seleccionadas. Conserva el orden de **Base de datos por API** para que el conteo se compruebe después de los intentos de alta.
-5. Toma las cinco capturas indicadas abajo antes de cerrar el laboratorio.
-6. Vuelve a PowerShell y pulsa **Ctrl+C**. Elimina de Postman el entorno importado. Evita mostrar o compartir sus tokens temporales.
+1. Deja la terminal abierta. El entorno se genera en `backend\target\seguridad-local\postman-local.postman_environment.json` y la terminal imprime su ruta completa. Si reiniciaste el servidor, usa el entorno de la nueva sesión.
+2. En Postman Desktop, abre un espacio de trabajo privado y pulsa **Import**. Importa `docs\pruebas\seguridad\TransAduanas.postman_collection.json` desde el clon y luego el entorno que imprimió la terminal. Si aparece **Upgrade to v3**, cambia del modo Git local al espacio de trabajo antes de importar los JSON.
+3. Si Postman muestra **Unlock your vault** al importar el entorno, usa tu clave de **Postman Vault** para proteger los JWT temporales. Conserva esa clave y los tokens fuera de las capturas.
+4. En el selector de arriba a la derecha, cambia **No Environment** por **TransAduanas local - descartar al terminar**.
+5. En **Collections**, haz clic en el nombre **TransAduanas - Seguridad por componente** y pulsa **Run**. Si el botón no aparece, abre **Tools → Runner** en la barra inferior y arrastra el nombre de la colección al Runner.
+6. Selecciona **Functional → Local**, deja **1 iteración** y las **16 solicitudes** marcadas. Conserva el orden de **Base de datos por API**. Pulsa **Start run**.
+7. Guarda una captura del resumen en **Run results**. La ejecución de referencia mostró **32 aprobadas, 0 fallidas, 0 omitidas y 0 errores**. Si necesitas evidencia por componente, usa la tabla de abajo.
+8. Vuelve a PowerShell y pulsa **Ctrl+C**. Elimina de Postman el entorno importado.
 
 | Captura | Qué mostrar |
 | --- | --- |
@@ -154,7 +190,46 @@ Abre los casos individuales desde los resultados de la ejecución. Procura que s
 
 En Postman, Frontend prueba la respuesta HTML y el proxy HTTP de Vite. Base de datos comprueba registros **a través de la API con H2**. Para capturar la navegación real y los permisos SQL directos, usa los apartados 2 y 3.
 
-## 7. Orden para exponer las siete fases
+## 7. Consultar resultados guardados
+
+Abre PowerShell en la carpeta principal del clon. Cambia el valor de `$archivo` según la tabla para mostrar la salida de tu ejecución. Este bloque solo lee el archivo.
+
+```powershell
+$archivo = 'http.json'
+$carpeta = Join-Path (Get-Location).Path 'backend\target\seguridad-local'
+$ruta = Join-Path $carpeta $archivo
+$casos = Get-Content -LiteralPath $ruta -Raw -Encoding UTF8 -ErrorAction Stop | ConvertFrom-Json
+$casos | Sort-Object id | Format-Table id, resultado, esperado, observado -Wrap
+```
+
+| Bloque | Archivo |
+| --- | --- |
+| Backend | `http.json` |
+| Frontend | `frontend-resultados.json` |
+| MySQL | `mysql-resultados.json` |
+| Sistema | `sistema-resultados.json` |
+
+Para mostrar un caso concreto, por ejemplo el conteo de MySQL después de cargar su archivo, usa:
+
+```powershell
+$casos | Where-Object id -eq 'BD06' | Format-List *
+```
+
+Para la prueba general, el resumen de terminal queda en `backend\target\seguridad-local\ejecucion-general.txt`. Para Postman Desktop usa **Run results**. Si ejecutaste Newman, abre `backend\target\seguridad-local\ejecucion-postman.txt`.
+
+## 8. Qué mostrar por tipo de prueba
+
+| Tipo | Evidencia y dónde encontrarla |
+| --- | --- |
+| Penetración | Backend, `SEC10`. Muestra que el titular recibió el comprobante con HTTP 200 y la otra empresa recibió HTTP 403. |
+| Vulnerabilidades | [README, análisis de dependencias y ZAP](README.md). Muestra el informe de la herramienta y el alcance que se examinó. |
+| Seguridad | Backend, `SEC01` a `SEC03`. Muestra las respuestas de autenticación y autorización. Añade las tablas del SGA, MySQL y sistema para documentar cada componente. |
+| Deserialización | Backend, `SEC06`. Muestra las respuestas HTTP observadas con JSON inválido y el conteo antes y después en la salida de terminal. |
+| Configuración | [README, revisión de configuración](README.md). Muestra `configuracion.json` y la referencia al archivo que revisa cada caso. |
+| Fuzzing | [README, búsqueda de rutas con ffuf](README.md). Muestra `ffuf-rutas.json` y el listado de rutas usado en esa ejecución. |
+| Otros | Backend, `SEC09`, y el resumen de la prueba general. Muestra el resultado de las 20 solicitudes secuenciales y los totales por componente. |
+
+## 9. Orden para exponer las siete fases
 
 | Fase | Qué mostrar |
 | --- | --- |

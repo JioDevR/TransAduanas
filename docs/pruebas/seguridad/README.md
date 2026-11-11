@@ -1,6 +1,8 @@
 # Pruebas de seguridad de TransAduanas
 
-Probamos la API en una copia local con una base H2 en memoria. El script arranca el backend en un puerto libre de `127.0.0.1` y lo detiene al terminar. Para estas pruebas no necesitas levantar MySQL, Docker ni los frontends.
+Para ejecutar las pruebas en Windows y preparar las evidencias del informe, sigue [CAPTURAS.md](CAPTURAS.md). Ahí están los comandos, la ubicación de los resultados y los pasos de Postman Desktop.
+
+Para las pruebas HTTP del backend, el script arranca Spring Boot en un puerto libre de `127.0.0.1`, usa H2 en memoria y lo detiene al terminar. Los requisitos de MySQL, frontend y Postman están en sus apartados de la guía de capturas.
 
 Los usuarios y empresas son ficticios. María Salas de la Torre tiene el rol de agente comercial y Lucía Mendoza Vargas el de administradora. Ana Torres Velarde y Diego Paredes Ríos pertenecen a empresas distintas. La cuenta `admin` del proyecto se usa para comprobar la contraseña predeterminada y preparar los datos.
 
@@ -12,7 +14,7 @@ Los usuarios y empresas son ficticios. María Salas de la Torre tiene el rol de 
 | Frontend SGA | 8 casos en navegador con Playwright y el backend local. | 8 pasaron. Se verificaron sesión, navegación, contraseña oculta y redirección externa. |
 | Base de datos | 8 casos con SQL directo en MySQL 8.4.13, en una instancia separada y con el esquema del proyecto. | 8 pasaron. El usuario de lectura no pudo insertar, borrar ni leer una columna restringida. El conteo fue 1 antes y 1 después. |
 | Sistema | 8 casos con Spring Boot, JWT y datos en H2. | 8 pasaron. Se comprobó el flujo de baja y reactivación de una cuenta del portal y la separación entre empresas. |
-| Postman | 16 solicitudes en cuatro carpetas, ejecutadas por Newman. | 32 aserciones sin fallos. |
+| Postman | 16 solicitudes en cuatro carpetas, ejecutadas con Newman y Postman Desktop. | 32 aserciones aprobadas en cada ejecución de referencia. |
 
 La prueba general ejecutó 34 casos sin Postman. Pasaron 31 y se reprodujeron tres hallazgos. Consulta [los archivos que controlan la seguridad](ARCHIVOS-SEGURIDAD.md) y [los comandos para tomar capturas](CAPTURAS.md). MySQL se probó aparte. Las pruebas HTTP, de navegador y de sistema usan H2. Los reportes de ffuf, ZAP pasivo y dependencias siguen disponibles.
 
@@ -156,7 +158,7 @@ if ($LASTEXITCODE -ne 0) { throw 'Falló la revisión de configuración.' }
 
 Las salidas de la ejecución original están en [evidencia/](evidencia/). Para comparar tu ejecución, usa [la matriz de resultados](evidencia/matriz-seguridad.csv). La ráfaga de SEC09 solo comprueba las 20 solicitudes del caso. ZAP analizó las respuestas de tres rutas anónimas y no reportó alertas de sitio en esa muestra.
 
-## Enlaces del PDF
+## Herramientas y referencias
 
 | Página | Herramienta o referencia | Uso en esta revisión |
 | --- | --- | --- |
@@ -170,4 +172,4 @@ Las salidas de la ejecución original están en [evidencia/](evidencia/). Para c
 | 46 | [ZAP](https://www.zaproxy.org/docs/automate/automation-framework/) | Se ejecutó un plan pasivo con tres peticiones. |
 | 46 | [sqlmap](https://sqlmap.org/) | Referencia de inyección SQL. El caso SEC07 se ejecutó con Node.js. |
 
-La evidencia original se obtuvo sobre los binarios del ZIP, porque el entorno de revisión dio un error de permisos al recompilar. El árbol Maven y el classpath sí se generaron y se usaron para ejecutar las pruebas. La revisión cubrió la referencia `5b8b29d022d4f335df96129b0814f9704e5b06d7`. Postman queda para una etapa posterior.
+La primera revisión se hizo sobre los binarios del ZIP y cubrió la referencia `5b8b29d022d4f335df96129b0814f9704e5b06d7`. La [guía de capturas](CAPTURAS.md) muestra cómo compilar desde el clon y obtener evidencia de una ejecución nueva.

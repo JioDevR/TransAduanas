@@ -4,6 +4,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.web.multipart.MultipartFile;
 import pe.sga.dto.response.DocumentoResponseDTO;
 import pe.sga.entity.DocumentoAdjunto;
+import pe.sga.entity.Usuario;
 import pe.sga.entity.enums.CategoriaDocumento;
 import pe.sga.entity.enums.EntidadDocumento;
 
@@ -41,4 +42,17 @@ public interface IDocumentoService {
     void validarPropiedadConsultaCliente(Integer idClienteAutenticado, Integer idCotizacion, Integer idExpediente, Integer idCliente);
 
     void validarPropiedadDocumentoCliente(Integer idClienteAutenticado, DocumentoAdjunto doc);
+
+    void validarAccesoComercialCotizacion(Usuario usuario, Integer idCotizacion, boolean permitirSinAsignar);
+
+    void validarAccesoDocumentoComercial(Usuario usuario, DocumentoAdjunto doc, boolean permitirSinAsignar);
+
+    List<DocumentoResponseDTO> listarParaUsuario(
+            Usuario usuario,
+            EntidadDocumento entidadTipo,
+            Integer idCotizacion,
+            Integer idExpediente,
+            Integer idCliente,
+            CategoriaDocumento categoria
+    );
 }

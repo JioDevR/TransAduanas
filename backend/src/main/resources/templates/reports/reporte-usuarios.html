@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{reports/ti-listado-base :: tiHead(${tituloDocumento})}"></head>
+<body>
+
+    <table th:replace="~{reports/ti-listado-base :: tiHeader(${kickerTexto}, ${tituloReporte}, ${alcanceTexto}, ${fechaGeneracion}, ${totalListado}, 'usuarios')}"></table>
+
+    <table th:replace="~{reports/ti-listado-base :: tiSummary(${tituloMetrica1}, ${totalListado}, 'Sedes Representadas', ${totalSedes}, 'Total Registrados', ${totalRegistrados})}"></table>
+
+    <table class="ti-list-table">
+        <thead>
+            <tr>
+                <th style="width: 15%;">USUARIO</th>
+                <th style="width: 28%;">CORREO</th>
+                <th style="width: 16%;">NÚMERO</th>
+                <th style="width: 21%;">CARGO</th>
+                <th style="width: 20%;">SEDE</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:if="${#lists.isEmpty(items)}">
+                <td colspan="5" class="ti-empty-row">No se encontraron usuarios internos para mostrar en este informe.</td>
+            </tr>
+            <tr th:each="u : ${items}">
+                <td><span class="ti-user-chip" th:text="'@' + ${u.username}">@admin</span></td>
+                <td><span class="ti-email-text" th:text="${u.correo}">admin@sga.pe</span></td>
+                <td th:text="${u.numero}">+51 999 999 999</td>
+                <td th:text="${u.cargo}">Administrador TI</td>
+                <td th:text="${u.sede}">Sede Central Corporativa</td>
+            </tr>
+        </tbody>
+    </table>
+
+</body>
+</html>

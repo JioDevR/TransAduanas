@@ -38,6 +38,13 @@ public class UsuarioController {
         return ResponseEntity.ok(ApiResponseDTO.ok("Lista de usuarios recuperada exitosamente", usuarios));
     }
 
+    @GetMapping("/operadores")
+    @PreAuthorize(SecurityRoles.ACCESS_OPERADORES_READ)
+    public ResponseEntity<ApiResponseDTO<List<UsuarioResponseDTO>>> listarOperadoresActivos() {
+        List<UsuarioResponseDTO> operadores = usuarioService.listarActivos();
+        return ResponseEntity.ok(ApiResponseDTO.ok("Lista de operadores activos recuperada exitosamente", operadores));
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponseDTO<UsuarioResponseDTO>> buscarPorId(@PathVariable Integer id) {
         UsuarioResponseDTO usuario = usuarioService.buscarPorId(id);
@@ -76,11 +83,15 @@ public class UsuarioController {
     }
 
     @GetMapping("/exportar-pdf")
-    public ResponseEntity<InputStreamResource> exportarUsuariosPdf() {
-        ByteArrayInputStream pdfStream = reporteJasperService.exportarUsuariosPdf();
+    public ResponseEntity<InputStreamResource> exportarUsuariosPdf(
+            @RequestParam(required = false, defaultValue = "true") boolean soloActivos) {
+        ByteArrayInputStream pdfStream = reporteJasperService.exportarUsuariosPdf(soloActivos);
 
         HttpHeaders headers = new HttpHeaders();
-        headers.add("Content-Disposition", "inline; filename=reporte-usuarios-seguridad-ti.pdf");
+        String filename = soloActivos
+                ? "reporte-usuarios-activos.pdf"
+                : "reporte-usuarios-listado.pdf";
+        headers.add(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=" + filename);
 
         return ResponseEntity.ok()
                 .headers(headers)

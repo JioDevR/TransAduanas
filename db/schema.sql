@@ -201,7 +201,7 @@ CREATE TABLE cotizacion (
     id_cotizacion INT NOT NULL AUTO_INCREMENT,
     codigo_cotizacion VARCHAR(20) NOT NULL,
     id_cliente INT NOT NULL,
-    id_usuario_comercial INT NOT NULL,
+    id_usuario_comercial INT NULL,
     id_mercancia INT NULL,
     id_tipo_carga INT NULL,
     -- Operación, régimen y ruta logística
@@ -239,7 +239,7 @@ CREATE TABLE cotizacion (
     PRIMARY KEY (id_cotizacion),
     CONSTRAINT uq_cotizacion_codigo UNIQUE (codigo_cotizacion),
     CONSTRAINT fk_cotizacion_cliente FOREIGN KEY (id_cliente) REFERENCES cliente (id_cliente) ON UPDATE CASCADE ON DELETE RESTRICT,
-    CONSTRAINT fk_cotizacion_comercial FOREIGN KEY (id_usuario_comercial) REFERENCES usuario (id_usuario) ON UPDATE CASCADE ON DELETE RESTRICT,
+    CONSTRAINT fk_cotizacion_comercial FOREIGN KEY (id_usuario_comercial) REFERENCES usuario (id_usuario) ON UPDATE CASCADE ON DELETE SET NULL,
     CONSTRAINT fk_cotizacion_revisor FOREIGN KEY (id_agente_revisor) REFERENCES usuario (id_usuario) ON UPDATE CASCADE ON DELETE SET NULL,
     CONSTRAINT fk_cotizacion_mercancia FOREIGN KEY (id_mercancia) REFERENCES catalogo_mercancia (id_mercancia) ON UPDATE CASCADE ON DELETE SET NULL,
     CONSTRAINT fk_cotizacion_tipo_carga FOREIGN KEY (id_tipo_carga) REFERENCES catalogo_tipo_carga (id_tipo_carga) ON UPDATE CASCADE ON DELETE SET NULL,

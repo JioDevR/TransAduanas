@@ -38,7 +38,7 @@
             class="btn-outline-warm"
             @click="handleExportPdf"
             :disabled="exportingPdf"
-            title="Descargar reporte oficial JasperReports"
+            title="Descargar informe PDF de usuarios internos activos"
           >
             <i :class="['pi', exportingPdf ? 'pi-spin pi-spinner' : 'pi-file-pdf']"></i>
             <span>Ver Reporte (PDF)</span>
@@ -288,11 +288,11 @@ const handleToggleStatus = async (user) => {
 const handleExportPdf = async () => {
   exportingPdf.value = true
   try {
-    const blob = await userService.downloadPdf()
+    const blob = await userService.downloadPdf(true)
     openBlobInNewTab(blob)
-    showToast('Reporte PDF oficial abierto en nueva pestaña.')
+    showToast('Informe PDF de usuarios activos abierto en nueva pestaña.')
   } catch (err) {
-    showToast('No se pudo generar el reporte PDF desde JasperReports.', 'error')
+    showToast('No se pudo generar el reporte PDF de usuarios.', 'error')
   } finally {
     exportingPdf.value = false
   }

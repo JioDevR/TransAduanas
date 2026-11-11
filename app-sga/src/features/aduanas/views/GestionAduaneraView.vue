@@ -1167,12 +1167,17 @@ const onCierreExpedienteSaved = () => {
 const loadData = async () => {
   loading.value = true
   try {
-    const [cots, exps] = await Promise.all([
+    const [cotsRes, expsRes] = await Promise.allSettled([
       gestionAduaneraService.getCotizaciones(),
       expedienteService.getExpedientes()
     ])
-    cotizaciones.value = cots || []
-    expedientes.value = exps || []
+    if (cotsRes.status === 'fulfilled') cotizaciones.value = cotsRes.value || []
+    if (expsRes.status === 'fulfilled') expedientes.value = expsRes.value || []
+
+    const firstFailure = [cotsRes, expsRes].find((r) => r.status === 'rejected')
+    if (firstFailure) {
+      showError(firstFailure.reason?.response?.data?.message || 'Error al sincronizar datos de Supervisión.')
+    }
 
     // Si había una cotización inspeccionada en vista completa, refrescar su dato
     if (inspectedCotizacion.value) {
@@ -1185,8 +1190,6 @@ const loadData = async () => {
       const updatedExp = expedientes.value.find((e) => e.idExpediente === selectedExpedienteParaDetalle.value.idExpediente)
       if (updatedExp) selectedExpedienteParaDetalle.value = updatedExp
     }
-  } catch (err) {
-    showError(err.response?.data?.message || 'Error al sincronizar datos de Supervisión.')
   } finally {
     loading.value = false
   }

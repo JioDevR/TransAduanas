@@ -30,7 +30,7 @@ public class CotizacionPagoController {
     // =========================================================================
 
     @PostMapping("/cotizaciones/{idCotizacion}/pagos")
-    @PreAuthorize(SecurityRoles.ACCESS_CLIENTE_COTIZACION_WRITE)
+    @PreAuthorize(SecurityRoles.ACCESS_COTIZACION_PAGO_WRITE)
     public ResponseEntity<ApiResponseDTO<CotizacionPagoResponseDTO>> registrarPago(
             @PathVariable Integer idCotizacion,
             @Valid @RequestBody CotizacionPagoRegistrarDTO dto,
@@ -45,8 +45,9 @@ public class CotizacionPagoController {
     @GetMapping("/cotizaciones/{idCotizacion}/pagos")
     @PreAuthorize(SecurityRoles.ACCESS_CLIENTE_COTIZACION_READ)
     public ResponseEntity<ApiResponseDTO<List<CotizacionPagoResponseDTO>>> listarPorCotizacion(
-            @PathVariable Integer idCotizacion) {
-        List<CotizacionPagoResponseDTO> response = cotizacionPagoService.listarPorCotizacion(idCotizacion);
+            @PathVariable Integer idCotizacion,
+            @AuthenticationPrincipal Usuario usuarioAutenticado) {
+        List<CotizacionPagoResponseDTO> response = cotizacionPagoService.listarPorCotizacion(idCotizacion, usuarioAutenticado);
         return ResponseEntity.ok(ApiResponseDTO.ok("Historial de pagos de la cotización recuperado", response));
     }
 

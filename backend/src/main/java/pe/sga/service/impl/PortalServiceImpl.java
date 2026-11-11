@@ -155,8 +155,9 @@ public class PortalServiceImpl implements IPortalService {
         Cliente cliente = clienteRepository.findById(idCliente)
                 .orElseThrow(() -> new ResourceNotFoundException("Cliente no encontrado con ID: " + idCliente));
 
-        Usuario usuarioComercial = usuarioRepository.findByRol(RolUsuario.AGENTE_COMERCIAL).stream().findFirst()
-                .orElseGet(() -> usuarioRepository.findAll().stream().findFirst().orElse(null));
+        // Las solicitudes creadas desde el Portal B2B ingresan a la bandeja de "Solicitudes Sin Asignar"
+        // para que cualquier asesor comercial pueda tomarlas.
+        Usuario usuarioComercial = null;
 
         // Generar código correlativo COT-YYYY-NNNN
         String codigoCotizacion = generarCodigoCotizacion();

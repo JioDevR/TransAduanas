@@ -13,6 +13,14 @@ export const userService = {
   },
 
   /**
+   * Listar operadores internos activos para asignación operativa en módulos
+   */
+  async getOperadores() {
+    const response = await apiClient.get('/usuarios/operadores')
+    return response.data.data
+  },
+
+  /**
    * Alias en español para getUsers
    */
   async getUsuarios(soloActivos = false) {
@@ -82,10 +90,12 @@ export const userService = {
   },
 
   /**
-   * Descargar reporte de usuarios en PDF generado por JasperReports
+   * Descargar listado de usuarios internos en PDF (plantilla HTML corporativa TI)
+   * @param {Boolean} soloActivos Filtrar solo usuarios activos (default: true)
    */
-  async downloadPdf() {
+  async downloadPdf(soloActivos = true) {
     const response = await apiClient.get('/usuarios/exportar-pdf', {
+      params: { soloActivos },
       responseType: 'blob'
     })
     return response.data

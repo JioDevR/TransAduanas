@@ -74,6 +74,18 @@ export const portalUserService = {
       params: { soloActivos: true }
     })
     return response.data.data
+  },
+
+  /**
+   * Descargar listado de usuarios del portal B2B en PDF (plantilla HTML corporativa TI)
+   * @param {Boolean} soloActivos Filtrar solo usuarios activos (default: true)
+   */
+  async downloadPdf(soloActivos = true) {
+    const response = await apiClient.get('/admin/usuarios-portal/exportar-pdf', {
+      params: { soloActivos },
+      responseType: 'blob'
+    })
+    return response.data
   }
 }
 

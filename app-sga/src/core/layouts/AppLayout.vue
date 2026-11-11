@@ -213,8 +213,8 @@ const currentTitle = computed(() => {
     const vMap = {
       dashboard: 'Dashboard Comercial & Ventas',
       cotizaciones: 'Registro de Cotizaciones Comerciales',
-      clientes: 'Directorio de Clientes & Prospectos',
-      ordenes: 'Expedientes Aduaneros'
+      solicitudes: 'Solicitudes Sin Asignar (Portal B2B)',
+      clientes: 'Directorio de Clientes & Prospectos'
     }
     return vMap[navigationStore.comercialSubOption] || 'Recepción Comercial'
   }
@@ -257,8 +257,8 @@ const currentKicker = computed(() => {
     const kMap = {
       dashboard: 'PANEL COMERCIAL // INTELIGENCIA DE VENTAS',
       cotizaciones: 'PROPUESTAS ADUANERAS // EMISIÓN & SEGUIMIENTO',
-      clientes: 'CARTERA COMERCIAL // CLIENTES & PROSPECTOS',
-      ordenes: 'CONTROL OPERATIVO // SEGUIMIENTO ADUANERO'
+      solicitudes: 'PORTAL B2B // SOLICITUDES PENDIENTES DE ASIGNACIÓN',
+      clientes: 'CARTERA COMERCIAL // CLIENTES & PROSPECTOS'
     }
     return kMap[navigationStore.comercialSubOption] || 'RECEPCIÓN COMERCIAL // PROSPECTOS & COTIZACIONES'
   }
@@ -332,11 +332,11 @@ const currentSubtitle = computed(() => {
   if (navigationStore.currentModule === 'comercial') {
     const sMap = {
       dashboard: 'Métricas de ventas, conversión de propuestas, cartera comercial y atajos rápidos de gestión.',
-      cotizaciones: 'Supervisión de prospectos comerciales, emisión de presupuestos de despacho aduanero y control de estados.',
-      clientes: 'Gestión unificada de prospectos en evaluación y clientes formalizados para operaciones aduaneras.',
-      ordenes: 'Seguimiento de expedientes operativos y enlace directo con cotizaciones comerciales aprobadas.'
+      cotizaciones: 'Emisión de presupuestos de despacho aduanero, corrección de observaciones y control de estados.',
+      solicitudes: 'Solicitudes de cotización registradas desde el Portal B2B pendientes de ser tomadas por un asesor comercial.',
+      clientes: 'Gestión unificada de prospectos en evaluación y clientes formalizados para operaciones aduaneras.'
     }
-    return sMap[navigationStore.comercialSubOption] || 'Supervisión comercial, emisión de presupuestos aduaneros y formalización de expedientes operativos.'
+    return sMap[navigationStore.comercialSubOption] || 'Supervisión comercial, emisión de presupuestos aduaneros y seguimiento de solicitudes.'
   }
   if (navigationStore.currentModule === 'gerencia-general') {
     const gSubs = {

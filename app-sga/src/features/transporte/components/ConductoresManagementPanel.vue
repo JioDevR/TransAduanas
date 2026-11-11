@@ -528,7 +528,7 @@ const loadConductores = async () => {
 
 const loadUsuarios = async () => {
   try {
-    const data = await userService.getUsers()
+    const data = await userService.getOperadores()
     usuariosList.value = Array.isArray(data) ? data : []
   } catch {
     // Silencioso

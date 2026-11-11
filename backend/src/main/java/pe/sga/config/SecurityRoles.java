@@ -30,6 +30,8 @@ public final class SecurityRoles {
     // 1. Usuarios, Roles y Logs
     public static final String ACCESS_USUARIOS_READ = "hasAnyRole('" + ADMINISTRADOR_TI + "', '" + GERENTE_GENERAL
             + "')";
+    public static final String ACCESS_OPERADORES_READ = "hasAnyRole('" + ADMINISTRADOR_TI + "', '"
+            + GERENTE_GENERAL + "', '" + SUPERVISOR_ADUANERO + "', '" + SUPERVISOR_TRANSPORTE + "')";
     public static final String ACCESS_USUARIOS_WRITE = "hasRole('" + ADMINISTRADOR_TI + "')";
     public static final String ACCESS_ROLES_READ = "hasAnyRole('" + ADMINISTRADOR_TI + "', '" + GERENTE_GENERAL + "')";
     public static final String ACCESS_ROLES_WRITE = "hasRole('" + ADMINISTRADOR_TI + "')";
@@ -46,10 +48,13 @@ public final class SecurityRoles {
             + "', '" + CONTADOR + "', '" + ASESOR_LEGAL + "')";
     public static final String ACCESS_CLIENTE_COTIZACION_WRITE = "hasAnyRole('" + ADMINISTRADOR_TI + "', '"
             + GERENTE_GENERAL + "', '" + AGENTE_COMERCIAL + "')";
+    public static final String ACCESS_COTIZACION_PAGO_WRITE = "hasAnyRole('" + ADMINISTRADOR_TI + "', '"
+            + GERENTE_GENERAL + "', '" + AGENTE_COMERCIAL + "', '" + CONTADOR + "')";
     public static final String ACCESS_COTIZACION_APROBACION = "hasAnyRole('" + ADMINISTRADOR_TI + "', '"
             + GERENTE_GENERAL + "', '" + SUPERVISOR_ADUANERO + "', '" + AGENTE_ADUANERO + "')";
 
     // 4. Expedientes y Control de Almacén
+    public static final String ACCESS_EXPEDIENTE_READ = ACCESS_INTERNAL_STAFF;
     public static final String ACCESS_EXPEDIENTE_ALMACEN_READ = "hasAnyRole('" + ADMINISTRADOR_TI + "', '"
             + GERENTE_GENERAL + "', '" + SUPERVISOR_ADUANERO + "', '" + AGENTE_ADUANERO + "', '" + ASESOR_LEGAL + "', '"
             + SUPERVISOR_TRANSPORTE + "', '" + CONTADOR + "')";

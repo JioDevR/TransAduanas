@@ -1,6 +1,7 @@
 package pe.sga.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pe.sga.dto.request.CotizacionPagoRegistrarDTO;
@@ -57,6 +58,8 @@ public class CotizacionPagoServiceImpl implements ICotizacionPagoService {
                     .orElse(null);
         }
 
+        validarPropiedadComercial(cotizacion, usuario);
+
         DocumentoAdjunto documentoComprobante = null;
         if (dto.getIdDocumentoComprobante() != null) {
             documentoComprobante = documentoRepository.findById(dto.getIdDocumentoComprobante()).orElse(null);
@@ -107,10 +110,22 @@ public class CotizacionPagoServiceImpl implements ICotizacionPagoService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<CotizacionPagoResponseDTO> listarPorCotizacion(Integer idCotizacion) {
+    public List<CotizacionPagoResponseDTO> listarPorCotizacion(Integer idCotizacion, Usuario usuarioActual) {
+        Cotizacion cotizacion = cotizacionRepository.findById(idCotizacion)
+                .orElseThrow(() -> new ResourceNotFoundException("Cotización no encontrada con ID: " + idCotizacion));
+        validarPropiedadComercial(cotizacion, usuarioActual);
         return cotizacionPagoRepository.findByCotizacion_IdCotizacionOrderByFechaRegistroDesc(idCotizacion).stream()
                 .map(this::mapToResponse)
                 .toList();
+    }
+
+    private void validarPropiedadComercial(Cotizacion cotizacion, Usuario usuarioActual) {
+        if (usuarioActual != null && usuarioActual.getRol() == RolUsuario.AGENTE_COMERCIAL) {
+            if (cotizacion.getUsuarioComercial() == null
+                    || !cotizacion.getUsuarioComercial().getIdUsuario().equals(usuarioActual.getIdUsuario())) {
+                throw new AccessDeniedException("No tiene permisos para acceder o registrar pagos de una cotización ajena");
+            }
+        }
     }
 
     @Override

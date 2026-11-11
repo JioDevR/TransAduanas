@@ -384,7 +384,7 @@ const resetForm = () => {
 
 const loadAgentes = async () => {
   try {
-    const users = await userService.getUsers(true)
+    const users = await userService.getOperadores()
     agentesList.value = (users || []).filter(
       (u) => u.idUsuario !== authStore.user?.idUsuario
     )

@@ -16,6 +16,7 @@ import pe.sga.entity.Expediente;
 import pe.sga.entity.Usuario;
 import pe.sga.entity.enums.CategoriaDocumento;
 import pe.sga.entity.enums.EntidadDocumento;
+import pe.sga.entity.enums.RolUsuario;
 import pe.sga.exception.ResourceNotFoundException;
 import pe.sga.repository.ClienteRepository;
 import pe.sga.repository.CotizacionPagoRepository;
@@ -139,25 +140,10 @@ public class DocumentoServiceImpl implements IDocumentoService {
             Integer idCliente,
             CategoriaDocumento categoria
     ) {
-        List<DocumentoAdjunto> lista;
-
-        if (idCotizacion != null) {
-            lista = documentoRepository.findByCotizacionIdCotizacionAndActivoTrueOrderByFechaCreacionDesc(idCotizacion);
-        } else if (idExpediente != null) {
-            lista = documentoRepository.findByExpedienteIdExpedienteAndActivoTrueOrderByFechaCreacionDesc(idExpediente);
-        } else if (idCliente != null) {
-            lista = documentoRepository.findByClienteIdClienteAndActivoTrueOrderByFechaCreacionDesc(idCliente);
-        } else if (entidadTipo != null) {
-            lista = documentoRepository.findByEntidadTipoAndActivoTrueOrderByFechaCreacionDesc(entidadTipo);
-        } else {
-            lista = documentoRepository.findByActivoTrueOrderByFechaCreacionDesc();
-        }
-
-        if (categoria != null) {
-            lista = lista.stream().filter(d -> d.getCategoria() == categoria).toList();
-        }
-
-        return lista.stream().map(this::toDTO).toList();
+        return obtenerDocumentosFiltrados(entidadTipo, idCotizacion, idExpediente, idCliente, categoria)
+                .stream()
+                .map(this::toDTO)
+                .toList();
     }
 
     @Override
@@ -286,6 +272,86 @@ public class DocumentoServiceImpl implements IDocumentoService {
         }
 
         throw new AccessDeniedException("Acceso denegado: el documento solicitado no pertenece a su empresa");
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public void validarAccesoComercialCotizacion(Usuario usuario, Integer idCotizacion, boolean permitirSinAsignar) {
+        if (usuario == null || usuario.getRol() != RolUsuario.AGENTE_COMERCIAL || idCotizacion == null) {
+            return;
+        }
+        Cotizacion cot = cotizacionRepository.findById(idCotizacion)
+                .orElseThrow(() -> new ResourceNotFoundException("Cotización no encontrada con ID: " + idCotizacion));
+        if (!puedeAccederCotizacionComercial(usuario, cot, permitirSinAsignar)) {
+            throw new AccessDeniedException("Acceso denegado: no tiene permisos sobre los documentos de esta cotización");
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public void validarAccesoDocumentoComercial(Usuario usuario, DocumentoAdjunto doc, boolean permitirSinAsignar) {
+        if (usuario == null || usuario.getRol() != RolUsuario.AGENTE_COMERCIAL || doc == null) {
+            return;
+        }
+        if (doc.getCotizacion() != null && !puedeAccederCotizacionComercial(usuario, doc.getCotizacion(), permitirSinAsignar)) {
+            throw new AccessDeniedException("Acceso denegado: el documento pertenece a una cotización de otro asesor comercial");
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<DocumentoResponseDTO> listarParaUsuario(
+            Usuario usuario,
+            EntidadDocumento entidadTipo,
+            Integer idCotizacion,
+            Integer idExpediente,
+            Integer idCliente,
+            CategoriaDocumento categoria
+    ) {
+        if (usuario != null && usuario.getRol() == RolUsuario.AGENTE_COMERCIAL) {
+            if (idCotizacion != null) {
+                validarAccesoComercialCotizacion(usuario, idCotizacion, true);
+            }
+            List<DocumentoAdjunto> base = obtenerDocumentosFiltrados(entidadTipo, idCotizacion, idExpediente, idCliente, categoria);
+            return base.stream()
+                    .filter(d -> d.getCotizacion() == null || puedeAccederCotizacionComercial(usuario, d.getCotizacion(), true))
+                    .map(this::toDTO)
+                    .toList();
+        }
+        return listar(entidadTipo, idCotizacion, idExpediente, idCliente, categoria);
+    }
+
+    private boolean puedeAccederCotizacionComercial(Usuario usuario, Cotizacion cot, boolean permitirSinAsignar) {
+        if (cot == null) return true;
+        if (cot.getUsuarioComercial() == null) {
+            return permitirSinAsignar;
+        }
+        return cot.getUsuarioComercial().getIdUsuario().equals(usuario.getIdUsuario());
+    }
+
+    private List<DocumentoAdjunto> obtenerDocumentosFiltrados(
+            EntidadDocumento entidadTipo,
+            Integer idCotizacion,
+            Integer idExpediente,
+            Integer idCliente,
+            CategoriaDocumento categoria
+    ) {
+        List<DocumentoAdjunto> lista;
+        if (idCotizacion != null) {
+            lista = documentoRepository.findByCotizacionIdCotizacionAndActivoTrueOrderByFechaCreacionDesc(idCotizacion);
+        } else if (idExpediente != null) {
+            lista = documentoRepository.findByExpedienteIdExpedienteAndActivoTrueOrderByFechaCreacionDesc(idExpediente);
+        } else if (idCliente != null) {
+            lista = documentoRepository.findByClienteIdClienteAndActivoTrueOrderByFechaCreacionDesc(idCliente);
+        } else if (entidadTipo != null) {
+            lista = documentoRepository.findByEntidadTipoAndActivoTrueOrderByFechaCreacionDesc(entidadTipo);
+        } else {
+            lista = documentoRepository.findByActivoTrueOrderByFechaCreacionDesc();
+        }
+        if (categoria != null) {
+            lista = lista.stream().filter(d -> d.getCategoria() == categoria).toList();
+        }
+        return lista;
     }
 
     private DocumentoResponseDTO toDTO(DocumentoAdjunto d) {

@@ -30,7 +30,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/expedientes")
 @RequiredArgsConstructor
-@PreAuthorize(SecurityRoles.ACCESS_EXPEDIENTE_ALMACEN_READ)
+@PreAuthorize(SecurityRoles.ACCESS_EXPEDIENTE_READ)
 public class ExpedienteController {
 
     private final IExpedienteService expedienteService;

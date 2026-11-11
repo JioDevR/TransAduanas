@@ -3,31 +3,38 @@ package pe.sga.service;
 import pe.sga.dto.request.CotizacionRequestDTO;
 import pe.sga.dto.request.CotizacionRevisionDTO;
 import pe.sga.dto.response.CotizacionResponseDTO;
+import pe.sga.entity.Usuario;
 import pe.sga.entity.enums.EstadoCotizacion;
 
 import java.util.List;
 
 public interface ICotizacionService {
 
-    List<CotizacionResponseDTO> listarTodas(Boolean soloActivas);
+    List<CotizacionResponseDTO> listar(
+            Boolean soloActivas,
+            EstadoCotizacion estado,
+            Integer idCliente,
+            Integer idUsuarioComercial,
+            Usuario usuarioActual
+    );
 
-    List<CotizacionResponseDTO> listarPorEstado(EstadoCotizacion estado);
+    List<CotizacionResponseDTO> listarSinAsignar();
 
-    List<CotizacionResponseDTO> listarPorCliente(Integer idCliente);
+    CotizacionResponseDTO buscarPorId(Integer id, Usuario usuarioActual);
 
-    CotizacionResponseDTO buscarPorId(Integer id);
+    CotizacionResponseDTO buscarPorCodigo(String codigoCotizacion, Usuario usuarioActual);
 
-    CotizacionResponseDTO buscarPorCodigo(String codigoCotizacion);
+    CotizacionResponseDTO crear(CotizacionRequestDTO dto, Usuario usuarioActual);
 
-    CotizacionResponseDTO crear(CotizacionRequestDTO dto);
+    CotizacionResponseDTO actualizar(Integer id, CotizacionRequestDTO dto, Usuario usuarioActual);
 
-    CotizacionResponseDTO actualizar(Integer id, CotizacionRequestDTO dto);
+    CotizacionResponseDTO asignarAsesor(Integer id, Integer idUsuarioComercial, Usuario usuarioActual);
 
     CotizacionResponseDTO revisarTecnicamente(Integer id, CotizacionRevisionDTO dto);
 
     CotizacionResponseDTO cambiarEstado(Integer id, EstadoCotizacion estado, String motivoObservacion);
 
-    void anular(Integer id);
+    void anular(Integer id, Usuario usuarioActual);
 
-    void eliminar(Integer id);
+    void eliminar(Integer id, Usuario usuarioActual);
 }

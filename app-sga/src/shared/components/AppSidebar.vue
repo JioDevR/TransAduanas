@@ -221,14 +221,27 @@
             type="button"
             :class="['nav-sub-btn', { active: navigationStore.comercialSubOption === 'cotizaciones' }]"
             @click="handleComercialSubClick('cotizaciones')"
-            :title="isCollapsed ? 'Cotizaciones Comerciales' : ''"
+            :title="isCollapsed ? (authStore.userRole === 'AGENTE_COMERCIAL' ? 'Mis Cotizaciones' : 'Cotizaciones Comerciales') : ''"
           >
             <span class="nav-num">02</span>
-            <span v-if="!isCollapsed" class="nav-label">Cotizaciones</span>
+            <span v-if="!isCollapsed" class="nav-label">{{ authStore.userRole === 'AGENTE_COMERCIAL' ? 'Mis Cotizaciones' : 'Cotizaciones' }}</span>
           </button>
         </li>
 
-        <!-- Sub-opción 03: Clientes & Prospectos -->
+        <!-- Sub-opción 03: Solicitudes Sin Asignar (Portal B2B) -->
+        <li class="nav-item">
+          <button
+            type="button"
+            :class="['nav-sub-btn', { active: navigationStore.comercialSubOption === 'solicitudes' }]"
+            @click="handleComercialSubClick('solicitudes')"
+            :title="isCollapsed ? 'Solicitudes Sin Asignar' : ''"
+          >
+            <span class="nav-num">03</span>
+            <span v-if="!isCollapsed" class="nav-label">Solicitudes Sin Asignar</span>
+          </button>
+        </li>
+
+        <!-- Sub-opción 04: Clientes & Prospectos -->
         <li class="nav-item">
           <button
             type="button"
@@ -236,21 +249,8 @@
             @click="handleComercialSubClick('clientes')"
             :title="isCollapsed ? 'Directorio de Clientes & Prospectos' : ''"
           >
-            <span class="nav-num">03</span>
-            <span v-if="!isCollapsed" class="nav-label">Clientes & Prospectos</span>
-          </button>
-        </li>
-
-        <!-- Sub-opción 04: Expedientes Aduaneros -->
-        <li class="nav-item">
-          <button
-            type="button"
-            :class="['nav-sub-btn', { active: navigationStore.comercialSubOption === 'ordenes' }]"
-            @click="handleComercialSubClick('ordenes')"
-            :title="isCollapsed ? 'Expedientes Aduaneros' : ''"
-          >
             <span class="nav-num">04</span>
-            <span v-if="!isCollapsed" class="nav-label">Expedientes Aduaneros</span>
+            <span v-if="!isCollapsed" class="nav-label">Clientes & Prospectos</span>
           </button>
         </li>
       </ul>

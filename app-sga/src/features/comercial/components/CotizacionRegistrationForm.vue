@@ -1793,7 +1793,9 @@ const handleSubmit = () => {
     cotizacionId: props.cotizacionToEdit?.idCotizacion,
     payload: {
       ...form.value,
-      idUsuarioComercial: authStore.user?.idUsuario || form.value.idUsuarioComercial || 1
+      idUsuarioComercial: isEditMode.value
+        ? (props.cotizacionToEdit?.idUsuarioComercial || form.value.idUsuarioComercial || authStore.user?.idUsuario || 1)
+        : (authStore.user?.idUsuario || form.value.idUsuarioComercial || 1)
     },
     documentos: queuedDocs.value,
     done: () => {

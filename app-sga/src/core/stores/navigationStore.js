@@ -10,7 +10,7 @@ export const useNavigationStore = defineStore('navigation', {
     administracionTiSubOption: 'dashboard',
     // Sub-opciones en Gerencia General: 'dashboard' | 'sedes' | 'puertos' | 'tipos-carga' | 'mercancias' | 'flota' | 'conductores'
     gerenciaGeneralSubOption: 'dashboard',
-    // Sub-opciones en Recepción Comercial: 'dashboard' | 'cotizaciones' | 'clientes' | 'ordenes'
+    // Sub-opciones en Recepción Comercial: 'dashboard' | 'cotizaciones' | 'solicitudes' | 'clientes'
     comercialSubOption: 'dashboard',
     // Sub-opciones en Gestión Aduanera: 'cotizaciones' | 'apertura' | 'expedientes' | 'declaraciones' | 'clasificacion' | 'tributos'
     gestionAduaneraSubOption: 'cotizaciones',
@@ -110,8 +110,9 @@ export const useNavigationStore = defineStore('navigation', {
     },
 
     setComercialSubOption(option) {
-      if (this.comercialSubOption === option) return
-      this.comercialSubOption = option
+      const target = option === 'ordenes' ? 'cotizaciones' : option
+      if (this.comercialSubOption === target) return
+      this.comercialSubOption = target
       this.navTick++
     },
     setVentasSubOption(option) {

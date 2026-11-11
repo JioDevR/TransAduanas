@@ -33,6 +33,17 @@
 
           <button
             type="button"
+            class="btn-outline-warm"
+            @click="handleExportPdf"
+            :disabled="exportingPdf"
+            title="Descargar informe PDF de usuarios activos del portal B2B"
+          >
+            <i :class="['pi', exportingPdf ? 'pi-spin pi-spinner' : 'pi-file-pdf']"></i>
+            <span>Ver Reporte (PDF)</span>
+          </button>
+
+          <button
+            type="button"
             class="btn-espresso"
             @click="openCreateView"
           >
@@ -148,6 +159,7 @@ import { portalUserService } from '../services/portalUserService'
 import { useNavigationStore } from '@/core/stores/navigationStore'
 import { useNotification } from '@/shared/composables/useNotification'
 import { useConfirmation } from '@/shared/composables/useConfirmation'
+import { openBlobInNewTab } from '@/shared/utils/download'
 import PortalUserTable from '../components/PortalUserTable.vue'
 import PortalUserForm from '../components/PortalUserForm.vue'
 import PortalUserAuditModal from '../components/PortalUserAuditModal.vue'
@@ -159,6 +171,7 @@ const { confirmAction } = useConfirmation()
 
 const users = ref([])
 const loading = ref(false)
+const exportingPdf = ref(false)
 const isEditing = ref(false)
 const selectedUser = ref(null)
 
@@ -265,6 +278,19 @@ const handleToggleStatus = async (user) => {
   } catch (err) {
     const msg = err.response?.data?.message || 'Error al modificar el estado del usuario'
     showError(msg)
+  }
+}
+
+const handleExportPdf = async () => {
+  exportingPdf.value = true
+  try {
+    const blob = await portalUserService.downloadPdf(true)
+    openBlobInNewTab(blob)
+    showSuccess('Informe PDF de usuarios activos del portal abierto en nueva pestaña.')
+  } catch (err) {
+    showError('No se pudo generar el reporte PDF de usuarios del portal.')
+  } finally {
+    exportingPdf.value = false
   }
 }
 </script>

@@ -5,13 +5,16 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import pe.sga.config.SecurityRoles;
+import pe.sga.dto.request.CotizacionAsignarDTO;
 import pe.sga.dto.request.CotizacionEstadoDTO;
 import pe.sga.dto.request.CotizacionRequestDTO;
 import pe.sga.dto.request.CotizacionRevisionDTO;
 import pe.sga.dto.response.ApiResponseDTO;
 import pe.sga.dto.response.CotizacionResponseDTO;
+import pe.sga.entity.Usuario;
 import pe.sga.entity.enums.EstadoCotizacion;
 import pe.sga.service.ICotizacionService;
 
@@ -29,34 +32,43 @@ public class CotizacionController {
     public ResponseEntity<ApiResponseDTO<List<CotizacionResponseDTO>>> listar(
             @RequestParam(required = false, defaultValue = "false") boolean soloActivas,
             @RequestParam(required = false) EstadoCotizacion estado,
-            @RequestParam(required = false) Integer idCliente) {
-        List<CotizacionResponseDTO> cotizaciones;
-        if (idCliente != null) {
-            cotizaciones = cotizacionService.listarPorCliente(idCliente);
-        } else if (estado != null) {
-            cotizaciones = cotizacionService.listarPorEstado(estado);
-        } else {
-            cotizaciones = cotizacionService.listarTodas(soloActivas);
-        }
+            @RequestParam(required = false) Integer idCliente,
+            @RequestParam(required = false) Integer idUsuarioComercial,
+            @AuthenticationPrincipal Usuario usuarioActual) {
+        List<CotizacionResponseDTO> cotizaciones = cotizacionService.listar(
+                soloActivas, estado, idCliente, idUsuarioComercial, usuarioActual
+        );
         return ResponseEntity.ok(ApiResponseDTO.ok("Lista de cotizaciones recuperada exitosamente", cotizaciones));
     }
 
+    @GetMapping("/sin-asignar")
+    public ResponseEntity<ApiResponseDTO<List<CotizacionResponseDTO>>> listarSinAsignar() {
+        List<CotizacionResponseDTO> cotizaciones = cotizacionService.listarSinAsignar();
+        return ResponseEntity.ok(ApiResponseDTO.ok("Solicitudes sin asignar recuperadas exitosamente", cotizaciones));
+    }
+
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponseDTO<CotizacionResponseDTO>> buscarPorId(@PathVariable Integer id) {
-        CotizacionResponseDTO cotizacion = cotizacionService.buscarPorId(id);
+    public ResponseEntity<ApiResponseDTO<CotizacionResponseDTO>> buscarPorId(
+            @PathVariable Integer id,
+            @AuthenticationPrincipal Usuario usuarioActual) {
+        CotizacionResponseDTO cotizacion = cotizacionService.buscarPorId(id, usuarioActual);
         return ResponseEntity.ok(ApiResponseDTO.ok(cotizacion));
     }
 
     @GetMapping("/codigo/{codigo}")
-    public ResponseEntity<ApiResponseDTO<CotizacionResponseDTO>> buscarPorCodigo(@PathVariable String codigo) {
-        CotizacionResponseDTO cotizacion = cotizacionService.buscarPorCodigo(codigo);
+    public ResponseEntity<ApiResponseDTO<CotizacionResponseDTO>> buscarPorCodigo(
+            @PathVariable String codigo,
+            @AuthenticationPrincipal Usuario usuarioActual) {
+        CotizacionResponseDTO cotizacion = cotizacionService.buscarPorCodigo(codigo, usuarioActual);
         return ResponseEntity.ok(ApiResponseDTO.ok(cotizacion));
     }
 
     @PostMapping
     @PreAuthorize(SecurityRoles.ACCESS_CLIENTE_COTIZACION_WRITE)
-    public ResponseEntity<ApiResponseDTO<CotizacionResponseDTO>> crear(@Valid @RequestBody CotizacionRequestDTO dto) {
-        CotizacionResponseDTO creada = cotizacionService.crear(dto);
+    public ResponseEntity<ApiResponseDTO<CotizacionResponseDTO>> crear(
+            @Valid @RequestBody CotizacionRequestDTO dto,
+            @AuthenticationPrincipal Usuario usuarioActual) {
+        CotizacionResponseDTO creada = cotizacionService.crear(dto, usuarioActual);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponseDTO.ok("Cotización registrada exitosamente", creada));
     }
@@ -65,9 +77,21 @@ public class CotizacionController {
     @PreAuthorize(SecurityRoles.ACCESS_CLIENTE_COTIZACION_WRITE)
     public ResponseEntity<ApiResponseDTO<CotizacionResponseDTO>> actualizar(
             @PathVariable Integer id,
-            @Valid @RequestBody CotizacionRequestDTO dto) {
-        CotizacionResponseDTO actualizada = cotizacionService.actualizar(id, dto);
+            @Valid @RequestBody CotizacionRequestDTO dto,
+            @AuthenticationPrincipal Usuario usuarioActual) {
+        CotizacionResponseDTO actualizada = cotizacionService.actualizar(id, dto, usuarioActual);
         return ResponseEntity.ok(ApiResponseDTO.ok("Cotización actualizada exitosamente", actualizada));
+    }
+
+    @PatchMapping("/{id}/asignar")
+    @PreAuthorize(SecurityRoles.ACCESS_CLIENTE_COTIZACION_WRITE)
+    public ResponseEntity<ApiResponseDTO<CotizacionResponseDTO>> asignar(
+            @PathVariable Integer id,
+            @RequestBody(required = false) CotizacionAsignarDTO dto,
+            @AuthenticationPrincipal Usuario usuarioActual) {
+        Integer idUsuarioComercial = dto != null ? dto.getIdUsuarioComercial() : null;
+        CotizacionResponseDTO asignada = cotizacionService.asignarAsesor(id, idUsuarioComercial, usuarioActual);
+        return ResponseEntity.ok(ApiResponseDTO.ok("Cotización asignada exitosamente al asesor comercial", asignada));
     }
 
     @PatchMapping("/{id}/revision")
@@ -90,8 +114,10 @@ public class CotizacionController {
 
     @DeleteMapping("/{id}")
     @PreAuthorize(SecurityRoles.ACCESS_CLIENTE_COTIZACION_WRITE)
-    public ResponseEntity<ApiResponseDTO<Void>> eliminar(@PathVariable Integer id) {
-        cotizacionService.anular(id);
+    public ResponseEntity<ApiResponseDTO<Void>> eliminar(
+            @PathVariable Integer id,
+            @AuthenticationPrincipal Usuario usuarioActual) {
+        cotizacionService.anular(id, usuarioActual);
         return ResponseEntity.ok(ApiResponseDTO.ok("Cotización anulada exitosamente (borrado lógico por estado)", null));
     }
 }

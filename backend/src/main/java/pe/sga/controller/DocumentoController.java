@@ -45,7 +45,7 @@ public class DocumentoController {
         Integer idUsuario;
         if (principal instanceof Usuario usuarioAutenticado && usuarioAutenticado.getIdUsuario() != null) {
             if (entidadTipo == EntidadDocumento.COTIZACION && idEntidad != null) {
-                documentoService.validarAccesoComercialCotizacion(usuarioAutenticado, idEntidad, false);
+                documentoService.validarAccesoComercialCotizacion(usuarioAutenticado, idEntidad, true);
             }
             idUsuario = usuarioAutenticado.getIdUsuario();
         } else if (principal instanceof UsuarioCliente uc) {
@@ -142,7 +142,7 @@ public class DocumentoController {
     ) {
         if (principal instanceof Usuario usuario) {
             DocumentoAdjunto entidad = documentoService.obtenerEntidad(id);
-            documentoService.validarAccesoDocumentoComercial(usuario, entidad, false);
+            documentoService.validarAccesoDocumentoComercial(usuario, entidad, true);
         }
         documentoService.eliminar(id);
         return ResponseEntity.ok(ApiResponseDTO.ok("Documento eliminado correctamente", null));

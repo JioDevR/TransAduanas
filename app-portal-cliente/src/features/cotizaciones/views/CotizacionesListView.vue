@@ -1,188 +1,201 @@
 <template>
   <div class="cotizaciones-view">
-    <!-- Header de Sección -->
-    <div class="view-header">
-      <div class="header-titles">
-        <span class="view-kicker">MÓDULO COMERCIAL B2B</span>
-        <h1 class="view-title">Mis Cotizaciones Logísticas</h1>
-        <p class="view-subtitle">Consulte sus cotizaciones de importación y exportación, desglose de costos y aprobación de servicios.</p>
-      </div>
-      <div class="header-actions">
-        <button class="btn-primary" @click="openSolicitudModal">
-          <i class="pi pi-plus"></i>
-          <span>Solicitar Nueva Cotización</span>
-        </button>
-      </div>
-    </div>
+    <!-- Vista completa de Solicitud de Cotización (Portal B2B Stepper) -->
+    <PortalCotizacionForm
+      v-if="showSolicitudForm"
+      @cancel="showSolicitudForm = false"
+      @saved="handleSolicitudSaved"
+    />
 
-    <!-- Tarjetas Métricas KPI con numeración 01..04 Warm Editorial -->
-    <div class="kpi-grid">
-      <div class="kpi-card">
-        <div class="kpi-top">
-          <span class="kpi-idx">01</span>
-          <div class="kpi-icon-box">
-            <i class="pi pi-file"></i>
+    <!-- Contenido de Listado y Métricas -->
+    <template v-else>
+      <!-- Header de Sección -->
+      <div class="view-header">
+        <div class="header-titles">
+          <span class="view-kicker">MÓDULO COMERCIAL B2B</span>
+          <h1 class="view-title">Mis Cotizaciones Logísticas</h1>
+          <p class="view-subtitle">Consulte sus cotizaciones de importación y exportación, desglose de costos y aprobación de servicios.</p>
+        </div>
+        <div class="header-actions">
+          <button class="btn-primary" @click="showSolicitudForm = true">
+            <i class="pi pi-plus"></i>
+            <span>Solicitar Nueva Cotización</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Tarjetas Métricas KPI con numeración 01..04 Warm Editorial -->
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-top">
+            <span class="kpi-idx">01</span>
+            <div class="kpi-icon-box">
+              <i class="pi pi-file"></i>
+            </div>
+          </div>
+          <div class="kpi-content">
+            <span class="kpi-label">TOTAL COTIZACIONES</span>
+            <span class="kpi-value font-mono">{{ cotizaciones.length }}</span>
           </div>
         </div>
-        <div class="kpi-content">
-          <span class="kpi-label">TOTAL COTIZACIONES</span>
-          <span class="kpi-value font-mono">{{ cotizaciones.length }}</span>
-        </div>
-      </div>
 
-      <div class="kpi-card">
-        <div class="kpi-top">
-          <span class="kpi-idx">02</span>
-          <div class="kpi-icon-box success">
-            <i class="pi pi-check-circle"></i>
+        <div class="kpi-card">
+          <div class="kpi-top">
+            <span class="kpi-idx">02</span>
+            <div class="kpi-icon-box success">
+              <i class="pi pi-check-circle"></i>
+            </div>
+          </div>
+          <div class="kpi-content">
+            <span class="kpi-label">APROBADAS PARA DESPACHO</span>
+            <span class="kpi-value font-mono">{{ cotizacionesAprobadas }}</span>
           </div>
         </div>
-        <div class="kpi-content">
-          <span class="kpi-label">APROBADAS PARA DESPACHO</span>
-          <span class="kpi-value font-mono">{{ cotizacionesAprobadas }}</span>
-        </div>
-      </div>
 
-      <div class="kpi-card">
-        <div class="kpi-top">
-          <span class="kpi-idx">03</span>
-          <div class="kpi-icon-box warning">
-            <i class="pi pi-clock"></i>
+        <div class="kpi-card">
+          <div class="kpi-top">
+            <span class="kpi-idx">03</span>
+            <div class="kpi-icon-box warning">
+              <i class="pi pi-clock"></i>
+            </div>
+          </div>
+          <div class="kpi-content">
+            <span class="kpi-label">EN EVALUACIÓN TÉCNICA</span>
+            <span class="kpi-value font-mono">{{ cotizacionesPendientes }}</span>
           </div>
         </div>
-        <div class="kpi-content">
-          <span class="kpi-label">EN EVALUACIÓN TÉCNICA</span>
-          <span class="kpi-value font-mono">{{ cotizacionesPendientes }}</span>
-        </div>
-      </div>
 
-      <div class="kpi-card highlighted">
-        <div class="kpi-top">
-          <span class="kpi-idx">04</span>
-          <div class="kpi-icon-box accent">
-            <i class="pi pi-dollar"></i>
+        <div class="kpi-card highlighted">
+          <div class="kpi-top">
+            <span class="kpi-idx">04</span>
+            <div class="kpi-icon-box accent">
+              <i class="pi pi-dollar"></i>
+            </div>
+          </div>
+          <div class="kpi-content">
+            <span class="kpi-label">VALOR TOTAL COTIZADO</span>
+            <span class="kpi-value font-mono">$ {{ formatCurrency(totalMontoCotizado) }}</span>
           </div>
         </div>
-        <div class="kpi-content">
-          <span class="kpi-label">VALOR TOTAL COTIZADO</span>
-          <span class="kpi-value font-mono">$ {{ formatCurrency(totalMontoCotizado) }}</span>
+      </div>
+
+      <!-- Barra de Filtros -->
+      <div class="filters-bar">
+        <div class="search-box">
+          <i class="pi pi-search"></i>
+          <input 
+            v-model="filtroTexto" 
+            type="text" 
+            placeholder="Buscar por código, mercancía o puerto..." 
+            class="search-input"
+          />
+        </div>
+
+        <div class="filter-group">
+          <label>Régimen:</label>
+          <select v-model="filtroRegimen" class="custom-select">
+            <option value="">Todos los regímenes</option>
+            <option value="IMPORTACION_DEFINITIVA">Importación Definitiva</option>
+            <option value="EXPORTACION_DEFINITIVA">Exportación Definitiva</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label>Estado:</label>
+          <select v-model="filtroEstado" class="custom-select">
+            <option value="">Todos los estados</option>
+            <option value="APROBADA">Aprobadas</option>
+            <option value="PENDIENTE">En Evaluación</option>
+            <option value="OBSERVADA">Observadas</option>
+          </select>
         </div>
       </div>
-    </div>
 
-    <!-- Barra de Filtros -->
-    <div class="filters-bar">
-      <div class="search-box">
-        <i class="pi pi-search"></i>
-        <input 
-          v-model="filtroTexto" 
-          type="text" 
-          placeholder="Buscar por código, mercancía o puerto..." 
-          class="search-input"
-        />
+      <!-- Tabla de Cotizaciones -->
+      <div class="table-card">
+        <div v-if="loading" class="loading-state">
+          <i class="pi pi-spin pi-spinner"></i>
+          <span>Cargando cotizaciones de su empresa...</span>
+        </div>
+
+        <div v-else-if="cotizacionesFiltradas.length === 0" class="empty-state">
+          <i class="pi pi-folder-open"></i>
+          <h3>No se encontraron cotizaciones</h3>
+          <p>No hay registros que coincidan con los filtros seleccionados o aún no ha solicitado cotizaciones.</p>
+        </div>
+
+        <div v-else class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>CÓDIGO</th>
+                <th>MERCANCÍA & CARGA</th>
+                <th>RÉGIMEN</th>
+                <th>RUTA LOGÍSTICA</th>
+                <th class="text-right">VALOR FOB</th>
+                <th class="text-right">TOTAL ESTIMADO</th>
+                <th class="text-center">ESTADO</th>
+                <th class="text-center">ESTADO PAGO</th>
+                <th class="text-center">ACCIONES</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="c in paginatedCotizaciones" :key="c.idCotizacion">
+                <td class="font-mono font-bold">{{ c.codigoCotizacion }}</td>
+                <td>
+                  <div class="item-name">{{ c.nombreMercancia || 'Mercancía General' }}</div>
+                  <div class="item-sub font-mono">{{ c.codigoMercancia || 'Sin partida' }} • {{ c.nombreTipoCarga || 'General' }}</div>
+                </td>
+                <td>
+                  <span class="regimen-tag" :class="c.regimenAduanero?.toLowerCase()">
+                    {{ formatRegimen(c.regimenAduanero) }}
+                  </span>
+                </td>
+                <td>
+                  <div class="route-box">
+                    <span>{{ c.nombrePuertoEnvio || 'Origen' }}</span>
+                    <i class="pi pi-arrow-right"></i>
+                    <span>{{ c.nombrePuertoDestino || 'Destino' }}</span>
+                  </div>
+                </td>
+                <td class="text-right font-mono">$ {{ formatCurrency(c.valorFob) }}</td>
+                <td class="text-right font-mono font-bold highlight-cell">
+                  <span v-if="esPendienteLiquidacion(c)" class="pendiente-tag">Por cotizar</span>
+                  <span v-else>$ {{ formatCurrency(c.totalCotizado) }}</span>
+                </td>
+                <td class="text-center">
+                  <span class="status-badge" :class="getStatusClass(c.estado)">
+                    {{ c.estado }}
+                  </span>
+                </td>
+                <td class="text-center">
+                  <span class="pago-badge" :class="getPagoClass(c.estadoPago)">
+                    {{ formatPago(c.estadoPago) }}
+                  </span>
+                </td>
+                <td class="text-center">
+                  <button class="btn-table-action" @click="verDetalle(c)" title="Ver Desglose Completo">
+                    <i class="pi pi-eye"></i>
+                    <span>Detalle</span>
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <!-- Paginador Compartido -->
+          <BasePagination 
+            v-if="totalItems > pageSize"
+            v-model:currentPage="currentPage"
+            :total-pages="totalPages"
+            :total-items="totalItems"
+            :start-index="startIndex"
+            :end-index="endIndex"
+            item-label="cotizaciones"
+          />
+        </div>
       </div>
-
-      <div class="filter-group">
-        <label>Régimen:</label>
-        <select v-model="filtroRegimen" class="custom-select">
-          <option value="">Todos los regímenes</option>
-          <option value="IMPORTACION_DEFINITIVA">Importación Definitiva</option>
-          <option value="EXPORTACION_DEFINITIVA">Exportación Definitiva</option>
-        </select>
-      </div>
-
-      <div class="filter-group">
-        <label>Estado:</label>
-        <select v-model="filtroEstado" class="custom-select">
-          <option value="">Todos los estados</option>
-          <option value="APROBADA">Aprobadas</option>
-          <option value="PENDIENTE">En Evaluación</option>
-          <option value="OBSERVADA">Observadas</option>
-        </select>
-      </div>
-    </div>
-
-    <!-- Tabla de Cotizaciones -->
-    <div class="table-card">
-      <div v-if="loading" class="loading-state">
-        <i class="pi pi-spin pi-spinner"></i>
-        <span>Cargando cotizaciones de su empresa...</span>
-      </div>
-
-      <div v-else-if="cotizacionesFiltradas.length === 0" class="empty-state">
-        <i class="pi pi-folder-open"></i>
-        <h3>No se encontraron cotizaciones</h3>
-        <p>No hay registros que coincidan con los filtros seleccionados o aún no ha solicitado cotizaciones.</p>
-      </div>
-
-      <div v-else class="table-responsive">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>CÓDIGO</th>
-              <th>MERCANCÍA & CARGA</th>
-              <th>RÉGIMEN</th>
-              <th>RUTA LOGÍSTICA</th>
-              <th class="text-right">VALOR FOB</th>
-              <th class="text-right">TOTAL ESTIMADO</th>
-              <th class="text-center">ESTADO</th>
-              <th class="text-center">ESTADO PAGO</th>
-              <th class="text-center">ACCIONES</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="c in paginatedCotizaciones" :key="c.idCotizacion">
-              <td class="font-mono font-bold">{{ c.codigoCotizacion }}</td>
-              <td>
-                <div class="item-name">{{ c.nombreMercancia || 'Mercancía General' }}</div>
-                <div class="item-sub font-mono">{{ c.codigoMercancia || 'Sin partida' }} • {{ c.nombreTipoCarga || 'General' }}</div>
-              </td>
-              <td>
-                <span class="regimen-tag" :class="c.regimenAduanero?.toLowerCase()">
-                  {{ formatRegimen(c.regimenAduanero) }}
-                </span>
-              </td>
-              <td>
-                <div class="route-box">
-                  <span>{{ c.nombrePuertoEnvio || 'Origen' }}</span>
-                  <i class="pi pi-arrow-right"></i>
-                  <span>{{ c.nombrePuertoDestino || 'Destino' }}</span>
-                </div>
-              </td>
-              <td class="text-right font-mono">$ {{ formatCurrency(c.valorFob) }}</td>
-              <td class="text-right font-mono font-bold highlight-cell">$ {{ formatCurrency(c.totalCotizado) }}</td>
-              <td class="text-center">
-                <span class="status-badge" :class="getStatusClass(c.estado)">
-                  {{ c.estado }}
-                </span>
-              </td>
-              <td class="text-center">
-                <span class="pago-badge" :class="getPagoClass(c.estadoPago)">
-                  {{ formatPago(c.estadoPago) }}
-                </span>
-              </td>
-              <td class="text-center">
-                <button class="btn-table-action" @click="verDetalle(c)" title="Ver Desglose Completo">
-                  <i class="pi pi-eye"></i>
-                  <span>Detalle</span>
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-
-        <!-- Paginador Compartido -->
-        <BasePagination 
-          v-if="totalItems > pageSize"
-          v-model:currentPage="currentPage"
-          :total-pages="totalPages"
-          :total-items="totalItems"
-          :start-index="startIndex"
-          :end-index="endIndex"
-          item-label="cotizaciones"
-        />
-      </div>
-    </div>
+    </template>
 
     <!-- Modal de Detalle de Cotización -->
     <BaseModal
@@ -190,7 +203,7 @@
       :title="cotizacionSeleccionada?.codigoCotizacion || 'Detalle de Cotización'"
       subtitle="DETALLE DE COTIZACIÓN COMERCIAL"
       icon="pi pi-file"
-      max-width="680px"
+      max-width="840px"
       @close="modalDetalleVisible = false"
     >
       <div class="modal-body" v-if="cotizacionSeleccionada">
@@ -215,12 +228,24 @@
               <span class="detail-val">{{ cotizacionSeleccionada.nombrePuertoEnvio || 'Origen' }} &rarr; {{ cotizacionSeleccionada.nombrePuertoDestino || 'Destino' }}</span>
             </div>
             <div class="detail-item">
+              <span class="detail-label">Asesor Comercial:</span>
+              <span class="detail-val">{{ cotizacionSeleccionada.usuarioComercialNombre || 'Pendiente de asignación' }}</span>
+            </div>
+            <div class="detail-item">
               <span class="detail-label">Transporte Local:</span>
-              <span class="detail-val">{{ cotizacionSeleccionada.servicioTransporte ? 'Sí (Incluido a almacén)' : 'No incluido' }}</span>
+              <span class="detail-val">
+                {{ cotizacionSeleccionada.servicioTransporte ? (cotizacionSeleccionada.costoTransporteInterno ? `$ ${formatCurrency(cotizacionSeleccionada.costoTransporteInterno)} (SGA)` : 'Sí (Pendiente de cotización)') : 'No incluido' }}
+              </span>
+            </div>
+            <div v-if="cotizacionSeleccionada.servicioTransporte" class="detail-item">
+              <span class="detail-label">Ruta Nacional:</span>
+              <span class="detail-val">
+                {{ cotizacionSeleccionada.origenProvincia || cotizacionSeleccionada.origenDepartamento || 'Origen' }} &rarr; {{ cotizacionSeleccionada.destinoProvincia || cotizacionSeleccionada.destinoDepartamento || 'Destino' }}
+              </span>
             </div>
             <div class="detail-item">
               <span class="detail-label">Validez Comercial:</span>
-              <span class="detail-val">{{ cotizacionSeleccionada.validezDias }} días (Emitida: {{ cotizacionSeleccionada.fechaEmision }})</span>
+              <span class="detail-val">{{ cotizacionSeleccionada.validezDias }} días (Emitida: {{ cotizacionSeleccionada.fechaEmision || 'En evaluación' }})</span>
             </div>
           </div>
         </div>
@@ -235,25 +260,50 @@
             </div>
             <div class="cost-row">
               <span>Flete Internacional Estimado:</span>
-              <span class="font-mono">$ {{ formatCurrency(cotizacionSeleccionada.montoFlete) }}</span>
+              <span class="font-mono">
+                {{ Number(cotizacionSeleccionada.montoFlete) > 0 ? '$ ' + formatCurrency(cotizacionSeleccionada.montoFlete) : (esPendienteLiquidacion(cotizacionSeleccionada) ? 'Pendiente por asesor' : '$ 0.00') }}
+              </span>
             </div>
             <div class="cost-row">
               <span>Seguro de Transporte Estimado:</span>
-              <span class="font-mono">$ {{ formatCurrency(cotizacionSeleccionada.montoSeguroEstimado) }}</span>
+              <span class="font-mono">
+                {{ esPendienteLiquidacion(cotizacionSeleccionada) && !(Number(cotizacionSeleccionada.montoSeguroEstimado) > 0) ? 'Pendiente por asesor' : '$ ' + formatCurrency(cotizacionSeleccionada.montoSeguroEstimado) }}
+              </span>
             </div>
             <div class="cost-row">
               <span>Honorarios de Agenciamiento Aduanero:</span>
-              <span class="font-mono">$ {{ formatCurrency(cotizacionSeleccionada.montoHonorarios) }}</span>
+              <span class="font-mono">
+                {{ esPendienteLiquidacion(cotizacionSeleccionada) && !(Number(cotizacionSeleccionada.montoHonorarios) > 0) ? 'Pendiente por asesor' : '$ ' + formatCurrency(cotizacionSeleccionada.montoHonorarios) }}
+              </span>
+            </div>
+            <div v-if="cotizacionSeleccionada.servicioTransporte" class="cost-row">
+              <span>Flete Terrestre Local (SGA):</span>
+              <span class="font-mono">
+                {{ esPendienteLiquidacion(cotizacionSeleccionada) && !(Number(cotizacionSeleccionada.costoTransporteInterno) > 0) ? 'Pendiente por asesor' : '$ ' + formatCurrency(cotizacionSeleccionada.costoTransporteInterno) }}
+              </span>
             </div>
             <div class="cost-row highlight">
               <span>Tributos Aduaneros Estimados (Aranceles + IGV):</span>
-              <span class="font-mono">$ {{ formatCurrency(cotizacionSeleccionada.montoTributos) }}</span>
+              <span class="font-mono">
+                {{ cotizacionSeleccionada.regimenAduanero === 'EXPORTACION_DEFINITIVA' ? 'Inafecto ($ 0.00)' : (esPendienteLiquidacion(cotizacionSeleccionada) && !(Number(cotizacionSeleccionada.montoTributos) > 0) ? 'Pendiente por asesor' : '$ ' + formatCurrency(cotizacionSeleccionada.montoTributos)) }}
+              </span>
             </div>
             <div class="cost-row total-row">
               <span>TOTAL ESTIMADO DEL SERVICIO:</span>
-              <span class="font-mono total-amount">$ {{ formatCurrency(cotizacionSeleccionada.totalCotizado) }}</span>
+              <span class="font-mono total-amount">
+                {{ esPendienteLiquidacion(cotizacionSeleccionada) ? 'En liquidación ($ 0.00)' : '$ ' + formatCurrency(cotizacionSeleccionada.totalCotizado) }}
+              </span>
             </div>
           </div>
+        </div>
+
+        <!-- Documentación Técnica Adjunta / Expediente Digital -->
+        <div class="detail-section">
+          <h4 class="section-title">Documentación Técnica & Sustento Digital</h4>
+          <PortalDocumentosUploadPanel
+            mode="live"
+            :id-cotizacion="cotizacionSeleccionada.idCotizacion"
+          />
         </div>
 
         <!-- Estado de Pagos y Anticipos -->
@@ -314,118 +364,6 @@
         </div>
       </template>
     </BaseModal>
-
-    <!-- Modal de Solicitar Nueva Cotización -->
-    <BaseModal
-      v-model:visible="modalSolicitudVisible"
-      title="Solicitar Cotización de Agenciamiento"
-      subtitle="NUEVA OPERACIÓN"
-      icon="pi pi-file"
-      max-width="680px"
-      :busy="enviandoSolicitud"
-      @close="modalSolicitudVisible = false"
-    >
-      <form @submit.prevent="enviarSolicitud" class="modal-body">
-        <div class="form-grid">
-          <div class="form-field">
-            <label>Régimen Aduanero *</label>
-            <select v-model="solicitudForm.regimenAduanero" required class="custom-select">
-              <option value="IMPORTACION_DEFINITIVA">Importación Definitiva</option>
-              <option value="EXPORTACION_DEFINITIVA">Exportación Definitiva</option>
-            </select>
-          </div>
-
-          <div class="form-field">
-            <label>Modalidad de Transporte *</label>
-            <select v-model="modalidadSeleccionada" class="custom-select" @change="onModalidadChange">
-              <option value="MARITIMO">Marítimo</option>
-              <option value="AEREO">Aéreo</option>
-              <option value="TERRESTRE">Terrestre</option>
-            </select>
-          </div>
-
-          <div class="form-field">
-            <label>Tipo de Carga:</label>
-            <select v-model="solicitudForm.idTipoCarga" class="custom-select">
-              <option :value="null">Seleccione tipo de carga...</option>
-              <option v-for="tc in tiposCarga" :key="tc.idTipoCarga" :value="tc.idTipoCarga">
-                {{ tc.nombre }}
-              </option>
-            </select>
-          </div>
-
-          <div class="form-field">
-            <label>Mercancía / Partida:</label>
-            <select v-model="solicitudForm.idMercancia" class="custom-select">
-              <option :value="null">Seleccione mercancía...</option>
-              <option v-for="m in mercancias" :key="m.idMercancia" :value="m.idMercancia">
-                {{ m.codigo }} - {{ m.nombre }}
-              </option>
-            </select>
-          </div>
-
-          <div class="form-field">
-            <label>Puerto de Embarque (Origen):</label>
-            <select v-model="solicitudForm.idPuertoEnvio" class="custom-select">
-              <option :value="null">Seleccione puerto de salida...</option>
-              <option v-for="p in puertosFiltrados" :key="'env-' + p.idPuerto" :value="p.idPuerto">
-                {{ p.nombre }} ({{ p.pais }})
-              </option>
-            </select>
-          </div>
-
-          <div class="form-field">
-            <label>Puerto de Llegada (Destino):</label>
-            <select v-model="solicitudForm.idPuertoDestino" class="custom-select">
-              <option :value="null">Seleccione puerto de arribo...</option>
-              <option v-for="p in puertosFiltrados" :key="'dest-' + p.idPuerto" :value="p.idPuerto">
-                {{ p.nombre }} ({{ p.pais }})
-              </option>
-            </select>
-          </div>
-
-          <div class="form-field full">
-            <label>Valor FOB Estimado (USD) *</label>
-            <input 
-              v-model.number="solicitudForm.valorFob" 
-              type="number" 
-              step="0.01" 
-              min="1" 
-              placeholder="Ej. 25000.00" 
-              required 
-              class="custom-input font-mono"
-            />
-          </div>
-
-          <div class="form-field full">
-            <label class="checkbox-label">
-              <input type="checkbox" v-model="solicitudForm.servicioTransporte" />
-              <span>Requiero servicio de transporte terrestre hasta almacén / planta</span>
-            </label>
-          </div>
-
-          <div class="form-field full">
-            <label>Detalle de la Carga u Observaciones:</label>
-            <textarea 
-              v-model="solicitudForm.observaciones" 
-              rows="3" 
-              placeholder="Describa el tipo de mercancía, volumen en bultos o requerimientos especiales..."
-              class="custom-textarea"
-            ></textarea>
-          </div>
-        </div>
-
-        <div class="modal-footer" style="padding: 1rem 0 0 0; margin-top: 1rem;">
-          <button type="button" class="btn-secondary" @click="modalSolicitudVisible = false" :disabled="enviandoSolicitud">
-            Cancelar
-          </button>
-          <button type="submit" class="btn-primary" :disabled="enviandoSolicitud">
-            <i v-if="enviandoSolicitud" class="pi pi-spin pi-spinner"></i>
-            <span v-else>Enviar Solicitud a Evaluación</span>
-          </button>
-        </div>
-      </form>
-    </BaseModal>
   </div>
 </template>
 
@@ -436,21 +374,19 @@ import { useNotification } from '@/shared/composables/useNotification'
 import { useConfirmation } from '@/shared/composables/useConfirmation'
 import BasePagination from '@/shared/components/BasePagination.vue'
 import BaseModal from '@/shared/components/BaseModal.vue'
+import PortalCotizacionForm from '../components/PortalCotizacionForm.vue'
+import PortalDocumentosUploadPanel from '../components/PortalDocumentosUploadPanel.vue'
+import { esPendienteLiquidacion } from '../utils/portalCotizacionFormUtils'
 
 const { showSuccess, showError, showWarn } = useNotification()
 const { confirmAction } = useConfirmation()
 
+const showSolicitudForm = ref(false)
 const cotizaciones = ref([])
 const loading = ref(true)
 const filtroTexto = ref('')
 const filtroRegimen = ref('')
 const filtroEstado = ref('')
-
-// Catálogos dinámicos
-const puertos = ref([])
-const mercancias = ref([])
-const tiposCarga = ref([])
-const modalidadSeleccionada = ref('MARITIMO')
 
 // Paginación
 const currentPage = ref(1)
@@ -459,29 +395,6 @@ const pageSize = ref(10)
 const modalDetalleVisible = ref(false)
 const cotizacionSeleccionada = ref(null)
 const aceptando = ref(false)
-
-const modalSolicitudVisible = ref(false)
-const enviandoSolicitud = ref(false)
-const solicitudForm = ref({
-  regimenAduanero: 'IMPORTACION_DEFINITIVA',
-  valorFob: null,
-  idMercancia: null,
-  idTipoCarga: null,
-  idPuertoEnvio: null,
-  idPuertoDestino: null,
-  servicioTransporte: true,
-  observaciones: ''
-})
-
-const puertosFiltrados = computed(() => {
-  if (!modalidadSeleccionada.value) return puertos.value
-  return puertos.value.filter(p => !p.tipo || p.tipo.toUpperCase() === modalidadSeleccionada.value)
-})
-
-function onModalidadChange() {
-  solicitudForm.value.idPuertoEnvio = null
-  solicitudForm.value.idPuertoDestino = null
-}
 
 const cotizacionesFiltradas = computed(() => {
   return cotizaciones.value.filter(c => {
@@ -524,26 +437,8 @@ const totalMontoCotizado = computed(() => {
 })
 
 onMounted(async () => {
-  await Promise.all([
-    cargarCotizaciones(),
-    cargarCatalogos()
-  ])
+  await cargarCotizaciones()
 })
-
-async function cargarCatalogos() {
-  try {
-    const [pList, mList, tcList] = await Promise.all([
-      portalCotizacionService.obtenerPuertos().catch(() => []),
-      portalCotizacionService.obtenerMercancias().catch(() => []),
-      portalCotizacionService.obtenerTiposCarga().catch(() => [])
-    ])
-    puertos.value = pList
-    mercancias.value = mList
-    tiposCarga.value = tcList
-  } catch (err) {
-    console.debug('Error al cargar catálogos:', err)
-  }
-}
 
 async function cargarCotizaciones() {
   loading.value = true
@@ -555,6 +450,22 @@ async function cargarCotizaciones() {
   } finally {
     loading.value = false
   }
+}
+
+async function handleSolicitudSaved({ cotizacion, docsResult }) {
+  showSolicitudForm.value = false
+  if (docsResult?.failed?.length > 0) {
+    showWarn(
+      `Cotización ${cotizacion?.codigoCotizacion || ''} generada, pero algunos documentos no pudieron subirse. Puede reintentar desde el detalle del expediente.`,
+      'Solicitud Parcial'
+    )
+  } else {
+    showSuccess(
+      `Solicitud de cotización ${cotizacion?.codigoCotizacion || ''} remitida con éxito a evaluación comercial.`,
+      'Solicitud Enviada'
+    )
+  }
+  await cargarCotizaciones()
 }
 
 function formatCurrency(val) {
@@ -625,37 +536,6 @@ async function handleAceptarCotizacion(c) {
     showError(err.response?.data?.message || 'Error al aceptar cotización')
   } finally {
     aceptando.value = false
-  }
-}
-
-function openSolicitudModal() {
-  solicitudForm.value = {
-    regimenAduanero: 'IMPORTACION_DEFINITIVA',
-    valorFob: null,
-    idMercancia: null,
-    idTipoCarga: null,
-    idPuertoEnvio: null,
-    idPuertoDestino: null,
-    servicioTransporte: true,
-    observaciones: ''
-  }
-  modalidadSeleccionada.value = 'MARITIMO'
-  modalSolicitudVisible.value = true
-}
-
-async function enviarSolicitud() {
-  enviandoSolicitud.value = true
-  try {
-    const res = await portalCotizacionService.solicitarCotizacion(solicitudForm.value)
-    if (res) {
-      modalSolicitudVisible.value = false
-      showSuccess('Solicitud de cotización remitida con éxito a evaluación técnica.', 'Solicitud Enviada')
-      await cargarCotizaciones()
-    }
-  } catch (err) {
-    showError(err.response?.data?.message || 'Error al enviar solicitud')
-  } finally {
-    enviandoSolicitud.value = false
   }
 }
 </script>
@@ -1020,6 +900,18 @@ async function enviarSolicitud() {
 
 .pago-badge.neutral {
   color: var(--color-text-subtle);
+}
+
+.pendiente-tag {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--color-warning-text, #b78103);
+  background: var(--color-warning-bg, #fff8e1);
+  border: 1px solid var(--color-warning-border, #ffe082);
+  padding: 0.15rem 0.5rem;
+  border-radius: 12px;
+  display: inline-block;
+  letter-spacing: 0.02em;
 }
 
 .btn-table-action {

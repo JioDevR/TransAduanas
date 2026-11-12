@@ -27,13 +27,13 @@ Este diseño garantiza que:
 
 ## 2. Flujo de Autenticación por RUC (11 Dígitos)
 
-El acceso se realiza en [`app-portal-cliente/src/features/auth/views/PortalLoginView.vue`](file:///home/jiodev/Documents/Proyects/TransAduanas/app-portal-cliente/src/features/auth/views/PortalLoginView.vue):
+El acceso se realiza en [`app-portal-cliente/src/features/auth/views/PortalLoginView.vue`](../../app-portal-cliente/src/features/auth/views/PortalLoginView.vue):
 
 1. **Entrada de Datos:** El cliente ingresa su RUC de 11 dígitos y su contraseña.
 2. **Validación en Cliente:** El formulario comprueba que el RUC contenga únicamente dígitos numéricos y tenga longitud exacta de 11 caracteres antes de emitir la petición.
-3. **Petición al Backend:** Se envía un `POST /api/v1/auth/login` con `{ "username": "20370146994", "password": "..." }`.
+3. **Petición al Backend:** Se envía un `POST /api/v1/portal/auth/login` con `{ "username": "20370146994", "password": "..." }`.
 4. **Respuesta del Servidor:**
-   - Si las credenciales son válidas, el backend entrega el token JWT con rol `ROLE_CLIENTE`, los datos de la empresa y la bandera booleana `debeCambiarPassword`.
+   - Si las credenciales son válidas, el backend entrega el token JWT con rol `ROLE_CLIENTE_PORTAL`, los datos de la empresa y la bandera booleana `debeCambiarPassword`.
    - `authStore` almacena el token en `localStorage` bajo la clave `portal_token` y el objeto de usuario en `portal_user`.
 
 ---
@@ -56,14 +56,14 @@ El acceso se realiza en [`app-portal-cliente/src/features/auth/views/PortalLogin
                                   │
                      [ Cliente ingresa nueva clave ]
                                   │
-                     [ PUT /api/v1/portal/auth/cambiar-password ]
+                     [ POST /api/v1/portal/auth/cambiar-password ]
                                   │
                      [ debeCambiarPassword = false ]
                                   ▼
                      [ Desbloqueo total del Portal ]
 ```
 
-- **Vista:** [`PortalCambioPasswordObligatorioView.vue`](file:///home/jiodev/Documents/Proyects/TransAduanas/app-portal-cliente/src/features/auth/views/PortalCambioPasswordObligatorioView.vue)
+- **Vista:** [`PortalCambioPasswordObligatorioView.vue`](../../app-portal-cliente/src/features/auth/views/PortalCambioPasswordObligatorioView.vue)
 - **Reglas de Contraseña:** Exige ingresar la clave temporal actual, una nueva contraseña de al menos 8 caracteres (con números y letras) y la confirmación idéntica.
 - **Bloqueo Absoluto:** Si el usuario intenta cambiar la URL manualmente en el navegador para saltar a `/cotizaciones` o `/expedientes`, el enrutador lo intercepta y lo regresa inmediatamente a la pantalla de cambio obligatorio.
 
@@ -71,7 +71,7 @@ El acceso se realiza en [`app-portal-cliente/src/features/auth/views/PortalLogin
 
 ## 4. Gestión de Sesión con `authStore.js`
 
-Ubicado en [`app-portal-cliente/src/core/stores/authStore.js`](file:///home/jiodev/Documents/Proyects/TransAduanas/app-portal-cliente/src/core/stores/authStore.js):
+Ubicado en [`app-portal-cliente/src/core/stores/authStore.js`](../../app-portal-cliente/src/core/stores/authStore.js):
 
 - **Estado (`State`):**
   - `token`: Cadena JWT Bearer.
@@ -89,7 +89,7 @@ Ubicado en [`app-portal-cliente/src/core/stores/authStore.js`](file:///home/jiod
 
 ## 5. Guardias de Navegación del Router B2B
 
-Implementado en [`app-portal-cliente/src/core/router/index.js`](file:///home/jiodev/Documents/Proyects/TransAduanas/app-portal-cliente/src/core/router/index.js):
+Implementado en [`app-portal-cliente/src/core/router/index.js`](../../app-portal-cliente/src/core/router/index.js):
 
 ```javascript
 router.beforeEach((to, from, next) => {

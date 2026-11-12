@@ -19,7 +19,7 @@
 
 ## 1. Inventario General de Librerías
 
-El archivo [`app-portal-cliente/package.json`](file:///home/jiodev/Documents/Proyects/TransAduanas/app-portal-cliente/package.json) define las siguientes dependencias:
+El archivo [`app-portal-cliente/package.json`](../../app-portal-cliente/package.json) define las siguientes dependencias:
 
 | Librería | Versión | Rol en el Portal B2B |
 | :--- | :---: | :--- |
@@ -93,7 +93,7 @@ El archivo [`app-portal-cliente/package.json`](file:///home/jiodev/Documents/Pro
 
 ## 3. Configuración del Servidor y Proxy (`vite.config.js`)
 
-El archivo [`app-portal-cliente/vite.config.js`](file:///home/jiodev/Documents/Proyects/TransAduanas/app-portal-cliente/vite.config.js) configura el entorno de ejecución:
+El archivo [`app-portal-cliente/vite.config.js`](../../app-portal-cliente/vite.config.js) configura el entorno de ejecución:
 
 ```javascript
 export default defineConfig({

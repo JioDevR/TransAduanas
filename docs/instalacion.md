@@ -76,10 +76,10 @@ Antes de comenzar, verifica que tengas instaladas las siguientes herramientas en
 
 ### 1.3 Paso 1: Configuración e Inicialización de la Base de Datos MySQL Local
 
-El sistema utiliza una base de datos llamada `SGAdb` con juego de caracteres `utf8mb4` (`utf8mb4_unicode_ci`). Los scripts SQL oficiales se encuentran en la carpeta [`db/`](file:///home/jiodev/Documents/Proyects/TransAduanas/db):
+El sistema utiliza una base de datos llamada `SGAdb` con juego de caracteres `utf8mb4` (`utf8mb4_unicode_ci`). Los scripts SQL oficiales se encuentran en la carpeta [`db/`](../db):
 
-- [`db/schema.sql`](file:///home/jiodev/Documents/Proyects/TransAduanas/db/schema.sql): Crea la base de datos `SGAdb` y las **17 tablas relacionales** con sus llaves foráneas e índices.
-- [`db/seed.sql`](file:///home/jiodev/Documents/Proyects/TransAduanas/db/seed.sql): Inserta los datos iniciales completos para probar el proyecto (6 sedes, 80 puertos/aeropuertos, 17 tipos de carga, 52 subpartidas arancelarias NANDINA, 65 usuarios internos en los 8 roles y 80 empresas clientes con cuentas del Portal B2B).
+- [`db/schema.sql`](../db/schema.sql): Crea la base de datos `SGAdb` y las **17 tablas relacionales** con sus llaves foráneas e índices.
+- [`db/seed.sql`](../db/seed.sql): Inserta los datos iniciales completos para probar el proyecto (6 sedes, 80 puertos/aeropuertos, 17 tipos de carga, 52 subpartidas arancelarias NANDINA, 65 usuarios internos en los 8 roles y 80 empresas clientes con cuentas del Portal B2B).
 
 **Ejecuta los siguientes comandos desde la raíz del repositorio:**
 
@@ -92,7 +92,7 @@ mysql -u root -p < db/seed.sql
 ```
 
 > [!TIP]
-> También puedes abrir [`db/schema.sql`](file:///home/jiodev/Documents/Proyects/TransAduanas/db/schema.sql) y [`db/seed.sql`](file:///home/jiodev/Documents/Proyects/TransAduanas/db/seed.sql) desde **MySQL Workbench**, **DBeaver** o **DataGrip** y ejecutarlos en ese mismo orden.
+> También puedes abrir [`db/schema.sql`](../db/schema.sql) y [`db/seed.sql`](../db/seed.sql) desde **MySQL Workbench**, **DBeaver** o **DataGrip** y ejecutarlos en ese mismo orden.
 
 ---
 
@@ -100,9 +100,9 @@ mysql -u root -p < db/seed.sql
 
 #### A. Configurar Credenciales Locales (`application-local.properties`)
 
-Para no exponer tu usuario y contraseña de MySQL en Git, el archivo [`backend/src/main/resources/application.properties`](file:///home/jiodev/Documents/Proyects/TransAduanas/backend/src/main/resources/application.properties) importa automáticamente el archivo `backend/application-local.properties` (ignorado en `.gitignore`).
+Para no exponer tu usuario y contraseña de MySQL en Git, el archivo [`backend/src/main/resources/application.properties`](../backend/src/main/resources/application.properties) importa automáticamente el archivo `backend/application-local.properties` (ignorado en `.gitignore`).
 
-1. Ingresa al directorio `backend/` y crea tu archivo local a partir de la plantilla [`backend/application-local.properties.example`](file:///home/jiodev/Documents/Proyects/TransAduanas/backend/application-local.properties.example):
+1. Ingresa al directorio `backend/` y crea tu archivo local a partir de la plantilla [`backend/application-local.properties.example`](../backend/application-local.properties.example):
 
    ```bash
    cd backend
@@ -155,7 +155,7 @@ mvn spring-boot:run
 
 ### 1.5 Paso 3: Instalación y Ejecución del Frontend Interno (SGA Operativo)
 
-El **Frontend Interno** ([`app-sga/`](file:///home/jiodev/Documents/Proyects/TransAduanas/app-sga)) es la aplicación web principal donde operan los **8 roles institucionales**. Corre en el puerto `5180` y redirige automáticamente las llamadas `/api` hacia `http://localhost:8085`.
+El **Frontend Interno** ([`app-sga/`](../app-sga)) es la aplicación web principal donde operan los **8 roles institucionales**. Corre en el puerto `5180` y redirige automáticamente las llamadas `/api` hacia `http://localhost:8085`.
 
 Abre una **nueva terminal** desde la raíz del proyecto y ejecuta:
 
@@ -176,7 +176,7 @@ npm run dev
 
 ### 1.6 Paso 4: Instalación y Ejecución del Portal del Cliente B2B
 
-El **Portal del Cliente B2B** ([`app-portal-cliente/`](file:///home/jiodev/Documents/Proyects/TransAduanas/app-portal-cliente)) es la plataforma externa donde los clientes corporativos (importadores y exportadores) consultan el tracking de sus expedientes, revisan cotizaciones, registran pagos y descargan su documentación. Corre en el puerto `5174`.
+El **Portal del Cliente B2B** ([`app-portal-cliente/`](../app-portal-cliente)) es la plataforma externa donde los clientes corporativos (importadores y exportadores) consultan el tracking de sus expedientes, revisan cotizaciones, registran pagos y descargan su documentación. Corre en el puerto `5174`.
 
 Abre una **tercera terminal** desde la raíz del proyecto y ejecuta:
 
@@ -201,10 +201,10 @@ Una vez completados los 4 pasos anteriores, tendrás todo el ecosistema activo e
 
 | Servicio | Carpeta | Tecnología | Puerto | URL Local |
 | :--- | :--- | :--- | :---: | :--- |
-| **1. Base de Datos (`SGAdb`)** | [`db/`](file:///home/jiodev/Documents/Proyects/TransAduanas/db) | MySQL 8.4 InnoDB | `3306` | `jdbc:mysql://localhost:3306/SGAdb` |
-| **2. Backend API REST** | [`backend/`](file:///home/jiodev/Documents/Proyects/TransAduanas/backend) | Spring Boot 4.1.2 / Java 21 | `8085` | `http://localhost:8085/api/v1/health` |
-| **3. Frontend Interno (SGA)** | [`app-sga/`](file:///home/jiodev/Documents/Proyects/TransAduanas/app-sga) | Vue 3 + Vite 8 + PrimeVue | `5180` | `http://localhost:5180` |
-| **4. Portal del Cliente B2B** | [`app-portal-cliente/`](file:///home/jiodev/Documents/Proyects/TransAduanas/app-portal-cliente) | Vue 3 + Vite 6 + PrimeVue | `5174` | `http://localhost:5174` |
+| **1. Base de Datos (`SGAdb`)** | [`db/`](../db) | MySQL 8.4 InnoDB | `3306` | `jdbc:mysql://localhost:3306/SGAdb` |
+| **2. Backend API REST** | [`backend/`](../backend) | Spring Boot 4.1.2 / Java 21 | `8085` | `http://localhost:8085/api/v1/health` |
+| **3. Frontend Interno (SGA)** | [`app-sga/`](../app-sga) | Vue 3 + Vite 8 + PrimeVue | `5180` | `http://localhost:5180` |
+| **4. Portal del Cliente B2B** | [`app-portal-cliente/`](../app-portal-cliente) | Vue 3 + Vite 6 + PrimeVue | `5174` | `http://localhost:5174` |
 
 ---
 
@@ -219,12 +219,12 @@ Para probar el flujo completo del proyecto de extremo a extremo, utiliza las sig
 | :--- | :---: | :--- | :--- |
 | **`ADMINISTRADOR_TI`** | `admin` | — | `/administracion-ti/dashboard` |
 | **`GERENTE_GENERAL`** | `gerente` | — | `/gerencia-general/dashboard` |
-| **`AGENTE_COMERCIAL`** | `comercial` | `dcastillo`, `nvalverde`, `mrodriguez` | `/recepcion-comercial/dashboard` |
-| **`SUPERVISOR_ADUANERO`** | `supervisor` | `rcabrera`, `apena`, `dmiranda` | `/gestion-aduanera/apertura` |
-| **`AGENTE_ADUANERO`** | `agente` | `fbalbuena`, `lmejia`, `ccordova` | `/deposito-temporal/ingreso` |
-| **`SUPERVISOR_TRANSPORTE`** | `transporte` | `ebravor`, `wgalarza`, `osanchez` | `/despachos-ruta/flota` |
-| **`CONTADOR`** | `contador` | `rsalazar`, `gmontoya`, `lcornejo` | `/validacion-financiera/pagos` |
-| **`ASESOR_LEGAL`** | `legal` | `mcamacho`, `jvilchez`, `cportugal` | `/asesoria-legal/normativa` |
+| **`AGENTE_COMERCIAL`** | `comercial` | `dcastillo`, `nvalverde`, `mrodriguez` | `/recepcion-comercial` |
+| **`SUPERVISOR_ADUANERO`** | `supervisor` | `rcabrera`, `apena`, `dmiranda` | `/gestion-aduanera` |
+| **`AGENTE_ADUANERO`** | `agente` | `fbalbuena`, `lmejia`, `ccordova` | `/agente-aduanero` |
+| **`SUPERVISOR_TRANSPORTE`** | `transporte` | `ebravor`, `wgalarza`, `osanchez` | `/transporte-flota` |
+| **`CONTADOR`** | `contador` | `rsalazar`, `gmontoya`, `lcornejo` | `/finanzas` |
+| **`ASESOR_LEGAL`** | `legal` | `mcamacho`, `jvilchez`, `cportugal` | `/legal-auditoria` |
 
 #### B. Cuentas Corporativas del Portal B2B (`http://localhost:5174`)
 En el Portal B2B se inicia sesión con el **número de RUC (11 dígitos)** y la contraseña **`Password123!`**:

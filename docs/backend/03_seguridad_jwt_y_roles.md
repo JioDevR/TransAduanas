@@ -69,23 +69,23 @@ El token JWT es una cadena de texto dividida en tres partes separadas por puntos
    - `idUsuario` / `idCliente`: Identificador primario en la base de datos para trazabilidad.
    - `iat` (Issued At): Momento exacto en que fue emitido.
    - `exp` (Expiration): Momento exacto en que expira (por defecto 86,400,000 ms = 24 horas).
-3. **Firma Digital (*Signature*):** Es el resultado de combinar el Header + Payload con la clave secreta `jwt.secret` mediante el algoritmo HMAC-SHA256. Si un usuario malintencionado intenta alterar su rol de `CLIENTE` a `ADMINISTRADOR_TI` en el navegador, la firma ya no coincidirá y el backend rechazará la petición con `401 Unauthorized`.
+3. **Firma Digital (*Signature*):** Es el resultado de combinar el Header + Payload con la clave secreta `jwt.secret` mediante el algoritmo HMAC-SHA256. Si un usuario malintencionado intenta alterar su rol de `CLIENTE_PORTAL` a `ADMINISTRADOR_TI` en el navegador, la firma ya no coincidirá y el backend rechazará la petición con `401 Unauthorized`.
 
 ---
 
 ## 3. Componentes del Módulo de Seguridad
 
-Todos los componentes de seguridad se encuentran centralizados en [`backend/src/main/java/pe/sga/config/`](file:///home/jiodev/Documents/Proyects/TransAduanas/backend/src/main/java/pe/sga/config/):
+Todos los componentes de seguridad se encuentran centralizados en [`backend/src/main/java/pe/sga/config/`](../../backend/src/main/java/pe/sga/config/):
 
 ### 3.1 `SecurityConfig.java`: Cadena de Filtros
 Esta clase define las reglas de acceso perimetral mediante un `@Bean` de `SecurityFilterChain`:
 - **Desactivación de CSRF:** Al ser una API REST stateless que consume tokens en cabeceras y no utiliza cookies de sesión, el ataque CSRF queda mitigado por diseño.
 - **Política de Sesión:** `SessionCreationPolicy.STATELESS`. Spring no crea sesiones `HttpSession` en memoria.
 - **Rutas Públicas Autorizadas (`permitAll`):**
-  - `/api/v1/auth/**`: Endpoint de inicio de sesión (`/login`).
-  - `/api/v1/health`: Monitor de salud del servidor para balanceadores de carga o Docker.
-  - `/api/v1/portal/auth/**`: Acceso de autenticación específico para clientes B2B.
-- **Rutas Protegidas:** Cualquier otra ruta requiere obligatoriamente un token JWT válido (`anyRequest().authenticated()`).
+  - `/api/v1/auth/login` y `/api/v1/portal/auth/login`: Endpoints de inicio de sesión interno y B2B (`/api/v1/auth/me` y `/api/v1/portal/auth/cambiar-password` requieren autenticación).
+  - `/api/v1/health/**`: Monitor de salud del servidor para balanceadores de carga o Docker.
+  - `GET /api/v1/catalogos/**`: Lectura pública de catálogos auxiliares (puertos, tipos de carga y mercancías).
+- **Rutas Protegidas:** Cualquier otra ruta (incluyendo descargas, previews y reportes PDF) requiere obligatoriamente un token JWT válido (`anyRequest().authenticated()`).
 
 ### 3.2 `JwtAuthenticationFilter.java`: Intercepción de Cabeceras
 Se ejecuta una vez por cada petición HTTP entrante (`OncePerRequestFilter`):
@@ -112,7 +112,7 @@ Los navegadores web bloquean por seguridad peticiones de un puerto a otro (CORS)
 
 ## 4. Matriz de los 8 Roles Institucionales + Acceso B2B
 
-La enumeración `RolUsuario` ([`backend/src/main/java/pe/sga/entity/enums/RolUsuario.java`](file:///home/jiodev/Documents/Proyects/TransAduanas/backend/src/main/java/pe/sga/entity/enums/RolUsuario.java)) define estrictamente las 8 identidades operativas de la organización, sumadas al perfil externo de clientes:
+La enumeración `RolUsuario` ([`backend/src/main/java/pe/sga/entity/enums/RolUsuario.java`](../../backend/src/main/java/pe/sga/entity/enums/RolUsuario.java)) define estrictamente las 8 identidades operativas de la organización, sumadas al perfil externo de clientes (`ROLE_CLIENTE_PORTAL`):
 
 | Rol Institucional | Nombre en Sistema | Alcance Operativo en el Backend |
 | :--- | :--- | :--- |
@@ -124,35 +124,35 @@ La enumeración `RolUsuario` ([`backend/src/main/java/pe/sga/entity/enums/RolUsu
 | **Supervisor de Transporte** | `ROLE_SUPERVISOR_TRANSPORTE` | Operación logística terrestre (TMS). Asignación de tractos y choferes con brevete MTC, emisión de guías de remisión y tracking en ruta. |
 | **Contador** | `ROLE_CONTADOR` | Custodia financiera y fiscal. Validación obligatoria de anticipos pre-expediente, control de detracciones SPOT (12%) y liquidaciones de gastos. |
 | **Asesor Legal** | `ROLE_ASESOR_LEGAL` | Cumplimiento regulatorio. Fiscalización de permisos sectoriales obligatorios (DIGEMID, SENASA, SUCAMEC, PRODUCE) y auditoría contractual. |
-| **Cliente B2B** *(Extranet)* | `ROLE_CLIENTE` | Importador o exportador externo. Consulta de estado de sus cargas, descarga de documentos oficiales y registro de pagos bancarios. |
+| **Cliente B2B** *(Extranet)* | `ROLE_CLIENTE_PORTAL` | Importador o exportador externo. Consulta de estado de sus cargas, solicitud de cotizaciones, descarga de documentos oficiales y registro de pagos bancarios. |
 
 ---
 
 ## 5. Centralización de Permisos con SpEL (`SecurityRoles.java`)
 
-Para evitar tener cadenas de texto mágicas y desordenadas repartidas por cientos de controladores, el sistema utiliza la clase [`SecurityRoles.java`](file:///home/jiodev/Documents/Proyects/TransAduanas/backend/src/main/java/pe/sga/config/SecurityRoles.java):
+Para evitar tener cadenas de texto mágicas y desordenadas repartidas por cientos de controladores, el sistema utiliza la clase [`SecurityRoles.java`](../../backend/src/main/java/pe/sga/config/SecurityRoles.java):
 
 ```java
 public final class SecurityRoles {
-    public static final String TI = "hasRole('ADMINISTRADOR_TI')";
-    public static final String GERENCIA = "hasAnyRole('ADMINISTRADOR_TI', 'GERENTE_GENERAL')";
-    public static final String COMERCIAL = "hasAnyRole('ADMINISTRADOR_TI', 'AGENTE_COMERCIAL')";
-    public static final String ADUANAS = "hasAnyRole('ADMINISTRADOR_TI', 'SUPERVISOR_ADUANERO', 'AGENTE_ADUANERO')";
-    public static final String FINANZAS = "hasAnyRole('ADMINISTRADOR_TI', 'CONTADOR')";
-    public static final String TRANSPORTE = "hasAnyRole('ADMINISTRADOR_TI', 'SUPERVISOR_TRANSPORTE')";
-    public static final String PORTAL_CLIENTE = "hasRole('CLIENTE')";
-    // Expresiones compuestas de negocio
-    public static final String PUEDE_CREAR_EXPEDIENTE = "hasAnyRole('ADMINISTRADOR_TI', 'SUPERVISOR_ADUANERO')";
-    public static final String PUEDE_VALIDAR_PAGO = "hasAnyRole('ADMINISTRADOR_TI', 'CONTADOR')";
-    ...
+    public static final String ACCESS_INTERNAL_STAFF =
+        "hasAnyRole('ADMINISTRADOR_TI', 'GERENTE_GENERAL', 'AGENTE_COMERCIAL', 'SUPERVISOR_ADUANERO', 'AGENTE_ADUANERO', 'SUPERVISOR_TRANSPORTE', 'CONTADOR', 'ASESOR_LEGAL')";
+    public static final String ACCESS_USUARIOS_READ = "hasAnyRole('ADMINISTRADOR_TI', 'GERENTE_GENERAL')";
+    public static final String ACCESS_USUARIOS_WRITE = "hasRole('ADMINISTRADOR_TI')";
+    public static final String ACCESS_LOGS_READ = "hasRole('ADMINISTRADOR_TI')";
+    public static final String ACCESS_CLIENTE_COTIZACION_WRITE = "hasAnyRole('ADMINISTRADOR_TI', 'GERENTE_GENERAL', 'AGENTE_COMERCIAL')";
+    public static final String ACCESS_COTIZACION_PAGO_WRITE = "hasAnyRole('ADMINISTRADOR_TI', 'GERENTE_GENERAL', 'AGENTE_COMERCIAL', 'CONTADOR')";
+    public static final String ACCESS_EXPEDIENTE_ALMACEN_WRITE = "hasAnyRole('ADMINISTRADOR_TI', 'GERENTE_GENERAL', 'SUPERVISOR_ADUANERO', 'AGENTE_ADUANERO')";
+    public static final String ACCESS_TRANSPORTE_WRITE = "hasAnyRole('ADMINISTRADOR_TI', 'GERENTE_GENERAL', 'SUPERVISOR_TRANSPORTE')";
+    public static final String ACCESS_LIQUIDACION_WRITE = "hasAnyRole('ADMINISTRADOR_TI', 'GERENTE_GENERAL', 'CONTADOR', 'SUPERVISOR_ADUANERO')";
+    // ... resto de expresiones ACCESS_* por módulo
 }
 ```
 
-En los controladores, se protege cada método de forma limpia y legible:
+En los controladores, se protege cada método de forma limpia y legible (mientras que en `PortalController` se exige `@PreAuthorize("hasRole('CLIENTE_PORTAL')")`):
 
 ```java
-@PostMapping("/expedientes")
-@PreAuthorize(SecurityRoles.PUEDE_CREAR_EXPEDIENTE)
+@PostMapping
+@PreAuthorize(SecurityRoles.ACCESS_EXPEDIENTE_ALMACEN_WRITE)
 public ResponseEntity<ApiResponseDTO<ExpedienteResponseDTO>> crearExpediente(@Valid @RequestBody ExpedienteRequestDTO dto) {
     ...
 }
@@ -178,7 +178,7 @@ Usuario usuarioActual = usuarioRepository.findByUsername(currentUsername)
 
 **Beneficios de esta implementación:**
 1. **Auditoría Fidedigna:** Cada registro modificado almacena exactamente el ID del usuario real que presionó el botón en ese segundo, sin posibilidad de suplantación.
-2. **Soporte Híbrido Interno / Portal B2B:** Cuando un pago es registrado desde el **Portal del Cliente B2B**, el sistema detecta que el usuario pertenece al rol `CLIENTE`, asocia el pago automáticamente a su empresa (`Cliente`) y deja el campo `id_usuario_registro` como `NULL`, marcando el origen como `PORTAL_WEB`. Cuando un **Contador** interno lo valida, se vincula el ID del contador responsable.
+2. **Soporte Híbrido Interno / Portal B2B:** Cuando un pago es registrado desde el **Portal del Cliente B2B**, el sistema detecta que el usuario pertenece al rol `ROLE_CLIENTE_PORTAL`, asocia el pago automáticamente a su empresa (`Cliente`) y deja el campo `id_usuario_registro` como `NULL`, marcando el origen como `PORTAL_WEB`. Cuando un **Contador** interno lo valida, se vincula el ID del contador responsable.
 
 ---
 

@@ -17,7 +17,7 @@
 ## 1. Línea de Tiempo y Tracking Aduanero (`ExpedientesTrackingView.vue`)
 
 Ruta: `/expedientes`  
-Servicio: [`portalExpedienteService.js`](file:///home/jiodev/Documents/Proyects/TransAduanas/app-portal-cliente/src/features/expedientes/services/portalExpedienteService.js)
+Servicio: [`portalExpedienteService.js`](../../app-portal-cliente/src/features/expedientes/services/portalExpedienteService.js)
 
 Esta vista es el corazón operativo del portal. Permite al cliente importador monitorear el estado exacto de su carga sin necesidad de enviar correos o llamar a la agencia:
 
@@ -36,7 +36,7 @@ Esta vista es el corazón operativo del portal. Permite al cliente importador mo
 ## 2. Historial de Cotizaciones y Proformas (`CotizacionesListView.vue`)
 
 Ruta: `/cotizaciones`  
-Servicio: [`portalCotizacionService.js`](file:///home/jiodev/Documents/Proyects/TransAduanas/app-portal-cliente/src/features/cotizaciones/services/portalCotizacionService.js)
+Servicio: [`portalCotizacionService.js`](../../app-portal-cliente/src/features/cotizaciones/services/portalCotizacionService.js)
 
 Es la pantalla de inicio por defecto del cliente corporativo:
 
@@ -54,7 +54,7 @@ Es la pantalla de inicio por defecto del cliente corporativo:
 ## 3. Estado de Cuenta y Deuda Heredada (`CobrosPagosView.vue`)
 
 Ruta: `/pagos`  
-Servicio: [`portalPagoService.js`](file:///home/jiodev/Documents/Proyects/TransAduanas/app-portal-cliente/src/features/pagos/services/portalPagoService.js)
+Servicio: [`portalPagoService.js`](../../app-portal-cliente/src/features/pagos/services/portalPagoService.js)
 
 > [!IMPORTANT]
 > **Rediseño Financiero Reciente (Moneda Única USD & Deuda Heredada):**  
@@ -66,12 +66,12 @@ Servicio: [`portalPagoService.js`](file:///home/jiodev/Documents/Proyects/TransA
    - **Total Pagado ($ USD):** Suma de abonos que ya fueron formalmente validados por el contador de Transaduanas.
    - **Saldo Pendiente ($ USD):** Deuda neta viva que el cliente tiene pendiente de pago.
 2. **Pestaña 1: "Obligaciones Pendientes" (Deuda Heredada):**
-   - Consume el endpoint `/api/v1/portal/obligaciones-pendientes`.
+   - Consume el endpoint `/api/v1/portal/pagos/obligaciones-pendientes`.
    - Desglosa las cuotas pendientes tanto de **anticipos de cotización** (para que se pueda abrir el expediente) como de **saldos de liquidación final** de cargas ya entregadas.
    - Cada fila incluye un botón directo de acción: *"Pagar Cuota"*.
 3. **Pestaña 2: "Historial de Abonos Registrados":**
    - Muestra todos los comprobantes que la empresa ha subido.
-   - Estados: `VALIDADO` (con fecha y sello del contador) o `PENDIENTE_VALIDACION` (en revisión contable).
+   - Estados (`EstadoPagoCotizacion`): `APROBADO` (con fecha y sello del contador), `PENDIENTE_REVISION` (en revisión contable), `OBSERVADO` o `RECHAZADO` (con opción de subsanar).
    - Permite visualizar el voucher bancario adjunto en cualquier momento.
 
 ---
@@ -122,7 +122,7 @@ Es una vista a pantalla completa diseñada para que el cliente realice sus abono
 ## 5. Centro de Notificaciones y Avisos Operativos (`PortalNotificacionesView.vue`)
 
 Ruta: `/notificaciones`  
-Servicio: [`portalNotificationService.js`](file:///home/jiodev/Documents/Proyects/TransAduanas/app-portal-cliente/src/features/notificaciones/services/portalNotificationService.js)
+Servicio: [`portalNotificationService.js`](../../app-portal-cliente/src/features/notificaciones/services/portalNotificationService.js)
 
 Funciona como la bandeja de entrada de alertas en tiempo real de la empresa:
 - **Eventos Notificados Automáticamente:**

@@ -96,23 +96,25 @@ El correlativo se autogenera mediante un algoritmo determinista con bloqueo tran
 
 > [!CAUTION]
 > **Regla de Negocio Crítica:**  
-> Ningún usuario, ni siquiera el Gerente General o el Administrador TI, puede abrir un expediente aduanero si la cotización comercial previa no cuenta con un pago formalmente registrado y **en estado `VALIDADO` por el área contable**.
+> Ningún usuario, ni siquiera el Gerente General o el Administrador TI, puede abrir un expediente aduanero si la cotización comercial previa no se encuentra en estado `ADELANTO_APROBADO` o `PAGADO_TOTAL`, ni cuenta con un abono formalmente registrado **en estado `APROBADO` por el área contable**.
 
 En `ExpedienteServiceImpl.java`, la compuerta se ejecuta antes de cualquier inserción:
 
 ```java
 // 1. Buscar la cotización vinculada
-Cotizacion cotizacion = cotizacionRepository.findById(dto.getIdCotizacion())
+Cotizacion cotizacion = cotizacionRepository.findById(request.getIdCotizacion())
     .orElseThrow(() -> new ResourceNotFoundException("Cotización no encontrada"));
 
-// 2. Verificar que tenga pagos y que al menos uno esté VALIDADO por contabilidad
-boolean tienePagoValidado = cotizacionPagoRepository
-    .existsByCotizacion_IdCotizacionAndEstadoPago(cotizacion.getIdCotizacion(), EstadoPago.VALIDADO);
+// 2. Verificar estado agregado o al menos un abono APROBADO por contabilidad
+boolean tienePagoAprobado = "ADELANTO_APROBADO".equals(cotizacion.getEstadoPago())
+    || "PAGADO_TOTAL".equals(cotizacion.getEstadoPago())
+    || cotizacionPagoRepository.existsByCotizacion_IdCotizacionAndEstadoPago(
+        cotizacion.getIdCotizacion(), EstadoPagoCotizacion.APROBADO);
 
-if (!tienePagoValidado) {
-    throw new BadRequestException("COMPUERTA FINANCIERA BLOQUEADA: La cotización " 
-        + cotizacion.getCodigoCotizacion() 
-        + " no cuenta con un pago validado por Finanzas/Contador. Trámite no autorizado.");
+if (!tienePagoAprobado) {
+    throw new BadRequestException("El expediente no puede abrirse: la cotización "
+        + cotizacion.getCodigoCotizacion()
+        + " no cuenta con un abono aprobado por Finanzas.");
 }
 ```
 
@@ -124,14 +126,14 @@ Esta compuerta erradica el riesgo de que la empresa asuma costos portuarios o de
 
 ### 4.1 Registro de Abonos y Subida de Vouchers
 Los pagos pueden originarse de dos formas:
-1. **Registro Interno (Contador):** El contador registra el abono directamente en el módulo de Finanzas tras recibir la confirmación de la cuenta bancaria corporativa.
+1. **Registro Interno (Contador / Comercial):** Se registra el abono directamente en el módulo de Finanzas o Cotizaciones tras recibir la confirmación de la cuenta bancaria corporativa.
 2. **Registro Externo (Portal del Cliente B2B):** El importador entra a su portal, adjunta el voucher bancario (PDF, PNG o JPG de hasta 10 MB) e ingresa el banco, número de operación y monto.
 
-El backend almacena el comprobante en disco mediante `StorageServiceImpl` y crea el registro en `cotizacion_pago` con estado inicial `PENDIENTE_VALIDACION`. Cuando el contador lo aprueba, el estado cambia a `VALIDADO`, guardando la fecha y el ID del contador auditor.
+El backend almacena el comprobante en disco mediante `LocalStorageServiceImpl` y crea el registro en `cotizacion_pago` con estado inicial `PENDIENTE_REVISION` (enum `EstadoPagoCotizacion`: `SIN_PAGO`, `PENDIENTE_REVISION`, `APROBADO`, `ADELANTO_APROBADO`, `PAGADO_TOTAL`, `OBSERVADO`, `RECHAZADO`). Cuando el contador lo aprueba, el abono cambia a `APROBADO` (y el estado agregado de la cotización a `ADELANTO_APROBADO` o `PAGADO_TOTAL`), guardando la fecha y el ID del usuario revisor.
 
 ### 4.2 Consulta de Obligaciones Pendientes (Deuda Heredada)
-Recientemente se implementó el endpoint:  
-`GET /api/v1/portal/obligaciones-pendientes`
+El Portal B2B expone el endpoint:  
+`GET /api/v1/portal/pagos/obligaciones-pendientes`
 
 Este servicio calcula la **deuda viva** de un cliente B2B agrupando:
 - **Cotizaciones con saldo pendiente:** Monto total cotizado menos los abonos validados.
@@ -175,7 +177,7 @@ El módulo de almacén (`ControlAlmacenController` y `ControlAlmacenServiceImpl`
 El módulo de transporte (`DespachoTransporteController` / `DespachoTransporteServiceImpl`) gobierna la operación de la flota pesada (TMS):
 1. **Validación de Conductor MTC:** Verifica que el chofer asignado tenga brevete profesional vigente (A-IIIa, A-IIIb o A-IIIc) y no registre sanciones graves.
 2. **Asignación de Unidad:** Vincula el tracto-camión y la carreta/semirremolque con su respectivo Certificado de Inspección Técnica Vehicular (CITV) y póliza de seguro de carga.
-3. **Generación de Correlativo:** Emite el despacho oficial con formato `DSP-YYYY-XXXX`.
+3. **Generación de Correlativo:** Emite el despacho oficial con formato `TRK-YYYY-XXXX`.
 4. **Emisión de Guía de Remisión:** Genera los datos para la Guía de Remisión Transportista electrónica requerida por SUNAT para el tránsito por carreteras nacionales.
 5. **Tracking de Estados:** Controla la secuencia `PROGRAMADO` $\rightarrow$ `EN_RUTA` $\rightarrow$ `ENTREGADO`.
 

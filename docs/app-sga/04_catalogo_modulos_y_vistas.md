@@ -28,14 +28,14 @@ Seguridad: `ROLE_ADMINISTRADOR_TI`
 Este módulo centraliza el control de infraestructura y gobernanza de la plataforma a través de 6 vistas:
 
 1. **Dashboard TI (`AdminDashboardView.vue`):** Muestra tarjetas de métricas (*MetricCard*) con el estado de salud de la base de datos, servidores de desarrollo, usuarios activos por rol y accesos rápidos a catálogos y logs.
-2. **Gestión de Personal Interno (`UsersManagementView.vue` + `UserFormModal.vue`):** Permite dar de alta a nuevos colaboradores, asignar su rol institucional (de los 8 posibles), su sede de trabajo y credenciales. Al eliminar un usuario, ejecuta *Soft Delete* desactivándolo sin borrar su historial de auditoría.
-3. **Gestión de Usuarios del Portal B2B (`UsuariosPortalManagementView.vue` + `UsuarioPortalFormModal.vue`):** Permite al administrador consultar las cuentas de las empresas importadoras/exportadoras creadas en la tabla `usuario_cliente`, resetear contraseñas temporales y habilitar o bloquear accesos.
-4. **Sedes Corporativas (`SedesManagementView.vue` + `SedeFormModal.vue`):** Muestra el padrón de las 6 sedes territoriales y terminales portuarios (Central, San Isidro, Callao Marítimo, Callao Aéreo, Paita, Matarani) con botón de descarga del padrón oficial en PDF.
-5. **Catálogos Maestros (`CatalogosManagementView.vue`):**
-   - **Pestaña Puertos (`PuertosManagementView.vue`):** Directorio de los 80 puertos y aeropuertos mundiales con búsqueda por código UN/LOCODE.
-   - **Pestaña Tipos de Carga (`TiposCargaManagementView.vue`):** Catálogo de las 17 modalidades (FCL, LCL, Reefer, Peligrosa IMO).
-   - **Pestaña Mercancías NANDINA (`MercanciasManagementView.vue`):** Buscador de las 52 subpartidas de 10 dígitos, mostrando aranceles base y entidad reguladora sectorial (MTC, SENASA, DIGEMID).
-6. **Consola del Sistema y Logs en Vivo (`AdminLogsView.vue`):** Visor en tiempo real de las últimas líneas del archivo `sga-backend.log` con botón de recarga automática (*polling*) y descarga del archivo histórico de auditoría.
+2. **Gestión de Personal Interno (`UserManagementView.vue`):** Permite dar de alta a nuevos colaboradores, asignar su rol institucional (de los 8 posibles), su sede de trabajo y credenciales. Al eliminar un usuario, ejecuta *Soft Delete* desactivándolo sin borrar su historial de auditoría.
+3. **Gestión de Usuarios del Portal B2B (`PortalUserManagementView.vue`):** Permite al administrador consultar las cuentas de las empresas importadoras/exportadoras creadas en la tabla `usuario_cliente`, resetear contraseñas temporales y habilitar o bloquear accesos.
+4. **Sedes Corporativas (`SedesManagementView.vue`):** Muestra el padrón de las sedes territoriales y terminales portuarios (Central, San Isidro, Callao Marítimo, Callao Aéreo, Paita, Matarani) con botón de descarga del padrón oficial en PDF.
+5. **Catálogos Maestros (`PuertosManagementView.vue`, `TiposCargaManagementView.vue`, `MercanciasManagementView.vue`):**
+   - **Puertos (`PuertosManagementView.vue`):** Directorio de puertos y aeropuertos mundiales con búsqueda por código UN/LOCODE.
+   - **Tipos de Carga (`TiposCargaManagementView.vue`):** Catálogo de modalidades (FCL, LCL, Reefer, Peligrosa IMO).
+   - **Mercancías NANDINA (`MercanciasManagementView.vue`):** Buscador de subpartidas de 10 dígitos, mostrando aranceles base y entidad reguladora sectorial (MTC, SENASA, DIGEMID).
+6. **Consola del Sistema y Logs en Vivo (`SystemLogsView.vue`):** Visor en tiempo real de las últimas líneas del archivo `sga-backend.log` con botón de recarga y descarga del archivo histórico de auditoría.
 7. **Acerca del Sistema (`AboutSystemView.vue`):** Muestra versiones de Spring Boot, Java, Vue 3, Vite y créditos arquitectónicos.
 
 ---
@@ -97,20 +97,20 @@ Seguridad: `ROLE_SUPERVISOR_ADUANERO`, `ROLE_GERENTE_GENERAL`, `ROLE_ADMINISTRAD
 - **Servicio: `expedienteService.js`**
 - **Funcionalidad:**
   - **Bandeja de Cotizaciones Aprobadas:** Muestra las cotizaciones comerciales listas para ser convertidas en expedientes formales.
-  - **Verificación de la Compuerta Financiera:** El sistema consulta al backend si la cotización cuenta con un pago en estado `VALIDADO`. Si no cuenta con pago contable, el botón de apertura aparece inhabilitado con un distintivo de advertencia.
+  - **Verificación de la Compuerta Financiera:** El sistema consulta al backend si la cotización cuenta con un estado de pago `ADELANTO_APROBADO` / `PAGADO_TOTAL` o al menos un abono en estado `APROBADO`. Si no cuenta con pago aprobado por contabilidad, el botón de apertura aparece inhabilitado con un distintivo de advertencia.
   - **Apertura de Expediente:** Genera el correlativo `EXP-YYYY-XXXX` y registra la fecha de arribo de la nave.
   - **Asignación de DAM y Canal SUNAT:** Permite al supervisor registrar el número de DAM y marcar el canal asignado por SUNAT (Verde, Naranja o Rojo).
   - **Alerta de Credenciales B2B:** Si el expediente pertenece a una empresa nueva, el modal presenta un mensaje emergente con el usuario (RUC) y contraseña temporal generada para que el supervisor se las entregue al cliente importador.
 
 ---
 
-## 6. Módulo de Depósito Temporal y Almacén (`features/almacen/`)
+## 6. Módulo de Depósito Temporal y Almacén (`features/agente-aduanero/` y `features/almacen/`)
 
 Ruta: `/agente-aduanero`  
 Seguridad: `ROLE_AGENTE_ADUANERO`, `ROLE_SUPERVISOR_ADUANERO`, `ROLE_ADMINISTRADOR_TI`
 
-- **Vista Principal: `AgenteAduaneroView.vue`**
-- **Servicio: `almacenService.js`**
+- **Vista Principal: `AgenteAduaneroView.vue`** (`features/agente-aduanero/views/`)
+- **Servicio: `almacenService.js`** (`features/almacen/services/`)
 - **Funcionalidad:**
   - **Control de Ingreso a Recinto:** Registro de fecha y hora de ingreso del contenedor o carga suelta al depósito temporal.
   - **Pesaje en Báscula Certificada VGM:** Modal interactivo para ingresar la tara del contenedor y el peso de la mercancía. Calcula automáticamente la Masa Bruta Verificada (VGM) en cumplimiento de la enmienda SOLAS y exige adjuntar el ticket de balanza fiscal.
@@ -127,7 +127,7 @@ Seguridad: `ROLE_SUPERVISOR_TRANSPORTE`, `ROLE_GERENTE_GENERAL`, `ROLE_ADMINISTR
 - **Componentes y Modales:**
   - **Pestaña Flota (`FlotaManagementPanel.vue`):** Directorio de tractos, camiones y semirremolques con placas, marca, configuración de ejes y vigencia de pólizas de seguro.
   - **Pestaña Conductores (`ConductoresManagementPanel.vue`):** Padrón de choferes profesionales con validación de categoría de brevete MTC (A-IIIa, A-IIIb, A-IIIc).
-  - **Modal de Creación de Despacho (`CrearDespachoModal.vue`):** Vincula un expediente aduanero con una orden de despacho `DSP-YYYY-XXXX`.
+  - **Modal de Creación de Despacho (`CrearDespachoModal.vue`):** Vincula un expediente aduanero con una orden de despacho `TRK-YYYY-XXXX`.
   - **Modal de Asignación de Recursos (`AsignarRecursosModal.vue`):** Selecciona el tracto y chofer disponible para el viaje.
   - **Modal de Confirmación de Entrega (`ConfirmarEntregaModal.vue`):** Registra la hora de llegada al almacén del cliente y permite adjuntar la Guía de Remisión firmada.
 
@@ -142,9 +142,9 @@ Seguridad: `ROLE_CONTADOR`, `ROLE_GERENTE_GENERAL`, `ROLE_ADMINISTRADOR_TI`
 - **Componente Auxiliar: `RegistroPagoFullView.vue`**
 - **Servicio: `finanzasService.js`**
 - **Funcionalidad:**
-  - **Bandeja de Anticipos Pendientes:** Lista los pagos registrados por agentes comerciales o subidos directamente por los clientes desde el Portal B2B (`PENDIENTE_VALIDACION`).
+  - **Bandeja de Anticipos Pendientes:** Lista los pagos registrados por agentes comerciales o subidos directamente por los clientes desde el Portal B2B (`PENDIENTE_REVISION`).
   - **Visor de Vouchers:** Permite al contador abrir y verificar el comprobante bancario (PDF o imagen de hasta 10 MB) en un diálogo modal sin salir del sistema.
-  - **Botón de Validación Contable:** Al hacer clic en "Validar Abono", el contador confirma el ingreso de fondos a la cuenta corporativa, cambiando el estado a `VALIDADO` y **liberando la compuerta financiera** para que Aduanas pueda crear el expediente.
+  - **Botón de Validación Contable:** Al hacer clic en "Validar Abono", el contador confirma el ingreso de fondos a la cuenta corporativa, cambiando el abono a `APROBADO` (y la cotización a `ADELANTO_APROBADO` o `PAGADO_TOTAL`) y **liberando la compuerta financiera** para que Aduanas pueda crear el expediente.
   - **Registro de Pagos Internos:** Permite al contador ingresar abonos manuales recibidos por caja o transferencias interbancarias directas.
 
 ---

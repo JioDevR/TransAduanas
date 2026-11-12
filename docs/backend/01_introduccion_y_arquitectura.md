@@ -44,7 +44,7 @@ El backend del **Sistema de Gestión Aduanera - Transaduanas** es el cerebro que
 | **Desacoplamiento DTO / Entidad** | Nunca mostramos la estructura íntima de la base de datos a internet; usamos "sobres cerrados" de información. | Las entidades JPA (`@Entity`) jamás se retornan directamente en los controladores. Se utilizan `RequestDTO` (validados con Jakarta Validation `@Valid`) y `ResponseDTO` mapeados explícitamente para evitar fuga de campos internos y vulnerabilidades de *Mass Assignment*. |
 | **Envoltorio Unificado `ApiResponseDTO<T>`** | Todas las respuestas del sistema tienen siempre la misma forma predecible, facilitando el trabajo del frontend y aplicaciones móviles. | Todo endpoint retorna una estructura JSON estándar: `{ "success": boolean, "message": string, "data": T, "timestamp": string }`. |
 | **Tolerancia Cero a Borrado Físico (*Soft Delete*)** | En aduanas no existe la tecla "eliminar". Todo queda registrado para SUNAT. | Ninguna entidad ejecuta `DELETE FROM ...`. Se aplican banderas lógicas (`estado_activo = false`) y cambios de estado de dominio (`ANULADO`, `CANCELADO`), garantizando la preservación histórica de auditoría fiscal. |
-| **Compuertas Financieras Obligatorias** | Nadie trabaja gratis ni se asumen riesgos crediticios no autorizados. | Regla estricta a nivel de capa de servicio: un expediente operativo solo puede ser instanciado si la cotización comercial previa tiene un anticipo en estado `VALIDADO` por el área contable. |
+| **Compuertas Financieras Obligatorias** | Nadie trabaja gratis ni se asumen riesgos crediticios no autorizados. | Regla estricta a nivel de capa de servicio: un expediente operativo solo puede ser instanciado si la cotización comercial previa tiene un estado de pago `ADELANTO_APROBADO` / `PAGADO_TOTAL` o cuenta con un abono en estado `APROBADO` validado por el área contable. |
 
 ---
 
@@ -81,7 +81,7 @@ El backend sigue una arquitectura multicapa estricta orientada a dominio (*Domai
 │  - Reglas de Negocio, Compuertas Financieras y Cálculos (IGV, SPOT 12%) │
 │  - Gestión de Transacciones ACID (@Transactional)                       │
 │  - Resolución segura de usuario autenticado (sin IDs fijos)             │
-│  - Generación de correlativos deterministas (COT-, EXP-, DSP-)          │
+│  - Generación de correlativos deterministas (COT-, EXP-, TRK-)          │
 └──────────────────────────────────────┬──────────────────────────────────┘
                                        │ Invoca operaciones de persistencia
                                        ▼
@@ -110,7 +110,7 @@ Veamos qué ocurre exactamente cuando un **Agente Comercial** crea una nueva cot
 1. **Llegada al Servidor:** El navegador envía un `POST /api/v1/cotizaciones` con el token JWT en la cabecera `Authorization: Bearer eyJhbG...` y un cuerpo JSON con los datos de la carga, ruta y cliente.
 2. **Filtro de Seguridad (`JwtAuthenticationFilter`):** El filtro extrae el token, verifica que la firma digital sea válida y que no haya expirado. Si es legítimo, extrae el nombre de usuario (`comercial`), busca sus roles en la base de datos y coloca la credencial en el `SecurityContext`.
 3. **Controlador (`CotizacionController`):**
-   - `@PreAuthorize(SecurityRoles.PUEDE_CREAR_COTIZACION)`: Spring Security verifica que el rol `AGENTE_COMERCIAL` tenga permiso para ejecutar este método. Si fuera un transportista o chofer, respondería inmediatamente con `403 Forbidden`.
+   - `@PreAuthorize(SecurityRoles.ACCESS_CLIENTE_COTIZACION_WRITE)`: Spring Security verifica que el rol `AGENTE_COMERCIAL` (o `GERENTE_GENERAL` / `ADMINISTRADOR_TI`) tenga permiso para ejecutar este método. Si fuera un transportista o chofer, respondería inmediatamente con `403 Forbidden`.
    - `@Valid CotizacionRequestDTO`: Spring valida que campos obligatorios como peso, puerto de origen, puerto de destino y RUC del cliente no vengan vacíos ni con números negativos.
 4. **Capa de Servicio (`CotizacionServiceImpl`):**
    - Obtiene el usuario autenticado real desde el contexto de seguridad (garantizando auditoría precisa).
@@ -141,7 +141,7 @@ El código del backend no es un conjunto de scripts desordenados; implementa pat
 
 ## 6. Estructura Física del Código Fuente
 
-El código Java está organizado dentro del paquete base `pe.sga` en [`backend/src/main/java/pe/sga/`](file:///home/jiodev/Documents/Proyects/TransAduanas/backend/src/main/java/pe/sga/):
+El código Java está organizado dentro del paquete base `pe.sga` en [`backend/src/main/java/pe/sga/`](../../backend/src/main/java/pe/sga/):
 
 ```
 backend/src/main/java/pe/sga/
@@ -180,7 +180,7 @@ backend/src/main/java/pe/sga/
 │   ├── request/                           # Contratos de entrada con validaciones @Valid
 │   ├── response/                          # Contratos de salida formateados para el cliente
 │   ├── portal/                            # DTOs específicos del Portal de Clientes B2B
-│   └── reporte/                           # DTOs para plantillas PDF (Jasper y Thymeleaf)
+│   └── reporte/                           # DTOs para plantillas PDF (Thymeleaf + OpenHTMLtoPDF)
 │
 ├── entity/                                # 17 Entidades persistentes JPA (Tablas MySQL)
 │   └── enums/                             # Enumeraciones tipadas (RolUsuario, EstadoCotizacion...)

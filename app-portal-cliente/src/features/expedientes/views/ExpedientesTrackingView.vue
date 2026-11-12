@@ -83,6 +83,7 @@
           v-model.trim="searchQuery"
           type="text"
           placeholder="Buscar por N° Expediente, DAM, contenedor, mercancía o nave..."
+          aria-label="Buscar expedientes por número, DAM, contenedor, mercancía o nave"
           class="search-input"
         />
         <button
@@ -91,6 +92,7 @@
           class="clear-search"
           @click="searchQuery = ''"
           title="Limpiar búsqueda"
+          aria-label="Limpiar búsqueda"
         >
           <i class="pi pi-times"></i>
         </button>
@@ -100,7 +102,7 @@
         <!-- Filtro Régimen -->
         <div class="filter-select-wrap">
           <i class="pi pi-compass filter-icon"></i>
-          <select v-model="filterRegimen" class="filter-select">
+          <select v-model="filterRegimen" aria-label="Filtrar por régimen" class="filter-select">
             <option value="TODOS">Todos los Regímenes</option>
             <option value="IMPORTACION">Importación</option>
             <option value="EXPORTACION">Exportación</option>
@@ -110,7 +112,7 @@
         <!-- Filtro Canal SUNAT -->
         <div class="filter-select-wrap">
           <i class="pi pi-tag filter-icon"></i>
-          <select v-model="filterCanal" class="filter-select">
+          <select v-model="filterCanal" aria-label="Filtrar por canal SUNAT" class="filter-select">
             <option value="TODOS">Todos los Canales</option>
             <option value="VERDE">Canal Verde</option>
             <option value="NARANJA">Canal Naranja</option>
@@ -957,8 +959,8 @@ function getDaysAlertClass(days) {
 }
 
 .kpi-icon-box.accent {
-  background: rgba(194, 65, 12, 0.15);
-  color: var(--color-accent-kicker, #c2410c);
+  background: var(--color-bg-subtle);
+  color: var(--color-accent-kicker);
 }
 
 .kpi-icon-box.success {
@@ -1064,19 +1066,19 @@ function getDaysAlertClass(days) {
   pointer-events: none;
 }
 
-.filter-select {
-  padding: 0.5625rem 1rem 0.5625rem 2rem;
-  background: var(--color-bg-base, #1e1e1b);
-  border: 1px solid var(--color-border, #444138);
+.filter-select-wrap .filter-select {
+  padding: 0.5625rem 2.25rem 0.5625rem 2rem !important;
+  background-color: var(--color-bg-base);
+  border: 1px solid var(--color-border);
   border-radius: 6px;
-  color: var(--color-text-main, #f6f2ea);
+  color: var(--color-text-main);
   font-size: 0.8125rem;
   outline: none;
   cursor: pointer;
 }
 
 .filter-select:focus {
-  border-color: var(--color-accent-kicker, #c2410c);
+  border-color: var(--color-accent-kicker);
 }
 
 /* Tablero Kanban (2 Columnas) */
@@ -1140,9 +1142,9 @@ function getDaysAlertClass(days) {
   font-size: 0.75rem;
   font-weight: 700;
   border-radius: 12px;
-  background: rgba(194, 65, 12, 0.15);
-  color: var(--color-accent-kicker, #c2410c);
-  border: 1px solid rgba(194, 65, 12, 0.3);
+  background: var(--color-bg-subtle);
+  color: var(--color-accent-kicker);
+  border: 1px solid var(--color-border);
 }
 
 .count-badge.completed {
@@ -1231,9 +1233,9 @@ function getDaysAlertClass(days) {
 }
 
 .canal-pill.rojo {
-  background: rgba(220, 38, 38, 0.15);
-  color: #f87171;
-  border: 1px solid rgba(220, 38, 38, 0.3);
+  background: var(--color-danger-bg);
+  color: var(--color-danger-text);
+  border: 1px solid var(--color-danger-border);
 }
 
 .canal-pill.pendiente {
@@ -1279,15 +1281,15 @@ function getDaysAlertClass(days) {
 }
 
 .regimen-tag.import {
-  background: rgba(59, 130, 246, 0.15);
-  color: #93c5fd;
-  border: 1px solid rgba(59, 130, 246, 0.3);
+  background: var(--color-info-bg);
+  color: var(--color-info-text);
+  border: 1px solid var(--color-info-border);
 }
 
 .regimen-tag.export {
-  background: rgba(168, 85, 247, 0.15);
-  color: #d8b4fe;
-  border: 1px solid rgba(168, 85, 247, 0.3);
+  background: var(--color-success-bg);
+  color: var(--color-success-text);
+  border: 1px solid var(--color-success-border);
 }
 
 .card-meta-grid {
@@ -1341,7 +1343,7 @@ function getDaysAlertClass(days) {
 }
 
 .canal-mini-pill.rojo {
-  color: #f87171;
+  color: var(--color-danger-text);
 }
 
 /* Indicador de fase operativa */
@@ -1360,21 +1362,21 @@ function getDaysAlertClass(days) {
 }
 
 .phase-pill.phase-transito {
-  background: rgba(59, 130, 246, 0.15);
-  color: #93c5fd;
-  border: 1px solid rgba(59, 130, 246, 0.3);
+  background: var(--color-info-bg);
+  color: var(--color-info-text);
+  border: 1px solid var(--color-info-border);
 }
 
 .phase-pill.phase-arribado {
-  background: rgba(245, 158, 11, 0.15);
-  color: #fcd34d;
-  border: 1px solid rgba(245, 158, 11, 0.3);
+  background: var(--color-warning-bg);
+  color: var(--color-warning-text);
+  border: 1px solid var(--color-warning-border);
 }
 
 .phase-pill.phase-inspeccion {
-  background: rgba(239, 68, 68, 0.15);
-  color: #fca5a5;
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  background: var(--color-danger-bg);
+  color: var(--color-danger-text);
+  border: 1px solid var(--color-danger-border);
 }
 
 .phase-pill.phase-levante {
@@ -1410,8 +1412,8 @@ function getDaysAlertClass(days) {
 }
 
 .card-alert.danger {
-  background: rgba(220, 38, 38, 0.2);
-  color: #f87171;
+  background: var(--color-danger-bg);
+  color: var(--color-danger-text);
 }
 
 /* Métricas de Historial */
@@ -1482,17 +1484,17 @@ function getDaysAlertClass(days) {
   padding: 0.3rem 0.6rem;
   font-size: 0.6875rem;
   font-weight: 700;
-  border: 1px solid var(--color-accent-kicker, #c2410c);
-  background: rgba(194, 65, 12, 0.1);
-  color: var(--color-accent-kicker, #c2410c);
+  border: 1px solid var(--color-accent-kicker);
+  background: var(--color-bg-subtle);
+  color: var(--color-accent-kicker);
   border-radius: 4px;
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .btn-card-action:hover {
-  background: var(--color-accent-kicker, #c2410c);
-  color: #ffffff;
+  background: var(--color-accent-kicker);
+  color: var(--color-primary-text);
 }
 
 .btn-card-action.history {
@@ -1589,12 +1591,12 @@ function getDaysAlertClass(days) {
 }
 
 .sunat-traffic-light.rojo {
-  border-color: rgba(220, 38, 38, 0.4);
-  background: rgba(220, 38, 38, 0.1);
+  border-color: var(--color-danger-border);
+  background: var(--color-danger-bg);
 }
 
 .sunat-traffic-light.rojo .light-icon {
-  color: #f87171;
+  color: var(--color-danger-text);
 }
 
 .light-icon {
@@ -1684,9 +1686,9 @@ function getDaysAlertClass(days) {
 }
 
 .step.active .step-circle {
-  background: rgba(194, 65, 12, 0.2);
-  border-color: var(--color-accent-kicker, #c2410c);
-  color: var(--color-accent-kicker, #c2410c);
+  background: var(--color-warning-bg);
+  border-color: var(--color-accent-kicker);
+  color: var(--color-accent-kicker);
 }
 
 .step-label {
@@ -1745,13 +1747,13 @@ function getDaysAlertClass(days) {
 }
 
 .op-icon.warehouse {
-  background: rgba(194, 65, 12, 0.15);
-  color: var(--color-accent-kicker, #c2410c);
+  background: var(--color-warning-bg);
+  color: var(--color-accent-kicker);
 }
 
 .op-icon.transport {
-  background: rgba(59, 130, 246, 0.15);
-  color: #93c5fd;
+  background: var(--color-info-bg);
+  color: var(--color-info-text);
 }
 
 .op-title {
@@ -1792,8 +1794,9 @@ function getDaysAlertClass(days) {
   font-weight: 700;
   padding: 0.15rem 0.5rem;
   border-radius: 4px;
-  background: rgba(59, 130, 246, 0.15);
-  color: #93c5fd;
+  background: var(--color-info-bg);
+  color: var(--color-info-text);
+  border: 1px solid var(--color-info-border);
 }
 
 .warehouse-countdown-alert {
@@ -1816,8 +1819,8 @@ function getDaysAlertClass(days) {
 }
 
 .warehouse-countdown-alert.danger {
-  background: rgba(220, 38, 38, 0.15);
-  border: 1px solid rgba(220, 38, 38, 0.3);
+  background: var(--color-danger-bg);
+  border: 1px solid var(--color-danger-border);
 }
 
 .alert-info {
@@ -1954,14 +1957,14 @@ function getDaysAlertClass(days) {
 }
 
 .btn-doc-action.download {
-  border-color: var(--color-accent-kicker, #c2410c);
-  background: rgba(194, 65, 12, 0.15);
-  color: var(--color-accent-kicker, #c2410c);
+  border-color: var(--color-accent-kicker);
+  background: var(--color-bg-subtle);
+  color: var(--color-accent-kicker);
 }
 
 .btn-doc-action.download:hover {
-  background: var(--color-accent-kicker, #c2410c);
-  color: #ffffff;
+  background: var(--color-accent-kicker);
+  color: var(--color-primary-text);
 }
 
 /* Empty State Global */

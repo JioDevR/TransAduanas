@@ -175,6 +175,7 @@
             v-model="filtroObligacionTexto" 
             type="text" 
             placeholder="Buscar por código, mercancía o DAM..." 
+            aria-label="Buscar obligaciones pendientes por código, mercancía o DAM"
             class="filter-search-input"
           />
         </div>
@@ -375,13 +376,14 @@
             v-model="filtroHistorialTexto" 
             type="text" 
             placeholder="Buscar por código de pago, cotización o N° operación..." 
+            aria-label="Buscar en historial por código de pago, cotización o número de operación"
             class="filter-search-input"
           />
         </div>
 
         <div class="select-filter-wrap">
-          <label>Estado Contable:</label>
-          <select v-model="filtroHistorialEstado" class="custom-select font-sm">
+          <label for="filtro-historial-estado">Estado Contable:</label>
+          <select id="filtro-historial-estado" v-model="filtroHistorialEstado" aria-label="Filtrar por estado contable" class="custom-select font-sm">
             <option value="">Todos los comprobantes</option>
             <option value="PENDIENTE_REVISION">En Revisión Contable</option>
             <option value="VALIDADO">Validados / Conciliados</option>
@@ -787,7 +789,7 @@ async function verComprobante(idDocumento) {
   align-items: center;
   gap: 0.45rem;
   background: var(--color-warning-text);
-  color: #1e1e1b;
+  color: var(--color-bg-surface);
   border: none;
   padding: 0.55rem 1.1rem;
   border-radius: var(--radius-sm, 6px);
@@ -1100,10 +1102,10 @@ async function verComprobante(idDocumento) {
 }
 
 .custom-select {
-  padding: 0.45rem 0.75rem;
+  padding: 0.45rem 2.25rem 0.45rem 0.75rem;
   border-radius: 6px;
   border: 1px solid var(--color-border);
-  background: var(--color-bg-surface);
+  background-color: var(--color-bg-surface);
   color: var(--color-text-main);
   font-size: 0.8125rem;
   outline: none;
@@ -1530,7 +1532,7 @@ async function verComprobante(idDocumento) {
   padding: 0.65rem 1.35rem;
   font-size: 0.85rem;
   font-weight: 700;
-  color: #fff;
+  color: var(--color-primary-text);
   background: var(--color-primary);
   border: 1px solid var(--color-primary);
   border-radius: var(--radius-md, 6px);
@@ -1608,6 +1610,6 @@ async function verComprobante(idDocumento) {
 
 .btn-secondary:hover {
   background: var(--color-bg-subtle);
-  border-color: var(--color-border-hover);
+  border-color: var(--color-border-strong);
 }
 </style>

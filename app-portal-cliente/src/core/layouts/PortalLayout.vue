@@ -334,7 +334,7 @@ async function handleLogout() {
   top: -4px;
   right: -4px;
   background: var(--color-danger);
-  color: #ffffff;
+  color: var(--color-primary-text);
   font-size: 0.65rem;
   font-weight: 700;
   height: 18px;
@@ -349,7 +349,7 @@ async function handleLogout() {
 
 .nav-badge {
   background: var(--color-danger);
-  color: #ffffff;
+  color: var(--color-primary-text);
   font-size: 0.65rem;
   font-weight: 700;
   padding: 0.1rem 0.45rem;
@@ -377,7 +377,7 @@ async function handleLogout() {
   height: 30px;
   border-radius: 50%;
   background: var(--color-accent-kicker);
-  color: #ffffff;
+  color: var(--color-primary-text);
   display: flex;
   align-items: center;
   justify-content: center;

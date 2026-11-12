@@ -78,14 +78,14 @@
 
         <div class="proforma-row">
           <span class="p-label">Valor FOB (Mercancía):</span>
-          <span class="p-val font-semibold">
+          <span class="p-val font-semibold font-mono">
             {{ Number(form?.valorFob) > 0 ? '$' + formatVal(form?.valorFob) : 'Por cotizar ($0.00)' }}
           </span>
         </div>
 
         <div class="proforma-row">
           <span class="p-label">Flete Internacional:</span>
-          <span class="p-val font-semibold">
+          <span class="p-val font-semibold font-mono">
             {{ Number(form?.montoFleteEstimado) > 0 ? '$' + formatVal(form?.montoFleteEstimado) : 'Por cotizar ($0.00)' }}
           </span>
         </div>
@@ -229,7 +229,7 @@ const formatVal = (val) => {
   color: var(--color-primary);
   background: var(--color-bg-subtle);
   padding: 0.25rem 0.65rem;
-  border-radius: var(--radius-full, 9999px);
+  border-radius: var(--radius-pill, 9999px);
   margin-bottom: var(--space-3, 0.75rem);
   align-self: flex-start;
 }

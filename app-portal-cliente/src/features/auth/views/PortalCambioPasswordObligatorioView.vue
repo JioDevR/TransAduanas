@@ -253,14 +253,14 @@ const handleLogout = () => {
   width: 56px;
   height: 56px;
   margin: 0 auto 1rem;
-  background: rgba(184, 91, 53, 0.12);
+  background: var(--color-bg-subtle);
   color: var(--color-primary);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 1.75rem;
-  border: 1px solid rgba(184, 91, 53, 0.25);
+  border: 1px solid var(--color-border-strong);
 }
 
 .brand-title {
@@ -275,9 +275,9 @@ const handleLogout = () => {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  background: rgba(197, 137, 64, 0.12);
-  color: #b45309;
-  border: 1px solid rgba(197, 137, 64, 0.3);
+  background: var(--color-warning-bg);
+  color: var(--color-warning-text);
+  border: 1px solid var(--color-warning-border);
   padding: 0.25rem 0.75rem;
   border-radius: 9999px;
   font-size: 0.7rem;
@@ -341,10 +341,10 @@ const handleLogout = () => {
   align-items: center;
   gap: 0.65rem;
   padding: 0.85rem 1rem;
-  background: rgba(220, 38, 38, 0.08);
-  border: 1px solid rgba(220, 38, 38, 0.25);
+  background: var(--color-danger-bg);
+  border: 1px solid var(--color-danger-border);
   border-radius: var(--radius-md, 8px);
-  color: #dc2626;
+  color: var(--color-danger-text);
   font-size: 0.85rem;
   margin-bottom: 1.25rem;
 }
@@ -440,12 +440,12 @@ const handleLogout = () => {
 }
 
 .rule-row.valid {
-  color: #16a34a;
+  color: var(--color-success-text);
   font-weight: 600;
 }
 
 .text-success {
-  color: #16a34a;
+  color: var(--color-success-text);
 }
 
 .text-muted {
@@ -498,7 +498,7 @@ const handleLogout = () => {
 }
 
 .btn-text-logout:hover {
-  color: #dc2626;
+  color: var(--color-danger-text);
 }
 
 .font-mono {

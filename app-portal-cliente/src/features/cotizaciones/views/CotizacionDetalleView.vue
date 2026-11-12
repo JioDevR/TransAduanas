@@ -81,7 +81,7 @@
             <h1 class="quote-code font-mono">{{ cotizacion.codigoCotizacion }}</h1>
             <p class="quote-subtitle">
               Emitida para <strong>{{ cotizacion.razonSocialCliente || 'Cliente Importador' }}</strong>
-              (RUC: {{ cotizacion.rucCliente || '-' }})
+              (RUC: <span class="font-mono">{{ cotizacion.rucCliente || '-' }}</span>)
             </p>
           </div>
 
@@ -569,9 +569,9 @@ function imprimirCotizacion() {
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
-  background: #16a34a;
-  color: #ffffff;
-  border: 1px solid #15803d;
+  background: var(--color-success-text);
+  color: var(--color-bg-surface);
+  border: 1px solid var(--color-success-border);
   padding: 0.5rem 1rem;
   border-radius: var(--radius-sm, 6px);
   font-size: 0.8125rem;
@@ -621,8 +621,9 @@ function imprimirCotizacion() {
 }
 
 .btn-action-observe:hover {
-  background: var(--color-danger-border);
-  color: #ffffff;
+  background: var(--color-danger-text);
+  color: var(--color-bg-surface);
+  border-color: var(--color-danger-text);
 }
 
 .btn-action-outline {
@@ -799,7 +800,7 @@ function imprimirCotizacion() {
   align-items: center;
   gap: 0.4rem;
   background: var(--color-danger-text);
-  color: #1e1e1b;
+  color: var(--color-bg-surface);
   border: none;
   padding: 0.45rem 0.9rem;
   border-radius: var(--radius-sm, 6px);
@@ -971,7 +972,8 @@ function imprimirCotizacion() {
 }
 
 .cost-row.total-row-full .concept-desc {
-  color: rgba(255, 255, 255, 0.75);
+  color: var(--color-primary-text);
+  opacity: 0.8;
 }
 
 .total-amount-big {
@@ -1074,8 +1076,9 @@ function imprimirCotizacion() {
 }
 
 .btn-full-danger:hover {
-  background: var(--color-danger-border);
-  color: #ffffff;
+  background: var(--color-danger-text);
+  color: var(--color-bg-surface);
+  border-color: var(--color-danger-text);
 }
 
 .btn-full-outline {

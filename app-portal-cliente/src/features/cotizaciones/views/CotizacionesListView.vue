@@ -87,13 +87,14 @@
             v-model="filtroTexto" 
             type="text" 
             placeholder="Buscar por código, mercancía o puerto..." 
+            aria-label="Buscar cotizaciones por código, mercancía o puerto"
             class="search-input"
           />
         </div>
 
         <div class="filter-group">
-          <label>Régimen:</label>
-          <select v-model="filtroRegimen" class="custom-select">
+          <label for="filtro-regimen-cotizaciones">Régimen:</label>
+          <select id="filtro-regimen-cotizaciones" v-model="filtroRegimen" aria-label="Filtrar por régimen" class="custom-select">
             <option value="">Todos los regímenes</option>
             <option value="IMPORTACION_DEFINITIVA">Importación Definitiva</option>
             <option value="EXPORTACION_DEFINITIVA">Exportación Definitiva</option>
@@ -101,8 +102,8 @@
         </div>
 
         <div class="filter-group">
-          <label>Estado:</label>
-          <select v-model="filtroEstado" class="custom-select">
+          <label for="filtro-estado-cotizaciones">Estado:</label>
+          <select id="filtro-estado-cotizaciones" v-model="filtroEstado" aria-label="Filtrar por estado" class="custom-select">
             <option value="">Todos los estados</option>
             <option value="APROBADA">Aprobadas</option>
             <option value="PENDIENTE">En Evaluación</option>
@@ -547,8 +548,8 @@ function irASubsanarPago(c) {
 .custom-select {
   border: 1px solid var(--color-border);
   border-radius: 6px;
-  padding: 0.45rem 0.65rem;
-  background: var(--color-bg-surface);
+  padding: 0.45rem 2.25rem 0.45rem 0.65rem;
+  background-color: var(--color-bg-surface);
   color: var(--color-text-main);
   font-size: 0.82rem;
   outline: none;
@@ -739,9 +740,9 @@ function irASubsanarPago(c) {
 }
 
 .btn-table-action--pay:hover {
-  background: var(--color-accent-kicker, #9a7f60);
-  color: #ffffff;
-  border-color: var(--color-accent-kicker, #9a7f60);
+  background: var(--color-accent-kicker);
+  color: var(--color-primary-text);
+  border-color: var(--color-accent-kicker);
 }
 
 .btn-table-action--observe {
@@ -752,8 +753,9 @@ function irASubsanarPago(c) {
 }
 
 .btn-table-action--observe:hover {
-  background: var(--color-danger-border);
-  color: #ffffff;
+  background: var(--color-danger-text);
+  color: var(--color-bg-surface);
+  border-color: var(--color-danger-text);
 }
 
 .loading-state, .empty-state {

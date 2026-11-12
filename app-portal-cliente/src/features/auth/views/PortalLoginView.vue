@@ -94,11 +94,25 @@
             <i class="pi pi-info-circle"></i>
             <span>Cuentas de demostración disponibles:</span>
           </div>
-          <div class="demo-item" @click="fillDemo('20511894520', 'Password123!')">
+          <div
+            class="demo-item"
+            role="button"
+            tabindex="0"
+            @click="fillDemo('20511894520', 'Password123!')"
+            @keydown.enter="fillDemo('20511894520', 'Password123!')"
+            @keydown.space.prevent="fillDemo('20511894520', 'Password123!')"
+          >
             <span class="demo-name">LG Electronics:</span>
             <span class="demo-val">RUC: 20511894520 / Password123!</span>
           </div>
-          <div class="demo-item" @click="fillDemo('20370146994', 'Password123!')">
+          <div
+            class="demo-item"
+            role="button"
+            tabindex="0"
+            @click="fillDemo('20370146994', 'Password123!')"
+            @keydown.enter="fillDemo('20370146994', 'Password123!')"
+            @keydown.space.prevent="fillDemo('20370146994', 'Password123!')"
+          >
             <span class="demo-name">Camposol S.A.:</span>
             <span class="demo-val">RUC: 20370146994 / Password123!</span>
           </div>
@@ -205,8 +219,8 @@ async function handleSubmit() {
 .brand-logo {
   width: 52px;
   height: 52px;
-  background: var(--color-primary, #352f2a);
-  color: #ffffff;
+  background: var(--color-primary);
+  color: var(--color-primary-text);
   border-radius: 10px;
   display: flex;
   align-items: center;
@@ -389,7 +403,7 @@ async function handleSubmit() {
 }
 
 .demo-item:hover {
-  background: rgba(255, 255, 255, 0.6);
+  background: var(--color-bg-surface);
 }
 
 .demo-name {

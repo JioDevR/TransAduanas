@@ -17,7 +17,7 @@
       <div class="nav-actions" v-if="pago?.idCotizacion">
         <button type="button" class="btn-action-outline" @click="verCotizacion(pago.idCotizacion)">
           <i class="pi pi-file"></i>
-          <span>Ver Cotización ({{ pago.codigoCotizacion }})</span>
+          <span>Ver Cotización (<span class="font-mono">{{ pago.codigoCotizacion }}</span>)</span>
         </button>
       </div>
     </div>
@@ -44,7 +44,7 @@
           <span class="header-kicker">SUBSANACIÓN DE COMPROBANTE BANCARIO // FINANZAS</span>
           <h1 class="payment-title font-mono">{{ pago.codigoPago }}</h1>
           <p class="payment-subtitle">
-            Abono vinculado a la Cotización <strong>{{ pago.codigoCotizacion || 'COTIZACIÓN' }}</strong>
+            Abono vinculado a la Cotización <strong class="font-mono">{{ pago.codigoCotizacion || 'COTIZACIÓN' }}</strong>
             <span class="sub-sep">•</span>
             Tipo: <strong>{{ pago.tipoAbono || 'ANTICIPO' }}</strong>
           </p>
@@ -546,8 +546,6 @@ function verCotizacion(idCotizacion) {
   flex-direction: column;
   gap: 1.5rem;
   width: 100%;
-  max-width: 1360px;
-  margin: 0 auto;
 }
 
 /* Barra superior */
@@ -583,7 +581,7 @@ function verCotizacion(idCotizacion) {
 
 .btn-back:hover {
   background: var(--color-bg-subtle);
-  border-color: var(--color-border-hover);
+  border-color: var(--color-border-strong);
 }
 
 .breadcrumbs {
@@ -814,7 +812,7 @@ function verCotizacion(idCotizacion) {
   background: var(--color-bg-subtle);
   padding: 0.875rem 1rem;
   border-radius: var(--radius-md);
-  border-left: 3px solid var(--color-warning);
+  border-left: 3px solid var(--color-warning-border);
 }
 
 .observation-hint {
@@ -936,7 +934,7 @@ function verCotizacion(idCotizacion) {
   border-radius: var(--radius-md);
   border: 1px solid var(--color-primary);
   background: var(--color-primary);
-  color: #fff;
+  color: var(--color-primary-text);
   cursor: pointer;
   transition: all 0.15s ease;
 }
@@ -953,7 +951,7 @@ function verCotizacion(idCotizacion) {
 
 .btn-voucher-action.secondary:hover {
   background: var(--color-bg-subtle);
-  border-color: var(--color-border-hover);
+  border-color: var(--color-border-strong);
 }
 
 .no-voucher-note {
@@ -1046,7 +1044,7 @@ function verCotizacion(idCotizacion) {
   padding: 0.625rem 0.875rem;
   font-size: 0.875rem;
   color: var(--color-text-main);
-  background: var(--color-bg-base);
+  background-color: var(--color-bg-base);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   outline: none;
@@ -1059,7 +1057,7 @@ function verCotizacion(idCotizacion) {
 }
 
 .form-control:read-only {
-  background: var(--color-bg-subtle);
+  background-color: var(--color-bg-subtle);
   color: var(--color-text-muted);
   cursor: not-allowed;
 }
@@ -1241,7 +1239,7 @@ function verCotizacion(idCotizacion) {
 
 .btn-secondary:hover:not(:disabled) {
   background: var(--color-bg-subtle);
-  border-color: var(--color-border-hover);
+  border-color: var(--color-border-strong);
 }
 
 .btn-primary-action {
@@ -1251,7 +1249,7 @@ function verCotizacion(idCotizacion) {
   padding: 0.625rem 1.5rem;
   font-size: 0.875rem;
   font-weight: 700;
-  color: #fff;
+  color: var(--color-primary-text);
   background: var(--color-primary);
   border: 1px solid var(--color-primary);
   border-radius: var(--radius-md);

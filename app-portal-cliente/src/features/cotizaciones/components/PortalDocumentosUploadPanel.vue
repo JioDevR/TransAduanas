@@ -105,6 +105,7 @@
                 type="button"
                 class="btn-remove-queued"
                 title="Quitar archivo de la lista"
+                aria-label="Quitar archivo de la lista"
                 @click="removeDeferredFile(idx)"
               >
                 <i class="pi pi-times"></i>
@@ -149,6 +150,7 @@
                 type="button"
                 class="btn-remove-queued"
                 title="Quitar archivo"
+                aria-label="Quitar archivo"
                 @click="liveQueue.splice(idx, 1)"
               >
                 <i class="pi pi-times"></i>
@@ -591,11 +593,15 @@ function getFileIconClass(filename = '') {
   padding: 0.55rem 0.75rem;
   font-size: var(--font-size-sm, 0.8125rem);
   color: var(--color-text-main);
-  background: var(--color-bg-surface);
+  background-color: var(--color-bg-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md, 0.5rem);
   outline: none;
   transition: border-color var(--transition-fast);
+}
+
+.select-input {
+  padding-right: 2.25rem;
 }
 
 .select-input:focus,

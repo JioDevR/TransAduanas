@@ -230,9 +230,13 @@
               <div 
                 v-for="banco in cuentasBancariasUsd" 
                 :key="banco.id"
+                role="button"
+                tabindex="0"
                 class="bank-account-card"
                 :class="{ selected: form.bancoDestino === banco.nombre }"
                 @click="form.bancoDestino = banco.nombre"
+                @keydown.enter="form.bancoDestino = banco.nombre"
+                @keydown.space.prevent="form.bancoDestino = banco.nombre"
               >
                 <div class="bank-card-header">
                   <div class="bank-badge-title">
@@ -352,7 +356,7 @@
                     <span class="file-name font-mono">{{ archivoVoucher.name }}</span>
                     <span class="file-size">{{ (archivoVoucher.size / 1024).toFixed(1) }} KB</span>
                   </div>
-                  <button type="button" class="btn-remove-file" @click="quitarArchivo" title="Quitar archivo">
+                  <button type="button" class="btn-remove-file" @click="quitarArchivo" title="Quitar archivo" aria-label="Quitar archivo">
                     <i class="pi pi-times"></i>
                   </button>
                 </div>
@@ -825,9 +829,9 @@ function volver() {
   width: fit-content;
 }
 
-.canal-badge.verde { background: #e6f4ea; color: #137333; }
-.canal-badge.naranja { background: #fef7e0; color: #b06000; }
-.canal-badge.rojo { background: #fce8e6; color: #c5221f; }
+.canal-badge.verde { background: var(--color-success-bg); color: var(--color-success-text); }
+.canal-badge.naranja { background: var(--color-warning-bg); color: var(--color-warning-text); }
+.canal-badge.rojo { background: var(--color-danger-bg); color: var(--color-danger-text); }
 
 .status-pill {
   font-size: 0.7rem;
@@ -924,8 +928,8 @@ function volver() {
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  background: var(--color-primary, #352f2a);
-  color: #fff;
+  background: var(--color-primary);
+  color: var(--color-primary-text);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1183,13 +1187,17 @@ function volver() {
 }
 
 .custom-input, .custom-select, .custom-textarea {
-  border: 1px solid var(--color-border, #e4dacb);
+  border: 1px solid var(--color-border);
   border-radius: 6px;
   padding: 0.65rem 0.85rem;
   font-size: 0.9rem;
-  color: var(--color-text-main, #2b2520);
-  background: var(--color-bg-surface, #ffffff);
+  color: var(--color-text-main);
+  background-color: var(--color-bg-surface);
   width: 100%;
+}
+
+.custom-select {
+  padding-right: 2.25rem;
 }
 
 .custom-input:focus, .custom-select:focus, .custom-textarea:focus {

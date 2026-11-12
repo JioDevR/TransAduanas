@@ -41,8 +41,12 @@
                 <div
                   v-for="reg in REGIMEN_OPTIONS"
                   :key="reg.value"
+                  role="button"
+                  tabindex="0"
                   :class="['regimen-card', { selected: form.regimenAduanero === reg.value }]"
                   @click="handleSelectRegimen(reg.value)"
+                  @keydown.enter="handleSelectRegimen(reg.value)"
+                  @keydown.space.prevent="handleSelectRegimen(reg.value)"
                 >
                   <div class="regimen-header">
                     <span class="regimen-code-badge">{{ reg.codigo }}</span>
@@ -392,8 +396,12 @@
 
               <div class="transport-toggle-grid">
                 <div
+                  role="button"
+                  tabindex="0"
                   :class="['transport-card-opt', { selected: form.servicioTransporte === true }]"
                   @click="form.servicioTransporte = true"
+                  @keydown.enter="form.servicioTransporte = true"
+                  @keydown.space.prevent="form.servicioTransporte = true"
                 >
                   <div class="opt-icon"><i class="pi pi-truck"></i></div>
                   <div class="opt-info">
@@ -404,8 +412,12 @@
                 </div>
 
                 <div
+                  role="button"
+                  tabindex="0"
                   :class="['transport-card-opt', { selected: form.servicioTransporte === false }]"
                   @click="form.servicioTransporte = false"
+                  @keydown.enter="form.servicioTransporte = false"
+                  @keydown.space.prevent="form.servicioTransporte = false"
                 >
                   <div class="opt-icon"><i class="pi pi-building"></i></div>
                   <div class="opt-info">
@@ -789,16 +801,6 @@
                 <i class="pi pi-arrow-left"></i>
                 <span>Anterior: Documentación</span>
               </button>
-              <button
-                type="button"
-                class="btn-espresso"
-                @click="handleSubmit"
-                :disabled="submitting || !isFormReady"
-              >
-                <i v-if="submitting" class="pi pi-spin pi-spinner"></i>
-                <i v-else class="pi pi-send"></i>
-                <span>{{ submitting ? 'Enviando Solicitud...' : 'Enviar Solicitud a Evaluación' }}</span>
-              </button>
             </div>
           </div>
         </section>
@@ -1060,9 +1062,9 @@ defineExpose({
   font-family: var(--font-mono, monospace);
   font-size: var(--font-size-md, 0.9375rem);
   font-weight: 700;
-  color: var(--color-accent-kicker, #8c6d3f);
-  background: var(--color-bg-subtle, #f5f2ed);
-  border: 1px solid var(--color-border-subtle, #e2ded8);
+  color: var(--color-accent-kicker);
+  background: var(--color-bg-subtle);
+  border: 1px solid var(--color-border-subtle);
   width: 2.25rem;
   height: 2.25rem;
   display: flex;
@@ -1458,8 +1460,8 @@ defineExpose({
 
 .regulatory-warning-banner {
   padding: 0.75rem 0.85rem;
-  background: var(--color-warning-bg, #fff8e1);
-  border: 1px solid var(--color-warning-border, #ffe082);
+  background: var(--color-warning-bg);
+  border: 1px solid var(--color-warning-border);
   border-radius: var(--radius-md, 0.5rem);
   display: flex;
   align-items: flex-start;
@@ -1467,7 +1469,7 @@ defineExpose({
 }
 
 .warning-icon-box {
-  color: var(--color-warning-text, #b78103);
+  color: var(--color-warning-text);
   font-size: 1.15rem;
   margin-top: 0.1rem;
 }
@@ -1476,7 +1478,7 @@ defineExpose({
   font-size: 0.6rem;
   font-weight: 800;
   letter-spacing: 0.06em;
-  color: var(--color-warning-text, #b78103);
+  color: var(--color-warning-text);
 }
 
 .warning-title {
@@ -1650,7 +1652,7 @@ defineExpose({
 }
 
 .loc-dest {
-  color: var(--color-accent-kicker, #8c6d3f);
+  color: var(--color-accent-kicker);
 }
 
 .loc-fields-row {
@@ -1674,9 +1676,9 @@ defineExpose({
 .form-select {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md, 0.5rem);
-  padding: 0.45rem 0.65rem;
+  padding: 0.45rem 2.25rem 0.45rem 0.65rem;
   font-size: 0.75rem;
-  background: var(--color-bg-surface);
+  background-color: var(--color-bg-surface);
   color: var(--color-text-main);
   outline: none;
 }
@@ -1715,7 +1717,7 @@ defineExpose({
 .shortcut-chip.active {
   background: var(--color-primary);
   border-color: var(--color-primary);
-  color: #fff;
+  color: var(--color-primary-text);
 }
 
 .form-textarea {
@@ -1862,9 +1864,9 @@ defineExpose({
 }
 
 .advisory-status-badge.badge-pending {
-  color: var(--color-warning-text, #b78103);
-  background: var(--color-warning-bg, #fff8e1);
-  border-color: var(--color-warning-border, #ffe082);
+  color: var(--color-warning-text);
+  background: var(--color-warning-bg);
+  border-color: var(--color-warning-border);
 }
 
 .advisory-amount {

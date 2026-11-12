@@ -158,9 +158,9 @@
   --color-primary: #d6b476;          /* Arena dorada cálida luminosa */
   --color-primary-hover: #e5c78f;    /* Arena dorada hover */
   --color-primary-text: #1d1b15;     /* Texto carbón profundo sobre arena */
-  --color-primary-espresso: #f6f2ea;
+  --color-primary-espresso: #d6b476;
   --color-accent-kicker: #e0c287;    /* Subtítulos kicker en arena dorada viva */
-  --color-accent-copper: #f59e0b;
+  --color-accent-copper: #fb923c;
 
   /* Tipografía */
   --color-text-main: #f6f2ea;        /* Blanco marfil cálido para lectura cómoda */
@@ -317,9 +317,14 @@ button, input, select, textarea {
   box-shadow: 0 2px 6px rgba(53, 47, 42, 0.2);
 }
 
-.btn-espresso:hover {
+.btn-espresso:hover:not(:disabled) {
   background: var(--color-primary-hover);
   transform: translateY(-1px);
+}
+
+.btn-espresso:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .btn-outline-warm {
@@ -636,7 +641,7 @@ button, input, select, textarea {
 .p-confirmdialog .p-button-success {
   background: var(--color-success-text) !important;
   border: 1px solid var(--color-success-text) !important;
-  color: #ffffff !important;
+  color: var(--color-bg-surface) !important;
   font-size: 0.85rem !important;
   font-weight: 700 !important;
   padding: 0.55rem 1.35rem !important;
@@ -655,7 +660,7 @@ button, input, select, textarea {
 .p-confirmdialog .p-button-danger {
   background: var(--color-danger-text) !important;
   border: 1px solid var(--color-danger-text) !important;
-  color: #ffffff !important;
+  color: var(--color-bg-surface) !important;
   font-size: 0.85rem !important;
   font-weight: 700 !important;
   padding: 0.55rem 1.35rem !important;

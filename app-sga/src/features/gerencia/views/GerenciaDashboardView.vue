@@ -386,7 +386,7 @@ import { useNavigationStore } from '@/core/stores/navigationStore'
 import sedeService from '@/features/admin/sedes/services/sedeService'
 import catalogoService from '@/features/admin/catalogos/services/catalogoService'
 import { transporteFlotaService } from '@/features/transporte/services/transporteFlotaService'
-import { downloadBlob, openBlobInNewTab } from '@/shared/utils/download'
+import { openBlobInNewTab } from '@/shared/utils/download'
 
 const router = useRouter()
 const navigationStore = useNavigationStore()

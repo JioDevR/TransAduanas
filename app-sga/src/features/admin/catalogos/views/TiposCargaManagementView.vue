@@ -311,8 +311,9 @@ import TipoCargaRegistrationForm from '../components/TipoCargaRegistrationForm.v
 import { useNotification } from '@/shared/composables/useNotification'
 import { useConfirmation } from '@/shared/composables/useConfirmation'
 import { openBlobInNewTab } from '@/shared/utils/download'
+import { formatNumber } from '@/shared/utils/formatters'
 
-const { showSuccess, showError, showInfo, showWarn } = useNotification()
+const { showSuccess, showError } = useNotification()
 const { confirmAction } = useConfirmation()
 
 // Estado General
@@ -329,18 +330,6 @@ const tiposSortBy = ref('nombre-asc')
 // Formulario Modal/Completo
 const showTipoCargaForm = ref(false)
 const selectedTipo = ref(null)
-
-const showToast = (message, type = 'success') => {
-  if (type === 'error') {
-    showError(message)
-  } else if (type === 'warn' || type === 'warning') {
-    showWarn(message)
-  } else if (type === 'info') {
-    showInfo(message)
-  } else {
-    showSuccess(message)
-  }
-}
 
 // Métricas Computadas
 const activasCount = computed(() => {
@@ -383,11 +372,6 @@ const filterByStatus = (status) => {
 
 const filterByContainer = (tipoKeyword) => {
   tiposContainerFilter.value = tipoKeyword
-}
-
-const formatNumber = (num) => {
-  if (num === null || num === undefined) return '0.00'
-  return Number(num).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
 
 // Filtrado de Tipos de Carga
@@ -446,7 +430,7 @@ const loadTiposCarga = async () => {
     tiposCarga.value = Array.isArray(res) ? res : (res?.data || [])
   } catch (error) {
     console.error('Error cargando tipos de carga:', error)
-    showToast('Error al conectar con el catálogo de tipos de carga', 'error')
+    showError('Error al conectar con el catálogo de tipos de carga')
   } finally {
     loadingTipos.value = false
   }
@@ -465,7 +449,7 @@ const openEditTipoModal = (tipo) => {
 
 const onTipoSaved = (payload) => {
   showTipoCargaForm.value = false
-  showToast(payload?.isEdit ? 'Tipo de carga actualizado exitosamente' : 'Nuevo tipo de carga registrado')
+  showSuccess(payload?.isEdit ? 'Tipo de carga actualizado exitosamente' : 'Nuevo tipo de carga registrado')
   loadTiposCarga()
 }
 
@@ -481,22 +465,22 @@ const handleDeactivateTipo = async (tipo) => {
 
   try {
     await catalogoService.deleteTipoCarga(tipo.idTipoCarga)
-    showToast(`Tipo de carga ${tipo.codigo} marcado como inactivo`)
+    showSuccess(`Tipo de carga ${tipo.codigo} marcado como inactivo`)
     loadTiposCarga()
   } catch (error) {
     console.error('Error desactivando tipo de carga:', error)
-    showToast('No se pudo desactivar el tipo de carga', 'error')
+    showError('No se pudo desactivar el tipo de carga')
   }
 }
 
 const handleReactivateTipo = async (tipo) => {
   try {
     await catalogoService.reactivarTipoCarga(tipo.idTipoCarga)
-    showToast(`Tipo de carga ${tipo.codigo} reactivado exitosamente`)
+    showSuccess(`Tipo de carga ${tipo.codigo} reactivado exitosamente`)
     loadTiposCarga()
   } catch (error) {
     console.error('Error reactivando tipo de carga:', error)
-    showToast('No se pudo reactivar el tipo de carga', 'error')
+    showError('No se pudo reactivar el tipo de carga')
   }
 }
 
@@ -506,10 +490,10 @@ const handleExportPdf = async () => {
   try {
     const blobData = await catalogoService.downloadTiposCargaPdf()
     openBlobInNewTab(blobData)
-    showToast('Reporte oficial de tipos de carga abierto en nueva pestaña')
+    showSuccess('Reporte oficial de tipos de carga abierto en nueva pestaña')
   } catch (err) {
     console.error('Error al descargar reporte de tipos de carga:', err)
-    showToast('No se pudo generar el reporte de tipos de carga', 'error')
+    showError('No se pudo generar el reporte de tipos de carga')
   } finally {
     exportingPdf.value = false
   }

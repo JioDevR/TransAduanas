@@ -124,6 +124,7 @@
 import { ref, watch } from 'vue'
 import BaseModal from '@/shared/components/BaseModal.vue'
 import { transporteFlotaService } from '../services/transporteFlotaService'
+import { getNowDateTimeInput } from '@/shared/utils/dateUtils'
 
 const props = defineProps({
   visible: {
@@ -142,7 +143,7 @@ const loading = ref(false)
 const errorMessage = ref('')
 
 const defaultForm = () => {
-  const now = new Date().toISOString().slice(0, 16)
+  const now = getNowDateTimeInput()
   return {
     fechaEntregaConforme: now,
     receptorNombre: '',

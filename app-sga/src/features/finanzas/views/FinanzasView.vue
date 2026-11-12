@@ -2374,6 +2374,8 @@ import { documentoService } from '@/features/documentos/services/documentoServic
 import { useNavigationStore } from '@/core/stores/navigationStore'
 import { useNotification } from '@/shared/composables/useNotification'
 import { useConfirmation } from '@/shared/composables/useConfirmation'
+import { formatDate, formatDateTime, getNowDateTimeInput } from '@/shared/utils/dateUtils'
+import { formatCurrency, formatEstado, getEstadoSeverity, getCanalSeverity } from '@/shared/utils/formatters'
 
 const route = useRoute()
 const router = useRouter()
@@ -2475,7 +2477,7 @@ const pagoForm = ref({
   bancoDestino: 'BCP',
   numeroOperacion: '',
   numeroFactura: '',
-  fechaPago: new Date().toISOString().slice(0, 16),
+  fechaPago: getNowDateTimeInput(),
   observaciones: ''
 })
 
@@ -2780,7 +2782,7 @@ function openPagoModal(liquidacion) {
     bancoDestino: 'BCP',
     numeroOperacion: '',
     numeroFactura: liquidacion.numeroFactura || '',
-    fechaPago: new Date().toISOString().slice(0, 16),
+    fechaPago: getNowDateTimeInput(),
     observaciones: ''
   }
   showPagoModal.value = true
@@ -2838,47 +2840,12 @@ async function confirmAnular(liquidacion) {
 // =========================================================================
 
 function formatCurrencyPen(val) {
-  const num = Number(val || 0)
-  return 'S/ ' + num.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+  return formatCurrency(val, 'PEN')
 }
 
 function formatEstadoPago(st) {
   if (!st) return 'DESCONOCIDO'
-  switch (st.toUpperCase()) {
-    case 'PENDIENTE': return 'Pendiente de Cobro'
-    case 'PAGADO': return 'Cobrado / Conforme'
-    case 'ANULADO': return 'Anulado'
-    default: return st
-  }
-}
-
-function getEstadoSeverity(st) {
-  switch (st?.toUpperCase()) {
-    case 'PAGADO': return 'success'
-    case 'PENDIENTE': return 'warn'
-    case 'ANULADO': return 'danger'
-    default: return 'info'
-  }
-}
-
-function getCanalSeverity(canal) {
-  switch (canal?.toUpperCase()) {
-    case 'VERDE': return 'success'
-    case 'NARANJA': return 'warn'
-    case 'ROJO': return 'danger'
-    default: return 'info'
-  }
-}
-
-function formatDate(dt) {
-  if (!dt) return '—'
-  return String(dt).split('T')[0]
-}
-
-function formatDateTime(dt) {
-  if (!dt) return '—'
-  const d = new Date(dt)
-  return isNaN(d.getTime()) ? dt : d.toLocaleString('es-PE')
+  return formatEstado(st)
 }
 
 const anticiposPendientesCount = computed(() => {
@@ -3097,15 +3064,10 @@ function closeRegistroPagoFullView() {
   showRegistroPagoFullView.value = false
   selectedCotizacionForPago.value = null
 }
-const closeRegistrarPagoFullView = closeRegistroPagoFullView
 
 async function handlePagoRegistradoDesdeFullView(data) {
   closeRegistroPagoFullView()
   await onPagoRegistradoEnFinanzas()
-}
-
-function closeRegistrarPagoModal() {
-  closeRegistroPagoFullView()
 }
 
 async function openHistorialCotizacion(cotizacion) {

@@ -303,9 +303,9 @@ const openReportarIncidencia = (despacho) => {
 
 const handleIniciarRutaDirecto = async (despacho) => {
   const ok = await confirmAction({
-    title: 'Iniciar Ruta de Transporte',
+    header: 'Iniciar Ruta de Transporte',
     message: `¿Confirma la salida a ruta del despacho ${despacho.codigoTracking}? La unidad y el conductor pasarán a estado EN RUTA y se notificará al cliente.`,
-    confirmText: 'Iniciar Ruta',
+    acceptLabel: 'Iniciar Ruta',
     severity: 'info'
   })
   if (!ok) return

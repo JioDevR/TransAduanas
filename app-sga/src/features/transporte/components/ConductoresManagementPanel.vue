@@ -426,8 +426,11 @@ import Dialog from 'primevue/dialog'
 import { transporteFlotaService } from '@/features/transporte/services/transporteFlotaService'
 import { userService } from '@/features/admin/users/services/userService'
 import { useNotification } from '@/shared/composables/useNotification'
+import { useConfirmation } from '@/shared/composables/useConfirmation'
+import { formatDate } from '@/shared/utils/dateUtils'
 
 const { showSuccess, showError, showInfo } = useNotification()
+const { confirmAction } = useConfirmation()
 
 const conductoresList = ref([])
 const usuariosList = ref([])
@@ -595,6 +598,16 @@ const saveConductor = async () => {
 }
 
 const toggleEstado = async (c) => {
+  if (c.estadoActivo) {
+    const confirmed = await confirmAction({
+      header: 'Confirmar Desactivación de Conductor',
+      message: `¿Desea desactivar al conductor ${c.nombres} ${c.apellidos || ''} del padrón MTC?`,
+      acceptLabel: 'Desactivar',
+      acceptClass: 'p-button-danger'
+    })
+    if (!confirmed) return
+  }
+
   try {
     if (c.estadoActivo) {
       await transporteFlotaService.deleteConductor(c.idConductor)
@@ -607,12 +620,6 @@ const toggleEstado = async (c) => {
   } catch (err) {
     showError(err.message || 'Error al cambiar estado')
   }
-}
-
-const formatDate = (d) => {
-  if (!d) return '— No registrado —'
-  const date = new Date(d)
-  return isNaN(date.getTime()) ? d : date.toLocaleDateString('es-PE')
 }
 
 const getLicenseDateClass = (d) => {

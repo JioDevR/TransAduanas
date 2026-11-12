@@ -152,10 +152,11 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted } from 'vue'
+import { ref, watch } from 'vue'
 import BaseModal from '@/shared/components/BaseModal.vue'
 import { transporteFlotaService } from '../services/transporteFlotaService'
 import { expedienteService } from '../services/expedienteService'
+import { getNowDateTimeInput } from '@/shared/utils/dateUtils'
 
 const props = defineProps({
   visible: {
@@ -175,7 +176,7 @@ const unidadesList = ref([])
 const defaultForm = () => {
   const now = new Date()
   now.setHours(now.getHours() + 2)
-  const fechaIso = now.toISOString().slice(0, 16)
+  const fechaIso = getNowDateTimeInput(now)
 
   return {
     idExpediente: null,

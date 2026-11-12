@@ -111,3 +111,63 @@ export function addDaysToDate(dateStr, days = 0) {
   d.setDate(d.getDate() + days)
   return getLocalDateString(d)
 }
+
+/**
+ * Retorna la fecha actual (o la fecha provista) en formato local YYYY-MM-DD para inputs type="date".
+ * Evita el desfase UTC de toISOString().slice(0, 10) después de las 19:00 (GMT-5).
+ */
+export function getTodayDateInput(date = new Date()) {
+  return getLocalDateString(date)
+}
+
+/**
+ * Retorna la fecha y hora actual (o la provista) en formato local YYYY-MM-DDTHH:mm para inputs type="datetime-local".
+ * Evita el desfase UTC de toISOString().slice(0, 16).
+ */
+export function getNowDateTimeInput(date = new Date()) {
+  const d = date instanceof Date ? date : new Date(date)
+  if (isNaN(d.getTime())) return ''
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+}
+
+/**
+ * Formatea una fecha (string ISO o Date) a representación local es-PE (DD/MM/YYYY).
+ */
+export function formatDate(val, fallback = '—') {
+  if (!val) return fallback
+  const d = typeof val === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(val.trim())
+    ? parseLocalDate(val)
+    : (val instanceof Date ? val : new Date(val))
+  if (!d || isNaN(d.getTime())) return String(val)
+  return d.toLocaleDateString('es-PE', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  })
+}
+
+/**
+ * Formatea una fecha y hora a representación local es-PE.
+ */
+export function formatDateTime(val, fallback = '—') {
+  if (!val) return fallback
+  const d = val instanceof Date ? val : new Date(val)
+  if (isNaN(d.getTime())) return String(val)
+  return d.toLocaleString('es-PE', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit'
+  })
+}
+
+/**
+ * Formatea una fecha a formato corto DD/MM/YYYY.
+ */
+export function formatDateShort(val, fallback = '—') {
+  if (!val) return fallback
+  const short = formatHumanShort(val)
+  return short || String(val)
+}
+

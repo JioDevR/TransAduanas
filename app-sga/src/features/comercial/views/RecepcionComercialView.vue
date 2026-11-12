@@ -1097,7 +1097,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
@@ -1109,6 +1109,7 @@ import { useAuthStore } from '@/features/auth/stores/authStore'
 import { useNavigationStore } from '@/core/stores/navigationStore'
 import { useNotification } from '@/shared/composables/useNotification'
 import { useConfirmation } from '@/shared/composables/useConfirmation'
+import { formatRegimen } from '@/shared/utils/formatters'
 import ClienteRegistrationForm from '../components/ClienteRegistrationForm.vue'
 import CotizacionRegistrationForm from '../components/CotizacionRegistrationForm.vue'
 import CotizacionCorrectionView from '../components/CotizacionCorrectionView.vue'
@@ -1120,7 +1121,7 @@ const authStore = useAuthStore()
 const isAgenteComercial = computed(() => authStore.userRole === 'AGENTE_COMERCIAL')
 const navigationStore = useNavigationStore()
 const { showSuccess, showError, showInfo, showWarn } = useNotification()
-const { confirmAction, confirmDelete } = useConfirmation()
+const { confirmDelete } = useConfirmation()
 
 const activeTab = ref('dashboard')
 const loading = ref(false)
@@ -1286,7 +1287,6 @@ watch(
 const cotizaciones = ref([])
 const solicitudesSinAsignar = ref([])
 const clientes = ref([])
-const claimingId = ref(null)
 
 // Normalizador de texto para búsquedas (ignora tildes, mayúsculas y espacios extras)
 const normalizeSearchText = (text) => {
@@ -1611,27 +1611,6 @@ const loadData = async () => {
   }
 }
 
-const handleTomarSolicitud = async (solicitud) => {
-  if (!solicitud?.idCotizacion) return
-  const confirmed = await confirmAction(
-    `¿Desea tomar la solicitud ${solicitud.codigoCotizacion} (${solicitud.clienteRazonSocial}) y asignarla a su cartera personal?`,
-    'Tomar Solicitud del Portal B2B'
-  )
-  if (!confirmed) return
-
-  claimingId.value = solicitud.idCotizacion
-  try {
-    await comercialService.asignarCotizacion(solicitud.idCotizacion)
-    showToast(`Solicitud ${solicitud.codigoCotizacion} asignada a su bandeja de cotizaciones.`)
-    await loadData()
-  } catch (err) {
-    showToast(err.response?.data?.message || 'No se pudo tomar la solicitud.', 'error')
-    await loadData()
-  } finally {
-    claimingId.value = null
-  }
-}
-
 // ==========================================
 // CLIENTES ACTIONS
 // ==========================================
@@ -1771,28 +1750,6 @@ const handleCotizacionSaved = async ({ isEdit, cotizacionId, payload, documentos
   }
 }
 
-const handleCambiarEstadoCotizacion = async (cotizacion, nuevoEstado) => {
-  let motivo = ''
-  if (nuevoEstado === 'RECHAZADA') {
-    const confirmed = await confirmAction(
-      `¿Está seguro de marcar como RECHAZADA la cotización ${cotizacion.codigoCotizacion}?`,
-      'Confirmar Rechazo de Cotización'
-    )
-    if (!confirmed) return
-  }
-
-  try {
-    await comercialService.updateCotizacionEstado(cotizacion.idCotizacion, {
-      estado: nuevoEstado,
-      motivoObservacion: motivo
-    })
-    showToast(`Cotización marcada como ${nuevoEstado}.`)
-    await loadData()
-  } catch (err) {
-    showToast(err.response?.data?.message || 'Error al actualizar estado.', 'error')
-  }
-}
-
 const handleDeleteCotizacion = async (cotizacion) => {
   const confirmed = await confirmDelete(
     `¿Desea eliminar la cotización ${cotizacion.codigoCotizacion}?`,
@@ -1829,17 +1786,6 @@ const getCotizacionLabel = (estado) => {
     ANULADA: 'Anulada'
   }
   return map[estado] || estado
-}
-
-const formatRegimen = (regimen) => {
-  if (!regimen) return '—'
-  return regimen.replace(/_/g, ' ')
-}
-
-const getCotizacionBadgeClass = (estado) => {
-  if (estado === 'APROBADA') return 'status-approved'
-  if (estado === 'RECHAZADA') return 'status-rejected'
-  return 'status-pending'
 }
 
 onMounted(() => {

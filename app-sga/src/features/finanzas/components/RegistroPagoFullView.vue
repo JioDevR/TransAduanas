@@ -774,6 +774,7 @@ import { ref, computed, watch, onMounted } from 'vue'
 import { finanzasService } from '@/features/finanzas/services/finanzasService'
 import { documentoService } from '@/features/documentos/services/documentoService'
 import { useAuthStore } from '@/features/auth/stores/authStore'
+import { getTodayDateInput } from '@/shared/utils/dateUtils'
 
 const props = defineProps({
   cotizacion: {
@@ -809,7 +810,7 @@ const defaultForm = () => ({
   bancoOrigen: '',
   bancoDestino: 'BCP Dólares Cta Cte 191-0023412-1-44',
   numeroOperacion: '',
-  fechaOperacion: new Date().toISOString().substring(0, 10),
+  fechaOperacion: getTodayDateInput(),
   observaciones: '',
   idDocumentoComprobante: null
 })

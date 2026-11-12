@@ -735,15 +735,6 @@ const handleComercialSubClick = (subOption) => {
   }
 }
 
-// Disparador de acciones rápidas de Comercial (modales)
-const handleComercialAction = (action) => {
-  navigationStore.setActiveModule('comercial')
-  if (route.path !== '/recepcion-comercial') {
-    router.push('/recepcion-comercial')
-  }
-  navigationStore.triggerComercialAction(action)
-}
-
 // Navegación en sub-opciones de Gestión Aduanera (incluye Liquidación)
 const handleGestionAduaneraSubClick = (subOption) => {
   navigationStore.setActiveModule('gestion-aduanera')

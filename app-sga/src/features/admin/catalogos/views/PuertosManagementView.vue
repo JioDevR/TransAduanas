@@ -318,7 +318,7 @@ import { useNotification } from '@/shared/composables/useNotification'
 import { useConfirmation } from '@/shared/composables/useConfirmation'
 import { openBlobInNewTab } from '@/shared/utils/download'
 
-const { showSuccess, showError, showInfo, showWarn } = useNotification()
+const { showSuccess, showError } = useNotification()
 const { confirmAction } = useConfirmation()
 
 // Estado General
@@ -335,18 +335,6 @@ const puertosSortBy = ref('nombre-asc')
 // Formulario Modal/Completo
 const showPuertoForm = ref(false)
 const selectedPuerto = ref(null)
-
-const showToast = (message, type = 'success') => {
-  if (type === 'error') {
-    showError(message)
-  } else if (type === 'warn' || type === 'warning') {
-    showWarn(message)
-  } else if (type === 'info') {
-    showInfo(message)
-  } else {
-    showSuccess(message)
-  }
-}
 
 // Métricas Computadas
 const maritimePortsCount = computed(() => {
@@ -432,7 +420,7 @@ const loadPuertos = async () => {
     puertos.value = Array.isArray(res) ? res : (res?.data || [])
   } catch (error) {
     console.error('Error cargando puertos:', error)
-    showToast('Error al conectar con el catálogo de puertos', 'error')
+    showError('Error al conectar con el catálogo de puertos')
   } finally {
     loadingPuertos.value = false
   }
@@ -444,10 +432,10 @@ const handleExportPdf = async () => {
   try {
     const blobData = await catalogoService.downloadPuertosPdf()
     openBlobInNewTab(blobData)
-    showToast('Reporte oficial de puertos abierto en nueva pestaña')
+    showSuccess('Reporte oficial de puertos abierto en nueva pestaña')
   } catch (err) {
     console.error('Error al descargar reporte de puertos:', err)
-    showToast('No se pudo generar el reporte oficial de puertos', 'error')
+    showError('No se pudo generar el reporte oficial de puertos')
   } finally {
     exportingPdf.value = false
   }
@@ -487,7 +475,7 @@ const openEditPuertoModal = (puerto) => {
 
 const onPuertoSaved = (payload) => {
   showPuertoForm.value = false
-  showToast(payload?.isEdit ? 'Puerto actualizado exitosamente' : 'Nuevo puerto registrado en el catálogo')
+  showSuccess(payload?.isEdit ? 'Puerto actualizado exitosamente' : 'Nuevo puerto registrado en el catálogo')
   loadPuertos()
 }
 
@@ -503,22 +491,22 @@ const handleDeactivatePuerto = async (puerto) => {
 
   try {
     await catalogoService.deletePuerto(puerto.idPuerto)
-    showToast(`Puerto ${puerto.codigoPuerto} marcado como inactivo`)
+    showSuccess(`Puerto ${puerto.codigoPuerto} marcado como inactivo`)
     loadPuertos()
   } catch (error) {
     console.error('Error desactivando puerto:', error)
-    showToast('No se pudo desactivar el puerto', 'error')
+    showError('No se pudo desactivar el puerto')
   }
 }
 
 const handleReactivatePuerto = async (puerto) => {
   try {
     await catalogoService.reactivarPuerto(puerto.idPuerto)
-    showToast(`Puerto ${puerto.codigoPuerto} reactivado exitosamente`)
+    showSuccess(`Puerto ${puerto.codigoPuerto} reactivado exitosamente`)
     loadPuertos()
   } catch (error) {
     console.error('Error reactivando puerto:', error)
-    showToast('No se pudo reactivar el puerto', 'error')
+    showError('No se pudo reactivar el puerto')
   }
 }
 

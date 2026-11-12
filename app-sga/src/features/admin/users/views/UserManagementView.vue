@@ -149,12 +149,12 @@ import { ROLES } from '@/core/auth/roles'
 import { useNavigationStore } from '@/core/stores/navigationStore'
 import { useNotification } from '@/shared/composables/useNotification'
 import { useConfirmation } from '@/shared/composables/useConfirmation'
-import { downloadBlob, openBlobInNewTab } from '@/shared/utils/download'
+import { openBlobInNewTab } from '@/shared/utils/download'
 import UserTable from '../components/UserTable.vue'
 import UserRegistrationForm from '../components/UserRegistrationForm.vue'
 
 const navigationStore = useNavigationStore()
-const { showSuccess, showError, showInfo, showWarn } = useNotification()
+const { showSuccess, showError, showInfo } = useNotification()
 const { confirmAction } = useConfirmation()
 
 const users = ref([])
@@ -164,18 +164,6 @@ const loading = ref(false)
 const exportingPdf = ref(false)
 
 const selectedUser = ref(null)
-
-const showToast = (message, type = 'success') => {
-  if (type === 'error') {
-    showError(message)
-  } else if (type === 'warn' || type === 'warning') {
-    showWarn(message)
-  } else if (type === 'info') {
-    showInfo(message)
-  } else {
-    showSuccess(message)
-  }
-}
 
 const activeUsersCount = computed(() => {
   return users.value.filter((u) => u.estadoActivo).length
@@ -201,9 +189,8 @@ const loadData = async () => {
     roles.value = rolesData || []
     sedes.value = sedesData || []
   } catch (err) {
-    showToast(
-      err.response?.data?.message || 'Error al conectar con la base de datos de SGA.',
-      'error'
+    showError(
+      err.response?.data?.message || 'Error al conectar con la base de datos de SGA.'
     )
   } finally {
     loading.value = false
@@ -224,10 +211,10 @@ const handleUserSaved = async ({ isEdit, userId, payload, done }) => {
   try {
     if (isEdit) {
       await userService.updateUser(userId, payload)
-      showToast('Ficha del operador y acreditaciones actualizadas exitosamente.')
+      showSuccess('Ficha del operador y acreditaciones actualizadas exitosamente.')
     } else {
       await userService.createUser(payload)
-      showToast('Nuevo operador registrado y acreditado exitosamente.')
+      showSuccess('Nuevo operador registrado y acreditado exitosamente.')
     }
     navigationStore.setAdministracionTiSubOption('users')
     await loadData()
@@ -236,7 +223,7 @@ const handleUserSaved = async ({ isEdit, userId, payload, done }) => {
       err.response?.data?.message ||
       err.response?.data?.error ||
       'No se pudo completar la operación.'
-    showToast(errorMsg, 'error')
+    showError(errorMsg)
   } finally {
     done?.()
   }
@@ -271,16 +258,15 @@ const handleToggleStatus = async (user) => {
   try {
     if (isActivo) {
       await userService.deleteUser(user.idUsuario)
-      showToast(`Usuario @${user.username} desactivado correctamente.`, 'info')
+      showInfo(`Usuario @${user.username} desactivado correctamente.`)
     } else {
       await userService.reactivateUser(user.idUsuario)
-      showToast(`Usuario @${user.username} reactivado correctamente.`, 'success')
+      showSuccess(`Usuario @${user.username} reactivado correctamente.`)
     }
     await loadData()
   } catch (err) {
-    showToast(
-      err.response?.data?.message || 'Error al actualizar estado del usuario.',
-      'error'
+    showError(
+      err.response?.data?.message || 'Error al actualizar estado del usuario.'
     )
   }
 }
@@ -290,9 +276,9 @@ const handleExportPdf = async () => {
   try {
     const blob = await userService.downloadPdf(true)
     openBlobInNewTab(blob)
-    showToast('Informe PDF de usuarios activos abierto en nueva pestaña.')
+    showSuccess('Informe PDF de usuarios activos abierto en nueva pestaña.')
   } catch (err) {
-    showToast('No se pudo generar el reporte PDF de usuarios.', 'error')
+    showError('No se pudo generar el reporte PDF de usuarios.')
   } finally {
     exportingPdf.value = false
   }

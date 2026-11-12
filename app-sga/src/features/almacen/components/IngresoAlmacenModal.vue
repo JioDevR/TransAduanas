@@ -165,7 +165,7 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted } from 'vue'
+import { ref, watch } from 'vue'
 import BaseModal from '@/shared/components/BaseModal.vue'
 import { almacenService } from '../services/almacenService'
 import { expedienteService } from '../services/expedienteService'

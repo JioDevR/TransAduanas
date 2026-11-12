@@ -420,8 +420,11 @@ import Tag from 'primevue/tag'
 import Dialog from 'primevue/dialog'
 import { transporteFlotaService } from '@/features/transporte/services/transporteFlotaService'
 import { useNotification } from '@/shared/composables/useNotification'
+import { useConfirmation } from '@/shared/composables/useConfirmation'
+import { formatDate } from '@/shared/utils/dateUtils'
 
 const { showSuccess, showError, showInfo } = useNotification()
+const { confirmAction } = useConfirmation()
 
 const unidadesList = ref([])
 const loading = ref(false)
@@ -604,6 +607,16 @@ const saveUnidad = async () => {
 }
 
 const toggleEstado = async (u) => {
+  if (u.estadoActivo) {
+    const confirmed = await confirmAction({
+      header: 'Confirmar Desactivación de Unidad',
+      message: `¿Desea desactivar la unidad ${u.placaTracto} del parque automotor?`,
+      acceptLabel: 'Desactivar',
+      acceptClass: 'p-button-danger'
+    })
+    if (!confirmed) return
+  }
+
   try {
     if (u.estadoActivo) {
       await transporteFlotaService.deleteUnidad(u.idUnidad)
@@ -626,12 +639,6 @@ const formatTipo = (t) => {
     CAMION_BARANDA: 'Camión Baranda'
   }
   return map[t] || t
-}
-
-const formatDate = (d) => {
-  if (!d) return '— No registrado —'
-  const date = new Date(d)
-  return isNaN(date.getTime()) ? d : date.toLocaleDateString('es-PE')
 }
 
 const getDocDateClass = (d) => {

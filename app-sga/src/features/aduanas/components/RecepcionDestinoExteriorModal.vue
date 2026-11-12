@@ -87,6 +87,7 @@
 import { ref, watch } from 'vue'
 import BaseModal from '@/shared/components/BaseModal.vue'
 import { expedienteService } from '../services/expedienteService'
+import { getNowDateTimeInput } from '@/shared/utils/dateUtils'
 
 const props = defineProps({
   visible: { type: Boolean, default: false },
@@ -106,7 +107,7 @@ const form = ref({
 })
 
 const getNowISOString = () => {
-  return new Date().toISOString().slice(0, 16)
+  return getNowDateTimeInput()
 }
 
 watch(

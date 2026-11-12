@@ -98,6 +98,7 @@
 import { ref, watch } from 'vue'
 import BaseModal from '@/shared/components/BaseModal.vue'
 import { expedienteService } from '../services/expedienteService'
+import { getTodayDateInput } from '@/shared/utils/dateUtils'
 
 const props = defineProps({
   visible: { type: Boolean, default: false },
@@ -118,13 +119,13 @@ const form = ref({
 })
 
 const getTodayString = () => {
-  return new Date().toISOString().slice(0, 10)
+  return getTodayDateInput()
 }
 
 const getFutureDateString = (days) => {
   const d = new Date()
   d.setDate(d.getDate() + days)
-  return d.toISOString().slice(0, 10)
+  return getTodayDateInput(d)
 }
 
 watch(

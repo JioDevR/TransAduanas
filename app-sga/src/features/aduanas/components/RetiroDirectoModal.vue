@@ -109,6 +109,7 @@
 import { ref, watch } from 'vue'
 import BaseModal from '@/shared/components/BaseModal.vue'
 import { expedienteService } from '../services/expedienteService'
+import { getNowDateTimeInput } from '@/shared/utils/dateUtils'
 
 const props = defineProps({
   visible: { type: Boolean, default: false },
@@ -133,9 +134,7 @@ watch(
   () => props.expediente,
   (exp) => {
     if (exp) {
-      const now = new Date()
-      const tzOffset = now.getTimezoneOffset() * 60000
-      const localISOTime = new Date(now.getTime() - tzOffset).toISOString().slice(0, 16)
+      const localISOTime = getNowDateTimeInput()
 
       form.value = {
         terminalAlmacen: 'Terminal Portuario Callao',

@@ -116,7 +116,7 @@
 
 <script setup>
 import { ref, computed, watch } from 'vue'
-import mercanciaService from '../services/mercanciaService'
+import catalogoService from '../services/catalogoService'
 import BaseModal from '@/shared/components/BaseModal.vue'
 
 const props = defineProps({
@@ -236,9 +236,9 @@ const handleSubmit = async () => {
 
     let result
     if (isEditMode.value) {
-      result = await mercanciaService.updateMercancia(props.mercanciaToEdit.idMercancia, payload)
+      result = await catalogoService.updateMercancia(props.mercanciaToEdit.idMercancia, payload)
     } else {
-      result = await mercanciaService.createMercancia(payload)
+      result = await catalogoService.createMercancia(payload)
     }
 
     emit('saved', {

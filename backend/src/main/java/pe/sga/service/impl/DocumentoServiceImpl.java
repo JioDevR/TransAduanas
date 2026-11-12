@@ -28,6 +28,8 @@ import pe.sga.repository.UsuarioRepository;
 import pe.sga.service.IDocumentoService;
 import pe.sga.service.IStorageService;
 
+import java.nio.file.Paths;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -91,11 +93,13 @@ public class DocumentoServiceImpl implements IDocumentoService {
         }
 
         List<DocumentoResponseDTO> resultados = new ArrayList<>();
+        String subpath = resolverSubdirectorio(entidadTipo, cotizacion, expediente, cliente, categoria, descripcion);
 
         for (MultipartFile file : files) {
             if (file == null || file.isEmpty()) continue;
 
-            String storedFilename = storageService.store(file);
+            String storedRelativePath = storageService.store(file, subpath);
+            String storedFilename = Paths.get(storedRelativePath).getFileName().toString();
             String originalFilename = StringUtils.cleanPath(file.getOriginalFilename() != null ? file.getOriginalFilename() : "documento");
 
             String extension = "";
@@ -112,7 +116,7 @@ public class DocumentoServiceImpl implements IDocumentoService {
                     .formatoMime(mimeType)
                     .extension(extension)
                     .tamanoBytes(file.getSize())
-                    .rutaAlmacenamiento(storedFilename)
+                    .rutaAlmacenamiento(storedRelativePath)
                     .categoria(categoria != null ? categoria : CategoriaDocumento.GENERAL)
                     .descripcion(descripcion)
                     .entidadTipo(entidadTipo)
@@ -157,7 +161,10 @@ public class DocumentoServiceImpl implements IDocumentoService {
     @Transactional(readOnly = true)
     public Resource descargarArchivo(Integer id) {
         DocumentoAdjunto doc = obtenerEntidad(id);
-        return storageService.loadAsResource(doc.getNombreAlmacenado());
+        String ruta = (doc.getRutaAlmacenamiento() != null && !doc.getRutaAlmacenamiento().isBlank())
+                ? doc.getRutaAlmacenamiento()
+                : doc.getNombreAlmacenado();
+        return storageService.loadAsResource(ruta);
     }
 
     @Override
@@ -375,5 +382,61 @@ public class DocumentoServiceImpl implements IDocumentoService {
                 .usuarioCreadorNombre(d.getUsuarioCreador() != null ? d.getUsuarioCreador().getNombreCompleto() : null)
                 .fechaCreacion(d.getFechaCreacion())
                 .build();
+    }
+
+    private String resolverSubdirectorio(
+            EntidadDocumento entidadTipo,
+            Cotizacion cotizacion,
+            Expediente expediente,
+            Cliente cliente,
+            CategoriaDocumento categoria,
+            String descripcion
+    ) {
+        LocalDate hoy = LocalDate.now();
+        String anio = String.valueOf(hoy.getYear());
+        String mes = String.format("%02d", hoy.getMonthValue());
+        String catFolder = categoria != null ? categoria.name().toLowerCase() : "general";
+
+        if (expediente != null) {
+            String expAnio = expediente.getFechaApertura() != null
+                    ? String.valueOf(expediente.getFechaApertura().getYear())
+                    : anio;
+            String expCod = (expediente.getCodigoExpediente() != null && !expediente.getCodigoExpediente().isBlank())
+                    ? sanitizarNombreDirectorio(expediente.getCodigoExpediente())
+                    : "EXP-" + expediente.getIdExpediente();
+            return "expedientes/" + expAnio + "/" + expCod + "/" + catFolder;
+        }
+
+        if (cotizacion != null) {
+            String cotAnio = cotizacion.getFechaEmision() != null
+                    ? String.valueOf(cotizacion.getFechaEmision().getYear())
+                    : anio;
+            String cotCod = (cotizacion.getCodigoCotizacion() != null && !cotizacion.getCodigoCotizacion().isBlank())
+                    ? sanitizarNombreDirectorio(cotizacion.getCodigoCotizacion())
+                    : "COT-" + cotizacion.getIdCotizacion();
+            return "cotizaciones/" + cotAnio + "/" + cotCod;
+        }
+
+        if (entidadTipo == EntidadDocumento.CLIENTE || cliente != null) {
+            String cliCod = (cliente != null && cliente.getNumeroDocumento() != null && !cliente.getNumeroDocumento().isBlank())
+                    ? sanitizarNombreDirectorio(cliente.getNumeroDocumento())
+                    : (cliente != null ? "CLI-" + cliente.getIdCliente() : "clientes-varios");
+
+            boolean esPago = (descripcion != null && (descripcion.toLowerCase().contains("voucher")
+                    || descripcion.toLowerCase().contains("pago")
+                    || descripcion.toLowerCase().contains("abono")))
+                    || (categoria == CategoriaDocumento.GENERAL && descripcion != null && descripcion.toLowerCase().contains("abono"));
+            if (esPago) {
+                return "pagos/" + anio + "/" + mes + "/" + cliCod;
+            }
+            return "clientes/" + cliCod + "/" + catFolder;
+        }
+
+        return "general/" + anio + "/" + mes;
+    }
+
+    private String sanitizarNombreDirectorio(String input) {
+        if (input == null) return "general";
+        return input.trim().replaceAll("[^a-zA-Z0-9._-]", "_");
     }
 }

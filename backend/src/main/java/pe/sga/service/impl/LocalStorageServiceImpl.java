@@ -42,7 +42,12 @@ public class LocalStorageServiceImpl implements IStorageService {
 
     @Override
     public String store(MultipartFile file) {
-        if (file.isEmpty()) {
+        return store(file, null);
+    }
+
+    @Override
+    public String store(MultipartFile file, String subpath) {
+        if (file == null || file.isEmpty()) {
             throw new BadRequestException("No se puede almacenar un archivo vacío.");
         }
 
@@ -60,8 +65,25 @@ public class LocalStorageServiceImpl implements IStorageService {
         String storedFilename = UUID.randomUUID().toString() + (extension.isEmpty() ? "" : "." + extension);
 
         try {
-            Path destinationFile = this.rootLocation.resolve(storedFilename).normalize().toAbsolutePath();
-            if (!destinationFile.getParent().equals(this.rootLocation)) {
+            Path destinationDir = this.rootLocation;
+            if (subpath != null && !subpath.isBlank()) {
+                String cleanSubpath = StringUtils.cleanPath(subpath)
+                        .replaceAll("^[\\\\/]+", "")
+                        .replaceAll("[\\\\/]+$", "");
+                if (cleanSubpath.contains("..")) {
+                    throw new BadRequestException("Ruta de almacenamiento inválida: " + subpath);
+                }
+                destinationDir = this.rootLocation.resolve(cleanSubpath).normalize();
+            }
+
+            if (!destinationDir.startsWith(this.rootLocation)) {
+                throw new BadRequestException("No se puede almacenar el archivo fuera del directorio designado.");
+            }
+
+            Files.createDirectories(destinationDir);
+
+            Path destinationFile = destinationDir.resolve(storedFilename).normalize().toAbsolutePath();
+            if (!destinationFile.startsWith(this.rootLocation)) {
                 throw new BadRequestException("No se puede almacenar el archivo fuera del directorio designado.");
             }
 
@@ -69,8 +91,9 @@ public class LocalStorageServiceImpl implements IStorageService {
                 Files.copy(inputStream, destinationFile, StandardCopyOption.REPLACE_EXISTING);
             }
 
-            log.info("Archivo almacenado con éxito: {} -> {}", originalFilename, storedFilename);
-            return storedFilename;
+            String relativeStoredPath = this.rootLocation.relativize(destinationFile).toString().replace('\\', '/');
+            log.info("Archivo almacenado con éxito: {} -> {}", originalFilename, relativeStoredPath);
+            return relativeStoredPath;
         } catch (IOException e) {
             log.error("Error al guardar archivo en disco: {}", e.getMessage());
             throw new RuntimeException("Fallo al almacenar el archivo " + originalFilename, e);
@@ -78,28 +101,61 @@ public class LocalStorageServiceImpl implements IStorageService {
     }
 
     @Override
-    public Resource loadAsResource(String filename) {
+    public Resource loadAsResource(String pathOrFilename) {
+        if (pathOrFilename == null || pathOrFilename.isBlank()) {
+            throw new ResourceNotFoundException("Nombre o ruta de archivo no especificado.");
+        }
         try {
-            Path file = rootLocation.resolve(filename).normalize();
-            Resource resource = new UrlResource(file.toUri());
-            if (resource.exists() && resource.isReadable()) {
-                return resource;
-            } else {
-                throw new ResourceNotFoundException("No se pudo leer el archivo: " + filename);
+            String clean = StringUtils.cleanPath(pathOrFilename).replaceAll("^[\\\\/]+", "");
+            if (clean.contains("..")) {
+                throw new BadRequestException("Ruta de archivo no permitida.");
             }
+
+            // 1. Intentar resolver ruta relativa estructurada
+            Path file = rootLocation.resolve(clean).normalize();
+            if (file.startsWith(rootLocation)) {
+                Resource resource = new UrlResource(file.toUri());
+                if (resource.exists() && resource.isReadable()) {
+                    return resource;
+                }
+            }
+
+            // 2. Fallback de compatibilidad: buscar archivo directamente por nombre base en la raíz
+            String baseFilename = Paths.get(clean).getFileName().toString();
+            Path flatFile = rootLocation.resolve(baseFilename).normalize();
+            if (flatFile.startsWith(rootLocation)) {
+                Resource flatResource = new UrlResource(flatFile.toUri());
+                if (flatResource.exists() && flatResource.isReadable()) {
+                    return flatResource;
+                }
+            }
+
+            throw new ResourceNotFoundException("No se pudo leer el archivo: " + pathOrFilename);
         } catch (MalformedURLException e) {
-            throw new ResourceNotFoundException("Ruta de archivo no válida: " + filename);
+            throw new ResourceNotFoundException("Ruta de archivo no válida: " + pathOrFilename);
         }
     }
 
     @Override
-    public void delete(String filename) {
+    public void delete(String pathOrFilename) {
+        if (pathOrFilename == null || pathOrFilename.isBlank()) return;
         try {
-            Path file = rootLocation.resolve(filename).normalize();
-            Files.deleteIfExists(file);
-            log.info("Archivo eliminado físicamente: {}", filename);
+            String clean = StringUtils.cleanPath(pathOrFilename).replaceAll("^[\\\\/]+", "");
+            if (clean.contains("..")) return;
+
+            Path file = rootLocation.resolve(clean).normalize();
+            if (file.startsWith(rootLocation) && Files.deleteIfExists(file)) {
+                log.info("Archivo eliminado físicamente: {}", pathOrFilename);
+                return;
+            }
+
+            String baseFilename = Paths.get(clean).getFileName().toString();
+            Path flatFile = rootLocation.resolve(baseFilename).normalize();
+            if (flatFile.startsWith(rootLocation) && Files.deleteIfExists(flatFile)) {
+                log.info("Archivo eliminado físicamente (fallback plano): {}", baseFilename);
+            }
         } catch (IOException e) {
-            log.warn("No se pudo eliminar el archivo físico: {}", filename);
+            log.warn("No se pudo eliminar el archivo físico: {}", pathOrFilename);
         }
     }
 }

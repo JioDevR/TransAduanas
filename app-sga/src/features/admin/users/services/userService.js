@@ -21,6 +21,23 @@ export const userService = {
   },
 
   /**
+   * Listar usuarios con rol AGENTE_ADUANERO activos para asignación de expedientes
+   */
+  async getAgentesAduaneros() {
+    const operadores = await this.getOperadores()
+    return (operadores || []).filter((u) => {
+      const rol = String(u.rol || u.rolNombre || u.nombreRol || '').toUpperCase()
+      const cargo = String(u.cargoTitulo || '').toUpperCase()
+      const esAgente =
+        rol === 'AGENTE_ADUANERO' ||
+        rol === 'ROLE_AGENTE_ADUANERO' ||
+        cargo.includes('AGENTE ADUANERO')
+      const activo = u.estadoActivo !== false
+      return esAgente && activo
+    })
+  },
+
+  /**
    * Alias en español para getUsers
    */
   async getUsuarios(soloActivos = false) {

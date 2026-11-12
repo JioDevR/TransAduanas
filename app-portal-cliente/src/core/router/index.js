@@ -31,6 +31,12 @@ const routes = [
         meta: { title: 'Mis Cotizaciones — Portal TransAduanas' }
       },
       {
+        path: 'cotizaciones/:id',
+        name: 'CotizacionDetalle',
+        component: () => import('@/features/cotizaciones/views/CotizacionDetalleView.vue'),
+        meta: { title: 'Detalle de Cotización — Portal TransAduanas' }
+      },
+      {
         path: 'expedientes',
         name: 'Expedientes',
         component: () => import('@/features/expedientes/views/ExpedientesTrackingView.vue'),
@@ -47,6 +53,12 @@ const routes = [
         name: 'RegistrarPago',
         component: () => import('@/features/pagos/views/RegistrarPagoView.vue'),
         meta: { title: 'Registrar Pago / Abono Bancario — Portal TransAduanas' }
+      },
+      {
+        path: 'pagos/subsanar/:id',
+        name: 'SubsanarPago',
+        component: () => import('@/features/pagos/views/SubsanarPagoView.vue'),
+        meta: { title: 'Subsanar Abono Bancario — Portal TransAduanas' }
       },
       {
         path: 'notificaciones',

@@ -69,7 +69,7 @@
         >
           <div class="kpi-top">
             <span class="kpi-index">01</span>
-            <span class="kpi-label">Total Asignados</span>
+            <span class="kpi-label">Expedientes Asignados</span>
             <i class="pi pi-folder-open kpi-icon accent"></i>
           </div>
           <div class="kpi-body">
@@ -77,7 +77,7 @@
             <span class="kpi-pill accent">En Bandeja</span>
           </div>
           <div class="kpi-footer">
-            <span>Ver listado completo</span>
+            <span>Ver todos los expedientes</span>
             <i class="pi pi-arrow-right"></i>
           </div>
         </div>

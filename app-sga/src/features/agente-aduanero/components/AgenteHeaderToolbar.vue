@@ -6,6 +6,28 @@
     </div>
 
     <div class="toolbar-controls-group">
+      <!-- Conmutador de Vista: Canvas vs Tabla -->
+      <div class="view-mode-toggle">
+        <button
+          type="button"
+          :class="['toggle-btn', { active: viewMode === 'canvas' }]"
+          title="Vista Canvas (Tarjetas Operativas)"
+          @click="$emit('update:viewMode', 'canvas')"
+        >
+          <i class="pi pi-th-large"></i>
+          <span>Canvas</span>
+        </button>
+        <button
+          type="button"
+          :class="['toggle-btn', { active: viewMode === 'table' }]"
+          title="Vista Tabla (Detallada)"
+          @click="$emit('update:viewMode', 'table')"
+        >
+          <i class="pi pi-list"></i>
+          <span>Tabla</span>
+        </button>
+      </div>
+
       <!-- Selector de Agente (Exclusivo para Supervisores y Administradores) -->
       <div v-if="esSupervisorOAdmin" class="supervisor-select-wrap">
         <label for="filter-agente-sel" class="supervisor-label">
@@ -81,6 +103,10 @@
 
 <script setup>
 defineProps({
+  viewMode: {
+    type: String,
+    default: 'canvas'
+  },
   searchQuery: {
     type: String,
     default: ''
@@ -112,6 +138,7 @@ defineProps({
 })
 
 defineEmits([
+  'update:viewMode',
   'update:searchQuery',
   'update:filterRegimen',
   'update:filterCanal',
@@ -125,69 +152,110 @@ defineEmits([
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1.25rem;
-  padding: 1rem 1.25rem;
-  background: var(--color-bg-surface, #282723);
-  border: 1px solid var(--color-border, #444138);
-  border-radius: 8px;
   flex-wrap: wrap;
+  gap: 1rem;
+  padding: 0.85rem 1.25rem;
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md, 8px);
+  box-shadow: var(--shadow-subtle);
 }
 
 .toolbar-left-info {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.2rem;
 }
 
 .badge-kicker {
-  font-size: 0.6875rem;
-  font-family: var(--font-mono, monospace);
-  font-weight: 800;
+  font-family: var(--font-sans);
+  font-size: var(--font-size-2xs, 0.6875rem);
+  font-weight: 700;
   letter-spacing: 0.08em;
-  color: var(--color-accent-kicker, #e0c287);
+  color: var(--color-accent-kicker);
   text-transform: uppercase;
 }
 
 .toolbar-title {
   margin: 0;
-  font-size: 1.25rem;
-  font-weight: 800;
-  color: var(--color-text-main, #f6f2ea);
+  font-family: var(--font-sans);
+  font-size: var(--font-size-md, 0.9375rem);
+  font-weight: 700;
+  color: var(--color-text-main);
+  letter-spacing: -0.01em;
 }
 
 .toolbar-controls-group {
   display: flex;
   align-items: center;
-  gap: 0.625rem;
+  gap: 0.65rem;
   flex-wrap: wrap;
+}
+
+/* Conmutador de Vista */
+.view-mode-toggle {
+  display: inline-flex;
+  align-items: center;
+  background: var(--color-bg-subtle);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm, 6px);
+  padding: 2px;
+}
+
+.toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.65rem;
+  border-radius: 4px;
+  border: none;
+  background: transparent;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm, 0.8125rem);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast, 0.15s ease);
+}
+
+.toggle-btn:hover {
+  color: var(--color-text-main);
+}
+
+.toggle-btn.active {
+  background: var(--color-primary);
+  color: var(--color-primary-text);
+  box-shadow: var(--shadow-subtle);
 }
 
 .supervisor-select-wrap {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  background: var(--color-bg-base, #1e1e1b);
-  border: 1px solid var(--color-border, #444138);
-  padding: 0.25rem 0.625rem;
-  border-radius: 6px;
+  gap: 0.35rem;
+  padding: 0 0.5rem;
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm, 6px);
+  height: 38px;
 }
 
 .supervisor-label {
   display: flex;
   align-items: center;
-  gap: 0.35rem;
-  font-size: 0.75rem;
+  gap: 0.25rem;
+  font-size: var(--font-size-2xs, 0.6875rem);
   font-weight: 700;
-  color: var(--color-accent-kicker, #e0c287);
-  white-space: nowrap;
+  color: var(--color-accent-kicker);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 .supervisor-select {
+  height: 100%;
   border: none;
   background: transparent;
-  font-size: 0.8125rem;
+  font-size: var(--font-size-sm, 0.8125rem);
   font-weight: 600;
-  color: var(--color-text-main, #f6f2ea);
+  color: var(--color-text-main);
   outline: none;
   cursor: pointer;
 }
@@ -195,19 +263,19 @@ defineEmits([
 .filter-select {
   height: 38px;
   padding: 0 0.75rem;
-  font-size: 0.8125rem;
+  font-size: var(--font-size-sm, 0.8125rem);
   font-weight: 500;
-  color: var(--color-text-main, #f6f2ea);
-  background: var(--color-bg-base, #1e1e1b);
-  border: 1px solid var(--color-border, #444138);
-  border-radius: 6px;
+  color: var(--color-text-main);
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm, 6px);
   outline: none;
   cursor: pointer;
-  transition: border-color 0.15s ease;
+  transition: border-color var(--transition-fast, 0.15s ease);
 }
 
 .filter-select:focus {
-  border-color: var(--color-primary, #d6b476);
+  border-color: var(--color-primary);
 }
 
 .search-input-wrap {
@@ -219,27 +287,31 @@ defineEmits([
 .search-icon {
   position: absolute;
   left: 0.75rem;
-  font-size: 0.8125rem;
-  color: var(--color-text-subtle, #968e7e);
+  font-size: var(--font-size-sm, 0.8125rem);
+  color: var(--color-text-subtle);
   pointer-events: none;
 }
 
 .search-input {
   height: 38px;
-  width: 250px;
+  width: 230px;
   padding: 0 0.75rem 0 2.25rem;
-  font-size: 0.8125rem;
-  color: var(--color-text-main, #f6f2ea);
-  background: var(--color-bg-base, #1e1e1b);
-  border: 1px solid var(--color-border, #444138);
-  border-radius: 6px;
+  font-size: var(--font-size-sm, 0.8125rem);
+  color: var(--color-text-main);
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm, 6px);
   outline: none;
-  transition: border-color 0.15s ease, width 0.2s ease;
+  transition: border-color var(--transition-fast, 0.15s ease), width 0.2s ease;
+}
+
+.search-input::placeholder {
+  color: var(--color-text-subtle);
 }
 
 .search-input:focus {
-  border-color: var(--color-primary, #d6b476);
-  width: 280px;
+  border-color: var(--color-primary);
+  width: 260px;
 }
 
 .refresh-btn {
@@ -248,18 +320,18 @@ defineEmits([
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: var(--color-bg-base, #1e1e1b);
-  border: 1px solid var(--color-border, #444138);
-  border-radius: 6px;
-  color: var(--color-text-muted, #c4bcab);
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm, 6px);
+  color: var(--color-text-muted);
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all var(--transition-fast, 0.15s ease);
 }
 
 .refresh-btn:hover:not(:disabled) {
-  color: var(--color-primary, #d6b476);
-  border-color: var(--color-primary, #d6b476);
-  background: var(--color-bg-subtle, #2e2d27);
+  color: var(--color-text-main);
+  border-color: var(--color-border-strong);
+  background: var(--color-bg-subtle);
 }
 
 .refresh-btn:disabled {

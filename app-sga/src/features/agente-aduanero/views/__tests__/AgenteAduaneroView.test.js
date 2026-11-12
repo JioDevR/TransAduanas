@@ -4,9 +4,12 @@ import AgenteDashboardPanel from '../../components/AgenteDashboardPanel.vue'
 import AgenteHeaderToolbar from '../../components/AgenteHeaderToolbar.vue'
 import AgenteKpiGrid from '../../components/AgenteKpiGrid.vue'
 import AgenteExpedientesTable from '../../components/AgenteExpedientesTable.vue'
+import AgenteExpedientesCanvas from '../../components/AgenteExpedientesCanvas.vue'
+import AgenteExpedienteInformeView from '../../components/AgenteExpedienteInformeView.vue'
+import AgenteOperacionTransitoView from '../../components/AgenteOperacionTransitoView.vue'
 import AgenteAccionesCell from '../../components/AgenteAccionesCell.vue'
 
-describe('Portal Agente Aduanero - Definición de Componentes', () => {
+describe('Portal Agente Aduanero - Definición de Componentes y Vistas', () => {
   it('exporta AgenteAduaneroView como un componente Vue 3 válido', () => {
     expect(AgenteAduaneroView).toBeDefined()
     expect(typeof AgenteAduaneroView).toBe('object')
@@ -29,6 +32,24 @@ describe('Portal Agente Aduanero - Definición de Componentes', () => {
     expect(AgenteKpiGrid).toBeDefined()
     expect(typeof AgenteKpiGrid).toBe('object')
     expect(AgenteKpiGrid.__name).toBe('AgenteKpiGrid')
+  })
+
+  it('exporta AgenteExpedientesCanvas como un componente Vue 3 válido para el canvas de expedientes', () => {
+    expect(AgenteExpedientesCanvas).toBeDefined()
+    expect(typeof AgenteExpedientesCanvas).toBe('object')
+    expect(AgenteExpedientesCanvas.__name).toBe('AgenteExpedientesCanvas')
+  })
+
+  it('exporta AgenteExpedienteInformeView como un componente Vue 3 válido para el informe a pantalla completa', () => {
+    expect(AgenteExpedienteInformeView).toBeDefined()
+    expect(typeof AgenteExpedienteInformeView).toBe('object')
+    expect(AgenteExpedienteInformeView.__name).toBe('AgenteExpedienteInformeView')
+  })
+
+  it('exporta AgenteOperacionTransitoView como un componente Vue 3 válido para la vista completa de operaciones', () => {
+    expect(AgenteOperacionTransitoView).toBeDefined()
+    expect(typeof AgenteOperacionTransitoView).toBe('object')
+    expect(AgenteOperacionTransitoView.__name).toBe('AgenteOperacionTransitoView')
   })
 
   it('exporta AgenteExpedientesTable como un componente Vue 3 válido', () => {

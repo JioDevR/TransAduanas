@@ -220,6 +220,7 @@ const currentTitle = computed(() => {
   }
   if (navigationStore.currentModule === 'gestion-aduanera') {
     const sMap = {
+      dashboard: 'Dashboard y Control Operativo Aduanero',
       cotizaciones: 'Bandeja de Cotizaciones para Revisión Técnica',
       apertura: 'Apertura de Expedientes Aduaneros',
       expedientes: 'Gestión Integral de Expedientes Aduaneros',
@@ -312,6 +313,7 @@ const currentKicker = computed(() => {
   if (navigationStore.currentModule === 'finanzas') {
     const fKickers = {
       dashboard: 'PANEL FINANCIERO // RECAUDACIÓN & LIQUIDEZ',
+      'abonos-b2b': 'VALIDACIÓN DE ABONOS B2B // VOUCHERS PENDIENTES PORTAL',
       'pre-expedientes': 'VALIDACIÓN DE ANTICIPOS // APERTURA OPERATIVA',
       liquidaciones: 'CIERRE FINANCIERO // LIQUIDACIONES DE EXPEDIENTE',
       conciliacion: 'TESORERÍA & BANCOS // CONCILIACIÓN DE ABONOS'
@@ -376,6 +378,7 @@ const currentSubtitle = computed(() => {
   }
   if (navigationStore.currentModule === 'gestion-aduanera') {
     const sMap = {
+      dashboard: 'Métricas ejecutivas en tiempo real, monitoreo de canales SUNAT y accesos directos de supervisión.',
       cotizaciones: 'Auditoría técnica de propuestas comerciales, control de partidas arancelarias y validación normativa.',
       apertura: 'Formalización y apertura operativa de expedientes aduaneros para cotizaciones con pago verificado.',
       expedientes: 'Gestión integral de expedientes aduaneros, asignación de canales SUNAT y autorización de levante.'
@@ -393,6 +396,7 @@ const currentSubtitle = computed(() => {
   if (navigationStore.currentModule === 'finanzas') {
     const fSubs = {
       dashboard: 'Visibilidad consolidada de ingresos, validación de vouchers bancarios, detracciones SPOT y flujo de caja.',
+      'abonos-b2b': 'Revisión y confirmación contable de anticipos y vouchers de pago remitidos por clientes desde el portal B2B.',
       'pre-expedientes': 'Verificación de abonos de adelanto y tributos para habilitar la apertura de expedientes aduaneros.',
       liquidaciones: 'Cálculo y facturación definitiva de servicios logísticos, almacenaje, transporte y gastos operativos.',
       conciliacion: 'Auditoría y conciliación bancaria de transferencias, depósitos y comprobantes registrados.'

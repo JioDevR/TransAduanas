@@ -1,10 +1,42 @@
 <template>
   <div class="agente-portal-view fade-in">
     <!-- ============================================================== -->
+    <!-- CASO 0A: INFORME DETALLADO A PANTALLA COMPLETA (FULL-SCREEN)   -->
+    <!-- ============================================================== -->
+    <AgenteExpedienteInformeView
+      v-if="selectedExpedienteParaInforme"
+      :expediente="selectedExpedienteParaInforme"
+      @back="cerrarInformeCompleto"
+      @salida-origen="openSalidaOrigenView"
+      @arribo-destino="openArriboDestinoView"
+      @transito="openTransitoView"
+      @diligencia="openDiligenciaModal"
+      @solicitar-transporte="openSolicitudTransporteModal"
+      @retiro-directo="openRetiroDirectoModal"
+      @ingreso-almacen="openIngresoAlmacenModal"
+      @recojo-exportacion="openRecojoExportacionModal"
+      @ingreso-origen="openIngresoOrigenModal"
+      @embarque="openEmbarqueModal"
+      @recepcion-exterior="openRecepcionExteriorModal"
+      @documentos="openDocumentosExpediente"
+    />
+
+    <!-- ============================================================== -->
+    <!-- CASO 0B: VISTA OPERATIVA DE TRÁNSITO / SALIDA / ARRIBO (FULL)  -->
+    <!-- ============================================================== -->
+    <AgenteOperacionTransitoView
+      v-else-if="selectedExpedienteParaOperacionTransito"
+      :expediente="selectedExpedienteParaOperacionTransito"
+      :initial-mode="transitoOperacionMode"
+      @back="cerrarOperacionTransito"
+      @saved="onOperacionTransitoSaved"
+    />
+
+    <!-- ============================================================== -->
     <!-- CASO A: DASHBOARD INICIAL DEL AGENTE (SOLO AQUÍ ESTÁN LOS KPIS)-->
     <!-- ============================================================== -->
     <AgenteDashboardPanel
-      v-if="activeTab === 'dashboard'"
+      v-else-if="activeTab === 'dashboard'"
       :expedientes="expedientes"
       :counts="kpiCounts"
       :selectedAgenteId="selectedAgenteId"
@@ -17,11 +49,12 @@
     />
 
     <!-- ============================================================== -->
-    <!-- CASO B: BANDEJA DE EXPEDIENTES (TODOS, TRÁNSITO, AFORO, LEVANTE)-->
+    <!-- CASO B: BANDEJA DE EXPEDIENTES (EXPEDIENTES, TRÁNSITO, AFORO, LEVANTE) -->
     <!-- ============================================================== -->
     <template v-else>
-      <!-- 1. Barra de Herramientas y Filtros Superiores -->
+      <!-- 1. Barra de Herramientas, Conmutador Canvas/Tabla y Filtros Superiores -->
       <AgenteHeaderToolbar
+        v-model:viewMode="viewMode"
         v-model:searchQuery="searchQuery"
         v-model:filterRegimen="filterRegimen"
         v-model:filterCanal="filterCanal"
@@ -32,11 +65,16 @@
         @refresh="loadData"
       />
 
-      <!-- 2. Tabla Principal de Expedientes Asignados -->
-      <AgenteExpedientesTable
+      <!-- 2. Vista Principal: Canvas de Tarjetas (Por defecto) -->
+      <AgenteExpedientesCanvas
+        v-if="viewMode === 'canvas'"
         :expedientes="filteredExpedientes"
         :loading="loading"
-        @transito="openTransitoModal"
+        :active-tab="activeTab"
+        @detalle="openInformeCompleto"
+        @salida-origen="openSalidaOrigenView"
+        @arribo-destino="openArriboDestinoView"
+        @transito="openTransitoView"
         @diligencia="openDiligenciaModal"
         @solicitar-transporte="openSolicitudTransporteModal"
         @retiro-directo="openRetiroDirectoModal"
@@ -46,14 +84,50 @@
         @embarque="openEmbarqueModal"
         @recepcion-exterior="openRecepcionExteriorModal"
         @documentos="openDocumentosExpediente"
-        @detalle="openDetalleExp"
+      />
+
+      <!-- 3. Vista Alternativa: Tabla Detallada -->
+      <AgenteExpedientesTable
+        v-else
+        :expedientes="filteredExpedientes"
+        :loading="loading"
+        :active-tab="activeTab"
+        @detalle="openInformeCompleto"
+        @salida-origen="openSalidaOrigenView"
+        @arribo-destino="openArriboDestinoView"
+        @transito="openTransitoView"
+        @diligencia="openDiligenciaModal"
+        @solicitar-transporte="openSolicitudTransporteModal"
+        @retiro-directo="openRetiroDirectoModal"
+        @ingreso-almacen="openIngresoAlmacenModal"
+        @recojo-exportacion="openRecojoExportacionModal"
+        @ingreso-origen="openIngresoOrigenModal"
+        @embarque="openEmbarqueModal"
+        @recepcion-exterior="openRecepcionExteriorModal"
+        @documentos="openDocumentosExpediente"
       />
     </template>
 
     <!-- ============================================================== -->
     <!-- MODALES OPERATIVOS AUXILIARES (IMPORTACIÓN Y COMUNES)           -->
     <!-- ============================================================== -->
-    <!-- Modal: Actualizar Tránsito y Embarque -->
+    <!-- Modal: Registrar Salida de Origen y Datos de Embarque -->
+    <RegistrarSalidaOrigenModal
+      :visible="showSalidaOrigenModal"
+      :expediente="selectedExpedienteParaAccion"
+      @close="showSalidaOrigenModal = false"
+      @saved="onSalidaOrigenSaved"
+    />
+
+    <!-- Modal: Confirmar Arribo a Puerto / Aeropuerto de Destino -->
+    <ConfirmarArriboDestinoModal
+      :visible="showArriboDestinoModal"
+      :expediente="selectedExpedienteParaAccion"
+      @close="showArriboDestinoModal = false"
+      @saved="onArriboDestinoSaved"
+    />
+
+    <!-- Modal: Actualizar Tránsito y Embarque (Simplificado y Guiado) -->
     <ActualizarTransitoModal
       :visible="showTransitoModal"
       :expediente="selectedExpedienteParaAccion"
@@ -129,17 +203,8 @@
     />
 
     <!-- ============================================================== -->
-    <!-- MODALES COMUNES: DETALLE Y DOCUMENTOS DIGITALES               -->
+    <!-- GESTOR DE DOCUMENTOS DIGITALES ADJUNTOS                        -->
     <!-- ============================================================== -->
-    <!-- Modal: Detalle Integral del Expediente -->
-    <DetalleExpedienteModal
-      :visible="showDetalleModal"
-      :expediente="selectedExpedienteParaDetalle"
-      @close="showDetalleModal = false"
-      @open-docs="openDocumentosExpediente"
-    />
-
-    <!-- Modal: Gestor de Documentos Digitales Adjuntos -->
     <DocumentosManagerModal
       :visible="showDocumentosModal"
       entidad-tipo="EXPEDIENTE"
@@ -162,9 +227,14 @@ import { useAgenteBandeja } from '../composables/useAgenteBandeja'
 // Componentes de la vista
 import AgenteDashboardPanel from '../components/AgenteDashboardPanel.vue'
 import AgenteHeaderToolbar from '../components/AgenteHeaderToolbar.vue'
+import AgenteExpedientesCanvas from '../components/AgenteExpedientesCanvas.vue'
 import AgenteExpedientesTable from '../components/AgenteExpedientesTable.vue'
+import AgenteExpedienteInformeView from '../components/AgenteExpedienteInformeView.vue'
+import AgenteOperacionTransitoView from '../components/AgenteOperacionTransitoView.vue'
 
 // Modales operativos compartidos
+import RegistrarSalidaOrigenModal from '@/features/aduanas/components/RegistrarSalidaOrigenModal.vue'
+import ConfirmarArriboDestinoModal from '@/features/aduanas/components/ConfirmarArriboDestinoModal.vue'
 import ActualizarTransitoModal from '@/features/aduanas/components/ActualizarTransitoModal.vue'
 import DiligenciaCampoModal from '@/features/aduanas/components/DiligenciaCampoModal.vue'
 import SolicitudTransporteModal from '@/features/aduanas/components/SolicitudTransporteModal.vue'
@@ -174,13 +244,23 @@ import SolicitudRecojoExportacionModal from '@/features/aduanas/components/Solic
 import ConfirmarIngresoOrigenModal from '@/features/aduanas/components/ConfirmarIngresoOrigenModal.vue'
 import ConfirmarEmbarqueExportacionModal from '@/features/aduanas/components/ConfirmarEmbarqueExportacionModal.vue'
 import RecepcionDestinoExteriorModal from '@/features/aduanas/components/RecepcionDestinoExteriorModal.vue'
-import DetalleExpedienteModal from '@/features/aduanas/components/DetalleExpedienteModal.vue'
 import DocumentosManagerModal from '@/shared/components/DocumentosManagerModal.vue'
 
 const route = useRoute()
 const router = useRouter()
 const navigationStore = useNavigationStore()
 const { showSuccess, showError } = useNotification()
+
+// Modo de visualización: 'canvas' (por defecto) o 'table'
+const viewMode = ref('canvas')
+
+// Expediente activo para el informe a pantalla completa
+const selectedExpedienteParaInforme = ref(null)
+
+// Expediente activo para operaciones de tránsito a pantalla completa
+const selectedExpedienteParaOperacionTransito = ref(null)
+const transitoOperacionMode = ref('salida')
+const previoEstabaEnInforme = ref(false)
 
 // Composable central
 const {
@@ -203,8 +283,9 @@ const {
 
 // Modales operativos
 const selectedExpedienteParaAccion = ref(null)
-const selectedExpedienteParaDetalle = ref(null)
 
+const showSalidaOrigenModal = ref(false)
+const showArriboDestinoModal = ref(false)
 const showTransitoModal = ref(false)
 const showDiligenciaModal = ref(false)
 const showSolicitudTransporteModal = ref(false)
@@ -214,7 +295,6 @@ const showRecojoExportacionModal = ref(false)
 const showIngresoOrigenModal = ref(false)
 const showEmbarqueModal = ref(false)
 const showRecepcionExteriorModal = ref(false)
-const showDetalleModal = ref(false)
 
 // Documentos
 const showDocumentosModal = ref(false)
@@ -222,8 +302,27 @@ const selectedDocEntidadId = ref(null)
 const selectedDocCodigoEntidad = ref('')
 const selectedDocTituloEntidad = ref('')
 
+// Navegación de informe a pantalla completa
+const openInformeCompleto = (exp) => {
+  selectedExpedienteParaInforme.value = exp
+}
+
+const cerrarInformeCompleto = () => {
+  selectedExpedienteParaInforme.value = null
+}
+
+// Sincronizar actualización en el informe completo si está abierto
+const syncExpedienteEnInforme = (actualizado) => {
+  if (selectedExpedienteParaInforme.value && actualizado?.idExpediente === selectedExpedienteParaInforme.value.idExpediente) {
+    selectedExpedienteParaInforme.value = { ...selectedExpedienteParaInforme.value, ...actualizado }
+  }
+}
+
 // Sincronización de pestañas con router y navigationStore
 const handleTabChange = (tabKey) => {
+  selectedExpedienteParaInforme.value = null
+  selectedExpedienteParaOperacionTransito.value = null
+  previoEstabaEnInforme.value = false
   cambiarTab(tabKey)
   navigationStore.setAgenteAduaneroSubOption(tabKey)
   if (route.query.tab !== tabKey) {
@@ -231,15 +330,55 @@ const handleTabChange = (tabKey) => {
   }
 }
 
-// Handlers de Modales de Importación
-const openTransitoModal = (exp) => {
-  selectedExpedienteParaAccion.value = exp
-  showTransitoModal.value = true
+// Handlers de Operaciones de Tránsito a Pantalla Completa
+const openSalidaOrigenView = (exp) => {
+  previoEstabaEnInforme.value = !!selectedExpedienteParaInforme.value
+  selectedExpedienteParaInforme.value = null
+  selectedExpedienteParaOperacionTransito.value = exp
+  transitoOperacionMode.value = 'salida'
 }
 
-const onTransitoSaved = (actualizado) => {
-  showTransitoModal.value = false
-  showSuccess(`Tránsito y datos de embarque actualizados para ${actualizado?.codigoExpediente || 'el expediente'}.`)
+const openArriboDestinoView = (exp) => {
+  previoEstabaEnInforme.value = !!selectedExpedienteParaInforme.value
+  selectedExpedienteParaInforme.value = null
+  selectedExpedienteParaOperacionTransito.value = exp
+  transitoOperacionMode.value = 'arribo'
+}
+
+const openTransitoView = (exp) => {
+  previoEstabaEnInforme.value = !!selectedExpedienteParaInforme.value
+  selectedExpedienteParaInforme.value = null
+  selectedExpedienteParaOperacionTransito.value = exp
+  transitoOperacionMode.value = 'transito'
+}
+
+const cerrarOperacionTransito = () => {
+  const exp = selectedExpedienteParaOperacionTransito.value
+  selectedExpedienteParaOperacionTransito.value = null
+  if (previoEstabaEnInforme.value && exp) {
+    selectedExpedienteParaInforme.value = exp
+  }
+  previoEstabaEnInforme.value = false
+}
+
+const onOperacionTransitoSaved = (actualizado) => {
+  const exp = actualizado || selectedExpedienteParaOperacionTransito.value
+  selectedExpedienteParaOperacionTransito.value = null
+
+  if (previoEstabaEnInforme.value && exp) {
+    selectedExpedienteParaInforme.value = exp
+  }
+  previoEstabaEnInforme.value = false
+
+  syncExpedienteEnInforme(actualizado)
+
+  if (transitoOperacionMode.value === 'salida') {
+    showSuccess(`Salida de origen confirmada para ${actualizado?.codigoExpediente || 'el despacho'}. Expediente en tránsito internacional.`)
+  } else if (transitoOperacionMode.value === 'arribo') {
+    showSuccess(`Arribo a puerto de destino confirmado para ${actualizado?.codigoExpediente || 'el expediente'}. Habilitado para asignación de Canal SUNAT.`)
+  } else {
+    showSuccess(`Tránsito y datos de embarque actualizados para ${actualizado?.codigoExpediente || 'el expediente'}.`)
+  }
   loadData()
 }
 
@@ -250,6 +389,7 @@ const openDiligenciaModal = (exp) => {
 
 const onDiligenciaSaved = (actualizado) => {
   showDiligenciaModal.value = false
+  syncExpedienteEnInforme(actualizado)
   showSuccess(`Acta de diligencia registrada con éxito para ${actualizado?.codigoExpediente || 'el expediente'}.`)
   loadData()
 }
@@ -295,6 +435,7 @@ const openRecojoExportacionModal = (exp) => {
 
 const onRecojoExportacionSaved = (act) => {
   showRecojoExportacionModal.value = false
+  syncExpedienteEnInforme(act)
   showSuccess(`Recojo en planta programado exitosamente para ${act?.codigoExpediente || 'el expediente'}.`)
   loadData()
 }
@@ -306,6 +447,7 @@ const openIngresoOrigenModal = (exp) => {
 
 const onIngresoOrigenSaved = (act) => {
   showIngresoOrigenModal.value = false
+  syncExpedienteEnInforme(act)
   showSuccess(`Ingreso a terminal / zona primaria confirmado para ${act?.codigoExpediente || 'el expediente'}.`)
   loadData()
 }
@@ -317,6 +459,7 @@ const openEmbarqueModal = (exp) => {
 
 const onEmbarqueSaved = (act) => {
   showEmbarqueModal.value = false
+  syncExpedienteEnInforme(act)
   showSuccess(`Embarque internacional confirmado para ${act?.codigoExpediente || 'el expediente'}.`)
   loadData()
 }
@@ -328,16 +471,12 @@ const openRecepcionExteriorModal = (exp) => {
 
 const onRecepcionExteriorSaved = (act) => {
   showRecepcionExteriorModal.value = false
+  syncExpedienteEnInforme(act)
   showSuccess(`Recepción en destino exterior confirmada para ${act?.codigoExpediente || 'el expediente'}.`)
   loadData()
 }
 
-// Handlers de Detalle y Documentos
-const openDetalleExp = (exp) => {
-  selectedExpedienteParaDetalle.value = exp
-  showDetalleModal.value = true
-}
-
+// Handlers de Documentos
 const openDocumentosExpediente = (exp) => {
   if (!exp) return
   selectedDocEntidadId.value = exp.idExpediente
@@ -355,8 +494,9 @@ watch(selectedAgenteId, () => {
 watch(
   () => route.query.tab,
   (newTab) => {
-    if (newTab && ['dashboard', 'todos', 'transito', 'inspeccion', 'levante'].includes(newTab)) {
-      cambiarTab(newTab)
+    selectedExpedienteParaInforme.value = null
+    if (newTab && ['dashboard', 'todos', 'expedientes', 'transito', 'inspeccion', 'levante'].includes(newTab)) {
+      cambiarTab(newTab === 'expedientes' ? 'todos' : newTab)
       navigationStore.setAgenteAduaneroSubOption(newTab)
     } else if (!newTab) {
       cambiarTab('dashboard')

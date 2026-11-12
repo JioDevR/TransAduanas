@@ -232,9 +232,101 @@ public class ExpedienteServiceImpl implements IExpedienteService {
 
     @Override
     @Transactional
+    public ExpedienteResponseDTO confirmarSalidaOrigen(Integer idExpediente, pe.sga.dto.request.ExpedienteSalidaOrigenDTO dto) {
+        Expediente expediente = expedienteRepository.findById(idExpediente)
+                .orElseThrow(() -> new ResourceNotFoundException("Expediente no encontrado con ID: " + idExpediente));
+
+        if (expediente.getEstadoExpediente() == EstadoExpediente.ANULADO || expediente.getEstadoExpediente() == EstadoExpediente.CERRADO) {
+            throw new BadRequestException("No se puede confirmar salida en un expediente en estado: " + expediente.getEstadoExpediente());
+        }
+
+        LocalDate fechaZarpe = dto.getFechaZarpeReal() != null ? dto.getFechaZarpeReal() : LocalDate.now();
+        expediente.setFechaZarpeEtd(fechaZarpe);
+        if (dto.getFechaLlegadaEta() != null) expediente.setFechaLlegadaEta(dto.getFechaLlegadaEta());
+        if (dto.getNaveViaje() != null && !dto.getNaveViaje().isBlank()) expediente.setNaveViaje(dto.getNaveViaje().trim());
+        if (dto.getNumeroContenedor() != null && !dto.getNumeroContenedor().isBlank()) expediente.setNumeroContenedor(dto.getNumeroContenedor().trim());
+        if (dto.getPrecintoAduanero() != null && !dto.getPrecintoAduanero().isBlank()) expediente.setPrecintoAduanero(dto.getPrecintoAduanero().trim());
+
+        expediente.setEstadoExpediente(EstadoExpediente.EN_TRAMITE);
+
+        String bitacora = String.format("[SALIDA ORIGEN CONFIRMADA] Zarpe confirmado el %s a bordo de %s | Contenedor: %s | Precinto: %s",
+                fechaZarpe,
+                expediente.getNaveViaje() != null ? expediente.getNaveViaje() : "Nave en travesía",
+                expediente.getNumeroContenedor() != null ? expediente.getNumeroContenedor() : "Por asignar",
+                expediente.getPrecintoAduanero() != null ? expediente.getPrecintoAduanero() : "Por asignar");
+
+        if (dto.getObservaciones() != null && !dto.getObservaciones().isBlank()) {
+            bitacora += ". Detalle: " + dto.getObservaciones().trim();
+        }
+
+        String obsPrevias = expediente.getObservaciones() != null ? expediente.getObservaciones() + "\n" : "";
+        expediente.setObservaciones(obsPrevias + bitacora);
+
+        Expediente guardado = expedienteRepository.save(expediente);
+
+        if (guardado.getCliente() != null) {
+            NotificacionCliente notif = NotificacionCliente.builder()
+                    .cliente(guardado.getCliente())
+                    .titulo("Carga en Tránsito Internacional: " + guardado.getCodigoExpediente())
+                    .mensaje("El agente aduanero ha confirmado la salida de origen de su mercancía el " + fechaZarpe
+                            + (expediente.getNaveViaje() != null ? " a bordo de " + expediente.getNaveViaje() : "")
+                            + ". Su despacho se encuentra en travesía internacional rumbo a Perú.")
+                    .tipo("DAM")
+                    .leido(false)
+                    .enlace("/expedientes")
+                    .fechaCreacion(LocalDateTime.now())
+                    .build();
+            notificacionClienteRepository.save(notif);
+        }
+
+        return mapToResponse(guardado);
+    }
+
+    @Override
+    @Transactional
+    public ExpedienteResponseDTO confirmarArriboDestino(Integer idExpediente, pe.sga.dto.request.ExpedienteArriboDestinoDTO dto) {
+        Expediente expediente = expedienteRepository.findById(idExpediente)
+                .orElseThrow(() -> new ResourceNotFoundException("Expediente no encontrado con ID: " + idExpediente));
+
+        if (expediente.getEstadoExpediente() == EstadoExpediente.ANULADO || expediente.getEstadoExpediente() == EstadoExpediente.CERRADO) {
+            throw new BadRequestException("No se puede registrar arribo en un expediente en estado: " + expediente.getEstadoExpediente());
+        }
+
+        LocalDateTime fechaArribo = dto.getFechaArriboAduana() != null ? dto.getFechaArriboAduana() : LocalDateTime.now();
+        expediente.setFechaArriboAduana(fechaArribo);
+
+        if (expediente.getEstadoExpediente() == EstadoExpediente.ASIGNADO) {
+            expediente.setEstadoExpediente(EstadoExpediente.EN_TRAMITE);
+        }
+
+        String bitacora = "[ARRIBO A PUERTO DE DESTINO] Arribo registrado el "
+                + fechaArribo.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
+        if (dto.getTerminalAlmacenDestino() != null && !dto.getTerminalAlmacenDestino().isBlank()) {
+            bitacora += " en terminal: " + dto.getTerminalAlmacenDestino().trim();
+        }
+        if (dto.getObservaciones() != null && !dto.getObservaciones().isBlank()) {
+            bitacora += ". Detalle: " + dto.getObservaciones().trim();
+        }
+
+        String obsPrevias = expediente.getObservaciones() != null ? expediente.getObservaciones() + "\n" : "";
+        expediente.setObservaciones(obsPrevias + bitacora);
+
+        return mapToResponse(expedienteRepository.save(expediente));
+    }
+
+    @Override
+    @Transactional
     public ExpedienteResponseDTO asignarCanal(Integer idExpediente, ExpedienteCanalDTO dto) {
         Expediente expediente = expedienteRepository.findById(idExpediente)
                 .orElseThrow(() -> new ResourceNotFoundException("Expediente no encontrado con ID: " + idExpediente));
+
+        // COMPUERTA OPERATIVA: En Importación, la mercancía debe haber arribado a destino antes de registrar DAM y Canal SUNAT
+        boolean esExportacion = expediente.getCotizacion() != null
+                && expediente.getCotizacion().getRegimenAduanero() != null
+                && expediente.getCotizacion().getRegimenAduanero().toUpperCase().contains("EXPORT");
+        if (!esExportacion && expediente.getFechaArriboAduana() == null) {
+            throw new BadRequestException("No es posible registrar el Canal SUNAT: La mercancía de importación aún no registra confirmación de arribo a puerto de destino.");
+        }
 
         String dam = dto.getNumeroDam().trim();
         if (expediente.getNumeroDam() == null || !expediente.getNumeroDam().equalsIgnoreCase(dam)) {
@@ -245,20 +337,27 @@ public class ExpedienteServiceImpl implements IExpedienteService {
         }
 
         expediente.setCanalSunat(dto.getCanalSunat());
-        expediente.setFechaAsignacionCanal(dto.getFechaAsignacionCanal() != null ? dto.getFechaAsignacionCanal() : LocalDateTime.now());
+        LocalDateTime fechaAsignacion = dto.getFechaAsignacionCanal() != null ? dto.getFechaAsignacionCanal() : LocalDateTime.now();
+        expediente.setFechaAsignacionCanal(fechaAsignacion);
 
         if (dto.getDetalleInspeccion() != null) {
             expediente.setDetalleInspeccion(dto.getDetalleInspeccion());
         }
 
-        // Regla de Negocio: Canales Naranja y Rojo activan notificación automática al agente
+        // Regla de Negocio: Canales Naranja y Rojo activan inspección y notificación al agente.
+        // Canal Verde concede Levante Automático formal inmediato.
         if (dto.getCanalSunat() == CanalSunat.NARANJA || dto.getCanalSunat() == CanalSunat.ROJO) {
             expediente.setNotificadoAgente(true);
             expediente.setFechaNotificacion(LocalDateTime.now());
             expediente.setEstadoExpediente(EstadoExpediente.INSPECCION);
         } else if (dto.getCanalSunat() == CanalSunat.VERDE) {
-            expediente.setNotificadoAgente(false);
-            expediente.setEstadoExpediente(EstadoExpediente.EN_TRAMITE);
+            expediente.setNotificadoAgente(true);
+            expediente.setFechaNotificacion(LocalDateTime.now());
+            expediente.setFechaLevanteAutorizacion(fechaAsignacion);
+            expediente.setEstadoExpediente(EstadoExpediente.LEVANTE_AUTORIZADO);
+            String notaVerde = "[CANAL VERDE SUNAT] Levante aduanero concedido automáticamente para DAM " + dam;
+            String obsPrevias = expediente.getObservaciones() != null ? expediente.getObservaciones() + "\n" : "";
+            expediente.setObservaciones(obsPrevias + notaVerde);
         }
 
         return mapToResponse(expedienteRepository.save(expediente));

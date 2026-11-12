@@ -244,9 +244,18 @@ public class PortalServiceImpl implements IPortalService {
         }
 
         if ((cotizacion.getObservaciones() != null && cotizacion.getObservaciones().contains("Aceptada formalmente por el cliente"))
-                || (cotizacion.getEstadoPago() != null && !"SIN_PAGO".equalsIgnoreCase(cotizacion.getEstadoPago()))) {
+                || (cotizacion.getEstadoPago() != null && !"SIN_PAGO".equalsIgnoreCase(cotizacion.getEstadoPago()) && !"PENDIENTE".equalsIgnoreCase(cotizacion.getEstadoPago()))) {
             throw new BadRequestException("Esta cotización ya fue aceptada previamente.");
         }
+
+        // Marcar formalmente el estado de pago como PENDIENTE
+        cotizacion.setEstadoPago("PENDIENTE");
+
+        // Garantizar que el saldo pendiente corresponda al total cotizado menos lo abonado
+        BigDecimal total = cotizacion.getTotalCotizado() != null ? cotizacion.getTotalCotizado() : BigDecimal.ZERO;
+        BigDecimal abonado = cotizacion.getTotalAbonado() != null ? cotizacion.getTotalAbonado() : BigDecimal.ZERO;
+        BigDecimal saldo = total.subtract(abonado);
+        cotizacion.setSaldoPendiente(saldo.compareTo(BigDecimal.ZERO) < 0 ? BigDecimal.ZERO : saldo);
 
         cotizacion.setObservaciones((cotizacion.getObservaciones() != null ? cotizacion.getObservaciones() + " | " : "") + "Aceptada formalmente por el cliente vía Portal B2B el " + LocalDateTime.now());
         Cotizacion guardada = cotizacionRepository.save(cotizacion);
@@ -362,14 +371,18 @@ public class PortalServiceImpl implements IPortalService {
         List<PortalObligacionPagoDTO> lista = new ArrayList<>();
 
         for (Cotizacion c : cotizaciones) {
-            if (c.getEstado() == EstadoCotizacion.ANULADA || c.getEstado() == EstadoCotizacion.RECHAZADA) {
+            // Solo cotizaciones con aprobación técnica aduanera
+            if (c.getEstado() != EstadoCotizacion.APROBADA) {
                 continue;
             }
 
             Optional<Expediente> expOpt = Optional.ofNullable(expByCotId.get(c.getIdCotizacion()));
-            BigDecimal saldoCot = c.getSaldoPendiente() != null ? c.getSaldoPendiente() : BigDecimal.ZERO;
             BigDecimal totalCot = c.getTotalCotizado() != null ? c.getTotalCotizado() : BigDecimal.ZERO;
             BigDecimal abonadoCot = c.getTotalAbonado() != null ? c.getTotalAbonado() : BigDecimal.ZERO;
+            BigDecimal saldoCalculado = totalCot.subtract(abonadoCot).max(BigDecimal.ZERO);
+            BigDecimal saldoCot = (c.getSaldoPendiente() != null && c.getSaldoPendiente().compareTo(BigDecimal.ZERO) > 0)
+                    ? c.getSaldoPendiente()
+                    : saldoCalculado;
 
             if (expOpt.isPresent()) {
                 Expediente exp = expOpt.get();

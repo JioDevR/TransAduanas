@@ -8,6 +8,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import pe.sga.config.SecurityRoles;
 import pe.sga.dto.request.ExpedienteActualizarDTO;
+import pe.sga.dto.request.ExpedienteArriboDestinoDTO;
 import pe.sga.dto.request.ExpedienteCanalDTO;
 import pe.sga.dto.request.ExpedienteCerrarDTO;
 import pe.sga.dto.request.ExpedienteCrearDTO;
@@ -18,6 +19,7 @@ import pe.sga.dto.request.ExpedienteLevanteDTO;
 import pe.sga.dto.request.ExpedienteRecepcionExteriorDTO;
 import pe.sga.dto.request.ExpedienteRecojoExportacionDTO;
 import pe.sga.dto.request.ExpedienteRetiroDirectoDTO;
+import pe.sga.dto.request.ExpedienteSalidaOrigenDTO;
 import pe.sga.dto.request.ExpedienteSolicitudTransporteDTO;
 import pe.sga.dto.response.ApiResponseDTO;
 import pe.sga.dto.response.ExpedienteResponseDTO;
@@ -135,6 +137,24 @@ public class ExpedienteController {
             @Valid @RequestBody ExpedienteIngresoOrigenDTO dto) {
         ExpedienteResponseDTO actualizado = expedienteService.confirmarIngresoOrigen(id, dto);
         return ResponseEntity.ok(ApiResponseDTO.ok("Ingreso a almacén/depósito temporal de origen confirmado", actualizado));
+    }
+
+    @PatchMapping("/{id}/confirmar-salida-origen")
+    @PreAuthorize(SecurityRoles.ACCESS_EXPEDIENTE_ALMACEN_WRITE)
+    public ResponseEntity<ApiResponseDTO<ExpedienteResponseDTO>> confirmarSalidaOrigen(
+            @PathVariable Integer id,
+            @Valid @RequestBody ExpedienteSalidaOrigenDTO dto) {
+        ExpedienteResponseDTO actualizado = expedienteService.confirmarSalidaOrigen(id, dto);
+        return ResponseEntity.ok(ApiResponseDTO.ok("Salida de origen confirmada exitosamente. Carga en tránsito internacional.", actualizado));
+    }
+
+    @PatchMapping("/{id}/confirmar-arribo-destino")
+    @PreAuthorize(SecurityRoles.ACCESS_EXPEDIENTE_ALMACEN_WRITE)
+    public ResponseEntity<ApiResponseDTO<ExpedienteResponseDTO>> confirmarArriboDestino(
+            @PathVariable Integer id,
+            @Valid @RequestBody ExpedienteArriboDestinoDTO dto) {
+        ExpedienteResponseDTO actualizado = expedienteService.confirmarArriboDestino(id, dto);
+        return ResponseEntity.ok(ApiResponseDTO.ok("Arribo a puerto/aeropuerto de destino confirmado exitosamente", actualizado));
     }
 
     @PatchMapping("/{id}/confirmar-embarque")

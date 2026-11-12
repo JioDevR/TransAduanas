@@ -45,6 +45,9 @@ backend/src/main/resources/application-local.properties
 .env
 .env.local
 backend/.env
+backend/uploads/*
+!backend/uploads/.gitkeep
+uploads/
 
 
 # -----------------------------------------------------------------------------

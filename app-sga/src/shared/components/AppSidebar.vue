@@ -369,16 +369,16 @@
             <span v-if="!isCollapsed" class="nav-label">Dashboard Operativo</span>
           </button>
         </li>
-        <!-- Sub-opción 02: Todos Mis Despachos -->
+        <!-- Sub-opción 02: Expedientes -->
         <li class="nav-item">
           <button
             type="button"
-            :class="['nav-sub-btn', { active: navigationStore.agenteAduaneroSubOption === 'todos' }]"
+            :class="['nav-sub-btn', { active: navigationStore.agenteAduaneroSubOption === 'todos' || navigationStore.agenteAduaneroSubOption === 'expedientes' }]"
             @click="handleAgenteAduaneroSubClick('todos')"
-            :title="isCollapsed ? 'Todos Mis Despachos' : ''"
+            :title="isCollapsed ? 'Expedientes' : ''"
           >
             <span class="nav-num">02</span>
-            <span v-if="!isCollapsed" class="nav-label">Todos Mis Despachos</span>
+            <span v-if="!isCollapsed" class="nav-label">Expedientes</span>
           </button>
         </li>
         <!-- Sub-opción 03: En Tránsito / Arribo -->

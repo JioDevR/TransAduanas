@@ -58,6 +58,24 @@ describe('expedienteService canonical & re-exports', () => {
     expect(result).toEqual({ id: 5, ...payload })
   })
 
+  it('confirmarSalidaOrigen delegates to PATCH /expedientes/:id/confirmar-salida-origen', async () => {
+    const payload = { fechaZarpeReal: '2026-11-12', naveViaje: 'MSC INES' }
+    apiClient.patch.mockResolvedValueOnce({ data: { data: { id: 7, ...payload } } })
+
+    const result = await expedienteService.confirmarSalidaOrigen(7, payload)
+    expect(apiClient.patch).toHaveBeenCalledWith('/expedientes/7/confirmar-salida-origen', payload)
+    expect(result).toEqual({ id: 7, ...payload })
+  })
+
+  it('confirmarArriboDestino delegates to PATCH /expedientes/:id/confirmar-arribo-destino', async () => {
+    const payload = { fechaArriboAduana: '2026-11-11T15:30:00', terminalAlmacenDestino: 'DP World' }
+    apiClient.patch.mockResolvedValueOnce({ data: { data: { id: 8, ...payload } } })
+
+    const result = await expedienteService.confirmarArriboDestino(8, payload)
+    expect(apiClient.patch).toHaveBeenCalledWith('/expedientes/8/confirmar-arribo-destino', payload)
+    expect(result).toEqual({ id: 8, ...payload })
+  })
+
   it('cerrarExpediente delegates to PATCH /expedientes/:id/cerrar', async () => {
     const payload = { observacionesCierre: 'OK' }
     apiClient.patch.mockResolvedValueOnce({ data: { data: { id: 10, estado: 'CERRADO' } } })

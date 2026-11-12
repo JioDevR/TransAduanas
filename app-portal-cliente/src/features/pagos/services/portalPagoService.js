@@ -29,6 +29,15 @@ export const portalPagoService = {
   },
 
   /**
+   * Obtiene los datos de un pago/anticipo específico por su ID.
+   * @param {number|string} idPago
+   */
+  async obtenerPagoPorId(idPago) {
+    const anticipos = await this.listarAnticipos()
+    return anticipos.find(p => p.idPago === Number(idPago)) || null
+  },
+
+  /**
    * Lista las liquidaciones finales de despacho aduanero.
    */
   async listarLiquidaciones() {

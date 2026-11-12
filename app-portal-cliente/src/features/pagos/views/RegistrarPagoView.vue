@@ -465,7 +465,7 @@ async function cargarObligaciones() {
 
       let seleccion = null
       if (qId) {
-        if (qTipo === 'EXPEDIENTE') {
+        if (qTipo === 'EXPEDIENTE' || qTipo === 'EXPEDIENTE_HEREDADO') {
           seleccion = obligaciones.value.find(o => o.idExpediente === qId)
         } else {
           seleccion = obligaciones.value.find(o => o.idCotizacion === qId || o.idReferencia === qId)

@@ -107,6 +107,26 @@ export const expedienteService = {
   },
 
   /**
+   * Confirmar salida real de la carga en origen (Importación)
+   * @param {Number} id ID del expediente
+   * @param {Object} payload ExpedienteSalidaOrigenDTO { fechaZarpeReal, naveViaje, numeroContenedor, precintoAduanero, fechaLlegadaEta, observaciones }
+   */
+  async confirmarSalidaOrigen(id, payload) {
+    const response = await apiClient.patch(`/expedientes/${id}/confirmar-salida-origen`, payload)
+    return response.data.data
+  },
+
+  /**
+   * Confirmar arribo de la nave/carga a puerto o aeropuerto de destino (Importación)
+   * @param {Number} id ID del expediente
+   * @param {Object} payload ExpedienteArriboDestinoDTO { fechaArriboAduana, terminalAlmacenDestino, observaciones }
+   */
+  async confirmarArriboDestino(id, payload) {
+    const response = await apiClient.patch(`/expedientes/${id}/confirmar-arribo-destino`, payload)
+    return response.data.data
+  },
+
+  /**
    * Confirmar ingreso de carga a zona primaria / depósito temporal de origen (VGM y pesaje)
    * @param {Number} id ID del expediente
    * @param {Object} payload ExpedienteIngresoOrigenDTO

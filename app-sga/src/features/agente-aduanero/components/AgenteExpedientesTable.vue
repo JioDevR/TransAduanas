@@ -162,6 +162,9 @@
           <template #body="{ data: exp }">
             <AgenteAccionesCell
               :expediente="exp"
+              :active-tab="activeTab"
+              @salida-origen="$emit('salida-origen', $event)"
+              @arribo-destino="$emit('arribo-destino', $event)"
               @transito="$emit('transito', $event)"
               @diligencia="$emit('diligencia', $event)"
               @solicitar-transporte="$emit('solicitar-transporte', $event)"
@@ -195,10 +198,16 @@ defineProps({
   loading: {
     type: Boolean,
     default: false
+  },
+  activeTab: {
+    type: String,
+    default: 'todos'
   }
 })
 
 defineEmits([
+  'salida-origen',
+  'arribo-destino',
   'transito',
   'diligencia',
   'solicitar-transporte',
@@ -251,60 +260,61 @@ const getExpedienteSeverity = (est) => {
 
 <style scoped>
 .content-table-card {
-  background: var(--color-bg-surface, #282723);
-  border: 1px solid var(--color-border, #444138);
-  border-radius: 8px;
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md, 8px);
   overflow: hidden;
+  box-shadow: var(--shadow-subtle);
 }
 
 .card-header-bar {
   padding: 1rem 1.25rem;
-  border-bottom: 1px solid var(--color-border, #444138);
-  background: var(--color-bg-subtle, #2e2d27);
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-bg-subtle);
 }
 
 .badge-kicker {
-  font-size: 0.6875rem;
+  font-size: var(--font-size-2xs, 0.6875rem);
   font-family: var(--font-mono, monospace);
   font-weight: 800;
   letter-spacing: 0.08em;
-  color: var(--color-accent-kicker, #e0c287);
+  color: var(--color-accent-kicker);
   text-transform: uppercase;
 }
 
 .section-title {
   margin: 0.25rem 0 0 0;
-  font-size: 1.125rem;
+  font-size: var(--font-size-lg, 1.125rem);
   font-weight: 800;
-  color: var(--color-text-main, #f6f2ea);
+  color: var(--color-text-main);
 }
 
 .table-container {
   overflow-x: auto;
-  background: var(--color-bg-surface, #282723);
+  background: var(--color-bg-surface);
 }
 
 .empty-state {
   padding: 3rem 1.5rem;
   text-align: center;
-  color: var(--color-text-muted, #c4bcab);
+  color: var(--color-text-muted);
 }
 
 .empty-icon {
   font-size: 2.5rem;
   margin-bottom: 0.75rem;
-  color: var(--color-border, #444138);
+  color: var(--color-border);
 }
 
 .empty-title {
   font-weight: 700;
   font-size: 1rem;
   margin: 0 0 0.25rem 0;
-  color: var(--color-text-main, #f6f2ea);
+  color: var(--color-text-main);
 }
 
 .empty-desc {
-  font-size: 0.8125rem;
+  font-size: var(--font-size-sm, 0.8125rem);
   margin: 0;
 }
 
@@ -315,7 +325,7 @@ const getExpedienteSeverity = (est) => {
   align-items: center;
   justify-content: center;
   gap: 0.75rem;
-  color: var(--color-text-muted, #c4bcab);
+  color: var(--color-text-muted);
 }
 
 .exp-code-badge {
@@ -323,8 +333,8 @@ const getExpedienteSeverity = (est) => {
   align-items: center;
   gap: 0.35rem;
   cursor: pointer;
-  color: var(--color-primary, #d6b476);
-  font-size: 0.8125rem;
+  color: var(--color-primary);
+  font-size: var(--font-size-sm, 0.8125rem);
   transition: opacity 0.15s ease;
 }
 
@@ -345,15 +355,15 @@ const getExpedienteSeverity = (est) => {
 }
 
 .badge-import {
-  background: var(--color-info-bg, #172635);
-  color: var(--color-info-text, #93c5fd);
-  border: 1px solid var(--color-info-border, #254b6d);
+  background: var(--color-info-bg);
+  color: var(--color-info-text);
+  border: 1px solid var(--color-info-border);
 }
 
 .badge-export {
-  background: var(--color-success-bg, #1c2b1f);
-  color: var(--color-success-text, #7ee79d);
-  border: 1px solid var(--color-success-border, #2d5738);
+  background: var(--color-success-bg);
+  color: var(--color-success-text);
+  border: 1px solid var(--color-success-border);
 }
 
 .client-cell {
@@ -363,17 +373,21 @@ const getExpedienteSeverity = (est) => {
 }
 
 .font-main {
-  color: var(--color-text-main, #f6f2ea);
+  color: var(--color-text-main);
 }
 
 .client-name {
-  font-size: 0.8125rem;
-  color: var(--color-text-main, #f6f2ea);
+  font-size: var(--font-size-sm, 0.8125rem);
+  color: var(--color-text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 180px;
 }
 
 .client-sub {
   font-size: 0.6875rem;
-  color: var(--color-text-muted, #c4bcab);
+  color: var(--color-text-muted);
 }
 
 .text-2xs {
@@ -381,23 +395,23 @@ const getExpedienteSeverity = (est) => {
 }
 
 .text-info {
-  color: var(--color-info-text, #93c5fd);
+  color: var(--color-info-text);
 }
 
 .text-success {
-  color: var(--color-success-text, #7ee79d);
+  color: var(--color-success-text);
 }
 
 .text-pending {
-  color: var(--color-info-text, #93c5fd);
+  color: var(--color-info-text);
 }
 
 .text-warning {
-  color: var(--color-warning-text, #fcd34d);
+  color: var(--color-warning-text);
 }
 
 .text-muted-dash {
-  color: var(--color-text-subtle, #968e7e);
+  color: var(--color-text-subtle);
 }
 
 .mt-1 {

@@ -73,15 +73,13 @@
           <div class="agent-select-wrap">
             <i class="pi pi-user-edit field-icon"></i>
             <select id="exp-agente" v-model="form.idAgenteAduanero" class="select-input" required>
-              <option :value="authStore.user?.idUsuario || 1">
-                {{ authStore.userFullName || 'Agente Aduanero Actual' }} ({{ authStore.user?.username || 'Usuario Actual' }})
-              </option>
+              <option :value="null" disabled>-- Seleccione un Agente Aduanero Acreditado --</option>
               <option v-for="u in agentesList" :key="u.idUsuario" :value="u.idUsuario">
-                {{ u.nombres }} {{ u.apellidos }} ({{ u.username }})
+                {{ u.nombres }} {{ u.apellidos }} ({{ u.codigoSunat ? u.codigoSunat + ' / ' : '' }}@{{ u.username }})
               </option>
             </select>
           </div>
-          <span class="field-hint">Especialista que gestionará la declaración aduanera y trámites SUNAT</span>
+          <span class="field-hint">Especialista acreditado (Rol: AGENTE_ADUANERO) que gestionará la declaración aduanera y trámites SUNAT</span>
         </div>
 
         <!-- Contacto en el Exterior (Proveedor / Comprador) -->
@@ -259,9 +257,13 @@ const formatRegimen = (reg) => {
   return labels[reg] || reg
 }
 
+const isCurrentUserAgente = computed(() => {
+  return authStore.userRole === 'AGENTE_ADUANERO' || authStore.user?.rol === 'AGENTE_ADUANERO'
+})
+
 const defaultForm = () => ({
   idCotizacion: null,
-  idAgenteAduanero: authStore.user?.idUsuario || 1,
+  idAgenteAduanero: isCurrentUserAgente.value ? authStore.user?.idUsuario : null,
   contactoExteriorNombre: '',
   contactoExteriorTelefono: '',
   contactoExteriorCorreo: '',
@@ -285,10 +287,14 @@ const onCotizacionSelect = () => {
 
 const loadAgentes = async () => {
   try {
-    const users = await userService.getOperadores()
-    agentesList.value = (users || []).filter(
-      (u) => u.idUsuario !== authStore.user?.idUsuario
-    )
+    const agentes = await userService.getAgentesAduaneros()
+    agentesList.value = agentes || []
+
+    if (isCurrentUserAgente.value && authStore.user?.idUsuario) {
+      form.value.idAgenteAduanero = authStore.user.idUsuario
+    } else if (agentesList.value.length > 0 && !form.value.idAgenteAduanero) {
+      form.value.idAgenteAduanero = agentesList.value[0].idUsuario
+    }
   } catch (e) {
     console.error('Error cargando usuarios para agente aduanero:', e)
   }

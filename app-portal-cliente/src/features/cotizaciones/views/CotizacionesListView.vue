@@ -173,10 +173,28 @@
                     {{ formatPago(c.estadoPago) }}
                   </span>
                 </td>
-                <td class="text-center">
+                <td class="text-center actions-cell">
                   <button class="btn-table-action" @click="verDetalle(c)" title="Ver Desglose Completo">
                     <i class="pi pi-eye"></i>
                     <span>Detalle</span>
+                  </button>
+                  <button 
+                    v-if="c.estado === 'APROBADA' && (c.estadoPago === 'OBSERVADO' || c.estadoPago === 'RECHAZADO')" 
+                    class="btn-table-action btn-table-action--observe" 
+                    @click="irASubsanarPago(c)" 
+                    title="Subsanar Abono Bancario Observado por Finanzas"
+                  >
+                    <i class="pi pi-pencil"></i>
+                    <span>Subsanar</span>
+                  </button>
+                  <button 
+                    v-else-if="c.estado === 'APROBADA' && c.estadoPago !== 'PAGADO_TOTAL'" 
+                    class="btn-table-action btn-table-action--pay" 
+                    @click="irAPagar(c)" 
+                    title="Registrar Anticipo o Pago Completo"
+                  >
+                    <i class="pi pi-wallet"></i>
+                    <span>Abonar</span>
                   </button>
                 </td>
               </tr>
@@ -196,190 +214,20 @@
         </div>
       </div>
     </template>
-
-    <!-- Modal de Detalle de Cotización -->
-    <BaseModal
-      v-model:visible="modalDetalleVisible"
-      :title="cotizacionSeleccionada?.codigoCotizacion || 'Detalle de Cotización'"
-      subtitle="DETALLE DE COTIZACIÓN COMERCIAL"
-      icon="pi pi-file"
-      max-width="840px"
-      @close="modalDetalleVisible = false"
-    >
-      <div class="modal-body" v-if="cotizacionSeleccionada">
-        <!-- Información General -->
-        <div class="detail-section">
-          <h4 class="section-title">Información de la Operación</h4>
-          <div class="detail-grid">
-            <div class="detail-item">
-              <span class="detail-label">Mercancía:</span>
-              <span class="detail-val">{{ cotizacionSeleccionada.nombreMercancia || 'Mercancía General' }} ({{ cotizacionSeleccionada.codigoMercancia || '-' }})</span>
-            </div>
-            <div class="detail-item">
-              <span class="detail-label">Tipo de Carga:</span>
-              <span class="detail-val">{{ cotizacionSeleccionada.nombreTipoCarga || 'General' }}</span>
-            </div>
-            <div class="detail-item">
-              <span class="detail-label">Régimen Aduanero:</span>
-              <span class="detail-val">{{ formatRegimen(cotizacionSeleccionada.regimenAduanero) }}</span>
-            </div>
-            <div class="detail-item">
-              <span class="detail-label">Ruta Puerto:</span>
-              <span class="detail-val">{{ cotizacionSeleccionada.nombrePuertoEnvio || 'Origen' }} &rarr; {{ cotizacionSeleccionada.nombrePuertoDestino || 'Destino' }}</span>
-            </div>
-            <div class="detail-item">
-              <span class="detail-label">Asesor Comercial:</span>
-              <span class="detail-val">{{ cotizacionSeleccionada.usuarioComercialNombre || 'Pendiente de asignación' }}</span>
-            </div>
-            <div class="detail-item">
-              <span class="detail-label">Transporte Local:</span>
-              <span class="detail-val">
-                {{ cotizacionSeleccionada.servicioTransporte ? (cotizacionSeleccionada.costoTransporteInterno ? `$ ${formatCurrency(cotizacionSeleccionada.costoTransporteInterno)} (SGA)` : 'Sí (Pendiente de cotización)') : 'No incluido' }}
-              </span>
-            </div>
-            <div v-if="cotizacionSeleccionada.servicioTransporte" class="detail-item">
-              <span class="detail-label">Ruta Nacional:</span>
-              <span class="detail-val">
-                {{ cotizacionSeleccionada.origenProvincia || cotizacionSeleccionada.origenDepartamento || 'Origen' }} &rarr; {{ cotizacionSeleccionada.destinoProvincia || cotizacionSeleccionada.destinoDepartamento || 'Destino' }}
-              </span>
-            </div>
-            <div class="detail-item">
-              <span class="detail-label">Validez Comercial:</span>
-              <span class="detail-val">{{ cotizacionSeleccionada.validezDias }} días (Emitida: {{ cotizacionSeleccionada.fechaEmision || 'En evaluación' }})</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Desglose Económico y Liquidación Estimada -->
-        <div class="detail-section">
-          <h4 class="section-title">Desglose de Costos y Tributos (USD)</h4>
-          <div class="cost-table">
-            <div class="cost-row">
-              <span>Valor Mercancía (FOB estimado):</span>
-              <span class="font-mono">$ {{ formatCurrency(cotizacionSeleccionada.valorFob) }}</span>
-            </div>
-            <div class="cost-row">
-              <span>Flete Internacional Estimado:</span>
-              <span class="font-mono">
-                {{ Number(cotizacionSeleccionada.montoFlete) > 0 ? '$ ' + formatCurrency(cotizacionSeleccionada.montoFlete) : (esPendienteLiquidacion(cotizacionSeleccionada) ? 'Pendiente por asesor' : '$ 0.00') }}
-              </span>
-            </div>
-            <div class="cost-row">
-              <span>Seguro de Transporte Estimado:</span>
-              <span class="font-mono">
-                {{ esPendienteLiquidacion(cotizacionSeleccionada) && !(Number(cotizacionSeleccionada.montoSeguroEstimado) > 0) ? 'Pendiente por asesor' : '$ ' + formatCurrency(cotizacionSeleccionada.montoSeguroEstimado) }}
-              </span>
-            </div>
-            <div class="cost-row">
-              <span>Honorarios de Agenciamiento Aduanero:</span>
-              <span class="font-mono">
-                {{ esPendienteLiquidacion(cotizacionSeleccionada) && !(Number(cotizacionSeleccionada.montoHonorarios) > 0) ? 'Pendiente por asesor' : '$ ' + formatCurrency(cotizacionSeleccionada.montoHonorarios) }}
-              </span>
-            </div>
-            <div v-if="cotizacionSeleccionada.servicioTransporte" class="cost-row">
-              <span>Flete Terrestre Local (SGA):</span>
-              <span class="font-mono">
-                {{ esPendienteLiquidacion(cotizacionSeleccionada) && !(Number(cotizacionSeleccionada.costoTransporteInterno) > 0) ? 'Pendiente por asesor' : '$ ' + formatCurrency(cotizacionSeleccionada.costoTransporteInterno) }}
-              </span>
-            </div>
-            <div class="cost-row highlight">
-              <span>Tributos Aduaneros Estimados (Aranceles + IGV):</span>
-              <span class="font-mono">
-                {{ cotizacionSeleccionada.regimenAduanero === 'EXPORTACION_DEFINITIVA' ? 'Inafecto ($ 0.00)' : (esPendienteLiquidacion(cotizacionSeleccionada) && !(Number(cotizacionSeleccionada.montoTributos) > 0) ? 'Pendiente por asesor' : '$ ' + formatCurrency(cotizacionSeleccionada.montoTributos)) }}
-              </span>
-            </div>
-            <div class="cost-row total-row">
-              <span>TOTAL ESTIMADO DEL SERVICIO:</span>
-              <span class="font-mono total-amount">
-                {{ esPendienteLiquidacion(cotizacionSeleccionada) ? 'En liquidación ($ 0.00)' : '$ ' + formatCurrency(cotizacionSeleccionada.totalCotizado) }}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Documentación Técnica Adjunta / Expediente Digital -->
-        <div class="detail-section">
-          <h4 class="section-title">Documentación Técnica & Sustento Digital</h4>
-          <PortalDocumentosUploadPanel
-            mode="live"
-            :id-cotizacion="cotizacionSeleccionada.idCotizacion"
-          />
-        </div>
-
-        <!-- Estado de Pagos y Anticipos -->
-        <div class="detail-section">
-          <h4 class="section-title">Control Financiero de Anticipos</h4>
-          <div class="financial-status-box">
-            <div class="fin-col">
-              <span class="fin-label">Total Cotizado:</span>
-              <span class="fin-val font-mono">$ {{ formatCurrency(cotizacionSeleccionada.totalCotizado) }}</span>
-            </div>
-            <div class="fin-col">
-              <span class="fin-label">Total Abonado:</span>
-              <span class="fin-val font-mono success">$ {{ formatCurrency(cotizacionSeleccionada.totalAbonado) }}</span>
-            </div>
-            <div class="fin-col">
-              <span class="fin-label">Saldo Pendiente:</span>
-              <span class="fin-val font-mono warning">$ {{ formatCurrency(cotizacionSeleccionada.saldoPendiente) }}</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Banner de Observación Técnica de Aduanas -->
-        <div v-if="cotizacionSeleccionada.estado === 'OBSERVADA'" class="alert-box-observation">
-          <div class="alert-obs-header">
-            <i class="pi pi-exclamation-triangle"></i>
-            <strong>Observación Técnica de Aduanas Emitida</strong>
-          </div>
-          <p class="alert-obs-message">
-            {{ cotizacionSeleccionada.motivoObservacion || 'Se requieren correcciones técnicas o precisiones documentarias en la propuesta comercial.' }}
-          </p>
-          <div class="alert-obs-footer">
-            <i class="pi pi-info-circle"></i>
-            <span>Su asesor comercial asignado se encuentra coordinando con usted la subsanación de estos requisitos antes del reingreso a supervisión.</span>
-          </div>
-        </div>
-
-        <!-- Observaciones -->
-        <div v-if="cotizacionSeleccionada.observaciones" class="observations-box">
-          <i class="pi pi-info-circle"></i>
-          <span>{{ cotizacionSeleccionada.observaciones }}</span>
-        </div>
-      </div>
-
-      <template #footer>
-        <div class="modal-footer">
-          <button class="btn-secondary" @click="modalDetalleVisible = false">
-            Cerrar
-          </button>
-          <button 
-            v-if="cotizacionSeleccionada?.estado === 'APROBADA'" 
-            class="btn-primary" 
-            @click="handleAceptarCotizacion(cotizacionSeleccionada)"
-            :disabled="aceptando || cotizacionSeleccionada?.aceptadaPorCliente"
-          >
-            <i :class="aceptando ? 'pi pi-spin pi-spinner' : (cotizacionSeleccionada?.aceptadaPorCliente ? 'pi pi-check-circle' : 'pi pi-check')"></i>
-            <span>{{ cotizacionSeleccionada?.aceptadaPorCliente ? 'Cotización Ya Autorizada' : 'Aceptar y Autorizar Despacho' }}</span>
-          </button>
-        </div>
-      </template>
-    </BaseModal>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import { portalCotizacionService } from '../services/portalCotizacionService'
 import { useNotification } from '@/shared/composables/useNotification'
-import { useConfirmation } from '@/shared/composables/useConfirmation'
 import BasePagination from '@/shared/components/BasePagination.vue'
-import BaseModal from '@/shared/components/BaseModal.vue'
 import PortalCotizacionForm from '../components/PortalCotizacionForm.vue'
-import PortalDocumentosUploadPanel from '../components/PortalDocumentosUploadPanel.vue'
 import { esPendienteLiquidacion } from '../utils/portalCotizacionFormUtils'
 
+const router = useRouter()
 const { showSuccess, showError, showWarn } = useNotification()
-const { confirmAction } = useConfirmation()
 
 const showSolicitudForm = ref(false)
 const cotizaciones = ref([])
@@ -391,10 +239,6 @@ const filtroEstado = ref('')
 // Paginación
 const currentPage = ref(1)
 const pageSize = ref(10)
-
-const modalDetalleVisible = ref(false)
-const cotizacionSeleccionada = ref(null)
-const aceptando = ref(false)
 
 const cotizacionesFiltradas = computed(() => {
   return cotizaciones.value.filter(c => {
@@ -479,7 +323,11 @@ function formatRegimen(reg) {
 }
 
 function formatPago(pago) {
-  if (!pago) return 'SIN PAGO'
+  if (!pago || pago === 'SIN_PAGO') return 'SIN PAGO'
+  if (pago === 'PENDIENTE') return 'PAGO PENDIENTE'
+  if (pago === 'PENDIENTE_REVISION') return 'EN REVISIÓN'
+  if (pago === 'ADELANTO_APROBADO') return 'ADELANTO VALIDADO'
+  if (pago === 'OBSERVADO') return 'PAGO OBSERVADO'
   return pago.replace('_', ' ')
 }
 
@@ -496,47 +344,36 @@ function getStatusClass(st) {
 function getPagoClass(pago) {
   switch (pago) {
     case 'PAGADO_TOTAL': return 'success'
+    case 'ADELANTO_APROBADO':
     case 'PAGADO_PARCIAL': return 'info'
+    case 'PENDIENTE': return 'warning'
+    case 'PENDIENTE_REVISION': return 'info'
+    case 'OBSERVADO':
+    case 'RECHAZADO':
+      return 'danger'
     default: return 'neutral'
   }
 }
 
 function verDetalle(c) {
-  cotizacionSeleccionada.value = c
-  modalDetalleVisible.value = true
+  if (!c) return
+  router.push(`/cotizaciones/${c.idCotizacion}`)
 }
 
-async function handleAceptarCotizacion(c) {
+function irAPagar(c) {
   if (!c) return
-  if (c.aceptadaPorCliente) {
-    showWarn('Esta cotización ya fue aceptada y autorizada previamente.')
-    return
-  }
-
-  const confirmed = await confirmAction({
-    header: 'Aceptar y Autorizar Despacho',
-    message: `¿Está seguro de autorizar la cotización ${c.codigoCotizacion} por un monto de $ ${formatCurrency(c.totalCotizado)} USD? Al aceptar, se iniciará el despacho aduanero.`,
-    icon: 'pi pi-check-circle',
-    acceptLabel: 'Autorizar Despacho',
-    rejectLabel: 'Cancelar',
-    acceptClass: 'p-button-success'
+  router.push({
+    path: '/pagos/registrar',
+    query: { tipo: 'COTIZACION', id: c.idCotizacion }
   })
+}
 
-  if (!confirmed) return
-
-  aceptando.value = true
-  try {
-    const res = await portalCotizacionService.aceptarCotizacion(c.idCotizacion)
-    if (res) {
-      modalDetalleVisible.value = false
-      showSuccess(`Cotización ${c.codigoCotizacion} aceptada con éxito. Se ha generado la orden de despacho.`, 'Operación Autorizada', 4000)
-      await cargarCotizaciones()
-    }
-  } catch (err) {
-    showError(err.response?.data?.message || 'Error al aceptar cotización')
-  } finally {
-    aceptando.value = false
-  }
+function irASubsanarPago(c) {
+  if (!c) return
+  router.push({
+    path: '/pagos',
+    query: { tab: 'historial', idCotizacion: c.idCotizacion }
+  })
 }
 </script>
 
@@ -898,6 +735,11 @@ async function handleAceptarCotizacion(c) {
   color: var(--color-info-text, var(--color-primary));
 }
 
+.pago-badge.warning {
+  color: var(--color-warning-text, #b78103);
+  font-weight: 700;
+}
+
 .pago-badge.neutral {
   color: var(--color-text-subtle);
 }
@@ -933,6 +775,86 @@ async function handleAceptarCotizacion(c) {
   background: var(--color-primary);
   color: var(--color-primary-text);
   border-color: var(--color-primary);
+}
+
+.actions-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.btn-table-action--pay {
+  background: var(--color-warning-bg);
+  color: var(--color-warning-text);
+  border-color: var(--color-warning-border);
+}
+
+.btn-table-action--pay:hover {
+  background: var(--color-accent-kicker, #9a7f60);
+  color: #ffffff;
+  border-color: var(--color-accent-kicker, #9a7f60);
+}
+
+.btn-table-action--observe {
+  background: var(--color-danger-bg);
+  color: var(--color-danger-text);
+  border-color: var(--color-danger-border);
+  font-weight: 700;
+}
+
+.btn-table-action--observe:hover {
+  background: var(--color-danger-border);
+  color: #ffffff;
+}
+
+.alert-box-pago-obs {
+  background: var(--color-danger-bg);
+  border: 1px solid var(--color-danger-border);
+  border-left: 4px solid var(--color-danger-text);
+  border-radius: var(--radius-md, 8px);
+  padding: 0.85rem 1rem;
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.alert-box-pago-obs .alert-obs-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--color-danger-text);
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.alert-box-pago-obs .alert-obs-message {
+  font-size: 0.8125rem;
+  color: var(--color-text-main);
+  margin: 0;
+  line-height: 1.45;
+}
+
+.btn-subsanar-modal {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: var(--color-danger-text);
+  color: #1e1e1b;
+  border: none;
+  padding: 0.45rem 0.85rem;
+  border-radius: var(--radius-sm, 6px);
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all var(--transition-fast, 0.15s ease);
+  margin-top: 0.25rem;
+}
+
+.btn-subsanar-modal:hover {
+  filter: brightness(1.15);
 }
 
 /* Modales */

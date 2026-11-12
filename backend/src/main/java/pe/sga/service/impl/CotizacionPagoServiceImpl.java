@@ -187,7 +187,7 @@ public class CotizacionPagoServiceImpl implements ICotizacionPagoService {
                                 + " ha sido verificado y aprobado por Finanzas. Su servicio queda expedito para la apertura del expediente aduanero.")
                         .tipo("PAGO")
                         .leido(false)
-                        .enlace("/pagos")
+                        .enlace("/pagos?tab=historial")
                         .fechaCreacion(LocalDateTime.now())
                         .build();
                 notificacionClienteRepository.save(notif);
@@ -214,7 +214,7 @@ public class CotizacionPagoServiceImpl implements ICotizacionPagoService {
                                 + "Motivo: " + motivo + ". Ingrese a la sección de Cobros y Pagos para subsanar el voucher o corregir los datos.")
                         .tipo("PAGO")
                         .leido(false)
-                        .enlace("/pagos")
+                        .enlace("/pagos?tab=historial&subsanarPago=" + pago.getIdPago())
                         .fechaCreacion(LocalDateTime.now())
                         .build();
                 notificacionClienteRepository.save(notif);
@@ -239,7 +239,7 @@ public class CotizacionPagoServiceImpl implements ICotizacionPagoService {
                                 + ") fue rechazado. Motivo: " + motivo + ". Ingrese al portal para regularizar su pago.")
                         .tipo("PAGO")
                         .leido(false)
-                        .enlace("/pagos")
+                        .enlace("/pagos?tab=historial&subsanarPago=" + pago.getIdPago())
                         .fechaCreacion(LocalDateTime.now())
                         .build();
                 notificacionClienteRepository.save(notif);
@@ -354,7 +354,7 @@ public class CotizacionPagoServiceImpl implements ICotizacionPagoService {
                 .fechaOperacion(p.getFechaOperacion())
                 .idDocumentoComprobante(p.getDocumentoComprobante() != null ? p.getDocumentoComprobante().getIdDocumento() : null)
                 .documentoComprobanteNombre(p.getDocumentoComprobante() != null ? p.getDocumentoComprobante().getNombreOriginal() : null)
-                .documentoComprobanteUrl(p.getDocumentoComprobante() != null ? p.getDocumentoComprobante().getRutaAlmacenamiento() : null)
+                .documentoComprobanteUrl(p.getDocumentoComprobante() != null ? "/api/v1/documentos/" + p.getDocumentoComprobante().getIdDocumento() + "/preview" : null)
                 .estadoPago(p.getEstadoPago())
                 .idUsuarioFinanzas(p.getUsuarioFinanzas() != null ? p.getUsuarioFinanzas().getIdUsuario() : null)
                 .usuarioFinanzasNombre(p.getUsuarioFinanzas() != null ? p.getUsuarioFinanzas().getNombreCompleto() : null)

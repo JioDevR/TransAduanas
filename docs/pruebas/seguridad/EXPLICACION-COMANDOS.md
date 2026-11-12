@@ -2,11 +2,11 @@
 
 ## Descargar el proyecto
 
-Descarga la rama de seguridad de GitHub y abre la carpeta del proyecto en la terminal.
+Si aún no tienes el proyecto, descarga el repositorio. Si ya existe en `Music\TransAduanas`, abre esa carpeta y usa la preparación común de CAPTURAS.md.
 
 ## Actualizar el proyecto
 
-Cambia a la rama de seguridad y descarga los cambios publicados para trabajar con la versión actualizada.
+Comprueba la rama actual antes de actualizar el repositorio. Los scripts incluidos se pueden ejecutar sin cambiar a la rama histórica de seguridad.
 
 ## Comprobar las versiones
 

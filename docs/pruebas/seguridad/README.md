@@ -18,50 +18,48 @@ Los usuarios y empresas son ficticios. María Salas de la Torre tiene el rol de 
 
 La prueba general ejecutó 34 casos sin Postman. Pasaron 31 y se reprodujeron tres hallazgos. Consulta [los archivos que controlan la seguridad](ARCHIVOS-SEGURIDAD.md) y [los comandos para tomar capturas](CAPTURAS.md). MySQL se probó aparte. Las pruebas HTTP, de navegador y de sistema usan H2. Los reportes de ffuf, ZAP pasivo y dependencias siguen disponibles.
 
-## 1. Abre la rama y verifica las versiones
+## 1. Abre el proyecto y verifica las versiones
 
-En VS Code, abre la **carpeta principal de TransAduanas**, la que contiene `backend` y `app-sga`. Abre **Terminal → Nueva terminal** y elige **PowerShell**. Ejecuta:
+En VS Code, abre la carpeta principal de TransAduanas, la que contiene `backend` y `app-sga`. Abre **Terminal → Nueva terminal**, elige **PowerShell** y ejecuta:
 
 ```powershell
-git fetch origin
-if ($LASTEXITCODE -ne 0) { throw 'No se pudo consultar origin.' }
-git switch pruebas/seguridad-transaduanas
-if ($LASTEXITCODE -ne 0) { throw 'No se pudo cambiar de rama.' }
-git pull --ff-only origin pruebas/seguridad-transaduanas
-if ($LASTEXITCODE -ne 0) { throw 'No se pudo actualizar la rama.' }
+Set-Location -LiteralPath "$env:USERPROFILE\Music\TransAduanas" -ErrorAction Stop
 git branch --show-current
 java -version
 node -v
 npm.cmd -v
 ```
 
-La rama debe ser `pruebas/seguridad-transaduanas`. Usa **JDK 21** y **Node.js 24**. Si `git switch` se detiene por cambios locales, guárdalos antes de cambiar de rama. Si acabas de instalar Java o Node, cierra VS Code y ábrelo otra vez para actualizar el PATH.
+Usa **JDK 21** y **Node.js 24**. No necesitas cambiar a la rama histórica de seguridad para ejecutar los scripts incluidos en este proyecto. Si lo guardaste en otra carpeta, ajusta la ruta de este bloque y `$raiz` en los siguientes. Si acabas de instalar Java o Node, cierra VS Code y ábrelo otra vez para actualizar el PATH.
 
 ## 2. Compila el backend y prepara el classpath
 
-Pega este bloque desde la **carpeta principal**. Maven necesita Internet la primera vez. Deja abierta la misma terminal para los pasos siguientes, porque usan las variables de este bloque.
+Pega este bloque en PowerShell. Usa el proyecto existente en `$env:USERPROFILE\Music\TransAduanas`; ajusta `$raiz` si lo guardaste en otra carpeta. Maven necesita Internet la primera vez. Deja abierta la misma terminal para los pasos siguientes, porque usan las variables de este bloque.
 
 ```powershell
-$raiz = (Get-Location).Path
-$backend = (Resolve-Path .\backend -ErrorAction Stop).Path
-$kit = (Resolve-Path .\docs\pruebas\seguridad -ErrorAction Stop).Path
-$resultado = Join-Path $backend 'target\seguridad-local'
-New-Item -ItemType Directory -Path $resultado -Force | Out-Null
-$archivoDeps = Join-Path $resultado 'dependencias.txt'
-$cp = Join-Path $resultado 'classpath-local.txt'
+. {
+    $raiz = "$env:USERPROFILE\Music\TransAduanas"
+    $backend = Join-Path $raiz 'backend'
+    $kit = Join-Path $raiz 'docs\pruebas\seguridad'
+    $script = Join-Path $kit 'seguridad-http.mjs'
+    if (-not (Test-Path -LiteralPath $script -PathType Leaf)) {
+        throw "No encontré $script. Corrige la ruta de la primera asignación."
+    }
 
-Set-Location $backend
-.\mvnw.cmd -v
-if ($LASTEXITCODE -ne 0) { throw 'El Maven Wrapper no arrancó. Revisa el error de arriba.' }
+    $resultado = Join-Path $backend 'target\seguridad-local'
+    New-Item -ItemType Directory -Path $resultado -Force -ErrorAction Stop | Out-Null
+    $archivoDeps = Join-Path $resultado 'dependencias.txt'
+    $cp = Join-Path $resultado 'classpath-local.txt'
 
-.\mvnw.cmd -B compile dependency:build-classpath "-DincludeScope=test" "-Dmdep.outputFile=$archivoDeps"
-if ($LASTEXITCODE -ne 0) { throw 'Maven falló. Corrige el primer error antes de ejecutar las pruebas.' }
-
-$deps = (Get-Content -LiteralPath $archivoDeps -Raw -ErrorAction Stop).Trim()
-"$backend\target\classes;$deps" | Set-Content -LiteralPath $cp -Encoding utf8
+    Set-Location -LiteralPath $backend -ErrorAction Stop
+    .\mvnw.cmd -B compile dependency:build-classpath "-DincludeScope=test" "-Dmdep.outputFile=$archivoDeps"
+    if ($LASTEXITCODE -ne 0) { throw 'Maven falló. Revisa el primer ERROR de la salida.' }
+    $deps = (Get-Content -LiteralPath $archivoDeps -Raw -ErrorAction Stop).Trim()
+    "$backend\target\classes;$deps" | Set-Content -LiteralPath $cp -Encoding utf8 -ErrorAction Stop
+}
 ```
 
-Verifica que Maven muestre **Java 21** y termine con **BUILD SUCCESS**. El alcance `test` del classpath incluye H2. Si Maven está usando otro JDK, verifica `$env:JAVA_HOME` y vuelve a ejecutar `.\mvnw.cmd -v` antes de compilar.
+Verifica que la compilación termine con **BUILD SUCCESS**. El alcance `test` del classpath incluye H2. Si Maven está usando otro JDK, verifica `$env:JAVA_HOME` y vuelve a ejecutar `.\mvnw.cmd -v` antes de compilar.
 
 ## 3. Ejecuta los 10 casos HTTP
 
@@ -136,7 +134,7 @@ Un código `1` acompañado de un informe válido indica que npm encontró alerta
 
 ```powershell
 & {
-    $raiz = "$env:USERPROFILE\Music\TransAduanas-seguridad"
+    $raiz = "$env:USERPROFILE\Music\TransAduanas"
     $script = Join-Path $raiz 'docs\pruebas\seguridad\check-config.py'
     $resultado = Join-Path $raiz 'backend\target\seguridad-local'
 

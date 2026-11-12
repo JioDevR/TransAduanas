@@ -1,28 +1,22 @@
 # Capturas de seguridad en Windows
 
-Desde la carpeta donde quieres guardar el repositorio, ejecuta en PowerShell:
+Para el proyecto existente en `$env:USERPROFILE\Music\TransAduanas`, abre PowerShell y ejecuta:
 
 ```powershell
-git clone --branch pruebas/seguridad-transaduanas --single-branch https://github.com/JioDevR/TransAduanas.git TransAduanas-seguridad
-cd .\TransAduanas-seguridad
+Set-Location -LiteralPath "$env:USERPROFILE\Music\TransAduanas"
 ```
 
-Abre el clon en VS Code. Si ya lo tenías, abre PowerShell en la carpeta del proyecto y actualiza la rama:
-
-```powershell
-git switch pruebas/seguridad-transaduanas
-git pull --ff-only origin pruebas/seguridad-transaduanas
-```
+No necesitas volver a clonar el repositorio para ejecutar estas pruebas. Si guardaste el proyecto en otra carpeta, ajusta `$raiz` en la preparación común.
 
 ## Preparación común
 
-Usa PowerShell con JDK 21 y Node.js 24. El bloque prepara las variables y compila con Maven. Cambia la primera ruta si guardaste el clon en otra carpeta. Ejecuta este bloque una vez por terminal, incluso si vas directo a Postman.
+Usa PowerShell con JDK 21 y Node.js 24. El bloque prepara las variables y compila con Maven. Cambia la primera ruta si guardaste el proyecto en otra carpeta. Ejecuta este bloque una vez por terminal, incluso si vas directo a Postman.
 
 La primera compilación puede descargar Maven y las dependencias del proyecto. Continúa cuando aparezca `BUILD SUCCESS`.
 
 ```powershell
 . {
-    $raiz = "$env:USERPROFILE\Music\TransAduanas-seguridad"
+    $raiz = "$env:USERPROFILE\Music\TransAduanas"
     $backend = Join-Path $raiz 'backend'
     $kit = Join-Path $raiz 'docs\pruebas\seguridad'
     $script = Join-Path $kit 'seguridad-http.mjs'
@@ -42,6 +36,8 @@ La primera compilación puede descargar Maven y las dependencias del proyecto. C
     "$backend\target\classes;$deps" | Set-Content -LiteralPath $cp -Encoding utf8 -ErrorAction Stop
 }
 ```
+
+La preparación solo compila y crea el classpath; ejecuta después el bloque del apartado Backend para iniciar las pruebas. El comando correcto es `.\mvnw.cmd`, sin una barra entre `mvnw` y `.cmd`.
 
 Si Node muestra `Cannot find module 'C:\seguridad-http.mjs'`, vuelve a pegar la preparación completa en esa terminal y continúa con el apartado que necesitas.
 

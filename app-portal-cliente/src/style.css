@@ -1106,37 +1106,6 @@ textarea.textarea-input:disabled {
   box-shadow: 0 0 0 3px rgba(214, 180, 118, 0.15) !important;
 }
 
-/* Modales BaseModal */
-.dark-theme .base-modal {
-  background: rgba(0, 0, 0, 0.65);
-}
-
-.dark-theme .base-modal__header {
-  background: #1c1814;
-  border-bottom-color: var(--color-border-subtle);
-}
-
-.dark-theme .base-modal__icon {
-  background: #2a231d;
-  color: var(--color-primary);
-  border-color: var(--color-border);
-}
-
-.dark-theme .base-modal__close:hover:not(:disabled) {
-  background: #2c251e;
-  color: var(--color-text-main);
-}
-
-.dark-theme .btn-modal-cancel {
-  background: #241f1a;
-  border-color: var(--color-border);
-  color: var(--color-text-main);
-}
-
-.dark-theme .btn-modal-cancel:hover:not(:disabled) {
-  background: #2e2821;
-}
-
 /* PrimeVue Diálogos */
 .dark-theme .p-dialog {
   background: var(--color-bg-surface) !important;
@@ -1163,9 +1132,7 @@ textarea.textarea-input:disabled {
    ========================================================================== */
 .table-card,
 .data-table-container,
-.content-table-card,
-.flota-table-card,
-.conductores-table-card {
+.content-table-card {
   background: var(--color-bg-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg, 12px);
@@ -1322,9 +1289,7 @@ textarea.textarea-input:disabled {
 /* Modificadores Modo Oscuro: Tablas & Paginador */
 .dark-theme .table-card,
 .dark-theme .data-table-container,
-.dark-theme .content-table-card,
-.dark-theme .flota-table-card,
-.dark-theme .conductores-table-card {
+.dark-theme .content-table-card {
   background: var(--color-bg-surface) !important;
   border-color: var(--color-border) !important;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4) !important;
@@ -1475,74 +1440,6 @@ textarea.textarea-input:disabled {
 .dark-theme .page-nav-btn:hover:not(:disabled) {
   background: var(--color-bg-muted) !important;
   border-color: var(--color-border-strong) !important;
-}
-
-/* Layout y Sidebar */
-.dark-theme .app-topbar {
-  background: var(--color-bg-base);
-  border-bottom-color: var(--color-border);
-}
-
-.dark-theme .user-profile-header:hover,
-.dark-theme .user-profile-header.active {
-  background: var(--color-bg-subtle);
-}
-
-.dark-theme .user-dropdown-panel {
-  background: var(--color-bg-surface);
-  border-color: var(--color-border);
-  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.5);
-}
-
-.dark-theme .dropdown-header {
-  background: var(--color-bg-subtle);
-  border-bottom-color: var(--color-border-subtle);
-}
-
-.dark-theme .dropdown-divider {
-  background: var(--color-border);
-}
-
-.dark-theme .sidebar-module-selector-card {
-  background: var(--color-bg-subtle);
-  border-color: var(--color-border);
-}
-
-.dark-theme .module-custom-select {
-  background: var(--color-bg-surface);
-  border-color: var(--color-border);
-  color: var(--color-text-main);
-}
-
-.dark-theme .static-module-pill {
-  background: var(--color-bg-surface);
-  border-color: var(--color-border);
-  color: var(--color-text-main);
-}
-
-.dark-theme .nav-sub-btn {
-  color: var(--color-text-muted);
-}
-
-.dark-theme .nav-sub-btn .nav-num {
-  background: var(--color-bg-muted);
-  color: var(--color-accent-kicker);
-}
-
-.dark-theme .nav-sub-btn:hover {
-  background: var(--color-bg-subtle);
-  color: var(--color-text-main);
-}
-
-.dark-theme .nav-sub-btn.active {
-  background: var(--color-primary);
-  color: var(--color-primary-text);
-  border-color: var(--color-primary);
-}
-
-.dark-theme .nav-sub-btn.active .nav-num {
-  background: rgba(29, 27, 21, 0.25);
-  color: var(--color-primary-text);
 }
 
 /* Scrollbar en modo oscuro */

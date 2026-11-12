@@ -495,6 +495,11 @@ import { portalPagoService } from '../services/portalPagoService'
 import { useNotification } from '@/shared/composables/useNotification'
 import { openBlobInNewTab } from '@/shared/utils/download'
 import BasePagination from '@/shared/components/BasePagination.vue'
+import {
+  formatCurrency,
+  formatEstadoPago,
+  getPagoStatusClass
+} from '@/shared/utils/formatters'
 
 const router = useRouter()
 const route = useRoute()
@@ -672,34 +677,6 @@ function subsanarAbonoCotizacion(o) {
 function irASubsanarPago(idPago) {
   if (!idPago) return
   router.push(`/pagos/subsanar/${idPago}`)
-}
-
-function formatCurrency(val) {
-  if (val == null) return '0.00'
-  return Number(val).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-}
-
-function formatEstadoPago(pago) {
-  if (!pago) return 'PENDIENTE'
-  return pago.replace('_', ' ')
-}
-
-function getPagoStatusClass(st) {
-  switch (st) {
-    case 'PAGADO':
-    case 'CONCILIADO':
-    case 'PAGADO_TOTAL':
-      return 'success'
-    case 'PENDIENTE':
-    case 'REGISTRADO':
-    case 'PAGADO_PARCIAL':
-      return 'warning'
-    case 'OBSERVADO':
-    case 'RECHAZADO':
-      return 'danger'
-    default:
-      return 'neutral'
-  }
 }
 
 function irARegistrarPago(tipo, id) {

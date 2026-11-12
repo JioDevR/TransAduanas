@@ -174,33 +174,7 @@ describe('portal-cliente authStore', () => {
     })
   })
 
-  describe('Perfil y Cambio de Contraseña', () => {
-    it('fetchPerfil no ejecuta llamado si no hay token', async () => {
-      const auth = useAuthStore()
-      await auth.fetchPerfil()
-      expect(apiClient.get).not.toHaveBeenCalled()
-    })
-
-    it('fetchPerfil actualiza usuario y localStorage si hay token', async () => {
-      storage['sga_portal_token'] = 'active-token'
-      storage['sga_portal_user'] = JSON.stringify({ idUsuarioCliente: 1, username: 'demo' })
-      const auth = useAuthStore()
-
-      apiClient.get.mockResolvedValueOnce({
-        data: {
-          data: { direccion: 'Av. Las Palmas 123', telefono: '999888777' }
-        }
-      })
-
-      await auth.fetchPerfil()
-
-      expect(auth.user.direccion).toBe('Av. Las Palmas 123')
-      expect(global.localStorage.setItem).toHaveBeenCalledWith(
-        'sga_portal_user',
-        expect.stringContaining('Av. Las Palmas 123')
-      )
-    })
-
+  describe('Cambio de Contraseña', () => {
     it('cambiarPassword actualiza debeCambiarPassword y guarda en storage', async () => {
       storage['sga_portal_token'] = 'active-token'
       storage['sga_portal_user'] = JSON.stringify({ idUsuarioCliente: 1, debeCambiarPassword: true })

@@ -66,20 +66,6 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  async function fetchPerfil() {
-    if (!token.value) return
-    try {
-      const response = await apiClient.get('/portal/perfil')
-      if (response.data?.data) {
-        const perfil = response.data.data
-        user.value = { ...user.value, ...perfil }
-        localStorage.setItem('sga_portal_user', JSON.stringify(user.value))
-      }
-    } catch (err) {
-      console.error('Error al actualizar perfil de cliente', err)
-    }
-  }
-
   async function cambiarPassword(passwordActual, nuevaPassword) {
     loading.value = true
     error.value = null
@@ -119,7 +105,6 @@ export const useAuthStore = defineStore('auth', () => {
     ruc,
     usuarioNombre,
     login,
-    fetchPerfil,
     cambiarPassword,
     logout
   }

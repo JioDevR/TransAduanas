@@ -370,6 +370,14 @@ import { portalCotizacionService } from '../services/portalCotizacionService'
 import { useNotification } from '@/shared/composables/useNotification'
 import { useConfirmation } from '@/shared/composables/useConfirmation'
 import PortalDocumentosUploadPanel from '../components/PortalDocumentosUploadPanel.vue'
+import { esPendienteLiquidacion } from '../utils/portalCotizacionFormUtils'
+import {
+  formatCurrency,
+  formatRegimen,
+  formatEstadoPago as formatPago,
+  getCotizacionStatusClass as getStatusClass,
+  getPagoStatusClass as getPagoClass
+} from '@/shared/utils/formatters'
 
 const router = useRouter()
 const route = useRoute()
@@ -473,54 +481,6 @@ async function autorizarCotizacion() {
 
 function imprimirCotizacion() {
   window.print()
-}
-
-function esPendienteLiquidacion(c) {
-  if (!c) return false
-  return c.estado === 'PENDIENTE' || !c.totalCotizado || Number(c.totalCotizado) === 0
-}
-
-function formatCurrency(val) {
-  if (val == null) return '0.00'
-  return Number(val).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-}
-
-function formatRegimen(reg) {
-  if (!reg) return 'IMPORTACION DEFINITIVA'
-  return reg.replace('_', ' ')
-}
-
-function formatPago(pago) {
-  if (!pago || pago === 'SIN_PAGO') return 'SIN PAGO'
-  if (pago === 'PENDIENTE') return 'PAGO PENDIENTE'
-  if (pago === 'PENDIENTE_REVISION') return 'EN REVISIÓN'
-  if (pago === 'ADELANTO_APROBADO') return 'ADELANTO VALIDADO'
-  if (pago === 'OBSERVADO') return 'PAGO OBSERVADO'
-  return pago.replace('_', ' ')
-}
-
-function getStatusClass(st) {
-  switch (st) {
-    case 'APROBADA': return 'success'
-    case 'PENDIENTE': return 'warning'
-    case 'OBSERVADA': return 'danger'
-    case 'RECHAZADA': return 'danger'
-    default: return 'neutral'
-  }
-}
-
-function getPagoClass(pago) {
-  switch (pago) {
-    case 'PAGADO_TOTAL': return 'success'
-    case 'ADELANTO_APROBADO':
-    case 'PAGADO_PARCIAL': return 'info'
-    case 'PENDIENTE': return 'warning'
-    case 'PENDIENTE_REVISION': return 'info'
-    case 'OBSERVADO':
-    case 'RECHAZADO':
-      return 'danger'
-    default: return 'neutral'
-  }
 }
 </script>
 

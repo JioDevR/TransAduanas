@@ -146,6 +146,8 @@
 </template>
 
 <script setup>
+import { formatCurrency, formatRegimen } from '@/shared/utils/formatters'
+
 const props = defineProps({
   form: {
     type: Object,
@@ -187,14 +189,12 @@ const props = defineProps({
 
 const getRegimenText = (regimen) => {
   if (props.getRegimenLabel) return props.getRegimenLabel(regimen)
-  if (regimen === 'IMPORTACION_DEFINITIVA') return 'Importación para el Consumo'
-  if (regimen === 'EXPORTACION_DEFINITIVA') return 'Exportación Definitiva'
-  return regimen || '—'
+  return formatRegimen(regimen) || '—'
 }
 
 const formatVal = (val) => {
   if (props.formatNumber) return props.formatNumber(val)
-  return Number(val || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+  return formatCurrency(val)
 }
 </script>
 

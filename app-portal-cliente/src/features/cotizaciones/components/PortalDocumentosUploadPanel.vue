@@ -288,6 +288,7 @@ import Tag from 'primevue/tag'
 import { portalCotizacionService } from '../services/portalCotizacionService'
 import { downloadBlob, openBlobInNewTab } from '@/shared/utils/download'
 import { useNotification } from '@/shared/composables/useNotification'
+import { formatBytes, formatDateTime } from '@/shared/utils/formatters'
 import { CATEGORIAS_DOCUMENTO } from '../utils/portalCotizacionFormUtils'
 
 const props = defineProps({
@@ -507,30 +508,6 @@ function getFileIconClass(filename = '') {
   if (['xlsx', 'xls', 'csv'].includes(ext)) return 'pi pi-file-excel'
   if (['doc', 'docx'].includes(ext)) return 'pi pi-file-word'
   return 'pi pi-file'
-}
-
-function formatBytes(bytes) {
-  if (!bytes || isNaN(bytes)) return '0 B'
-  const k = 1024
-  const sizes = ['B', 'KB', 'MB', 'GB']
-  const i = Math.floor(Math.log(bytes) / Math.log(k))
-  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i] || 'B'}`
-}
-
-function formatDateTime(val) {
-  if (!val) return '—'
-  try {
-    const d = new Date(val)
-    return d.toLocaleString('es-PE', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    })
-  } catch {
-    return val
-  }
 }
 </script>
 

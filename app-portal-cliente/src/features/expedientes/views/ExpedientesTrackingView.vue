@@ -596,6 +596,11 @@ import BaseModal from '@/shared/components/BaseModal.vue'
 import { portalExpedienteService } from '../services/portalExpedienteService'
 import { useNotification } from '@/shared/composables/useNotification'
 import { downloadBlob, openBlobInNewTab } from '@/shared/utils/download'
+import {
+  formatBytes as formatFileSize,
+  formatDate,
+  formatDateTime
+} from '@/shared/utils/formatters'
 
 const { showSuccess, showError } = useNotification()
 
@@ -818,23 +823,6 @@ function getDocumentIcon(mime) {
   if (mime.includes('image')) return 'pi pi-image'
   if (mime.includes('sheet') || mime.includes('excel')) return 'pi pi-file-excel'
   return 'pi pi-file'
-}
-
-function formatFileSize(bytes) {
-  if (!bytes) return '0 KB'
-  const kb = bytes / 1024
-  if (kb < 1024) return `${kb.toFixed(1)} KB`
-  return `${(kb / 1024).toFixed(2)} MB`
-}
-
-function formatDate(dt) {
-  if (!dt) return '-'
-  return dt.substring(0, 10)
-}
-
-function formatDateTime(dt) {
-  if (!dt) return '-'
-  return dt.replace('T', ' ').substring(0, 16)
 }
 
 function getCanalDescription(canal) {

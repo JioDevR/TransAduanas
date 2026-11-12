@@ -1,5 +1,19 @@
 import apiClient from '@/core/api/apiClient'
 
+export async function descargarDocumentoBlob(idDocumento) {
+  const response = await apiClient.get(`/documentos/${idDocumento}/descargar`, {
+    responseType: 'blob'
+  })
+  return response.data
+}
+
+export async function previsualizarDocumentoBlob(idDocumento) {
+  const response = await apiClient.get(`/documentos/${idDocumento}/preview`, {
+    responseType: 'blob'
+  })
+  return response.data
+}
+
 /**
  * Servicio de dominio para el módulo de Cotizaciones del Portal del Cliente B2B.
  */
@@ -148,24 +162,14 @@ export const portalCotizacionService = {
    * @param {number|string} idDocumento - ID del documento
    * @returns {Promise<Blob>}
    */
-  async descargarDocumento(idDocumento) {
-    const response = await apiClient.get(`/documentos/${idDocumento}/descargar`, {
-      responseType: 'blob'
-    })
-    return response.data
-  },
+  descargarDocumento: descargarDocumentoBlob,
 
   /**
    * Obtiene el binario de un documento para su previsualización inline en navegador.
    * @param {number|string} idDocumento - ID del documento
    * @returns {Promise<Blob>}
    */
-  async previsualizarDocumento(idDocumento) {
-    const response = await apiClient.get(`/documentos/${idDocumento}/preview`, {
-      responseType: 'blob'
-    })
-    return response.data
-  }
+  previsualizarDocumento: previsualizarDocumentoBlob
 }
 
 export default portalCotizacionService

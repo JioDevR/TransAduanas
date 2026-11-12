@@ -216,6 +216,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { portalNotificationService } from '../services/portalNotificationService'
 import { useNotification } from '@/shared/composables/useNotification'
 import BasePagination from '@/shared/components/BasePagination.vue'
+import { formatDateTime as formatFecha } from '@/shared/utils/formatters'
 
 const { showSuccess, showError } = useNotification()
 
@@ -367,22 +368,6 @@ function getTipoLabel(tipo) {
       return 'Seguridad'
     default:
       return 'Aviso General'
-  }
-}
-
-function formatFecha(fechaStr) {
-  if (!fechaStr) return '-'
-  try {
-    const d = new Date(fechaStr)
-    return d.toLocaleString('es-PE', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    })
-  } catch {
-    return fechaStr
   }
 }
 

@@ -362,6 +362,13 @@ import { useRoute, useRouter } from 'vue-router'
 import { portalPagoService } from '../services/portalPagoService'
 import { useNotification } from '@/shared/composables/useNotification'
 import { openBlobInNewTab, downloadBlob } from '@/shared/utils/download'
+import {
+  formatCurrency,
+  formatEstadoPago as formatEstado,
+  formatDateTime as formatFechaCompleta,
+  formatBytes as formatFileSize,
+  validarArchivoVoucher
+} from '@/shared/utils/formatters'
 
 const route = useRoute()
 const router = useRouter()
@@ -381,9 +388,6 @@ const form = ref({
   numeroOperacion: '',
   observaciones: ''
 })
-
-const MAX_FILE_SIZE = 10 * 1024 * 1024
-const ALLOWED_MIME_TYPES = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp']
 
 onMounted(async () => {
   await cargarPago()
@@ -419,22 +423,9 @@ async function cargarPago() {
   }
 }
 
-function validarArchivo(file) {
-  if (!file) return false
-  if (file.size > MAX_FILE_SIZE) {
-    showWarn('El archivo excede el tamaño máximo permitido de 10 MB.')
-    return false
-  }
-  if (!ALLOWED_MIME_TYPES.includes(file.type)) {
-    showWarn('Solo se permiten archivos en formato PDF, PNG, JPG o WEBP.')
-    return false
-  }
-  return true
-}
-
 function onArchivoSeleccionado(e) {
   const file = e.target.files?.[0]
-  if (file && validarArchivo(file)) {
+  if (file && validarArchivoVoucher(file, showWarn)) {
     nuevoArchivo.value = file
   } else if (file) {
     e.target.value = ''
@@ -444,7 +435,7 @@ function onArchivoSeleccionado(e) {
 function onDropArchivo(e) {
   isDragging.value = false
   const file = e.dataTransfer?.files?.[0]
-  if (file && validarArchivo(file)) {
+  if (file && validarArchivoVoucher(file, showWarn)) {
     nuevoArchivo.value = file
   }
 }
@@ -546,40 +537,6 @@ function volver() {
 
 function verCotizacion(idCotizacion) {
   router.push(`/cotizaciones/${idCotizacion}`)
-}
-
-function formatCurrency(val) {
-  if (val == null) return '0.00'
-  return Number(val).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-}
-
-function formatEstado(estado) {
-  if (!estado) return 'OBSERVADO'
-  return estado.replace('_', ' ')
-}
-
-function formatFechaCompleta(fechaStr) {
-  if (!fechaStr) return 'N/A'
-  try {
-    const d = new Date(fechaStr)
-    return d.toLocaleString('es-PE', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit'
-    })
-  } catch {
-    return fechaStr
-  }
-}
-
-function formatFileSize(bytes) {
-  if (!bytes) return '0 B'
-  const k = 1024
-  const sizes = ['B', 'KB', 'MB', 'GB']
-  const i = Math.floor(Math.log(bytes) / Math.log(k))
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
 }
 </script>
 

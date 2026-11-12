@@ -1,4 +1,8 @@
 import apiClient from '@/core/api/apiClient'
+import {
+  descargarDocumentoBlob,
+  previsualizarDocumentoBlob
+} from '@/features/cotizaciones/services/portalCotizacionService'
 
 /**
  * Servicio de dominio para Cobros, Pagos y Conciliación Financiera en el Portal del Cliente.
@@ -38,14 +42,6 @@ export const portalPagoService = {
   },
 
   /**
-   * Lista las liquidaciones finales de despacho aduanero.
-   */
-  async listarLiquidaciones() {
-    const response = await apiClient.get('/portal/pagos/liquidaciones')
-    return response.data?.data || []
-  },
-
-  /**
    * Sube un archivo de voucher bancario / comprobante de pago.
    * @param {File|Blob} file
    */
@@ -56,40 +52,6 @@ export const portalPagoService = {
       headers: { 'Content-Type': 'multipart/form-data' }
     })
     return response.data?.data || response.data
-  },
-
-  /**
-   * Registra un pago / voucher bancario. Soporta tanto payload JSON como FormData con archivo.
-   * @param {Object|FormData} payload
-   */
-  async registrarPago(payload) {
-    // Si viene como FormData con archivo
-    if (payload instanceof FormData) {
-      const file = payload.get('file') || payload.get('comprobante')
-      let idDocumentoComprobante = payload.get('idDocumentoComprobante')
-
-      if (file && file instanceof File && !idDocumentoComprobante) {
-        const docRes = await this.subirComprobante(file)
-        idDocumentoComprobante = docRes?.idDocumento || docRes?.id
-      }
-
-      const jsonPayload = {
-        tipoObligacion: payload.get('tipoObligacion'),
-        idReferencia: payload.get('idReferencia') ? Number(payload.get('idReferencia')) : (payload.get('idReferenciaObligacion') ? Number(payload.get('idReferenciaObligacion')) : null),
-        montoAbonado: payload.get('montoAbonado') ? Number(payload.get('montoAbonado')) : (payload.get('monto') ? Number(payload.get('monto')) : null),
-        moneda: payload.get('moneda') || 'USD',
-        metodoPago: payload.get('metodoPago') || 'TRANSFERENCIA_BANCARIA',
-        bancoOrigen: payload.get('bancoOrigen') || '',
-        bancoDestino: payload.get('bancoDestino') || 'BCP Dolares TransAduanas',
-        numeroOperacion: payload.get('numeroOperacion') || '',
-        fechaOperacion: payload.get('fechaOperacion') || payload.get('fechaPago'),
-        idDocumentoComprobante: idDocumentoComprobante ? Number(idDocumentoComprobante) : null,
-        observaciones: payload.get('observaciones') || ''
-      }
-      return this.registrarVoucher(jsonPayload)
-    }
-
-    return this.registrarVoucher(payload)
   },
 
   /**
@@ -176,23 +138,13 @@ export const portalPagoService = {
    * Descarga el archivo binario del comprobante de pago.
    * @param {number|string} idDocumento
    */
-  async descargarComprobante(idDocumento) {
-    const response = await apiClient.get(`/documentos/${idDocumento}/descargar`, {
-      responseType: 'blob'
-    })
-    return response.data
-  },
+  descargarComprobante: descargarDocumentoBlob,
 
   /**
    * Previsualiza el comprobante de pago en una pestaña o visor.
    * @param {number|string} idDocumento
    */
-  async previsualizarComprobante(idDocumento) {
-    const response = await apiClient.get(`/documentos/${idDocumento}/preview`, {
-      responseType: 'blob'
-    })
-    return response.data
-  }
+  previsualizarComprobante: previsualizarDocumentoBlob
 }
 
 export default portalPagoService

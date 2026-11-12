@@ -8,7 +8,6 @@ import { portalExpedienteService } from '../../services/portalExpedienteService'
 vi.mock('../../services/portalExpedienteService', () => ({
   portalExpedienteService: {
     listarExpedientes: vi.fn(),
-    obtenerDetalle: vi.fn(),
     listarDocumentosExpediente: vi.fn(),
     descargarDocumento: vi.fn(),
     previsualizarDocumento: vi.fn()

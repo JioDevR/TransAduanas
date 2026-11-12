@@ -396,6 +396,11 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { portalPagoService } from '../services/portalPagoService'
 import { useNotification } from '@/shared/composables/useNotification'
+import {
+  formatCurrency,
+  formatEstadoPago as formatEstado,
+  validarArchivoVoucher
+} from '@/shared/utils/formatters'
 
 const route = useRoute()
 const router = useRouter()
@@ -549,26 +554,10 @@ function onMontoManualInput() {
   }
 }
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024
-const ALLOWED_MIME_TYPES = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp']
-
-function validarArchivoVoucher(file) {
-  if (!file) return false
-  if (file.size > MAX_FILE_SIZE) {
-    showWarn('El archivo excede el tamaño máximo permitido de 10 MB.')
-    return false
-  }
-  if (!ALLOWED_MIME_TYPES.includes(file.type)) {
-    showWarn('Solo se permiten archivos en formato PDF, PNG, JPG o WEBP.')
-    return false
-  }
-  return true
-}
-
 function onFileSelected(e) {
   const file = e.target.files?.[0]
   if (file) {
-    if (!validarArchivoVoucher(file)) {
+    if (!validarArchivoVoucher(file, showWarn)) {
       e.target.value = ''
       return
     }
@@ -579,7 +568,7 @@ function onFileSelected(e) {
 function onFileDrop(e) {
   const file = e.dataTransfer?.files?.[0]
   if (file) {
-    if (!validarArchivoVoucher(file)) {
+    if (!validarArchivoVoucher(file, showWarn)) {
       return
     }
     archivoVoucher.value = file
@@ -639,16 +628,6 @@ async function confirmarYRegistrar() {
 
 function volver() {
   router.push('/pagos')
-}
-
-function formatCurrency(val) {
-  if (val == null) return '0.00'
-  return Number(val).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-}
-
-function formatEstado(st) {
-  if (!st) return 'PENDIENTE'
-  return st.replace(/_/g, ' ')
 }
 </script>
 

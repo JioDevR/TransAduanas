@@ -141,7 +141,13 @@ Un código `1` acompañado de un informe válido indica que npm encontró alerta
     if (-not (Test-Path -LiteralPath $script -PathType Leaf)) {
         throw "No encontré $script. Corrige la ruta del proyecto en la primera asignación."
     }
-    $python = Get-Command python -CommandType Application -ErrorAction Stop
+    # Seleccionar una sola instalación y omitir los alias de Microsoft Store.
+    $python = Get-Command python -CommandType Application -All -ErrorAction Stop |
+        Where-Object { $_.Source -notlike '*\Microsoft\WindowsApps\*' } |
+        Select-Object -First 1
+    if (-not $python) {
+        throw 'No encontré una instalación de Python en PATH. Instala Python 3 y vuelve a abrir la terminal.'
+    }
     New-Item -ItemType Directory -Path $resultado -Force -ErrorAction Stop |
         Out-Null
 

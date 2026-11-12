@@ -15,12 +15,7 @@
 
 ---
 
-## 1. ¿Qué es el Backend y qué problema resuelve? (Explicación para no técnicos)
-
-### La Analogía del Restaurante de Alta Cocina
-Imagina un restaurante exclusivo:
-- El **Frontend** (la pantalla que ve el usuario) es el salón comedor, la carta física y la amabilidad del mozo. Es lo visual, donde el cliente o el empleado hace clic y llena formularios.
-- El **Backend** es la cocina interna, el jefe de cocina (*chef*), la caja fuerte, el almacén de ingredientes y el contador. En la cocina no importa qué tan bonita sea la mesa: se comprueba que el dinero haya ingresado antes de ordenar al proveedor, se pesan las porciones con balanzas calibradas, se respetan las recetas al pie de la letra y se guardan registros para las inspecciones sanitarias y fiscales.
+## 1. ¿Qué es el Backend y qué problema resuelve? 
 
 ### El Problema Real que Resuelve en Aduanas y Transporte
 En el comercio exterior peruano (importaciones y exportaciones), las empresas se enfrentan a múltiples riesgos:

@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='utf-8'?>
+<testsuite name="pe.sga.functional.IntegrationPersistenceTest" time="0.404" tests="8" errors="0" skipped="0" failures="0">
+  <testcase name="IN01_crearPersisteDTO" classname="pe.sga.functional.IntegrationPersistenceTest" time="0.024" />
+  <testcase name="IN06_formalizarActualizaEstado" classname="pe.sga.functional.IntegrationPersistenceTest" time="0.034" />
+  <testcase name="IN05_reactivarRecuperaListado" classname="pe.sga.functional.IntegrationPersistenceTest" time="0.032" />
+  <testcase name="IN04_bajaLogicaConservaFila" classname="pe.sga.functional.IntegrationPersistenceTest" time="0.039" />
+  <testcase name="IN02_actualizarPersiste" classname="pe.sga.functional.IntegrationPersistenceTest" time="0.02" />
+  <testcase name="IN07_rollbackNoPersiste" classname="pe.sga.functional.IntegrationPersistenceTest" time="0.021" />
+  <testcase name="IN08_filtroConsultaSQL" classname="pe.sga.functional.IntegrationPersistenceTest" time="0.04" />
+  <testcase name="IN03_documentoDuplicadoNoInserta" classname="pe.sga.functional.IntegrationPersistenceTest" time="0.034" />
+</testsuite>

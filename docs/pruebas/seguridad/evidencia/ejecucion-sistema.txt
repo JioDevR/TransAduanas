@@ -1,0 +1,8 @@
+SIS01 Pasó | HTTP 200 y 200, empresas 3 y 4
+SIS02 Pasó | HTTP 403
+SIS03 Pasó | HTTP 403
+SIS04 Pasó | baja HTTP 403, perfil HTTP 200
+SIS05 Pasó | baja HTTP 200, perfil HTTP 401
+SIS06 Pasó | HTTP 401
+SIS07 Pasó | reactivación HTTP 200, login HTTP 200, perfil HTTP 200
+SIS08 Pasó | Diego HTTP 403, Ana HTTP 200

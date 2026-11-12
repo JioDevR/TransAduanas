@@ -1,0 +1,23 @@
+<?xml version='1.0' encoding='utf-8'?>
+<testsuite name="pe.sga.controller.ControllerFunctionalTest" time="0.057" tests="20" errors="0" skipped="0" failures="0">
+  <testcase name="CP03_meSinPrincipal" classname="pe.sga.controller.ControllerFunctionalTest" time="0.002" />
+  <testcase name="CP05_filtroCliente" classname="pe.sga.controller.ControllerFunctionalTest" time="0.0" />
+  <testcase name="CP19_anularCotizacion" classname="pe.sga.controller.ControllerFunctionalTest" time="0.001" />
+  <testcase name="CP02_login" classname="pe.sga.controller.ControllerFunctionalTest" time="0.001" />
+  <testcase name="CP08_filtroCliente" classname="pe.sga.controller.ControllerFunctionalTest" time="0.005" />
+  <testcase name="CP14_reactivarCliente" classname="pe.sga.controller.ControllerFunctionalTest" time="0.003" />
+  <testcase name="CP11_cliente11" classname="pe.sga.controller.ControllerFunctionalTest" time="0.001" />
+  <testcase name="CP10_filtroCliente" classname="pe.sga.controller.ControllerFunctionalTest" time="0.001" />
+  <testcase name="CP15_excepcionCliente" classname="pe.sga.controller.ControllerFunctionalTest" time="0.003" />
+  <testcase name="CP20_convertirProspecto" classname="pe.sga.controller.ControllerFunctionalTest" time="0.001" />
+  <testcase name="CP06_filtroCliente" classname="pe.sga.controller.ControllerFunctionalTest" time="0.0" />
+  <testcase name="CP17_cotizaciones" classname="pe.sga.controller.ControllerFunctionalTest" time="0.0" />
+  <testcase name="CP09_filtroCliente" classname="pe.sga.controller.ControllerFunctionalTest" time="0.001" />
+  <testcase name="CP13_eliminarCliente" classname="pe.sga.controller.ControllerFunctionalTest" time="0.002" />
+  <testcase name="CP16_cotizaciones" classname="pe.sga.controller.ControllerFunctionalTest" time="0.002" />
+  <testcase name="CP01_health" classname="pe.sga.controller.ControllerFunctionalTest" time="0.004" />
+  <testcase name="CP18_crearCotizacion" classname="pe.sga.controller.ControllerFunctionalTest" time="0.004" />
+  <testcase name="CP04_filtroCliente" classname="pe.sga.controller.ControllerFunctionalTest" time="0.004" />
+  <testcase name="CP12_cliente12" classname="pe.sga.controller.ControllerFunctionalTest" time="0.002" />
+  <testcase name="CP07_filtroCliente" classname="pe.sga.controller.ControllerFunctionalTest" time="0.001" />
+</testsuite>

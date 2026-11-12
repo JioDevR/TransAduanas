@@ -1,0 +1,18 @@
+SEC05 Falló HTTP 200 type=application/json
+SEC03 Pasó HTTP 403 type=application/json María Salas de la Torre, agente comercial. Lucía Mendoza Vargas, administradora, recibió 200 en la misma ruta.
+SEC01 Pasó HTTP 401 type=application/json;charset=UTF-8
+SEC02 Pasó HTTP 401 type=application/json;charset=UTF-8
+SEC04 Falló HTTP 200 type=application/json Suplantación de Lucía Mendoza Vargas en el laboratorio con la clave JWT de respaldo.
+SEC10 Pasó HTTP 200 type=application/pdf | HTTP 403 type=application/json Ana Torres Velarde, propietaria, y Diego Paredes Ríos, de otra empresa, probaron la misma descarga.
+SEC06 Falló HTTP 500 type=application/json | HTTP 500 type=application/json | HTTP 500 type=application/json | HTTP 500 type=application/json Clientes visibles antes=4; después=4
+SEC07 Pasó HTTP 401 type=application/json
+SEC08 Pasó HTTP 403 type=(ausente) Access-Control-Allow-Origin=(ausente)
+SEC09 Pasó 20/20 HTTP 401 p95=4.7 ms max=5.2 ms
+FE01 Pasó | /login
+FE06 Pasó | type=password
+FE02 Pasó | HTTP 401, token presente: false
+FE03 Pasó | HTTP 200, /recepcion-comercial
+FE04 Pasó | /recepcion-comercial
+FE05 Pasó | HTTP 403
+FE07 Pasó | sesión eliminada: true
+FE08 Pasó | HTTP 200, /recepcion-comercial

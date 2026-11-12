@@ -1,0 +1,86 @@
+[
+  {
+    "id": "SEC05",
+    "resultado": "Falló",
+    "observado": [
+      "HTTP 200 type=application/json"
+    ],
+    "detalle": ""
+  },
+  {
+    "id": "SEC03",
+    "resultado": "Pasó",
+    "observado": [
+      "HTTP 403 type=application/json"
+    ],
+    "detalle": "María Salas de la Torre, agente comercial. Lucía Mendoza Vargas, administradora, recibió 200 en la misma ruta."
+  },
+  {
+    "id": "SEC01",
+    "resultado": "Pasó",
+    "observado": [
+      "HTTP 401 type=application/json;charset=UTF-8"
+    ],
+    "detalle": ""
+  },
+  {
+    "id": "SEC02",
+    "resultado": "Pasó",
+    "observado": [
+      "HTTP 401 type=application/json;charset=UTF-8"
+    ],
+    "detalle": ""
+  },
+  {
+    "id": "SEC04",
+    "resultado": "Falló",
+    "observado": [
+      "HTTP 200 type=application/json"
+    ],
+    "detalle": "Suplantación de Lucía Mendoza Vargas en el laboratorio con la clave JWT de respaldo."
+  },
+  {
+    "id": "SEC10",
+    "resultado": "Pasó",
+    "observado": [
+      "HTTP 200 type=application/pdf",
+      "HTTP 403 type=application/json"
+    ],
+    "detalle": "Ana Torres Velarde, propietaria, y Diego Paredes Ríos, de otra empresa, probaron la misma descarga."
+  },
+  {
+    "id": "SEC06",
+    "resultado": "Falló",
+    "observado": [
+      "HTTP 500 type=application/json",
+      "HTTP 500 type=application/json",
+      "HTTP 500 type=application/json",
+      "HTTP 500 type=application/json"
+    ],
+    "detalle": "Clientes visibles antes=4; después=4"
+  },
+  {
+    "id": "SEC07",
+    "resultado": "Pasó",
+    "observado": [
+      "HTTP 401 type=application/json"
+    ],
+    "detalle": ""
+  },
+  {
+    "id": "SEC08",
+    "resultado": "Pasó",
+    "observado": [
+      "HTTP 403 type=(ausente)"
+    ],
+    "detalle": "Access-Control-Allow-Origin=(ausente)"
+  },
+  {
+    "id": "SEC09",
+    "resultado": "Pasó",
+    "observado": [
+      "20/20 HTTP 401 p95=3.1 ms max=3.4 ms"
+    ],
+    "detalle": ""
+  }
+]

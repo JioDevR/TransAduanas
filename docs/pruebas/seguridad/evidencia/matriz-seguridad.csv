@@ -1,0 +1,11 @@
+﻿Caso,Ruta,Esperado,Observado,Estado,Detalle
+SEC01,GET /api/v1/usuarios,401,HTTP 401 type=application/json;charset=UTF-8,Pasó,
+SEC02,GET /api/v1/usuarios,401,HTTP 401 type=application/json;charset=UTF-8,Pasó,
+SEC03,GET /api/v1/usuarios,403 para María; 200 para Lucía,HTTP 403 type=application/json,Pasó,"María Salas de la Torre, agente comercial. Lucía Mendoza Vargas, administradora, recibió 200 en la misma ruta."
+SEC04,GET /api/v1/usuarios,401,HTTP 200 type=application/json,Falló,Suplantación de Lucía Mendoza Vargas en el laboratorio con la clave JWT de respaldo.
+SEC05,POST /api/v1/auth/login,401,HTTP 200 type=application/json,Falló,
+SEC06,POST /api/v1/clientes,4 respuestas 400 sin nuevas filas visibles,HTTP 500 type=application/json | HTTP 500 type=application/json | HTTP 500 type=application/json | HTTP 500 type=application/json,Falló,Clientes visibles antes=4; después=4
+SEC07,POST /api/v1/auth/login,401,HTTP 401 type=application/json,Pasó,
+SEC08,OPTIONS /api/v1/usuarios,403 sin cabecera CORS,HTTP 403 type=(ausente),Pasó,Access-Control-Allow-Origin=(ausente)
+SEC09,GET /api/v1/usuarios,20 respuestas 401,20/20 HTTP 401 p95=3.1 ms max=3.4 ms,Pasó,
+SEC10,GET /api/v1/documentos/{id}/descargar,200 para Ana y 403 o 404 para Diego,HTTP 200 type=application/pdf | HTTP 403 type=application/json,Pasó,"Ana Torres Velarde, propietaria, y Diego Paredes Ríos, de otra empresa, probaron la misma descarga."

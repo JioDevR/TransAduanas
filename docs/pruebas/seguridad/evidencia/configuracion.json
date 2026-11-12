@@ -1,0 +1,37 @@
+[
+  {
+    "id": "CFG01",
+    "archivo": "backend/src/main/resources/application.properties",
+    "linea": 28,
+    "estado": "Patr\u00f3n confirmado",
+    "detalle": "Existe un secreto de firma JWT de respaldo conocido desde el c\u00f3digo."
+  },
+  {
+    "id": "CFG02",
+    "archivo": "backend/src/main/java/pe/sga/config/DataInitializer.java",
+    "linea": 97,
+    "estado": "Patr\u00f3n confirmado",
+    "detalle": "El inicializador asigna una contrase\u00f1a fija a una cuenta demo."
+  },
+  {
+    "id": "CFG03",
+    "archivo": "backend/src/main/resources/application.properties",
+    "linea": 13,
+    "estado": "Patr\u00f3n confirmado",
+    "detalle": "El JDBC por defecto desactiva TLS. Evaluar si la base de datos sale de localhost."
+  },
+  {
+    "id": "CFG04",
+    "archivo": "db/docker-compose.yml",
+    "linea": 11,
+    "estado": "Patr\u00f3n confirmado",
+    "detalle": "El compose incluye una contrase\u00f1a fija para root."
+  },
+  {
+    "id": "CFG05",
+    "archivo": "app-sga/src/features/auth/stores/authStore.js",
+    "linea": 126,
+    "estado": "Patr\u00f3n confirmado",
+    "detalle": "El token queda en almacenamiento accesible desde JavaScript. El impacto depende de que exista XSS."
+  }
+]

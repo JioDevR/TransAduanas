@@ -1,0 +1,50 @@
+[
+  {
+    "id": "BD01",
+    "esperado": "1045",
+    "observado": "1045",
+    "resultado": "Pasó"
+  },
+  {
+    "id": "BD02",
+    "esperado": "Transportes Costa del Sur S.A.C.",
+    "observado": "Transportes Costa del Sur S.A.C.",
+    "resultado": "Pasó"
+  },
+  {
+    "id": "BD03",
+    "esperado": "1142",
+    "observado": "1142",
+    "resultado": "Pasó"
+  },
+  {
+    "id": "BD04",
+    "esperado": "1142",
+    "observado": "1142",
+    "resultado": "Pasó"
+  },
+  {
+    "id": "BD05",
+    "esperado": "1142",
+    "observado": "1142",
+    "resultado": "Pasó"
+  },
+  {
+    "id": "BD07",
+    "esperado": "1143",
+    "observado": "1143",
+    "resultado": "Pasó"
+  },
+  {
+    "id": "BD08",
+    "esperado": "1142",
+    "observado": "1142",
+    "resultado": "Pasó"
+  },
+  {
+    "id": "BD06",
+    "esperado": "1",
+    "observado": "1",
+    "resultado": "Pasó"
+  }
+]

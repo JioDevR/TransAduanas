@@ -1,0 +1,231 @@
+{
+  "solicitudes": 16,
+  "aserciones": 32,
+  "fallos": 0,
+  "casos": [
+    {
+      "caso": "BE01 Ruta privada sin token",
+      "http": 401,
+      "aserciones": [
+        {
+          "nombre": "HTTP 401",
+          "paso": true
+        },
+        {
+          "nombre": "Verificación del caso",
+          "paso": true
+        }
+      ]
+    },
+    {
+      "caso": "BE02 JWT inválido",
+      "http": 401,
+      "aserciones": [
+        {
+          "nombre": "HTTP 401",
+          "paso": true
+        },
+        {
+          "nombre": "Verificación del caso",
+          "paso": true
+        }
+      ]
+    },
+    {
+      "caso": "BE03 Contraseña incorrecta",
+      "http": 401,
+      "aserciones": [
+        {
+          "nombre": "HTTP 401",
+          "paso": true
+        },
+        {
+          "nombre": "Verificación del caso",
+          "paso": true
+        }
+      ]
+    },
+    {
+      "caso": "BE04 Origen CORS externo",
+      "http": 403,
+      "aserciones": [
+        {
+          "nombre": "HTTP 403",
+          "paso": true
+        },
+        {
+          "nombre": "Verificación del caso",
+          "paso": true
+        }
+      ]
+    },
+    {
+      "caso": "FE01 Shell del login",
+      "http": 200,
+      "aserciones": [
+        {
+          "nombre": "HTTP 200",
+          "paso": true
+        },
+        {
+          "nombre": "Verificación del caso",
+          "paso": true
+        }
+      ]
+    },
+    {
+      "caso": "FE02 Ruta Finanzas entrega solo el shell",
+      "http": 200,
+      "aserciones": [
+        {
+          "nombre": "HTTP 200",
+          "paso": true
+        },
+        {
+          "nombre": "Verificación del caso",
+          "paso": true
+        }
+      ]
+    },
+    {
+      "caso": "FE03 Login incorrecto por el proxy del SGA",
+      "http": 401,
+      "aserciones": [
+        {
+          "nombre": "HTTP 401",
+          "paso": true
+        },
+        {
+          "nombre": "Verificación del caso",
+          "paso": true
+        }
+      ]
+    },
+    {
+      "caso": "FE04 Usuario comercial por el proxy del SGA",
+      "http": 403,
+      "aserciones": [
+        {
+          "nombre": "HTTP 403",
+          "paso": true
+        },
+        {
+          "nombre": "Verificación del caso",
+          "paso": true
+        }
+      ]
+    },
+    {
+      "caso": "BD01 Lectura del cliente sembrado",
+      "http": 200,
+      "aserciones": [
+        {
+          "nombre": "HTTP 200",
+          "paso": true
+        },
+        {
+          "nombre": "Verificación del caso",
+          "paso": true
+        }
+      ]
+    },
+    {
+      "caso": "BD02 Alta duplicada",
+      "http": 400,
+      "aserciones": [
+        {
+          "nombre": "HTTP 400",
+          "paso": true
+        },
+        {
+          "nombre": "Verificación del caso",
+          "paso": true
+        }
+      ]
+    },
+    {
+      "caso": "BD03 Alta desde cuenta del portal",
+      "http": 403,
+      "aserciones": [
+        {
+          "nombre": "HTTP 403",
+          "paso": true
+        },
+        {
+          "nombre": "Verificación del caso",
+          "paso": true
+        }
+      ]
+    },
+    {
+      "caso": "BD04 Conteo posterior sin nuevas altas",
+      "http": 200,
+      "aserciones": [
+        {
+          "nombre": "HTTP 200",
+          "paso": true
+        },
+        {
+          "nombre": "Verificación del caso",
+          "paso": true
+        }
+      ]
+    },
+    {
+      "caso": "SIS01 Ana descarga su comprobante",
+      "http": 200,
+      "aserciones": [
+        {
+          "nombre": "HTTP 200",
+          "paso": true
+        },
+        {
+          "nombre": "Verificación del caso",
+          "paso": true
+        }
+      ]
+    },
+    {
+      "caso": "SIS02 Diego no descarga el comprobante de Ana",
+      "http": 403,
+      "aserciones": [
+        {
+          "nombre": "HTTP 403",
+          "paso": true
+        },
+        {
+          "nombre": "Verificación del caso",
+          "paso": true
+        }
+      ]
+    },
+    {
+      "caso": "SIS03 Cuenta portal rechazada en API interna",
+      "http": 403,
+      "aserciones": [
+        {
+          "nombre": "HTTP 403",
+          "paso": true
+        },
+        {
+          "nombre": "Verificación del caso",
+          "paso": true
+        }
+      ]
+    },
+    {
+      "caso": "SIS04 Cuenta interna rechazada en perfil B2B",
+      "http": 403,
+      "aserciones": [
+        {
+          "nombre": "HTTP 403",
+          "paso": true
+        },
+        {
+          "nombre": "Verificación del caso",
+          "paso": true
+        }
+      ]
+    }
+  ]
+}

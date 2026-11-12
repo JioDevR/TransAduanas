@@ -1,0 +1,29 @@
+env:
+  contexts:
+  - name: TransAduanas local
+    urls:
+    - http://127.0.0.1:63940
+  parameters:
+    failOnError: true
+    failOnWarning: false
+jobs:
+- type: requestor
+  requests:
+  - url: http://127.0.0.1:63940/api/v1/health
+    method: GET
+    responseCode: 200
+  - url: http://127.0.0.1:63940/api/v1/clientes
+    method: GET
+    responseCode: 401
+  - url: http://127.0.0.1:63940/api/v1/usuarios
+    method: GET
+    responseCode: 401
+- type: passiveScan-wait
+  parameters:
+    maxDuration: 2
+- type: report
+  parameters:
+    template: traditional-json
+    reportDir: ./evidencia
+    reportFile: zap-pasivo
+    reportTitle: TransAduanas - escaneo pasivo local

@@ -1,0 +1,30 @@
+380 [main] INFO  org.parosproxy.paros.Constant - Copying default configuration to work\seguridad-evidencias\zap-run-Aqexhk\home\config.xml
+484 [main] INFO  org.parosproxy.paros.Constant - Creating directory work\seguridad-evidencias\zap-run-Aqexhk\home\session
+491 [main] INFO  org.parosproxy.paros.Constant - Creating directory work\seguridad-evidencias\zap-run-Aqexhk\home\dirbuster
+491 [main] INFO  org.parosproxy.paros.Constant - Creating directory work\seguridad-evidencias\zap-run-Aqexhk\home\fuzzers
+491 [main] INFO  org.parosproxy.paros.Constant - Creating directory work\seguridad-evidencias\zap-run-Aqexhk\home\plugin
+Job requestor set url = http://127.0.0.1:63940/api/v1/health
+Job requestor set method = GET
+Job requestor set responseCode = 200
+Job requestor set url = http://127.0.0.1:63940/api/v1/clientes
+Job requestor set method = GET
+Job requestor set responseCode = 401
+Job requestor set url = http://127.0.0.1:63940/api/v1/usuarios
+Job requestor set method = GET
+Job requestor set responseCode = 401
+Job passiveScan-wait set maxDuration = 2
+Job report set template = traditional-json
+Job report set reportDir = work/seguridad-evidencias
+Job report set reportFile = zap-pasivo
+Job report set reportTitle = TransAduanas - escaneo pasivo local
+Job requestor started
+Job requestor requesting URL http://127.0.0.1:63940/api/v1/health
+Job requestor requesting URL http://127.0.0.1:63940/api/v1/clientes
+Job requestor requesting URL http://127.0.0.1:63940/api/v1/usuarios
+Job requestor finished, time taken: 00:00:00
+Job passiveScan-wait started
+Job passiveScan-wait finished, time taken: 00:00:02
+Job report started
+Job report generated report work\seguridad-evidencias\zap-pasivo.json
+Job report finished, time taken: 00:00:00
+Automation plan succeeded!

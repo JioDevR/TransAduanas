@@ -1,0 +1,17 @@
+<?xml version='1.0' encoding='utf-8'?>
+<testsuite name="pe.sga.functional.SystemApiTest" time="1.964" tests="12" errors="0" skipped="0" failures="1">
+  <testcase name="SY07_CRUDClienteCompleto" classname="pe.sga.functional.SystemApiTest" time="0.378" />
+  <testcase name="SY03_credencialesIncorrectas" classname="pe.sga.functional.SystemApiTest" time="0.14" />
+  <testcase name="SY01_saludPublica" classname="pe.sga.functional.SystemApiTest" time="0.022" />
+  <testcase name="SY10_duplicado400" classname="pe.sga.functional.SystemApiTest" time="0.197" />
+  <testcase name="SY09_recursoInexistente404" classname="pe.sga.functional.SystemApiTest" time="0.175" />
+  <testcase name="SY06_rolSinPermiso" classname="pe.sga.functional.SystemApiTest" time="0.167" />
+  <testcase name="SY04_rechazoSinToken" classname="pe.sga.functional.SystemApiTest" time="0.084">
+    <failure message="Se esperaba application/json; recibido text/html;charset=UTF-8 ==&gt; expected: &lt;true&gt; but was: &lt;false&gt;" type="org.opentest4j.AssertionFailedError" />
+  </testcase>
+  <testcase name="SY02_loginYPerfilJWT" classname="pe.sga.functional.SystemApiTest" time="0.163" />
+  <testcase name="SY05_tokenInvalido" classname="pe.sga.functional.SystemApiTest" time="0.027" />
+  <testcase name="SY08_validacionCorreoNoInserta" classname="pe.sga.functional.SystemApiTest" time="0.194" />
+  <testcase name="SY12_longitudInvalida400" classname="pe.sga.functional.SystemApiTest" time="0.163" />
+  <testcase name="SY11_catalogoPublico" classname="pe.sga.functional.SystemApiTest" time="0.025" />
+</testsuite>

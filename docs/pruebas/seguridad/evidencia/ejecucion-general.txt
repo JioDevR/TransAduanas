@@ -1,0 +1,41 @@
+SEC05 Falló HTTP 200 type=application/json
+SEC03 Pasó HTTP 403 type=application/json María Salas de la Torre, agente comercial. Lucía Mendoza Vargas, administradora, recibió 200 en la misma ruta.
+SEC01 Pasó HTTP 401 type=application/json;charset=UTF-8
+SEC02 Pasó HTTP 401 type=application/json;charset=UTF-8
+SEC04 Falló HTTP 200 type=application/json Suplantación de Lucía Mendoza Vargas en el laboratorio con la clave JWT de respaldo.
+SEC10 Pasó HTTP 200 type=application/pdf | HTTP 403 type=application/json Ana Torres Velarde, propietaria, y Diego Paredes Ríos, de otra empresa, probaron la misma descarga.
+SEC06 Falló HTTP 500 type=application/json | HTTP 500 type=application/json | HTTP 500 type=application/json | HTTP 500 type=application/json Clientes visibles antes=4; después=4
+SEC07 Pasó HTTP 401 type=application/json
+SEC08 Pasó HTTP 403 type=(ausente) Access-Control-Allow-Origin=(ausente)
+SEC09 Pasó 20/20 HTTP 401 p95=3.8 ms max=4.9 ms
+FE01 Pasó | /login
+FE06 Pasó | type=password
+FE02 Pasó | HTTP 401, token presente: false
+FE03 Pasó | HTTP 200, /recepcion-comercial
+FE04 Pasó | /recepcion-comercial
+FE05 Pasó | HTTP 403
+FE07 Pasó | sesión eliminada: true
+FE08 Pasó | HTTP 200, /recepcion-comercial
+SIS01 Pasó | HTTP 200 y 200, empresas 3 y 4
+SIS02 Pasó | HTTP 403
+SIS03 Pasó | HTTP 403
+SIS04 Pasó | baja HTTP 403, perfil HTTP 200
+SIS05 Pasó | baja HTTP 200, perfil HTTP 401
+SIS06 Pasó | HTTP 401
+SIS07 Pasó | reactivación HTTP 200, login HTTP 200, perfil HTTP 200
+SIS08 Pasó | Diego HTTP 403, Ana HTTP 200
+MySQL 8.4.13 | instancia aislada en 127.0.0.1:57078
+BD01 Pasó | esperado: 1045 | observado: 1045
+BD02 Pasó | esperado: Transportes Costa del Sur S.A.C. | observado: Transportes Costa del Sur S.A.C.
+BD03 Pasó | esperado: 1142 | observado: 1142
+BD04 Pasó | esperado: 1142 | observado: 1142
+BD05 Pasó | esperado: 1142 | observado: 1142
+BD07 Pasó | esperado: 1143 | observado: 1143
+BD08 Pasó | esperado: 1142 | observado: 1142
+BD06 Pasó | esperado: 1 | observado: 1
+BD06 filas antes=1 después=1
+Backend: 10/10 casos; 7 conformes; 3 no conformes.
+Frontend SGA: 8/8 casos; 8 conformes; 0 no conformes.
+Base de datos MySQL: 8/8 casos; 8 conformes; 0 no conformes.
+Sistema: 8/8 casos; 8 conformes; 0 no conformes.
+Resultado general: Completo con hallazgos

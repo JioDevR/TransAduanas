@@ -1,0 +1,10 @@
+MySQL 8.4.13 | instancia aislada en 127.0.0.1:64520
+BD01 Pasó | esperado: 1045 | observado: 1045
+BD02 Pasó | esperado: Transportes Costa del Sur S.A.C. | observado: Transportes Costa del Sur S.A.C.
+BD03 Pasó | esperado: 1142 | observado: 1142
+BD04 Pasó | esperado: 1142 | observado: 1142
+BD05 Pasó | esperado: 1142 | observado: 1142
+BD07 Pasó | esperado: 1143 | observado: 1143
+BD08 Pasó | esperado: 1142 | observado: 1142
+BD06 Pasó | esperado: 1 | observado: 1
+BD06 filas antes=1 después=1

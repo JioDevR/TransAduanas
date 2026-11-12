@@ -4,8 +4,10 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import pe.sga.config.SecurityRoles;
 import pe.sga.dto.request.LoginRequestDTO;
 import pe.sga.dto.response.ApiResponseDTO;
 import pe.sga.dto.response.AuthResponseDTO;
@@ -27,6 +29,7 @@ public class AuthController {
     }
 
     @GetMapping("/me")
+    @PreAuthorize(SecurityRoles.ACCESS_INTERNAL_STAFF)
     public ResponseEntity<ApiResponseDTO<UsuarioResponseDTO>> me(@AuthenticationPrincipal Usuario usuario) {
         if (usuario == null || usuario.getIdUsuario() == null) {
             throw new AccessDeniedException("No autenticado como usuario interno");

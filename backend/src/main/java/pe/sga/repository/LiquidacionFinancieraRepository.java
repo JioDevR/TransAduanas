@@ -21,7 +21,5 @@ public interface LiquidacionFinancieraRepository extends JpaRepository<Liquidaci
 
     List<LiquidacionFinanciera> findByEstadoPagoIn(Collection<String> estadosPago);
 
-    List<LiquidacionFinanciera> findByEstadoPagoNot(String estadoPago);
-
     List<LiquidacionFinanciera> findByExpediente_Cliente_IdCliente(Integer idCliente);
 }

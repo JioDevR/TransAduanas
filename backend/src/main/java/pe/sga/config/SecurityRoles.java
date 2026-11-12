@@ -34,7 +34,6 @@ public final class SecurityRoles {
             + GERENTE_GENERAL + "', '" + SUPERVISOR_ADUANERO + "', '" + SUPERVISOR_TRANSPORTE + "')";
     public static final String ACCESS_USUARIOS_WRITE = "hasRole('" + ADMINISTRADOR_TI + "')";
     public static final String ACCESS_ROLES_READ = "hasAnyRole('" + ADMINISTRADOR_TI + "', '" + GERENTE_GENERAL + "')";
-    public static final String ACCESS_ROLES_WRITE = "hasRole('" + ADMINISTRADOR_TI + "')";
     public static final String ACCESS_LOGS_READ = "hasRole('" + ADMINISTRADOR_TI + "')";
 
     // 2. Sedes y Catálogos auxiliares (Puerto, Tipo Carga, Mercancía)

@@ -248,8 +248,10 @@ public class PortalServiceImpl implements IPortalService {
             throw new BadRequestException("Esta cotización ya fue aceptada previamente.");
         }
 
-        // Marcar formalmente el estado de pago como PENDIENTE
-        cotizacion.setEstadoPago("PENDIENTE");
+        // Mantener el estado de pago en SIN_PAGO hasta que el cliente registre un voucher (PENDIENTE_REVISION)
+        if (cotizacion.getEstadoPago() == null || cotizacion.getEstadoPago().isBlank()) {
+            cotizacion.setEstadoPago("SIN_PAGO");
+        }
 
         // Garantizar que el saldo pendiente corresponda al total cotizado menos lo abonado
         BigDecimal total = cotizacion.getTotalCotizado() != null ? cotizacion.getTotalCotizado() : BigDecimal.ZERO;
@@ -553,7 +555,7 @@ public class PortalServiceImpl implements IPortalService {
 
         Usuario usuarioResp = cotizacion.getUsuarioComercial() != null
                 ? cotizacion.getUsuarioComercial()
-                : usuarioRepository.findAll().stream().findFirst().orElse(null);
+                : usuarioRepository.findFirstByOrderByIdUsuarioAsc().orElse(null);
 
         CotizacionPago pago = CotizacionPago.builder()
                 .cotizacion(cotizacion)

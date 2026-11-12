@@ -15,8 +15,6 @@ public interface ControlAlmacenRepository extends JpaRepository<ControlAlmacen, 
 
     boolean existsByExpediente_IdExpediente(Integer idExpediente);
 
-    List<ControlAlmacen> findByEstadoAlmacen(String estadoAlmacen);
-
     List<ControlAlmacen> findByEstadoAlmacenNot(String estadoAlmacen);
 
     List<ControlAlmacen> findByDepositoTemporalIgnoreCase(String depositoTemporal);

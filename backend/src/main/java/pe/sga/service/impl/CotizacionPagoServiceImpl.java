@@ -50,12 +50,11 @@ public class CotizacionPagoServiceImpl implements ICotizacionPagoService {
             throw new BadRequestException("Solo se pueden registrar pagos para cotizaciones que han sido APROBADAS técnicamente. Estado actual: " + cotizacion.getEstado());
         }
 
-        Usuario usuario = null;
-        if (idUsuarioRegistro != null && usuarioRepository.existsById(idUsuarioRegistro)) {
-            usuario = usuarioRepository.findById(idUsuarioRegistro).get();
-        } else {
-            usuario = usuarioRepository.findAll().stream().findFirst()
-                    .orElse(null);
+        Usuario usuario = (idUsuarioRegistro != null)
+                ? usuarioRepository.findById(idUsuarioRegistro).orElse(null)
+                : null;
+        if (usuario == null) {
+            usuario = usuarioRepository.findFirstByOrderByIdUsuarioAsc().orElse(null);
         }
 
         validarPropiedadComercial(cotizacion, usuario);
@@ -150,14 +149,14 @@ public class CotizacionPagoServiceImpl implements ICotizacionPagoService {
         CotizacionPago pago = cotizacionPagoRepository.findById(idPago)
                 .orElseThrow(() -> new ResourceNotFoundException("Pago no encontrado con ID: " + idPago));
 
-        Usuario finanzas = null;
-        if (idUsuarioFinanzas != null && usuarioRepository.existsById(idUsuarioFinanzas)) {
-            finanzas = usuarioRepository.findById(idUsuarioFinanzas).get();
-        } else {
-            finanzas = usuarioRepository.findAll().stream()
-                    .filter(u -> RolUsuario.CONTADOR.equals(u.getRol()) || RolUsuario.ADMINISTRADOR_TI.equals(u.getRol()))
-                    .findFirst()
-                    .orElseGet(() -> usuarioRepository.findAll().stream().findFirst().orElse(null));
+        Usuario finanzas = (idUsuarioFinanzas != null)
+                ? usuarioRepository.findById(idUsuarioFinanzas).orElse(null)
+                : null;
+        if (finanzas == null) {
+            finanzas = usuarioRepository.findFirstByRolInOrderByIdUsuarioAsc(
+                            List.of(RolUsuario.CONTADOR, RolUsuario.ADMINISTRADOR_TI))
+                    .or(() -> usuarioRepository.findFirstByOrderByIdUsuarioAsc())
+                    .orElse(null);
         }
         if (finanzas == null) {
             throw new ResourceNotFoundException("No se encontró ningún usuario habilitado para validar el pago");

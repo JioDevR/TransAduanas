@@ -40,6 +40,4 @@ public interface CotizacionRepository extends JpaRepository<Cotizacion, Integer>
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("UPDATE Cotizacion c SET c.usuarioComercial = :usuario WHERE c.idCotizacion = :idCotizacion AND c.usuarioComercial IS NULL AND c.estado <> pe.sga.entity.enums.EstadoCotizacion.ANULADA")
     int asignarSiSinAsignar(@Param("idCotizacion") Integer idCotizacion, @Param("usuario") Usuario usuario);
-
-    List<Cotizacion> findByAgenteRevisor_IdUsuario(Integer idUsuario);
 }

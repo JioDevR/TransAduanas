@@ -13,8 +13,4 @@ public interface SedeRepository extends JpaRepository<Sede, Integer> {
     boolean existsByCodigoSede(String codigoSede);
 
     List<Sede> findByEstado(String estado);
-
-    default List<Sede> findByEstadoOperativo() {
-        return findByEstado("OPERATIVO");
-    }
 }

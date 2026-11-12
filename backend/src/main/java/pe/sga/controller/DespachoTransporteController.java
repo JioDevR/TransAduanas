@@ -57,7 +57,7 @@ public class DespachoTransporteController {
     }
 
     @GetMapping("/mi-despacho-activo")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize(SecurityRoles.ACCESS_TRANSPORTE_READ)
     public ResponseEntity<ApiResponseDTO<DespachoTransporteResponseDTO>> obtenerMiDespachoActivo(
             @org.springframework.security.core.annotation.AuthenticationPrincipal pe.sga.entity.Usuario usuarioAutenticado) {
         if (usuarioAutenticado == null) {
@@ -68,7 +68,7 @@ public class DespachoTransporteController {
     }
 
     @GetMapping("/mis-despachos")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize(SecurityRoles.ACCESS_TRANSPORTE_READ)
     public ResponseEntity<ApiResponseDTO<List<DespachoTransporteResponseDTO>>> listarMisDespachos(
             @org.springframework.security.core.annotation.AuthenticationPrincipal pe.sga.entity.Usuario usuarioAutenticado) {
         if (usuarioAutenticado == null) {

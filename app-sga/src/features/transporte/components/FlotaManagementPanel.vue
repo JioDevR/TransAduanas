@@ -562,15 +562,17 @@ const openCreateModal = () => {
 const openEditModal = (u) => {
   isEditing.value = true
   editingId.value = u.idUnidad
+  const soatRaw = u.fechaVencimientoSoat || u.soatVencimiento || ''
+  const citvRaw = u.fechaVencimientoCitv || u.citvVencimiento || ''
   form.value = {
     placaTracto: u.placaTracto || '',
     placaCarreta: u.placaCarreta || '',
     marcaModelo: u.marcaModelo || '',
     tipoVehiculo: u.tipoVehiculo || 'TRACTO',
     capacidadCargaKg: u.capacidadCargaKg || 30000,
-    anioFabricacion: u.anioFabricacion || new Date().getFullYear(),
-    fechaVencimientoSoat: u.fechaVencimientoSoat ? u.fechaVencimientoSoat.substring(0, 10) : '',
-    fechaVencimientoCitv: u.fechaVencimientoCitv ? u.fechaVencimientoCitv.substring(0, 10) : '',
+    anioFabricacion: u.anioFabricacion || u.anoFabricacion || new Date().getFullYear(),
+    fechaVencimientoSoat: soatRaw ? soatRaw.substring(0, 10) : '',
+    fechaVencimientoCitv: citvRaw ? citvRaw.substring(0, 10) : '',
     estadoOperativo: u.estadoOperativo || 'DISPONIBLE',
     observaciones: u.observaciones || ''
   }

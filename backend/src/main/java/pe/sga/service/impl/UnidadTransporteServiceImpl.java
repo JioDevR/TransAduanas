@@ -79,6 +79,7 @@ public class UnidadTransporteServiceImpl implements IUnidadTransporteService {
                 .kilometrajeActual(dto.getKilometrajeActual() != null ? dto.getKilometrajeActual() : 0)
                 .estadoOperativo(dto.getEstadoOperativo() != null ? dto.getEstadoOperativo().trim().toUpperCase() : "DISPONIBLE")
                 .estadoActivo(dto.getEstadoActivo() != null ? dto.getEstadoActivo() : true)
+                .observaciones(dto.getObservaciones() != null ? dto.getObservaciones().trim() : null)
                 .build();
 
         return mapToResponse(unidadRepository.save(unidad));
@@ -108,6 +109,7 @@ public class UnidadTransporteServiceImpl implements IUnidadTransporteService {
         if (dto.getKilometrajeActual() != null) unidad.setKilometrajeActual(dto.getKilometrajeActual());
         if (dto.getEstadoOperativo() != null) unidad.setEstadoOperativo(dto.getEstadoOperativo().trim().toUpperCase());
         if (dto.getEstadoActivo() != null) unidad.setEstadoActivo(dto.getEstadoActivo());
+        if (dto.getObservaciones() != null) unidad.setObservaciones(dto.getObservaciones().trim());
 
         return mapToResponse(unidadRepository.save(unidad));
     }
@@ -145,6 +147,7 @@ public class UnidadTransporteServiceImpl implements IUnidadTransporteService {
                 .kilometrajeActual(u.getKilometrajeActual())
                 .estadoOperativo(u.getEstadoOperativo())
                 .estadoActivo(u.getEstadoActivo())
+                .observaciones(u.getObservaciones())
                 .build();
     }
 }

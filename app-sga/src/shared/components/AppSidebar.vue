@@ -426,34 +426,12 @@
         <li class="nav-item">
           <button
             type="button"
-            :class="['nav-sub-btn', { active: navigationStore.transporteFlotaSubOption === 'cabina' }]"
-            @click="handleTransporteFlotaSubClick('cabina')"
-            :title="isCollapsed ? 'Mi Trabajo Actual (Cabina)' : ''"
+            :class="['nav-sub-btn', { active: navigationStore.transporteFlotaSubOption === 'dashboard' }]"
+            @click="handleTransporteFlotaSubClick('dashboard')"
+            :title="isCollapsed ? 'Dashboard Operativo' : ''"
           >
             <span class="nav-num">01</span>
-            <span v-if="!isCollapsed" class="nav-label">Mi Trabajo Actual</span>
-          </button>
-        </li>
-        <li class="nav-item">
-          <button
-            type="button"
-            :class="['nav-sub-btn', { active: navigationStore.transporteFlotaSubOption === 'camion' }]"
-            @click="handleTransporteFlotaSubClick('camion')"
-            :title="isCollapsed ? 'Camión Asignado' : ''"
-          >
-            <span class="nav-num">02</span>
-            <span v-if="!isCollapsed" class="nav-label">Camión Asignado</span>
-          </button>
-        </li>
-        <li class="nav-item">
-          <button
-            type="button"
-            :class="['nav-sub-btn', { active: navigationStore.transporteFlotaSubOption === 'viajes' }]"
-            @click="handleTransporteFlotaSubClick('viajes')"
-            :title="isCollapsed ? 'Historial de Mis Viajes' : ''"
-          >
-            <span class="nav-num">03</span>
-            <span v-if="!isCollapsed" class="nav-label">Historial de Viajes</span>
+            <span v-if="!isCollapsed" class="nav-label">Dashboard Operativo</span>
           </button>
         </li>
         <li class="nav-item">
@@ -461,36 +439,43 @@
             type="button"
             :class="['nav-sub-btn', { active: navigationStore.transporteFlotaSubOption === 'despachos' }]"
             @click="handleTransporteFlotaSubClick('despachos')"
-            :title="isCollapsed ? 'Monitoreo Global' : ''"
+            :title="isCollapsed ? 'Monitoreo & Despachos' : ''"
           >
-            <span class="nav-num">04</span>
-            <span v-if="!isCollapsed" class="nav-label">Monitoreo Global</span>
+            <span class="nav-num">02</span>
+            <span v-if="!isCollapsed" class="nav-label">Monitoreo & Despachos</span>
           </button>
         </li>
-
-        <!-- Sub-opción 05: Parque de Flota -->
+        <li class="nav-item">
+          <button
+            type="button"
+            :class="['nav-sub-btn', { active: navigationStore.transporteFlotaSubOption === 'cabina' }]"
+            @click="handleTransporteFlotaSubClick('cabina')"
+            :title="isCollapsed ? 'Cabina de Ruta' : ''"
+          >
+            <span class="nav-num">03</span>
+            <span v-if="!isCollapsed" class="nav-label">Cabina de Ruta</span>
+          </button>
+        </li>
         <li class="nav-item">
           <button
             type="button"
             :class="['nav-sub-btn', { active: navigationStore.transporteFlotaSubOption === 'unidades' }]"
             @click="handleTransporteFlotaSubClick('unidades')"
-            :title="isCollapsed ? 'Parque Automotor & Flota' : ''"
+            :title="isCollapsed ? 'Parque de Flota' : ''"
           >
-            <span class="nav-num">05</span>
+            <span class="nav-num">04</span>
             <span v-if="!isCollapsed" class="nav-label">Parque de Flota</span>
           </button>
         </li>
-
-        <!-- Sub-opción 06: Conductores MTC -->
         <li class="nav-item">
           <button
             type="button"
             :class="['nav-sub-btn', { active: navigationStore.transporteFlotaSubOption === 'conductores' }]"
             @click="handleTransporteFlotaSubClick('conductores')"
-            :title="isCollapsed ? 'Conductores MTC' : ''"
+            :title="isCollapsed ? 'Directorio de Choferes' : ''"
           >
-            <span class="nav-num">06</span>
-            <span v-if="!isCollapsed" class="nav-label">Conductores MTC</span>
+            <span class="nav-num">05</span>
+            <span v-if="!isCollapsed" class="nav-label">Directorio Choferes</span>
           </button>
         </li>
       </ul>
@@ -686,7 +671,7 @@ const handleModuleSelectChange = () => {
       router.push('/agente-aduanero')
     }
   } else if (mod === 'transporte-flota') {
-    navigationStore.setTransporteFlotaSubOption('despachos')
+    navigationStore.setTransporteFlotaSubOption('dashboard')
     if (route.path !== '/transporte-flota') {
       router.push('/transporte-flota')
     }

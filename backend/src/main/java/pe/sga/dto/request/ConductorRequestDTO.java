@@ -1,5 +1,6 @@
 package pe.sga.dto.request;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.*;
@@ -44,4 +45,13 @@ public class ConductorRequestDTO {
 
     @Builder.Default
     private Boolean estadoActivo = true;
+
+    private String observaciones;
+
+    @JsonProperty("categoriaLicencia")
+    public void setCategoriaLicencia(String cat) {
+        if (cat != null && !cat.isBlank()) {
+            this.tipoLicencia = cat;
+        }
+    }
 }

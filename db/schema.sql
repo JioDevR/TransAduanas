@@ -387,6 +387,7 @@ CREATE TABLE conductor (
     -- Disponibilidad y estado operativo
     estado_operativo VARCHAR(20) NOT NULL DEFAULT 'DISPONIBLE',
     estado_activo BOOLEAN NOT NULL DEFAULT TRUE,
+    observaciones TEXT NULL,
     -- Llave primaria y restricciones
     PRIMARY KEY (id_conductor),
     CONSTRAINT uq_conductor_usuario UNIQUE (id_usuario),
@@ -410,6 +411,7 @@ CREATE TABLE unidad_transporte (
     -- Disponibilidad y estado operativo
     estado_operativo VARCHAR(20) NOT NULL DEFAULT 'DISPONIBLE',
     estado_activo BOOLEAN NOT NULL DEFAULT TRUE,
+    observaciones TEXT NULL,
     -- Llave primaria y restricciones
     PRIMARY KEY (id_unidad),
     CONSTRAINT uq_unidad_tracto UNIQUE (placa_tracto)

@@ -59,7 +59,7 @@
           />
         </div>
 
-        <div class="field-item full-width">
+        <div class="field-item">
           <label for="ent-contacto">Puesto / Área o Contacto de Recepción</label>
           <input
             id="ent-contacto"
@@ -68,6 +68,18 @@
             placeholder="Ej. Jefe de Almacén Planta Gambetta"
             class="text-input"
             maxlength="100"
+          />
+        </div>
+
+        <div class="field-item">
+          <label for="ent-km">Kilometraje de Llegada (km)</label>
+          <input
+            id="ent-km"
+            v-model.number="form.kilometrajeLlegada"
+            type="number"
+            min="0"
+            placeholder="Ej. 125430"
+            class="text-input font-mono"
           />
         </div>
 
@@ -136,6 +148,7 @@ const defaultForm = () => {
     receptorNombre: '',
     receptorDni: '',
     contactoRecepcion: '',
+    kilometrajeLlegada: null,
     detalleIncidencia: 'Sin incidencias. Carga recibida conforme y precintos intactos.',
     observaciones: 'Guía de remisión firmada y sellada por el cliente.'
   }
@@ -157,6 +170,11 @@ watch(
       }
       if (props.despacho?.receptorDni) {
         form.value.receptorDni = props.despacho.receptorDni
+      }
+      if (props.despacho?.kilometrajeLlegada) {
+        form.value.kilometrajeLlegada = props.despacho.kilometrajeLlegada
+      } else if (props.despacho?.unidad?.kilometrajeActual) {
+        form.value.kilometrajeLlegada = props.despacho.unidad.kilometrajeActual
       }
     }
   }
@@ -181,6 +199,7 @@ const handleSubmit = async () => {
       receptorNombre: form.value.receptorNombre,
       receptorDni: form.value.receptorDni,
       contactoRecepcion: form.value.contactoRecepcion || null,
+      kilometrajeLlegada: form.value.kilometrajeLlegada != null ? Number(form.value.kilometrajeLlegada) : null,
       detalleIncidencia: form.value.detalleIncidencia || null,
       observaciones: form.value.observaciones || null
     }

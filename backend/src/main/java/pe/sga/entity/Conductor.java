@@ -52,4 +52,7 @@ public class Conductor {
     @Column(name = "estado_activo", nullable = false)
     @Builder.Default
     private Boolean estadoActivo = true;
+
+    @Column(name = "observaciones", columnDefinition = "TEXT")
+    private String observaciones;
 }

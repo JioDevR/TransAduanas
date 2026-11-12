@@ -16,8 +16,8 @@ export const useNavigationStore = defineStore('navigation', {
     gestionAduaneraSubOption: 'dashboard',
     // Sub-opciones en Agente Aduanero: 'dashboard' | 'todos' | 'transito' | 'inspeccion' | 'levante'
     agenteAduaneroSubOption: 'dashboard',
-    // Sub-opciones en Transporte y Flota: 'despachos' | 'unidades' | 'conductores'
-    transporteFlotaSubOption: 'despachos',
+    // Sub-opciones en Transporte y Flota: 'dashboard' | 'despachos' | 'cabina' | 'unidades' | 'conductores'
+    transporteFlotaSubOption: 'dashboard',
     // Sub-opciones en Legal y Auditoría: 'expedientes' | 'auditorias'
     legalAuditoriaSubOption: 'expedientes',
     // Sub-opciones en Finanzas: 'dashboard' | 'pre-expedientes' | 'liquidaciones' | 'conciliacion'
@@ -141,8 +141,12 @@ export const useNavigationStore = defineStore('navigation', {
     },
 
     setTransporteFlotaSubOption(option) {
-      if (this.transporteFlotaSubOption === option) return
-      this.transporteFlotaSubOption = option
+      let canon = option
+      if (option === 'camion') canon = 'cabina'
+      else if (option === 'viajes') canon = 'despachos'
+
+      if (this.transporteFlotaSubOption === canon) return
+      this.transporteFlotaSubOption = canon
       this.navTick++
     },
     setTransporteSubOption(option) {

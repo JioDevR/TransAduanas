@@ -1,5 +1,6 @@
 package pe.sga.dto.request;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -51,4 +52,35 @@ public class UnidadTransporteRequestDTO {
 
     @Builder.Default
     private Boolean estadoActivo = true;
+
+    private String observaciones;
+
+    @JsonProperty("anioFabricacion")
+    public void setAnioFabricacion(Integer a) {
+        this.anoFabricacion = a;
+    }
+
+    @JsonProperty("fechaVencimientoSoat")
+    public void setFechaVencimientoSoat(LocalDate d) {
+        this.soatVencimiento = d;
+    }
+
+    @JsonProperty("fechaVencimientoCitv")
+    public void setFechaVencimientoCitv(LocalDate d) {
+        this.citvVencimiento = d;
+    }
+
+    @JsonProperty("placa")
+    public void setPlaca(String p) {
+        if (this.placaTracto == null || this.placaTracto.isBlank()) {
+            this.placaTracto = p;
+        }
+    }
+
+    @JsonProperty("tipoUnidad")
+    public void setTipoUnidad(String t) {
+        if (t != null && !t.isBlank()) {
+            this.tipoVehiculo = t;
+        }
+    }
 }

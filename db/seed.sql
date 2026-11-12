@@ -497,4 +497,52 @@ INSERT INTO usuario_cliente (id_usuario_cliente, id_cliente, username, password_
     (79, 79, '20605891235', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', TRUE, FALSE, NULL),
     (80, 80, '20609874126', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', TRUE, FALSE, NULL);
 
+-- =============================================================================
+-- PARQUE AUTOMOTOR Y FLOTA DE TRANSPORTE TERRESTRE (MTC)
+-- =============================================================================
+INSERT INTO unidad_transporte (id_unidad, placa_tracto, placa_carreta, marca_modelo, ano_fabricacion, tipo_vehiculo, capacidad_carga_kg, soat_vencimiento, citv_vencimiento, kilometraje_actual, estado_operativo, estado_activo, observaciones) VALUES
+    (1, 'V1A-780', 'T1A-981', 'Volvo FH 500 Globetrotter', 2022, 'TRACTO', 32000.00, '2027-08-15', '2027-09-20', 145000, 'EN_RUTA', TRUE, 'Tracto con suspensión neumática y GPS satelital'),
+    (2, 'V2B-890', 'T2B-982', 'Scania R500 V8 Streamline', 2021, 'TRACTO', 32000.00, '2027-04-10', '2027-05-12', 198000, 'DISPONIBLE', TRUE, 'Asignado a rutas interprovinciales'),
+    (3, 'V3C-910', NULL, 'International ProStar 450', 2020, 'TRACTO', 30000.00, DATE_ADD(CURRENT_DATE, INTERVAL 15 DAY), DATE_ADD(CURRENT_DATE, INTERVAL 45 DAY), 220000, 'DISPONIBLE', TRUE, 'Alerta preventiva: SOAT próximo a vencer en 15 días'),
+    (4, 'T1A-981', NULL, 'Randon Plataforma 3 Ejes', 2022, 'PLATAFORMA', 34000.00, '2027-11-30', '2027-12-15', 85000, 'DISPONIBLE', TRUE, 'Plataforma para contenedores 20ft y 40ft con piñas de seguridad'),
+    (5, 'T2B-982', NULL, 'Tremac Semirremolque Baranda Rebatible', 2023, 'PLATAFORMA', 32000.00, '2028-02-28', '2028-03-15', 62000, 'DISPONIBLE', TRUE, 'Plataforma con barandas desmontables para carga suelta'),
+    (6, 'F4D-550', NULL, 'Scania P360 Furgon Refrigerado ThermoKing', 2023, 'FURGON', 22000.00, '2027-10-18', '2027-11-10', 85000, 'DISPONIBLE', TRUE, 'Furgón reefer bi-temperatura certificado Senasa'),
+    (7, 'F5E-660', NULL, 'Hino 500 Series Furgon Seco', 2022, 'FURGON', 18000.00, '2027-06-25', '2027-07-30', 110000, 'DISPONIBLE', TRUE, 'Furgón cerrado con rampa hidráulica de 2.5T'),
+    (8, 'B7G-110', NULL, 'Isuzu Forward 12T Baranda Alta', 2021, 'CAMION_BARANDA', 12000.00, '2027-09-05', '2027-10-01', 130000, 'DISPONIBLE', TRUE, 'Camión baranda para reparto urbano y consolidado');
+
+-- =============================================================================
+-- CONDUCTORES PROFESIONALES DE TRANSPORTE (MTC)
+-- =============================================================================
+INSERT INTO conductor (id_conductor, id_usuario, nombres, apellidos, numero_documento, telefono, tipo_licencia, numero_licencia, fecha_vencimiento_licencia, estado_operativo, estado_activo, observaciones) VALUES
+    (1, 54, 'Raul', 'Cardenas Melendez', '60123456', '+51 987 667 001', 'A-IIIc', 'Q60123456', '2028-05-15', 'EN_RUTA', TRUE, 'Conductor master con certificación MATPEL y 15 años de experiencia'),
+    (2, 55, 'Enrique', 'Bravo Rojas', '60234567', '+51 987 667 002', 'A-IIIc', 'Q60234567', '2027-12-10', 'DISPONIBLE', TRUE, 'Especialista en tractos de alto tonelaje Callao-Sur'),
+    (3, 56, 'Wilmer', 'Galarza Silva', '60345678', '+51 987 667 003', 'A-IIIb', 'Q60345678', DATE_ADD(CURRENT_DATE, INTERVAL 20 DAY), 'DISPONIBLE', TRUE, 'Alerta preventiva: Brevete profesional próximo a revalidar'),
+    (4, 57, 'Oscar', 'Sanchez Huamanchumo', '60456789', '+51 987 667 004', 'A-IIIc', 'Q60456789', '2028-03-22', 'DISPONIBLE', TRUE, 'Operador de furgón refrigerado y control de cadena de frío'),
+    (5, 58, 'Felix', 'Paredes Valles', '60567890', '+51 987 667 005', 'A-IIIc', 'Q60567890', '2027-09-30', 'DISPONIBLE', TRUE, 'Rutas interprovinciales y puertos norte (Paita / Salaverry)'),
+    (6, 59, 'Juan', 'Castaneda Luna', '60678901', '+51 987 667 006', 'A-IIIb', 'Q60678901', '2028-01-14', 'DISPONIBLE', TRUE, 'Distribución local en parques industriales de Lima');
+
+-- =============================================================================
+-- COTIZACIONES Y EXPEDIENTES OPERATIVOS CON TRANSPORTE VINCULADO
+-- =============================================================================
+INSERT INTO cotizacion (id_cotizacion, codigo_cotizacion, id_cliente, id_usuario_comercial, id_mercancia, id_tipo_carga, regimen_aduanero, id_puerto_envio, id_puerto_destino, servicio_transporte, origen_departamento, origen_provincia, destino_departamento, destino_provincia, costo_transporte_interno, valor_fob, monto_flete, monto_seguro_estimado, monto_honorarios, tasa_advalorem, tasa_percepcion, monto_tributos, total_cotizado, validez_dias, fecha_emision, estado, estado_pago, total_abonado, saldo_pendiente) VALUES
+    (1, 'COT-2026-0001', 1, 12, 34, 3, 'EXPORTACION_DEFINITIVA', 1, 12, TRUE, 'La Libertad', 'Virú', 'Callao', 'Callao', 1450.00, 48000.00, 3200.00, 450.00, 650.00, 0.00, 0.00, 0.00, 53750.00, 15, '2026-11-01', 'APROBADA', 'PAGO_COMPLETO', 53750.00, 0.00),
+    (2, 'COT-2026-0002', 2, 12, 36, 3, 'EXPORTACION_DEFINITIVA', 1, 12, TRUE, 'La Libertad', 'Trujillo', 'Callao', 'Callao', 1350.00, 52000.00, 3400.00, 500.00, 700.00, 0.00, 0.00, 0.00, 57950.00, 15, '2026-11-02', 'APROBADA', 'PAGO_COMPLETO', 57950.00, 0.00),
+    (3, 'COT-2026-0003', 21, 12, 1, 1, 'IMPORTACION_DEFINITIVA', 12, 1, TRUE, 'Callao', 'Callao', 'Lima', 'San Isidro', 850.00, 95000.00, 4200.00, 950.00, 1100.00, 0.00, 3.50, 18500.00, 120600.00, 15, '2026-11-03', 'APROBADA', 'PAGO_COMPLETO', 120600.00, 0.00),
+    (4, 'COT-2026-0004', 22, 12, 5, 1, 'IMPORTACION_DEFINITIVA', 12, 1, TRUE, 'Callao', 'Callao', 'Lima', 'Lurín', 1100.00, 72000.00, 3800.00, 720.00, 900.00, 0.00, 3.50, 14200.00, 92720.00, 15, '2026-11-04', 'APROBADA', 'PAGO_COMPLETO', 92720.00, 0.00);
+
+INSERT INTO expediente (id_expediente, codigo_expediente, id_cotizacion, id_cliente, id_mercancia, id_tipo_carga, id_agente_aduanero, fecha_asignacion, numero_dam, canal_sunat, numero_contenedor, precinto_aduanero, estado_expediente, fecha_apertura) VALUES
+    (1, 'EXP-2026-0001', 1, 1, 34, 3, 32, '2026-11-02 09:00:00', '118-2026-10-001234', 'VERDE', 'MSCU9876543', 'SUNAT-09871', 'LEVANTE_AUTORIZADO', '2026-11-02 09:00:00'),
+    (2, 'EXP-2026-0002', 2, 2, 36, 3, 32, '2026-11-03 10:30:00', '118-2026-10-001235', 'VERDE', 'TGHU1234567', 'SUNAT-09872', 'LEVANTE_AUTORIZADO', '2026-11-03 10:30:00'),
+    (3, 'EXP-2026-0003', 3, 21, 1, 1, 32, '2026-11-04 11:15:00', '118-2026-10-001236', 'VERDE', 'CMAU5566778', 'SUNAT-09873', 'LEVANTE_AUTORIZADO', '2026-11-04 11:15:00'),
+    (4, 'EXP-2026-0004', 4, 22, 5, 1, 32, '2026-11-05 14:00:00', '118-2026-10-001237', 'VERDE', 'EGLV9988776', 'SUNAT-09874', 'CERRADO', '2026-11-05 14:00:00');
+
+-- =============================================================================
+-- DESPACHOS DE TRANSPORTE TERRESTRE (MUESTRA OPERATIVA 4 ESTADOS)
+-- =============================================================================
+INSERT INTO despacho_transporte (id_despacho_transporte, id_expediente, codigo_tracking, tipo_traslado, id_conductor, id_unidad, guia_remision_transporte, direccion_partida, direccion_llegada, distrito_llegada, contacto_recepcion, receptor_nombre, receptor_dni, fecha_programada, fecha_salida_ruta, fecha_entrega_conforme, estado_transporte, detalle_incidencia, observaciones) VALUES
+    (1, 1, 'TRK-2026-0001', 'ENTREGA_IMPORTACION', NULL, NULL, NULL, 'Terminal Portuario Muelle Sur, Callao', 'Almacén Central Camposol, Panamericana Norte Km 497', 'Chao', 'Ing. Javier Morales (+51 944 112 233)', NULL, NULL, DATE_ADD(NOW(), INTERVAL 1 DAY), NULL, NULL, 'PENDIENTE_ASIGNACION', NULL, 'Pendiente asignación de tracto refrigerado y conductor con MATPEL'),
+    (2, 2, 'TRK-2026-0002', 'ENTREGA_IMPORTACION', 2, 2, 'GRT-001-000142', 'Terminal Portuario Muelle Norte APM, Callao', 'Planta Agroindustrial Danper, Mz L Lote 5', 'Trujillo', 'Sr. Carlos Benites (+51 944 223 344)', NULL, NULL, DATE_ADD(NOW(), INTERVAL 2 DAY), NULL, NULL, 'PROGRAMADO', NULL, 'Programado para recojo de contenedor refrigerado'),
+    (3, 3, 'TRK-2026-0003', 'ENTREGA_IMPORTACION', 1, 1, 'GRT-001-000140', 'Depósito Aduanero DP World Callao', 'Centro de Distribución Samsung, Av. Elmer Faucett 3450', 'Callao', 'Lic. Patricia Vega (+51 988 554 433)', NULL, NULL, NOW(), DATE_SUB(NOW(), INTERVAL 2 HOUR), NULL, 'EN_RUTA', 'Tránsito fluido por Av. Néstor Gambetta', 'Despacho con escolta de seguridad satelital'),
+    (4, 4, 'TRK-2026-0004', 'ENTREGA_IMPORTACION', 4, 6, 'GRT-001-000138', 'Depósito Aduanero APM Terminals Callao', 'Almacén Central LG Electronics, Panamericana Sur Km 29.5', 'Lurín', 'Ing. Roberto Huamán (+51 977 665 544)', 'Roberto Huamán Cárdenas', '44889911', DATE_SUB(NOW(), INTERVAL 1 DAY), DATE_SUB(NOW(), INTERVAL 1 DAY), DATE_SUB(NOW(), INTERVAL 18 HOUR), 'ENTREGADO', 'Entrega conforme sin observaciones', 'GRE-T firmada electrónicamente y precintos verificados');
+
 SET FOREIGN_KEY_CHECKS = 1;

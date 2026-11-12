@@ -561,7 +561,7 @@ const openEditModal = (c) => {
     apellidos: c.apellidos || '',
     numeroDocumento: c.numeroDocumento || '',
     numeroLicencia: c.numeroLicencia || '',
-    categoriaLicencia: c.categoriaLicencia || 'A-IIIc',
+    categoriaLicencia: c.categoriaLicencia || c.tipoLicencia || 'A-IIIc',
     fechaVencimientoLicencia: c.fechaVencimientoLicencia ? c.fechaVencimientoLicencia.substring(0, 10) : '',
     telefono: c.telefono || '',
     idUsuario: c.idUsuario || null,

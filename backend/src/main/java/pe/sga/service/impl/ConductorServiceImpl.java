@@ -82,6 +82,7 @@ public class ConductorServiceImpl implements IConductorService {
                 .telefono(dto.getTelefono() != null ? dto.getTelefono().trim() : null)
                 .estadoOperativo(dto.getEstadoOperativo() != null ? dto.getEstadoOperativo().trim().toUpperCase() : "DISPONIBLE")
                 .estadoActivo(dto.getEstadoActivo() != null ? dto.getEstadoActivo() : true)
+                .observaciones(dto.getObservaciones() != null ? dto.getObservaciones().trim() : null)
                 .build();
 
         return mapToResponse(conductorRepository.save(conductor));
@@ -122,6 +123,7 @@ public class ConductorServiceImpl implements IConductorService {
         if (dto.getTelefono() != null) conductor.setTelefono(dto.getTelefono().trim());
         if (dto.getEstadoOperativo() != null) conductor.setEstadoOperativo(dto.getEstadoOperativo().trim().toUpperCase());
         if (dto.getEstadoActivo() != null) conductor.setEstadoActivo(dto.getEstadoActivo());
+        if (dto.getObservaciones() != null) conductor.setObservaciones(dto.getObservaciones().trim());
 
         return mapToResponse(conductorRepository.save(conductor));
     }
@@ -163,6 +165,7 @@ public class ConductorServiceImpl implements IConductorService {
                 .telefono(c.getTelefono())
                 .estadoOperativo(c.getEstadoOperativo())
                 .estadoActivo(c.getEstadoActivo())
+                .observaciones(c.getObservaciones())
                 .build();
     }
 }

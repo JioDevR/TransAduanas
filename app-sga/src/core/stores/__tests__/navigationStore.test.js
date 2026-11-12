@@ -77,4 +77,28 @@ describe('navigationStore', () => {
     expect(store.finanzasActionTrigger).toBe('registrar-anticipo')
     expect(store.navTick).toBe(1)
   })
+
+  it('gestiona las 5 sub-opciones canónicas de transporte-flota con valor por defecto dashboard', () => {
+    const store = useNavigationStore()
+    expect(store.transporteFlotaSubOption).toBe('dashboard')
+
+    store.setTransporteFlotaSubOption('despachos')
+    expect(store.transporteFlotaSubOption).toBe('despachos')
+
+    store.setTransporteFlotaSubOption('cabina')
+    expect(store.transporteFlotaSubOption).toBe('cabina')
+
+    store.setTransporteFlotaSubOption('unidades')
+    expect(store.transporteFlotaSubOption).toBe('unidades')
+
+    store.setTransporteFlotaSubOption('conductores')
+    expect(store.transporteFlotaSubOption).toBe('conductores')
+
+    // Alias retrocompatibles
+    store.setTransporteFlotaSubOption('camion')
+    expect(store.transporteFlotaSubOption).toBe('cabina')
+
+    store.setTransporteFlotaSubOption('viajes')
+    expect(store.transporteFlotaSubOption).toBe('despachos')
+  })
 })

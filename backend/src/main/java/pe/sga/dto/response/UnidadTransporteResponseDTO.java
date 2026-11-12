@@ -1,5 +1,6 @@
 package pe.sga.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 
 import java.math.BigDecimal;
@@ -24,4 +25,30 @@ public class UnidadTransporteResponseDTO {
     private Integer kilometrajeActual;
     private String estadoOperativo;
     private Boolean estadoActivo;
+    private String observaciones;
+
+    @JsonProperty("anioFabricacion")
+    public Integer getAnioFabricacion() {
+        return anoFabricacion;
+    }
+
+    @JsonProperty("fechaVencimientoSoat")
+    public LocalDate getFechaVencimientoSoat() {
+        return soatVencimiento;
+    }
+
+    @JsonProperty("fechaVencimientoCitv")
+    public LocalDate getFechaVencimientoCitv() {
+        return citvVencimiento;
+    }
+
+    @JsonProperty("placa")
+    public String getPlaca() {
+        return placaTracto;
+    }
+
+    @JsonProperty("tipoUnidad")
+    public String getTipoUnidad() {
+        return tipoVehiculo;
+    }
 }

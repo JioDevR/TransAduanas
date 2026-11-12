@@ -25,7 +25,7 @@ Cuando una fábrica automotriz ensambla un vehículo moderno, no inventa los neu
 
 En el desarrollo web moderno:
 - **`npm`** (*Node Package Manager*) es el almacén global de componentes de software para JavaScript.
-- El archivo [`app-sga/package.json`](file:///home/jiodev/Documents/Proyects/TransAduanas/app-sga/package.json) es el manifiesto técnico donde se especifican exactamente qué librerías probadas utiliza la aplicación interna.
+- El archivo [`app-sga/package.json`](../../app-sga/package.json) es el manifiesto técnico donde se especifican exactamente qué librerías probadas utiliza la aplicación interna.
 - Cuando ejecutas `npm install`, npm descarga e instala de forma segura cada pieza en la carpeta `node_modules/`.
 
 ---
@@ -91,7 +91,7 @@ En el desarrollo web moderno:
 
 #### `axios` (^1.20.0)
 - **¿Para qué sirve?** Es el mensajero que envía y recibe información desde el backend de Spring Boot (`http://localhost:8085`).
-- **Detalle Técnico:** Instanciado en [`app-sga/src/core/api/apiClient.js`](file:///home/jiodev/Documents/Proyects/TransAduanas/app-sga/src/core/api/apiClient.js):
+- **Detalle Técnico:** Instanciado en [`app-sga/src/core/api/apiClient.js`](../../app-sga/src/core/api/apiClient.js):
   - **Interceptor de Petición:** Lee el token JWT guardado en `localStorage` y lo inyecta automáticamente en la cabecera `Authorization: Bearer <token>`.
   - **Interceptor de Respuesta:** Si el backend responde con un código `401 Unauthorized` (sesión caducada), Axios limpia los datos de sesión de Pinia y redirige de inmediato a la pantalla de `/login` sin recargar la página.
 
@@ -110,7 +110,7 @@ En el desarrollo web moderno:
 
 ## 4. Configuración del Empaquetador (`vite.config.js`)
 
-El archivo [`app-sga/vite.config.js`](file:///home/jiodev/Documents/Proyects/TransAduanas/app-sga/vite.config.js) incluye optimizaciones clave:
+El archivo [`app-sga/vite.config.js`](../../app-sga/vite.config.js) incluye optimizaciones clave:
 
 ```javascript
 export default defineConfig({

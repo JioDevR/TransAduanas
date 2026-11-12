@@ -21,7 +21,6 @@ public class CotizacionRequestDTO {
     @NotNull(message = "El idCliente es obligatorio")
     private Integer idCliente;
 
-    @NotNull(message = "El idUsuarioComercial es obligatorio")
     private Integer idUsuarioComercial;
 
     private Integer idMercancia;

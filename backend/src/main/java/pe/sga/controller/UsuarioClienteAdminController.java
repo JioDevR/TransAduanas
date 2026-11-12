@@ -3,15 +3,20 @@ package pe.sga.controller;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import pe.sga.config.SecurityRoles;
 import pe.sga.dto.portal.admin.*;
 import pe.sga.dto.response.ApiResponseDTO;
+import pe.sga.service.IReporteJasperService;
 import pe.sga.service.IUsuarioClienteService;
 
+import java.io.ByteArrayInputStream;
 import java.util.List;
 
 @RestController
@@ -22,6 +27,7 @@ import java.util.List;
 public class UsuarioClienteAdminController {
 
     private final IUsuarioClienteService usuarioClienteService;
+    private final IReporteJasperService reporteJasperService;
 
     @GetMapping
     public ResponseEntity<ApiResponseDTO<List<UsuarioClienteResponseDTO>>> listar(
@@ -79,5 +85,22 @@ public class UsuarioClienteAdminController {
             @Valid @RequestBody UsuarioClienteResetPasswordDTO dto) {
         usuarioClienteService.resetearPassword(id, dto);
         return ResponseEntity.ok(ApiResponseDTO.ok("Contraseña del usuario restablecida exitosamente", null));
+    }
+
+    @GetMapping("/exportar-pdf")
+    public ResponseEntity<InputStreamResource> exportarUsuariosPortalPdf(
+            @RequestParam(required = false, defaultValue = "true") boolean soloActivos) {
+        ByteArrayInputStream pdfStream = reporteJasperService.exportarUsuariosPortalPdf(soloActivos);
+
+        HttpHeaders headers = new HttpHeaders();
+        String filename = soloActivos
+                ? "reporte-usuarios-portal-activos.pdf"
+                : "reporte-usuarios-portal-listado.pdf";
+        headers.add(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=" + filename);
+
+        return ResponseEntity.ok()
+                .headers(headers)
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(new InputStreamResource(pdfStream));
     }
 }

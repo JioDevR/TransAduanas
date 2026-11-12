@@ -1,6 +1,7 @@
 package pe.sga.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pe.sga.dto.request.CotizacionPagoRegistrarDTO;
@@ -49,13 +50,14 @@ public class CotizacionPagoServiceImpl implements ICotizacionPagoService {
             throw new BadRequestException("Solo se pueden registrar pagos para cotizaciones que han sido APROBADAS técnicamente. Estado actual: " + cotizacion.getEstado());
         }
 
-        Usuario usuario = null;
-        if (idUsuarioRegistro != null && usuarioRepository.existsById(idUsuarioRegistro)) {
-            usuario = usuarioRepository.findById(idUsuarioRegistro).get();
-        } else {
-            usuario = usuarioRepository.findAll().stream().findFirst()
-                    .orElse(null);
+        Usuario usuario = (idUsuarioRegistro != null)
+                ? usuarioRepository.findById(idUsuarioRegistro).orElse(null)
+                : null;
+        if (usuario == null) {
+            usuario = usuarioRepository.findFirstByOrderByIdUsuarioAsc().orElse(null);
         }
+
+        validarPropiedadComercial(cotizacion, usuario);
 
         DocumentoAdjunto documentoComprobante = null;
         if (dto.getIdDocumentoComprobante() != null) {
@@ -107,10 +109,22 @@ public class CotizacionPagoServiceImpl implements ICotizacionPagoService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<CotizacionPagoResponseDTO> listarPorCotizacion(Integer idCotizacion) {
+    public List<CotizacionPagoResponseDTO> listarPorCotizacion(Integer idCotizacion, Usuario usuarioActual) {
+        Cotizacion cotizacion = cotizacionRepository.findById(idCotizacion)
+                .orElseThrow(() -> new ResourceNotFoundException("Cotización no encontrada con ID: " + idCotizacion));
+        validarPropiedadComercial(cotizacion, usuarioActual);
         return cotizacionPagoRepository.findByCotizacion_IdCotizacionOrderByFechaRegistroDesc(idCotizacion).stream()
                 .map(this::mapToResponse)
                 .toList();
+    }
+
+    private void validarPropiedadComercial(Cotizacion cotizacion, Usuario usuarioActual) {
+        if (usuarioActual != null && usuarioActual.getRol() == RolUsuario.AGENTE_COMERCIAL) {
+            if (cotizacion.getUsuarioComercial() == null
+                    || !cotizacion.getUsuarioComercial().getIdUsuario().equals(usuarioActual.getIdUsuario())) {
+                throw new AccessDeniedException("No tiene permisos para acceder o registrar pagos de una cotización ajena");
+            }
+        }
     }
 
     @Override
@@ -135,14 +149,14 @@ public class CotizacionPagoServiceImpl implements ICotizacionPagoService {
         CotizacionPago pago = cotizacionPagoRepository.findById(idPago)
                 .orElseThrow(() -> new ResourceNotFoundException("Pago no encontrado con ID: " + idPago));
 
-        Usuario finanzas = null;
-        if (idUsuarioFinanzas != null && usuarioRepository.existsById(idUsuarioFinanzas)) {
-            finanzas = usuarioRepository.findById(idUsuarioFinanzas).get();
-        } else {
-            finanzas = usuarioRepository.findAll().stream()
-                    .filter(u -> RolUsuario.CONTADOR.equals(u.getRol()) || RolUsuario.ADMINISTRADOR_TI.equals(u.getRol()))
-                    .findFirst()
-                    .orElseGet(() -> usuarioRepository.findAll().stream().findFirst().orElse(null));
+        Usuario finanzas = (idUsuarioFinanzas != null)
+                ? usuarioRepository.findById(idUsuarioFinanzas).orElse(null)
+                : null;
+        if (finanzas == null) {
+            finanzas = usuarioRepository.findFirstByRolInOrderByIdUsuarioAsc(
+                            List.of(RolUsuario.CONTADOR, RolUsuario.ADMINISTRADOR_TI))
+                    .or(() -> usuarioRepository.findFirstByOrderByIdUsuarioAsc())
+                    .orElse(null);
         }
         if (finanzas == null) {
             throw new ResourceNotFoundException("No se encontró ningún usuario habilitado para validar el pago");
@@ -172,7 +186,7 @@ public class CotizacionPagoServiceImpl implements ICotizacionPagoService {
                                 + " ha sido verificado y aprobado por Finanzas. Su servicio queda expedito para la apertura del expediente aduanero.")
                         .tipo("PAGO")
                         .leido(false)
-                        .enlace("/pagos")
+                        .enlace("/pagos?tab=historial")
                         .fechaCreacion(LocalDateTime.now())
                         .build();
                 notificacionClienteRepository.save(notif);
@@ -199,7 +213,7 @@ public class CotizacionPagoServiceImpl implements ICotizacionPagoService {
                                 + "Motivo: " + motivo + ". Ingrese a la sección de Cobros y Pagos para subsanar el voucher o corregir los datos.")
                         .tipo("PAGO")
                         .leido(false)
-                        .enlace("/pagos")
+                        .enlace("/pagos?tab=historial&subsanarPago=" + pago.getIdPago())
                         .fechaCreacion(LocalDateTime.now())
                         .build();
                 notificacionClienteRepository.save(notif);
@@ -224,7 +238,7 @@ public class CotizacionPagoServiceImpl implements ICotizacionPagoService {
                                 + ") fue rechazado. Motivo: " + motivo + ". Ingrese al portal para regularizar su pago.")
                         .tipo("PAGO")
                         .leido(false)
-                        .enlace("/pagos")
+                        .enlace("/pagos?tab=historial&subsanarPago=" + pago.getIdPago())
                         .fechaCreacion(LocalDateTime.now())
                         .build();
                 notificacionClienteRepository.save(notif);
@@ -339,7 +353,7 @@ public class CotizacionPagoServiceImpl implements ICotizacionPagoService {
                 .fechaOperacion(p.getFechaOperacion())
                 .idDocumentoComprobante(p.getDocumentoComprobante() != null ? p.getDocumentoComprobante().getIdDocumento() : null)
                 .documentoComprobanteNombre(p.getDocumentoComprobante() != null ? p.getDocumentoComprobante().getNombreOriginal() : null)
-                .documentoComprobanteUrl(p.getDocumentoComprobante() != null ? p.getDocumentoComprobante().getRutaAlmacenamiento() : null)
+                .documentoComprobanteUrl(p.getDocumentoComprobante() != null ? "/api/v1/documentos/" + p.getDocumentoComprobante().getIdDocumento() + "/preview" : null)
                 .estadoPago(p.getEstadoPago())
                 .idUsuarioFinanzas(p.getUsuarioFinanzas() != null ? p.getUsuarioFinanzas().getIdUsuario() : null)
                 .usuarioFinanzasNombre(p.getUsuarioFinanzas() != null ? p.getUsuarioFinanzas().getNombreCompleto() : null)

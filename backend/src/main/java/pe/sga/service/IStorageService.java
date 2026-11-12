@@ -9,7 +9,9 @@ public interface IStorageService {
 
     String store(MultipartFile file);
 
-    Resource loadAsResource(String filename);
+    String store(MultipartFile file, String subpath);
 
-    void delete(String filename);
+    Resource loadAsResource(String pathOrFilename);
+
+    void delete(String pathOrFilename);
 }

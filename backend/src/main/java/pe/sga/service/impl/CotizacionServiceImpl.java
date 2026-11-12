@@ -2,6 +2,7 @@ package pe.sga.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -11,6 +12,7 @@ import pe.sga.dto.response.CotizacionResponseDTO;
 import pe.sga.entity.*;
 import pe.sga.entity.enums.EstadoCotizacion;
 import pe.sga.entity.enums.EstadoPagoCotizacion;
+import pe.sga.entity.enums.RolUsuario;
 import pe.sga.exception.BadRequestException;
 import pe.sga.exception.ResourceNotFoundException;
 import pe.sga.repository.*;
@@ -47,52 +49,71 @@ public class CotizacionServiceImpl implements ICotizacionService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<CotizacionResponseDTO> listarTodas(Boolean soloActivas) {
-        if (soloActivas != null && soloActivas) {
-            return mapListToResponse(cotizacionRepository.findByEstadoNot(EstadoCotizacion.ANULADA));
+    public List<CotizacionResponseDTO> listar(
+            Boolean soloActivas,
+            EstadoCotizacion estado,
+            Integer idCliente,
+            Integer idUsuarioComercial,
+            Usuario usuarioActual
+    ) {
+        Integer ownerFilterId = esAgenteComercialRestringido(usuarioActual)
+                ? usuarioActual.getIdUsuario()
+                : idUsuarioComercial;
+
+        List<Cotizacion> base;
+        if (ownerFilterId != null) {
+            base = cotizacionRepository.findByUsuarioComercial_IdUsuario(ownerFilterId);
+        } else if (idCliente != null) {
+            base = cotizacionRepository.findByCliente_IdCliente(idCliente);
+        } else if (estado != null) {
+            base = cotizacionRepository.findByEstado(estado);
+        } else if (Boolean.TRUE.equals(soloActivas)) {
+            base = cotizacionRepository.findByEstadoNot(EstadoCotizacion.ANULADA);
+        } else {
+            base = cotizacionRepository.findAll();
         }
-        return mapListToResponse(cotizacionRepository.findAll());
+
+        List<Cotizacion> filtradas = base.stream()
+                .filter(c -> idCliente == null || (c.getCliente() != null && idCliente.equals(c.getCliente().getIdCliente())))
+                .filter(c -> estado == null || c.getEstado() == estado)
+                .filter(c -> !Boolean.TRUE.equals(soloActivas) || c.getEstado() != EstadoCotizacion.ANULADA)
+                .toList();
+
+        return mapListToResponse(filtradas);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<CotizacionResponseDTO> listarPorEstado(EstadoCotizacion estado) {
-        if (estado == null) {
-            return listarTodas(false);
-        }
-        return mapListToResponse(cotizacionRepository.findByEstado(estado));
+    public List<CotizacionResponseDTO> listarSinAsignar() {
+        List<Cotizacion> sinAsignar = cotizacionRepository.findByUsuarioComercialIsNullAndEstadoNot(EstadoCotizacion.ANULADA);
+        return mapListToResponse(sinAsignar);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<CotizacionResponseDTO> listarPorCliente(Integer idCliente) {
-        return mapListToResponse(cotizacionRepository.findByCliente_IdCliente(idCliente));
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public CotizacionResponseDTO buscarPorId(Integer id) {
+    public CotizacionResponseDTO buscarPorId(Integer id, Usuario usuarioActual) {
         Cotizacion cotizacion = cotizacionRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Cotización no encontrada con id: " + id));
+        validarAccesoCotizacion(cotizacion, usuarioActual, true);
         return mapToResponse(cotizacion);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public CotizacionResponseDTO buscarPorCodigo(String codigoCotizacion) {
+    public CotizacionResponseDTO buscarPorCodigo(String codigoCotizacion, Usuario usuarioActual) {
         Cotizacion cotizacion = cotizacionRepository.findByCodigoCotizacion(codigoCotizacion)
                 .orElseThrow(() -> new ResourceNotFoundException("Cotización no encontrada con código: " + codigoCotizacion));
+        validarAccesoCotizacion(cotizacion, usuarioActual, true);
         return mapToResponse(cotizacion);
     }
 
     @Override
     @Transactional
-    public CotizacionResponseDTO crear(CotizacionRequestDTO dto) {
+    public CotizacionResponseDTO crear(CotizacionRequestDTO dto, Usuario usuarioActual) {
         Cliente cliente = clienteRepository.findById(dto.getIdCliente())
                 .orElseThrow(() -> new ResourceNotFoundException("Cliente no encontrado con id: " + dto.getIdCliente()));
 
-        Usuario usuarioComercial = usuarioRepository.findById(dto.getIdUsuarioComercial())
-                .orElseThrow(() -> new ResourceNotFoundException("Usuario comercial no encontrado con id: " + dto.getIdUsuarioComercial()));
+        Usuario usuarioComercial = resolverUsuarioComercialCreacion(dto, usuarioActual);
 
         CatalogoMercancia mercancia = null;
         if (dto.getIdMercancia() != null) {
@@ -163,9 +184,29 @@ public class CotizacionServiceImpl implements ICotizacionService {
 
     @Override
     @Transactional
-    public CotizacionResponseDTO actualizar(Integer id, CotizacionRequestDTO dto) {
+    public CotizacionResponseDTO actualizar(Integer id, CotizacionRequestDTO dto, Usuario usuarioActual) {
         Cotizacion cotizacion = cotizacionRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Cotización no encontrada con id: " + id));
+
+        if (cotizacion.getUsuarioComercial() == null) {
+            Usuario asesorDestino = resolverUsuarioComercialCreacion(dto, usuarioActual);
+            int claimed = cotizacionRepository.asignarSiSinAsignar(id, asesorDestino);
+            if (claimed == 0) {
+                Cotizacion existente = cotizacionRepository.findById(id)
+                        .orElseThrow(() -> new ResourceNotFoundException("Cotización no encontrada con id: " + id));
+                if (existente.getEstado() == EstadoCotizacion.ANULADA) {
+                    throw new BadRequestException("No se puede editar una cotización anulada");
+                }
+                String asignadoA = existente.getUsuarioComercial() != null
+                        ? ": " + existente.getUsuarioComercial().getNombreCompleto()
+                        : "";
+                throw new BadRequestException("Esta solicitud ya fue tomada por otro asesor comercial" + asignadoA);
+            }
+            cotizacion = cotizacionRepository.findById(id)
+                    .orElseThrow(() -> new ResourceNotFoundException("Cotización no encontrada con id: " + id));
+        } else {
+            validarAccesoCotizacion(cotizacion, usuarioActual, false);
+        }
 
         if (cotizacion.getEstado() == EstadoCotizacion.APROBADA || cotizacion.getEstado() == EstadoCotizacion.ANULADA) {
             throw new BadRequestException("No se puede editar una cotización en estado: " + cotizacion.getEstado());
@@ -245,6 +286,10 @@ public class CotizacionServiceImpl implements ICotizacionService {
             dto.getEstado() != EstadoCotizacion.OBSERVADA &&
             dto.getEstado() != EstadoCotizacion.RECHAZADA) {
             throw new BadRequestException("El estado de revisión debe ser APROBADA, OBSERVADA o RECHAZADA");
+        }
+
+        if (dto.getEstado() == EstadoCotizacion.APROBADA && (cotizacion.getUsuarioComercial() == null || cotizacion.getTotalCotizado() == null || cotizacion.getTotalCotizado().compareTo(BigDecimal.ZERO) <= 0)) {
+            throw new BadRequestException("La cotización debe contar con asesor comercial asignado y liquidación económica mayor a $0.00 antes de aprobarse");
         }
 
         if (dto.getEstado() == EstadoCotizacion.OBSERVADA && (dto.getMotivoObservacion() == null || dto.getMotivoObservacion().trim().isEmpty())) {
@@ -328,18 +373,105 @@ public class CotizacionServiceImpl implements ICotizacionService {
 
     @Override
     @Transactional
-    public void anular(Integer id) {
+    public CotizacionResponseDTO asignarAsesor(Integer id, Integer idUsuarioComercial, Usuario usuarioActual) {
+        if (usuarioActual == null || usuarioActual.getIdUsuario() == null) {
+            throw new AccessDeniedException("Usuario autenticado requerido para asignar cotizaciones");
+        }
+
+        if (esAgenteComercialRestringido(usuarioActual)) {
+            int updated = cotizacionRepository.asignarSiSinAsignar(id, usuarioActual);
+            if (updated == 0) {
+                Cotizacion existente = cotizacionRepository.findById(id)
+                        .orElseThrow(() -> new ResourceNotFoundException("Cotización no encontrada con id: " + id));
+                if (existente.getEstado() == EstadoCotizacion.ANULADA) {
+                    throw new BadRequestException("No se puede asignar una cotización anulada");
+                }
+                String asignadoA = existente.getUsuarioComercial() != null
+                        ? ": " + existente.getUsuarioComercial().getNombreCompleto()
+                        : "";
+                throw new BadRequestException("Esta solicitud ya fue tomada por otro asesor comercial" + asignadoA);
+            }
+            Cotizacion asignada = cotizacionRepository.findById(id)
+                    .orElseThrow(() -> new ResourceNotFoundException("Cotización no encontrada con id: " + id));
+            log.info("Cotización {} reclamada por asesor comercial {} (ID: {})",
+                    asignada.getCodigoCotizacion(), usuarioActual.getUsername(), usuarioActual.getIdUsuario());
+            return mapToResponse(asignada);
+        }
+
         Cotizacion cotizacion = cotizacionRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Cotización no encontrada con id: " + id));
+
+        if (cotizacion.getEstado() == EstadoCotizacion.ANULADA) {
+            throw new BadRequestException("No se puede asignar una cotización anulada");
+        }
+
+        Integer targetId = idUsuarioComercial != null ? idUsuarioComercial : usuarioActual.getIdUsuario();
+        Usuario asesorDestino = usuarioRepository.findById(targetId)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario comercial no encontrado con id: " + targetId));
+
+        if (!Boolean.TRUE.equals(asesorDestino.getEstadoActivo())) {
+            throw new BadRequestException("El asesor comercial seleccionado se encuentra inactivo");
+        }
+
+        cotizacion.setUsuarioComercial(asesorDestino);
+        Cotizacion guardada = cotizacionRepository.save(cotizacion);
+        log.info("Cotización {} asignada a {} por usuario {}",
+                guardada.getCodigoCotizacion(), asesorDestino.getUsername(), usuarioActual.getUsername());
+        return mapToResponse(guardada);
+    }
+
+    @Override
+    @Transactional
+    public void anular(Integer id, Usuario usuarioActual) {
+        Cotizacion cotizacion = cotizacionRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Cotización no encontrada con id: " + id));
+        validarAccesoCotizacion(cotizacion, usuarioActual, false);
         cotizacion.setEstado(EstadoCotizacion.ANULADA);
         cotizacionRepository.save(cotizacion);
     }
 
     @Override
     @Transactional
-    public void eliminar(Integer id) {
+    public void eliminar(Integer id, Usuario usuarioActual) {
         // Borrado lógico estándar
-        anular(id);
+        anular(id, usuarioActual);
+    }
+
+    private boolean esAgenteComercialRestringido(Usuario usuarioActual) {
+        return usuarioActual != null && usuarioActual.getRol() == RolUsuario.AGENTE_COMERCIAL;
+    }
+
+    private void validarAccesoCotizacion(Cotizacion cotizacion, Usuario usuarioActual, boolean permitirSinAsignar) {
+        if (!esAgenteComercialRestringido(usuarioActual)) {
+            return;
+        }
+        if (cotizacion.getUsuarioComercial() == null) {
+            if (permitirSinAsignar) {
+                return;
+            }
+            throw new AccessDeniedException("Debe tomar esta solicitud antes de editarla o anularla");
+        }
+        if (!cotizacion.getUsuarioComercial().getIdUsuario().equals(usuarioActual.getIdUsuario())) {
+            throw new AccessDeniedException("No tiene permisos para acceder a la cotización de otro asesor comercial");
+        }
+    }
+
+    private Usuario resolverUsuarioComercialCreacion(CotizacionRequestDTO dto, Usuario usuarioActual) {
+        if (esAgenteComercialRestringido(usuarioActual)) {
+            return usuarioRepository.findById(usuarioActual.getIdUsuario())
+                    .orElseThrow(() -> new ResourceNotFoundException("Usuario comercial no encontrado con id: " + usuarioActual.getIdUsuario()));
+        }
+        if (dto != null && dto.getIdUsuarioComercial() != null) {
+            Optional<Usuario> usuarioOpt = usuarioRepository.findById(dto.getIdUsuarioComercial());
+            if (usuarioOpt.isPresent() && Boolean.TRUE.equals(usuarioOpt.get().getEstadoActivo())) {
+                return usuarioOpt.get();
+            }
+        }
+        if (usuarioActual != null && usuarioActual.getIdUsuario() != null) {
+            return usuarioRepository.findById(usuarioActual.getIdUsuario())
+                    .orElseThrow(() -> new ResourceNotFoundException("Usuario comercial no encontrado con id: " + usuarioActual.getIdUsuario()));
+        }
+        throw new BadRequestException("El idUsuarioComercial es obligatorio");
     }
 
     private String generarCodigoCotizacion() {
@@ -419,11 +551,12 @@ public class CotizacionServiceImpl implements ICotizacionService {
             cotizacion.setMontoTributosEstimado(tributos);
             BigDecimal totalFinal = dto.getTotalCotizado() != null && dto.getTotalCotizado().compareTo(BigDecimal.ZERO) > 0 ? dto.getTotalCotizado() : total;
             cotizacion.setTotalCotizado(totalFinal);
-
-            BigDecimal abonado = cotizacion.getTotalAbonado() != null ? cotizacion.getTotalAbonado() : BigDecimal.ZERO;
-            BigDecimal saldo = totalFinal.subtract(abonado);
-            cotizacion.setSaldoPendiente(saldo.compareTo(BigDecimal.ZERO) < 0 ? BigDecimal.ZERO : saldo);
         }
+
+        BigDecimal totalActual = cotizacion.getTotalCotizado() != null ? cotizacion.getTotalCotizado() : BigDecimal.ZERO;
+        BigDecimal abonado = cotizacion.getTotalAbonado() != null ? cotizacion.getTotalAbonado() : BigDecimal.ZERO;
+        BigDecimal saldo = totalActual.subtract(abonado);
+        cotizacion.setSaldoPendiente(saldo.compareTo(BigDecimal.ZERO) < 0 ? BigDecimal.ZERO : saldo);
     }
 
     private List<CotizacionResponseDTO> mapListToResponse(List<Cotizacion> cotizaciones) {

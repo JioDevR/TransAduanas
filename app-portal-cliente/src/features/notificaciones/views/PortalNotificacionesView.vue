@@ -94,13 +94,14 @@
           v-model="filtroTexto" 
           type="text" 
           placeholder="Buscar por asunto o contenido del mensaje..." 
+          aria-label="Buscar notificaciones por asunto o contenido"
           class="search-input"
         />
       </div>
 
       <div class="filter-group">
-        <label>Lectura:</label>
-        <select v-model="filtroEstado" class="custom-select">
+        <label for="filtro-lectura-notif">Lectura:</label>
+        <select id="filtro-lectura-notif" v-model="filtroEstado" aria-label="Filtrar por estado de lectura" class="custom-select">
           <option value="TODAS">Todas las notificaciones</option>
           <option value="NO_LEIDAS">Solo No Leídas</option>
           <option value="LEIDAS">Solo Leídas</option>
@@ -108,8 +109,8 @@
       </div>
 
       <div class="filter-group">
-        <label>Categoría:</label>
-        <select v-model="filtroTipo" class="custom-select">
+        <label for="filtro-categoria-notif">Categoría:</label>
+        <select id="filtro-categoria-notif" v-model="filtroTipo" aria-label="Filtrar por categoría" class="custom-select">
           <option value="">Todas las categorías</option>
           <option value="ACCESO_CREADO">Accesos & Cuenta</option>
           <option value="COTIZACION_APROBADA">Cotizaciones Aprobadas</option>
@@ -216,6 +217,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { portalNotificationService } from '../services/portalNotificationService'
 import { useNotification } from '@/shared/composables/useNotification'
 import BasePagination from '@/shared/components/BasePagination.vue'
+import { formatDateTime as formatFecha } from '@/shared/utils/formatters'
 
 const { showSuccess, showError } = useNotification()
 
@@ -367,22 +369,6 @@ function getTipoLabel(tipo) {
       return 'Seguridad'
     default:
       return 'Aviso General'
-  }
-}
-
-function formatFecha(fechaStr) {
-  if (!fechaStr) return '-'
-  try {
-    const d = new Date(fechaStr)
-    return d.toLocaleString('es-PE', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    })
-  } catch {
-    return fechaStr
   }
 }
 
@@ -632,10 +618,10 @@ onMounted(() => {
 }
 
 .custom-select {
-  padding: 0.55rem 0.95rem;
+  padding: 0.55rem 2.25rem 0.55rem 0.95rem;
   border-radius: 6px;
   border: 1px solid var(--color-border);
-  background: var(--color-bg-base);
+  background-color: var(--color-bg-base);
   font-size: 0.84rem;
   color: var(--color-text-main);
   outline: none;
@@ -829,7 +815,7 @@ onMounted(() => {
   font-size: 0.65rem;
   font-weight: 700;
   background: var(--color-accent-kicker);
-  color: #ffffff;
+  color: var(--color-primary-text);
   padding: 0.15rem 0.45rem;
   border-radius: 10px;
   letter-spacing: 0.04em;

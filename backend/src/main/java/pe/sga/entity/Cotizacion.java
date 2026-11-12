@@ -30,7 +30,7 @@ public class Cotizacion {
     private Cliente cliente;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "id_usuario_comercial", nullable = false)
+    @JoinColumn(name = "id_usuario_comercial")
     private Usuario usuarioComercial;
 
     @ManyToOne(fetch = FetchType.EAGER)

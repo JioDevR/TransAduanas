@@ -13,6 +13,31 @@ export const userService = {
   },
 
   /**
+   * Listar operadores internos activos para asignación operativa en módulos
+   */
+  async getOperadores() {
+    const response = await apiClient.get('/usuarios/operadores')
+    return response.data.data
+  },
+
+  /**
+   * Listar usuarios con rol AGENTE_ADUANERO activos para asignación de expedientes
+   */
+  async getAgentesAduaneros() {
+    const operadores = await this.getOperadores()
+    return (operadores || []).filter((u) => {
+      const rol = String(u.rol || u.rolNombre || u.nombreRol || '').toUpperCase()
+      const cargo = String(u.cargoTitulo || '').toUpperCase()
+      const esAgente =
+        rol === 'AGENTE_ADUANERO' ||
+        rol === 'ROLE_AGENTE_ADUANERO' ||
+        cargo.includes('AGENTE ADUANERO')
+      const activo = u.estadoActivo !== false
+      return esAgente && activo
+    })
+  },
+
+  /**
    * Alias en español para getUsers
    */
   async getUsuarios(soloActivos = false) {
@@ -82,10 +107,12 @@ export const userService = {
   },
 
   /**
-   * Descargar reporte de usuarios en PDF generado por JasperReports
+   * Descargar listado de usuarios internos en PDF (plantilla HTML corporativa TI)
+   * @param {Boolean} soloActivos Filtrar solo usuarios activos (default: true)
    */
-  async downloadPdf() {
+  async downloadPdf(soloActivos = true) {
     const response = await apiClient.get('/usuarios/exportar-pdf', {
+      params: { soloActivos },
       responseType: 'blob'
     })
     return response.data

@@ -44,6 +44,9 @@ public class DocumentoController {
     ) {
         Integer idUsuario;
         if (principal instanceof Usuario usuarioAutenticado && usuarioAutenticado.getIdUsuario() != null) {
+            if (entidadTipo == EntidadDocumento.COTIZACION && idEntidad != null) {
+                documentoService.validarAccesoComercialCotizacion(usuarioAutenticado, idEntidad, true);
+            }
             idUsuario = usuarioAutenticado.getIdUsuario();
         } else if (principal instanceof UsuarioCliente uc) {
             Integer idClienteAutenticado = uc.getCliente() != null ? uc.getCliente().getIdCliente() : null;
@@ -72,14 +75,18 @@ public class DocumentoController {
         if (principal instanceof UsuarioCliente uc) {
             Integer idClienteAutenticado = uc.getCliente() != null ? uc.getCliente().getIdCliente() : null;
             documentoService.validarPropiedadConsultaCliente(idClienteAutenticado, idCotizacion, idExpediente, idCliente);
-        } else if (!(principal instanceof Usuario)) {
-            throw new AccessDeniedException("No autorizado para listar documentos");
+            List<DocumentoResponseDTO> lista = documentoService.listar(
+                    entidadTipo, idCotizacion, idExpediente, idCliente, categoria
+            );
+            return ResponseEntity.ok(ApiResponseDTO.ok("Listado de documentos recuperado", lista));
         }
-
-        List<DocumentoResponseDTO> lista = documentoService.listar(
-                entidadTipo, idCotizacion, idExpediente, idCliente, categoria
-        );
-        return ResponseEntity.ok(ApiResponseDTO.ok("Listado de documentos recuperado", lista));
+        if (principal instanceof Usuario usuario) {
+            List<DocumentoResponseDTO> lista = documentoService.listarParaUsuario(
+                    usuario, entidadTipo, idCotizacion, idExpediente, idCliente, categoria
+            );
+            return ResponseEntity.ok(ApiResponseDTO.ok("Listado de documentos recuperado", lista));
+        }
+        throw new AccessDeniedException("No autorizado para listar documentos");
     }
 
     @GetMapping("/{id}")
@@ -87,13 +94,8 @@ public class DocumentoController {
             @PathVariable Integer id,
             @AuthenticationPrincipal Object principal
     ) {
-        if (principal instanceof UsuarioCliente uc) {
-            DocumentoAdjunto entidad = documentoService.obtenerEntidad(id);
-            Integer idClienteAutenticado = uc.getCliente() != null ? uc.getCliente().getIdCliente() : null;
-            documentoService.validarPropiedadDocumentoCliente(idClienteAutenticado, entidad);
-        } else if (!(principal instanceof Usuario)) {
-            throw new AccessDeniedException("No autorizado para consultar el documento");
-        }
+        DocumentoAdjunto entidad = documentoService.obtenerEntidad(id);
+        validarAccesoLecturaDocumento(principal, entidad);
         DocumentoResponseDTO dto = documentoService.buscarPorId(id);
         return ResponseEntity.ok(ApiResponseDTO.ok(dto));
     }
@@ -104,12 +106,7 @@ public class DocumentoController {
             @AuthenticationPrincipal Object principal
     ) {
         DocumentoAdjunto entidad = documentoService.obtenerEntidad(id);
-        if (principal instanceof UsuarioCliente uc) {
-            Integer idClienteAutenticado = uc.getCliente() != null ? uc.getCliente().getIdCliente() : null;
-            documentoService.validarPropiedadDocumentoCliente(idClienteAutenticado, entidad);
-        } else if (!(principal instanceof Usuario)) {
-            throw new AccessDeniedException("No autorizado para descargar el documento");
-        }
+        validarAccesoLecturaDocumento(principal, entidad);
 
         Resource resource = documentoService.descargarArchivo(id);
         String encodedFilename = URLEncoder.encode(entidad.getNombreOriginal(), StandardCharsets.UTF_8).replace("+", "%20");
@@ -126,12 +123,7 @@ public class DocumentoController {
             @AuthenticationPrincipal Object principal
     ) {
         DocumentoAdjunto entidad = documentoService.obtenerEntidad(id);
-        if (principal instanceof UsuarioCliente uc) {
-            Integer idClienteAutenticado = uc.getCliente() != null ? uc.getCliente().getIdCliente() : null;
-            documentoService.validarPropiedadDocumentoCliente(idClienteAutenticado, entidad);
-        } else if (!(principal instanceof Usuario)) {
-            throw new AccessDeniedException("No autorizado para previsualizar el documento");
-        }
+        validarAccesoLecturaDocumento(principal, entidad);
 
         Resource resource = documentoService.descargarArchivo(id);
         String encodedFilename = URLEncoder.encode(entidad.getNombreOriginal(), StandardCharsets.UTF_8).replace("+", "%20");
@@ -144,8 +136,26 @@ public class DocumentoController {
 
     @DeleteMapping("/{id}")
     @PreAuthorize(SecurityRoles.ACCESS_INTERNAL_STAFF)
-    public ResponseEntity<ApiResponseDTO<Void>> eliminar(@PathVariable Integer id) {
+    public ResponseEntity<ApiResponseDTO<Void>> eliminar(
+            @PathVariable Integer id,
+            @AuthenticationPrincipal Object principal
+    ) {
+        if (principal instanceof Usuario usuario) {
+            DocumentoAdjunto entidad = documentoService.obtenerEntidad(id);
+            documentoService.validarAccesoDocumentoComercial(usuario, entidad, true);
+        }
         documentoService.eliminar(id);
         return ResponseEntity.ok(ApiResponseDTO.ok("Documento eliminado correctamente", null));
+    }
+
+    private void validarAccesoLecturaDocumento(Object principal, DocumentoAdjunto entidad) {
+        if (principal instanceof UsuarioCliente uc) {
+            Integer idClienteAutenticado = uc.getCliente() != null ? uc.getCliente().getIdCliente() : null;
+            documentoService.validarPropiedadDocumentoCliente(idClienteAutenticado, entidad);
+        } else if (principal instanceof Usuario usuario) {
+            documentoService.validarAccesoDocumentoComercial(usuario, entidad, true);
+        } else {
+            throw new AccessDeniedException("No autorizado para acceder al documento");
+        }
     }
 }

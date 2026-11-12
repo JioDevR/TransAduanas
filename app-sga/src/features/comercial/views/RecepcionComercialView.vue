@@ -52,7 +52,11 @@
             </button>
             <button type="button" class="btn-outline-warm" @click="navigateTo('cotizaciones')">
               <i class="pi pi-file-edit"></i>
-              <span>Bandeja Cotizaciones</span>
+              <span>{{ isAgenteComercial ? 'Mis Cotizaciones' : 'Bandeja Cotizaciones' }}</span>
+            </button>
+            <button type="button" class="btn-outline-warm" @click="navigateTo('solicitudes')">
+              <i class="pi pi-inbox"></i>
+              <span>Sin Asignar ({{ solicitudesSinAsignar.length }})</span>
             </button>
             <button type="button" class="btn-outline-warm" @click="navigateTo('clientes')">
               <i class="pi pi-building"></i>
@@ -147,19 +151,21 @@
             </div>
           </div>
 
-          <!-- Tarjeta 6: Expedientes Formalizados -->
-          <div class="commercial-kpi-card" @click="navigateTo('ordenes')">
+          <!-- Tarjeta 6: Solicitudes Sin Asignar del Portal B2B -->
+          <div class="commercial-kpi-card pending-card" @click="navigateTo('solicitudes')">
             <div class="kpi-card-header">
               <span class="kpi-num">06</span>
-              <span class="kpi-label">Expedientes Operativos</span>
-              <i class="pi pi-folder-open kpi-icon"></i>
+              <span class="kpi-label">Solicitudes Sin Asignar</span>
+              <i class="pi pi-inbox kpi-icon warning"></i>
             </div>
             <div class="kpi-main-stat">
-              <span class="kpi-value">{{ expedientesList.length }}</span>
-              <span class="kpi-badge info">En Seguimiento</span>
+              <span class="kpi-value" :class="{ 'text-warning': solicitudesSinAsignar.length > 0 }">{{ solicitudesSinAsignar.length }}</span>
+              <span class="kpi-badge" :class="solicitudesSinAsignar.length > 0 ? 'warning' : 'info'">
+                {{ solicitudesSinAsignar.length > 0 ? 'Por Tomar' : 'Al día' }}
+              </span>
             </div>
             <div class="kpi-footer-note">
-              <span>Trámites aduaneros activos</span>
+              <span>Solicitudes B2B pendientes de asesor</span>
             </div>
           </div>
         </div>
@@ -284,14 +290,20 @@
                   <td>
                     <div class="client-cell">
                       <span class="client-name">{{ c.clienteRazonSocial || 'Cliente N/A' }}</span>
-                      <span class="client-sub">{{ c.clienteNumeroDocumento }}</span>
+                      <span class="client-sub font-mono">{{ c.clienteNumeroDocumento }}</span>
                     </div>
                   </td>
                   <td>
                     <span class="regimen-tag">{{ formatRegimen(c.regimenAduanero) }}</span>
                   </td>
                   <td>
-                    <span class="total-amount font-mono">${{ Number(c.totalCotizado || 0).toLocaleString('en-US', { minimumFractionDigits: 2 }) }}</span>
+                    <Tag
+                      v-if="Number(c.totalCotizado || 0) <= 0"
+                      value="Por liquidar ($0.00)"
+                      severity="warn"
+                      rounded
+                    />
+                    <span v-else class="total-amount font-mono">${{ Number(c.totalCotizado || 0).toLocaleString('en-US', { minimumFractionDigits: 2 }) }}</span>
                   </td>
                   <td>
                     <span class="date-text">{{ c.fechaEmision }}</span>
@@ -317,10 +329,10 @@
                       <button
                         type="button"
                         class="action-btn-outline"
-                        title="Editar cotización"
+                        :title="Number(c.totalCotizado || 0) <= 0 ? 'Completar cotización' : 'Editar cotización'"
                         @click="openEditCotizacion(c)"
                       >
-                        Editar
+                        {{ Number(c.totalCotizado || 0) <= 0 ? 'Completar' : 'Editar' }}
                       </button>
                     </div>
                   </td>
@@ -345,8 +357,8 @@
       <div v-if="activeTab === 'cotizaciones'" class="tab-content-section fade-in">
         <div class="section-header-row">
           <div>
-            <span class="badge-kicker">PROPUESTAS ADUANERAS</span>
-            <h3 class="section-title">Registro de Cotizaciones Comerciales</h3>
+            <span class="badge-kicker">{{ isAgenteComercial ? 'CARTERA PERSONAL // PROPUESTAS ADUANERAS' : 'VISIÓN GLOBAL // PROPUESTAS ADUANERAS' }}</span>
+            <h3 class="section-title">{{ isAgenteComercial ? 'Mis Cotizaciones Comerciales' : 'Registro de Cotizaciones Comerciales' }}</h3>
           </div>
 
           <div class="section-controls">
@@ -398,6 +410,17 @@
                 <option value="APROBADA">Aprobadas</option>
                 <option value="RECHAZADA">Rechazadas</option>
                 <option value="ANULADA">Anuladas</option>
+              </select>
+            </div>
+
+            <!-- Filtro Asesor Comercial (solo Gerencia / Admin TI) -->
+            <div v-if="!isAgenteComercial" class="filter-dropdown">
+              <select v-model="filterAsesorCotizacion" class="filter-select" title="Filtrar por asesor comercial">
+                <option value="ALL">Todos los Asesores</option>
+                <option value="UNASSIGNED">Sin Asignar</option>
+                <option v-for="a in asesoresDisponibles" :key="a.id" :value="String(a.id)">
+                  {{ a.nombre }}
+                </option>
               </select>
             </div>
 
@@ -472,7 +495,7 @@
               <div class="client-cell">
                 <span class="client-name">{{ c.clienteRazonSocial || 'Cliente N/A' }}</span>
                 <div class="client-sub-meta">
-                  <span class="client-sub">{{ c.clienteNumeroDocumento }}</span>
+                  <span class="client-sub font-mono">{{ c.clienteNumeroDocumento }}</span>
                   <span v-if="c.clienteTieneUsuario" class="portal-badge origin-badge origin-portal" title="Empresa formalizada con usuario activo en Portal B2B">
                     <i class="pi pi-id-card"></i> Portal B2B
                   </span>
@@ -484,6 +507,13 @@
             </template>
           </Column>
 
+          <Column v-if="!isAgenteComercial" header="Asesor Comercial">
+            <template #body="{ data: c }">
+              <span v-if="c.usuarioComercialNombre" class="contact-text">{{ c.usuarioComercialNombre }}</span>
+              <Tag v-else value="Sin Asignar" severity="warn" rounded />
+            </template>
+          </Column>
+
           <Column header="Régimen Aduanero">
             <template #body="{ data: c }">
               <span class="regimen-tag">{{ c.regimenAduanero }}</span>
@@ -492,7 +522,13 @@
 
           <Column header="Total Cotizado">
             <template #body="{ data: c }">
-              <span class="total-amount">${{ Number(c.totalCotizado || 0).toLocaleString('en-US', { minimumFractionDigits: 2 }) }}</span>
+              <Tag
+                v-if="Number(c.totalCotizado || 0) <= 0"
+                value="Por liquidar ($0.00)"
+                severity="warn"
+                rounded
+              />
+              <span v-else class="total-amount font-mono">${{ Number(c.totalCotizado || 0).toLocaleString('en-US', { minimumFractionDigits: 2 }) }}</span>
             </template>
           </Column>
 
@@ -532,7 +568,7 @@
                   :severity="getEstadoPagoSeverity(c.estadoPago)"
                   rounded
                 />
-                <span v-if="c.totalAbonado > 0" class="client-sub" style="color: #15803d; font-weight: 600;">
+                <span v-if="c.totalAbonado > 0" class="client-sub font-mono" style="color: var(--color-success-text); font-weight: 600;">
                   Abono: ${{ Number(c.totalAbonado).toLocaleString('en-US', { minimumFractionDigits: 2 }) }}
                 </span>
                 <span v-else class="client-sub text-muted">
@@ -545,13 +581,13 @@
 
           <Column header="Expediente Aduanero">
             <template #body="{ data: c }">
-              <span v-if="c.tieneExpediente" class="os-linked-tag">
+              <span v-if="c.tieneExpediente" class="os-linked-tag font-mono">
                 <i class="pi pi-folder"></i> {{ c.codigoExpediente }}
               </span>
-              <span v-else-if="c.estado === 'APROBADA' && c.tienePagoAprobado" class="text-muted-dash" style="color: #15803d; font-weight: 600;">
+              <span v-else-if="c.estado === 'APROBADA' && c.tienePagoAprobado" class="text-muted-dash" style="color: var(--color-success-text); font-weight: 600;">
                 Aprobada (Pago Validado)
               </span>
-              <span v-else-if="c.estado === 'APROBADA'" class="text-muted-dash" style="color: #b45309;">
+              <span v-else-if="c.estado === 'APROBADA'" class="text-muted-dash" style="color: var(--color-warning-text);">
                 Aprobada (Requiere Pago Finanzas)
               </span>
               <span v-else class="text-muted-dash">—</span>
@@ -596,10 +632,10 @@
                   v-else
                   type="button"
                   class="action-btn-outline"
-                  title="Editar cotización"
+                  :title="Number(c.totalCotizado || 0) <= 0 ? 'Completar cotización' : 'Editar cotización'"
                   @click="openEditCotizacion(c)"
                 >
-                  Editar
+                  {{ Number(c.totalCotizado || 0) <= 0 ? 'Completar' : 'Editar' }}
                 </button>
                 <button
                   v-if="!c.tieneExpediente && c.estado !== 'APROBADA'"
@@ -797,69 +833,56 @@
       </div>
     </div>
 
-    <!-- TAB 3: EXPEDIENTES ADUANEROS (SOLO LECTURA) -->
-    <div v-if="activeTab === 'ordenes'" class="tab-content-section">
+    <!-- TAB 3: SOLICITUDES SIN ASIGNAR (PORTAL B2B) -->
+    <div v-if="activeTab === 'solicitudes'" class="tab-content-section fade-in">
       <div class="section-header-row">
         <div>
-          <span class="badge-kicker">SEGUIMIENTO OPERATIVO // VISIBILIDAD GLOBAL</span>
-          <h3 class="section-title">Expedientes Aduaneros (Modo Consulta)</h3>
+          <span class="badge-kicker">PORTAL B2B // SOLICITUDES PENDIENTES DE ASIGNACIÓN</span>
+          <h3 class="section-title">Solicitudes Sin Asignar</h3>
+        </div>
+
+        <div class="section-controls">
+          <span class="analytics-stat-pill">
+            Disponibles para tomar: <strong>{{ solicitudesSinAsignar.length }}</strong>
+          </span>
         </div>
       </div>
 
       <!-- Controles de Tabla: Buscar, Filtros y Ordenar por -->
       <div class="table-controls-bar">
         <div class="controls-left">
-          <!-- Campo de Búsqueda -->
           <div class="search-box">
             <i class="pi pi-search search-icon"></i>
             <input
-              v-model.trim="searchExpediente"
+              v-model.trim="searchSolicitud"
               type="text"
-              placeholder="Buscar por expediente, DAM, cotización o cliente..."
+              placeholder="Buscar por N° solicitud, cliente, RUC o mercancía..."
               class="search-input"
             />
             <button
-              v-if="searchExpediente"
+              v-if="searchSolicitud"
               type="button"
               class="clear-search-btn"
-              @click="searchExpediente = ''"
+              @click="searchSolicitud = ''"
               title="Limpiar búsqueda"
             >
               <i class="pi pi-times"></i>
             </button>
           </div>
 
-          <!-- Filtro Estado Expediente -->
           <div class="filter-dropdown">
-            <select v-model="filterEstadoExpediente" class="filter-select" title="Filtrar por estado del expediente">
-              <option value="">Todos los Estados</option>
-              <option value="ASIGNADO">Asignado</option>
-              <option value="NUMERADO">Numerado</option>
-              <option value="EN_TRAMITE">En Trámite</option>
-              <option value="CON_CANAL">Con Canal SUNAT</option>
-              <option value="LEVANTE_AUTORIZADO">Levante Autorizado</option>
-              <option value="CONCLUIDO">Concluido</option>
-              <option value="ANULADO">Anulado</option>
+            <select v-model="filterRegimenSolicitud" class="filter-select" title="Filtrar por régimen aduanero">
+              <option value="ALL">Todos los Regímenes</option>
+              <option value="IMPORTACION_DEFINITIVA">Importación (REG-10)</option>
+              <option value="EXPORTACION_DEFINITIVA">Exportación (REG-40)</option>
             </select>
           </div>
 
-          <!-- Filtro Canal SUNAT -->
-          <div class="filter-dropdown">
-            <select v-model="filterCanalExpediente" class="filter-select" title="Filtrar por canal SUNAT">
-              <option value="ALL">Todos los Canales</option>
-              <option value="VERDE">Canal Verde</option>
-              <option value="NARANJA">Canal Naranja</option>
-              <option value="ROJO">Canal Rojo</option>
-              <option value="PENDIENTE">Pendiente Asignación</option>
-            </select>
-          </div>
-
-          <!-- Ordenar Por -->
           <div class="sort-dropdown">
-            <select v-model="sortByExpediente" class="filter-select sort-select" title="Ordenar expedientes">
-              <option value="fecha-desc">Ordenar por: Fecha (Recientes primero)</option>
-              <option value="fecha-asc">Ordenar por: Fecha (Antiguos primero)</option>
-              <option value="codigo-asc">Ordenar por: N° Expediente (A - Z)</option>
+            <select v-model="sortBySolicitud" class="filter-select sort-select" title="Ordenar solicitudes">
+              <option value="fecha-desc">Ordenar por: Más recientes</option>
+              <option value="fecha-asc">Ordenar por: Más antiguas</option>
+              <option value="monto-desc">Ordenar por: Monto (Mayor a menor)</option>
               <option value="cliente-asc">Ordenar por: Cliente (A - Z)</option>
             </select>
           </div>
@@ -867,10 +890,10 @@
 
         <div class="controls-right">
           <button
-            v-if="hasActiveExpedienteFilters"
+            v-if="hasActiveSolicitudFilters"
             type="button"
             class="btn-clear-filters"
-            @click="resetExpedienteFilters"
+            @click="resetSolicitudFilters"
             title="Restablecer filtros"
           >
             <i class="pi pi-filter-slash"></i>
@@ -884,84 +907,117 @@
         </div>
       </div>
 
-      <!-- Tabla de Expedientes Aduaneros con PrimeVue DataTable (Solo Vista) -->
       <div class="table-container">
         <DataTable
-          :value="filteredExpedientes"
+          :value="filteredSolicitudes"
           :loading="loading"
           responsiveLayout="scroll"
           class="custom-datatable"
-          dataKey="idExpediente"
+          dataKey="idCotizacion"
           paginator
           :rows="15"
           :rowsPerPageOptions="[15, 30, 50]"
-          currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} expedientes"
+          currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} solicitudes"
           paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown CurrentPageReport"
         >
           <template #empty>
             <div class="empty-state">
-              <i class="pi pi-folder-open empty-icon"></i>
-              <p class="empty-title">No hay expedientes aduaneros registrados</p>
-              <p class="empty-desc">Los expedientes aduaneros son formalizados por Supervisión Aduanera tras aprobarse la cotización y confirmarse el pago en Finanzas.</p>
+              <i class="pi pi-inbox empty-icon"></i>
+              <p class="empty-title">No hay solicitudes pendientes por asignar</p>
+              <p class="empty-desc">Las nuevas cotizaciones solicitadas por empresas desde el Portal B2B aparecerán aquí para que cualquier asesor comercial pueda tomarlas.</p>
             </div>
           </template>
 
-          <Column header="N° Expediente">
-            <template #body="{ data: exp }">
-              <span class="doc-code-os">{{ exp.codigoExpediente }}</span>
+          <Column header="N° Solicitud">
+            <template #body="{ data: s }">
+              <span class="doc-code">{{ s.codigoCotizacion }}</span>
             </template>
           </Column>
 
-          <Column header="Cotización Origen">
-            <template #body="{ data: exp }">
-              <span class="doc-code">{{ exp.codigoCotizacion || '—' }}</span>
-            </template>
-          </Column>
-
-          <Column header="Cliente / Importador">
-            <template #body="{ data: exp }">
+          <Column header="Cliente B2B">
+            <template #body="{ data: s }">
               <div class="client-cell">
-                <span class="client-name">{{ exp.clienteRazonSocial || '—' }}</span>
-                <span v-if="exp.clienteNumeroDocumento" class="client-sub">{{ exp.clienteNumeroDocumento }}</span>
+                <span class="client-name">{{ s.clienteRazonSocial || 'Cliente N/A' }}</span>
+                <div class="client-sub-meta">
+                  <span class="client-sub font-mono">{{ s.clienteNumeroDocumento }}</span>
+                  <span class="portal-badge origin-badge origin-portal">
+                    <i class="pi pi-id-card"></i> Portal B2B
+                  </span>
+                </div>
               </div>
             </template>
           </Column>
 
-          <Column header="Régimen Aduanero">
-            <template #body="{ data: exp }">
-              <span class="regimen-tag">{{ formatRegimen(exp.regimenAduanero) }}</span>
+          <Column header="Operación & Carga">
+            <template #body="{ data: s }">
+              <div class="client-cell">
+                <span class="regimen-tag">{{ formatRegimen(s.regimenAduanero) }}</span>
+                <span v-if="s.mercanciaNombre" class="client-sub">{{ s.mercanciaNombre }}</span>
+                <span v-if="s.puertoEnvioNombre || s.puertoDestinoNombre" class="client-sub">
+                  {{ s.puertoEnvioNombre || 'Origen' }} → {{ s.puertoDestinoNombre || 'Destino' }}
+                </span>
+              </div>
             </template>
           </Column>
 
-          <Column header="Canal SUNAT">
-            <template #body="{ data: exp }">
+          <Column header="FOB / Total Estimado">
+            <template #body="{ data: s }">
+              <div class="client-cell">
+                <template v-if="Number(s.totalCotizado || 0) <= 0">
+                  <Tag value="Por liquidar" severity="warn" rounded />
+                  <span class="client-sub font-mono">
+                    FOB: ${{ Number(s.valorFob || 0).toLocaleString('en-US', { minimumFractionDigits: 2 }) }}
+                    <template v-if="Number(s.montoFleteEstimado || 0) > 0">
+                      • Flete decl.: ${{ Number(s.montoFleteEstimado || 0).toLocaleString('en-US', { minimumFractionDigits: 2 }) }}
+                    </template>
+                  </span>
+                </template>
+                <template v-else>
+                  <span class="total-amount font-mono">${{ Number(s.totalCotizado || 0).toLocaleString('en-US', { minimumFractionDigits: 2 }) }}</span>
+                  <span class="client-sub font-mono">FOB: ${{ Number(s.valorFob || 0).toLocaleString('en-US', { minimumFractionDigits: 2 }) }}</span>
+                </template>
+              </div>
+            </template>
+          </Column>
+
+          <Column header="Fecha Emisión">
+            <template #body="{ data: s }">
+              <span class="date-text">{{ s.fechaEmision }}</span>
+            </template>
+          </Column>
+
+          <Column header="Estado">
+            <template #body="{ data: s }">
               <Tag
-                :value="exp.canalSunat || 'PENDIENTE'"
-                :severity="getCanalSeverity(exp.canalSunat)"
+                :value="getCotizacionLabel(s.estado)"
+                :severity="getCotizacionSeverity(s.estado)"
                 rounded
               />
             </template>
           </Column>
 
-          <Column header="N° DAM">
-            <template #body="{ data: exp }">
-              <span class="font-mono text-xs font-bold">{{ exp.numeroDam || exp.numeroDeclaracion || '—' }}</span>
-            </template>
-          </Column>
-
-          <Column header="Fecha Apertura">
-            <template #body="{ data: exp }">
-              <span class="date-text">{{ formatDateTime(exp.fechaApertura) }}</span>
-            </template>
-          </Column>
-
-          <Column header="Estado Trámite">
-            <template #body="{ data: exp }">
-              <Tag
-                :value="exp.estadoExpediente || 'ASIGNADO'"
-                :severity="getExpedienteSeverity(exp.estadoExpediente)"
-                rounded
-              />
+          <Column header="Acciones" headerClass="text-right" bodyClass="text-right">
+            <template #body="{ data: s }">
+              <div class="actions-wrapper">
+                <button
+                  type="button"
+                  class="action-btn-outline"
+                  title="Ver documentos adjuntos"
+                  @click="openDocumentosCotizacion(s)"
+                >
+                  <i class="pi pi-paperclip"></i>
+                  <span>Docs</span>
+                </button>
+                <button
+                  type="button"
+                  class="btn-espresso btn-sm"
+                  title="Abrir cotización para revisar y liquidar precios antes de tomarla"
+                  @click="openEditCotizacion(s)"
+                >
+                  <i class="pi pi-pencil"></i>
+                  <span>Revisar y Liquidar</span>
+                </button>
+              </div>
             </template>
           </Column>
         </DataTable>
@@ -1041,19 +1097,19 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import Tag from 'primevue/tag'
 import Dialog from 'primevue/dialog'
 import { comercialService } from '../services/comercialService'
-import { expedienteService } from '../services/expedienteService'
 import { documentoService } from '@/features/documentos/services/documentoService'
 import { useAuthStore } from '@/features/auth/stores/authStore'
 import { useNavigationStore } from '@/core/stores/navigationStore'
 import { useNotification } from '@/shared/composables/useNotification'
 import { useConfirmation } from '@/shared/composables/useConfirmation'
+import { formatRegimen } from '@/shared/utils/formatters'
 import ClienteRegistrationForm from '../components/ClienteRegistrationForm.vue'
 import CotizacionRegistrationForm from '../components/CotizacionRegistrationForm.vue'
 import CotizacionCorrectionView from '../components/CotizacionCorrectionView.vue'
@@ -1062,9 +1118,10 @@ import DocumentosManagerModal from '@/shared/components/DocumentosManagerModal.v
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
+const isAgenteComercial = computed(() => authStore.userRole === 'AGENTE_COMERCIAL')
 const navigationStore = useNavigationStore()
 const { showSuccess, showError, showInfo, showWarn } = useNotification()
-const { confirmAction, confirmDelete } = useConfirmation()
+const { confirmDelete } = useConfirmation()
 
 const activeTab = ref('dashboard')
 const loading = ref(false)
@@ -1179,10 +1236,11 @@ const closeAllForms = () => {
 watch(
   () => route.query.tab,
   (newTab) => {
-    if (newTab && ['dashboard', 'cotizaciones', 'clientes', 'ordenes'].includes(newTab)) {
-      activeTab.value = newTab
-      if (navigationStore.comercialSubOption !== newTab) {
-        navigationStore.setComercialSubOption(newTab)
+    const resolvedTab = newTab === 'ordenes' ? 'cotizaciones' : newTab
+    if (resolvedTab && ['dashboard', 'cotizaciones', 'solicitudes', 'clientes'].includes(resolvedTab)) {
+      activeTab.value = resolvedTab
+      if (navigationStore.comercialSubOption !== resolvedTab) {
+        navigationStore.setComercialSubOption(resolvedTab)
       }
       closeAllForms()
     }
@@ -1194,9 +1252,10 @@ watch(
 watch(
   () => [navigationStore.comercialSubOption, navigationStore.navTick],
   ([newSub]) => {
-    if (newSub && ['dashboard', 'cotizaciones', 'clientes', 'ordenes'].includes(newSub)) {
-      if (activeTab.value !== newSub) {
-        activeTab.value = newSub
+    const resolvedSub = newSub === 'ordenes' ? 'cotizaciones' : newSub
+    if (resolvedSub && ['dashboard', 'cotizaciones', 'solicitudes', 'clientes'].includes(resolvedSub)) {
+      if (activeTab.value !== resolvedSub) {
+        activeTab.value = resolvedSub
         closeAllForms()
       }
     }
@@ -1226,8 +1285,8 @@ watch(
 )
 
 const cotizaciones = ref([])
+const solicitudesSinAsignar = ref([])
 const clientes = ref([])
-const expedientesList = ref([])
 
 // Normalizador de texto para búsquedas (ignora tildes, mayúsculas y espacios extras)
 const normalizeSearchText = (text) => {
@@ -1244,19 +1303,19 @@ const normalizeSearchText = (text) => {
 const searchCotizacion = ref('')
 const filterRegimenCotizacion = ref('ALL')
 const filterEstadoCotizacion = ref('')
+const filterAsesorCotizacion = ref('ALL')
 const sortByCotizacion = ref('fecha-desc')
 
-// Filtros y ordenación para Clientes (Sub-opción 03)
+// Filtros y ordenación para Solicitudes Sin Asignar (Sub-opción 03)
+const searchSolicitud = ref('')
+const filterRegimenSolicitud = ref('ALL')
+const sortBySolicitud = ref('fecha-desc')
+
+// Filtros y ordenación para Clientes (Sub-opción 04)
 const searchCliente = ref('')
 const filterTipoCliente = ref('ALL')
 const filterEstadoCliente = ref('ALL')
 const sortByCliente = ref('nombre-asc')
-
-// Filtros y ordenación para Expedientes (Sub-opción 04)
-const searchExpediente = ref('')
-const filterEstadoExpediente = ref('')
-const filterCanalExpediente = ref('ALL')
-const sortByExpediente = ref('fecha-desc')
 
 // Banderas de filtros activos
 const hasActiveCotizacionFilters = computed(() => {
@@ -1264,7 +1323,16 @@ const hasActiveCotizacionFilters = computed(() => {
     !!searchCotizacion.value ||
     filterRegimenCotizacion.value !== 'ALL' ||
     !!filterEstadoCotizacion.value ||
+    (!isAgenteComercial.value && filterAsesorCotizacion.value !== 'ALL') ||
     sortByCotizacion.value !== 'fecha-desc'
+  )
+})
+
+const hasActiveSolicitudFilters = computed(() => {
+  return (
+    !!searchSolicitud.value ||
+    filterRegimenSolicitud.value !== 'ALL' ||
+    sortBySolicitud.value !== 'fecha-desc'
   )
 })
 
@@ -1277,21 +1345,19 @@ const hasActiveClienteFilters = computed(() => {
   )
 })
 
-const hasActiveExpedienteFilters = computed(() => {
-  return (
-    !!searchExpediente.value ||
-    !!filterEstadoExpediente.value ||
-    filterCanalExpediente.value !== 'ALL' ||
-    sortByExpediente.value !== 'fecha-desc'
-  )
-})
-
 // Acciones de restablecimiento de filtros
 const resetCotizacionFilters = () => {
   searchCotizacion.value = ''
   filterRegimenCotizacion.value = 'ALL'
   filterEstadoCotizacion.value = ''
+  filterAsesorCotizacion.value = 'ALL'
   sortByCotizacion.value = 'fecha-desc'
+}
+
+const resetSolicitudFilters = () => {
+  searchSolicitud.value = ''
+  filterRegimenSolicitud.value = 'ALL'
+  sortBySolicitud.value = 'fecha-desc'
 }
 
 const resetClienteFilters = () => {
@@ -1299,13 +1365,6 @@ const resetClienteFilters = () => {
   filterTipoCliente.value = 'ALL'
   filterEstadoCliente.value = 'ALL'
   sortByCliente.value = 'nombre-asc'
-}
-
-const resetExpedienteFilters = () => {
-  searchExpediente.value = ''
-  filterEstadoExpediente.value = ''
-  filterCanalExpediente.value = 'ALL'
-  sortByExpediente.value = 'fecha-desc'
 }
 
 const showToast = (message, type = 'success') => {
@@ -1387,6 +1446,18 @@ const regimenBreakdown = computed(() => {
   }))
 })
 
+const asesoresDisponibles = computed(() => {
+  const map = new Map()
+  cotizaciones.value.forEach((c) => {
+    if (c.idUsuarioComercial && c.usuarioComercialNombre) {
+      map.set(c.idUsuarioComercial, c.usuarioComercialNombre)
+    }
+  })
+  return Array.from(map.entries())
+    .map(([id, nombre]) => ({ id, nombre }))
+    .sort((a, b) => a.nombre.localeCompare(b.nombre))
+})
+
 const filteredCotizaciones = computed(() => {
   let list = cotizaciones.value.filter((c) => {
     // 1. Filtro Estado
@@ -1405,12 +1476,21 @@ const filteredCotizaciones = computed(() => {
       if (c.regimenAduanero !== filterRegimenCotizacion.value) return false
     }
 
-    // 3. Búsqueda inteligente (ignora tildes, tokens)
+    // 3. Filtro Asesor Comercial (para Gerencia / Admin TI)
+    if (!isAgenteComercial.value && filterAsesorCotizacion.value !== 'ALL') {
+      if (filterAsesorCotizacion.value === 'UNASSIGNED') {
+        if (c.idUsuarioComercial) return false
+      } else if (String(c.idUsuarioComercial) !== filterAsesorCotizacion.value) {
+        return false
+      }
+    }
+
+    // 4. Búsqueda inteligente (ignora tildes, tokens)
     const q = normalizeSearchText(searchCotizacion.value)
     if (q) {
       const tokens = q.split(/\s+/).filter(Boolean)
       const corpus = normalizeSearchText(
-        `${c.codigoCotizacion || ''} ${c.clienteRazonSocial || ''} ${c.clienteNumeroDocumento || ''} ${c.regimenAduanero || ''} ${c.estado || ''}`
+        `${c.codigoCotizacion || ''} ${c.clienteRazonSocial || ''} ${c.clienteNumeroDocumento || ''} ${c.usuarioComercialNombre || ''} ${c.regimenAduanero || ''} ${c.estado || ''}`
       )
       if (!tokens.every((t) => corpus.includes(t))) return false
     }
@@ -1418,7 +1498,7 @@ const filteredCotizaciones = computed(() => {
     return true
   })
 
-  // 4. Ordenar
+  // 5. Ordenar
   return list.sort((a, b) => {
     switch (sortByCotizacion.value) {
       case 'fecha-asc':
@@ -1429,6 +1509,39 @@ const filteredCotizaciones = computed(() => {
         return (Number(a.totalCotizado) || 0) - (Number(b.totalCotizado) || 0)
       case 'codigo-asc':
         return (a.codigoCotizacion || '').localeCompare(b.codigoCotizacion || '')
+      case 'cliente-asc':
+        return (a.clienteRazonSocial || '').localeCompare(b.clienteRazonSocial || '')
+      case 'fecha-desc':
+      default:
+        return new Date(b.fechaEmision || 0) - new Date(a.fechaEmision || 0) || (b.idCotizacion || 0) - (a.idCotizacion || 0)
+    }
+  })
+})
+
+const filteredSolicitudes = computed(() => {
+  let list = solicitudesSinAsignar.value.filter((s) => {
+    if (filterRegimenSolicitud.value !== 'ALL') {
+      if (s.regimenAduanero !== filterRegimenSolicitud.value) return false
+    }
+
+    const q = normalizeSearchText(searchSolicitud.value)
+    if (q) {
+      const tokens = q.split(/\s+/).filter(Boolean)
+      const corpus = normalizeSearchText(
+        `${s.codigoCotizacion || ''} ${s.clienteRazonSocial || ''} ${s.clienteNumeroDocumento || ''} ${s.mercanciaNombre || ''} ${s.regimenAduanero || ''}`
+      )
+      if (!tokens.every((t) => corpus.includes(t))) return false
+    }
+
+    return true
+  })
+
+  return list.sort((a, b) => {
+    switch (sortBySolicitud.value) {
+      case 'fecha-asc':
+        return new Date(a.fechaEmision || 0) - new Date(b.fechaEmision || 0)
+      case 'monto-desc':
+        return (Number(b.totalCotizado) || 0) - (Number(a.totalCotizado) || 0)
       case 'cliente-asc':
         return (a.clienteRazonSocial || '').localeCompare(b.clienteRazonSocial || '')
       case 'fecha-desc':
@@ -1477,63 +1590,22 @@ const filteredClientes = computed(() => {
   })
 })
 
-const filteredExpedientes = computed(() => {
-  let list = expedientesList.value.filter((exp) => {
-    // 1. Estado
-    if (filterEstadoExpediente.value && exp.estadoExpediente !== filterEstadoExpediente.value) return false
-
-    // 2. Canal SUNAT
-    if (filterCanalExpediente.value !== 'ALL') {
-      const canal = (exp.canalSunat || 'PENDIENTE').toUpperCase()
-      if (filterCanalExpediente.value === 'PENDIENTE') {
-        if (canal !== 'PENDIENTE' && canal !== '') return false
-      } else if (canal !== filterCanalExpediente.value) {
-        return false
-      }
-    }
-
-    // 3. Búsqueda inteligente
-    const q = normalizeSearchText(searchExpediente.value)
-    if (q) {
-      const tokens = q.split(/\s+/).filter(Boolean)
-      const corpus = normalizeSearchText(
-        `${exp.codigoExpediente || ''} ${exp.codigoCotizacion || ''} ${exp.clienteRazonSocial || ''} ${exp.clienteNumeroDocumento || ''} ${exp.numeroDam || ''} ${exp.numeroDeclaracion || ''} ${exp.regimenAduanero || ''} ${exp.canalSunat || ''}`
-      )
-      if (!tokens.every((t) => corpus.includes(t))) return false
-    }
-
-    return true
-  })
-
-  // 4. Ordenar
-  return list.sort((a, b) => {
-    switch (sortByExpediente.value) {
-      case 'fecha-asc':
-        return new Date(a.fechaCreacion || a.fechaApertura || 0) - new Date(b.fechaCreacion || b.fechaApertura || 0)
-      case 'codigo-asc':
-        return (a.codigoExpediente || '').localeCompare(b.codigoExpediente || '')
-      case 'cliente-asc':
-        return (a.clienteRazonSocial || '').localeCompare(b.clienteRazonSocial || '')
-      case 'fecha-desc':
-      default:
-        return new Date(b.fechaCreacion || b.fechaApertura || 0) - new Date(a.fechaCreacion || a.fechaApertura || 0) || (b.idExpediente || 0) - (a.idExpediente || 0)
-    }
-  })
-})
-
 const loadData = async () => {
   loading.value = true
   try {
-    const [cots, cls, exps] = await Promise.all([
+    const [cotsRes, sinAsignarRes, clsRes] = await Promise.allSettled([
       comercialService.getCotizaciones(),
-      comercialService.getClientes(),
-      expedienteService.getExpedientes()
+      comercialService.getCotizacionesSinAsignar(),
+      comercialService.getClientes()
     ])
-    cotizaciones.value = cots || []
-    clientes.value = cls || []
-    expedientesList.value = exps || []
-  } catch (err) {
-    showToast(err.response?.data?.message || 'Error al conectar con la API de ventas.', 'error')
+    if (cotsRes.status === 'fulfilled') cotizaciones.value = cotsRes.value || []
+    if (sinAsignarRes.status === 'fulfilled') solicitudesSinAsignar.value = sinAsignarRes.value || []
+    if (clsRes.status === 'fulfilled') clientes.value = clsRes.value || []
+
+    const firstFailure = [cotsRes, sinAsignarRes, clsRes].find((r) => r.status === 'rejected')
+    if (firstFailure) {
+      showToast(firstFailure.reason?.response?.data?.message || 'Error al conectar con la API de ventas.', 'error')
+    }
   } finally {
     loading.value = false
   }
@@ -1617,6 +1689,9 @@ const handleQuickClientCreated = async (newClient) => {
 
 const handleCotizacionSaved = async ({ isEdit, cotizacionId, payload, documentos, done }) => {
   try {
+    const wasUnassigned = isEdit && selectedCotizacion.value && !selectedCotizacion.value.idUsuarioComercial
+    const wasObservada = isEdit && selectedCotizacion.value && (selectedCotizacion.value.estado === 'OBSERVADA' || selectedCotizacion.value.estado === 'REVISION')
+
     if (isEdit) {
       await comercialService.updateCotizacion(cotizacionId, payload)
       if (cotizacionId && documentos && documentos.length > 0) {
@@ -1634,7 +1709,13 @@ const handleCotizacionSaved = async ({ isEdit, cotizacionId, payload, documentos
           }
         }
       }
-      showToast('Cotización actualizada y correcciones enviadas a Supervisión Aduanera.', 'success')
+      if (wasUnassigned) {
+        showToast('Solicitud liquidada y asignada exitosamente a su cartera comercial.', 'success')
+      } else if (wasObservada) {
+        showToast('Cotización actualizada y correcciones enviadas a Supervisión Aduanera.', 'success')
+      } else {
+        showToast('Cotización actualizada correctamente.', 'success')
+      }
     } else {
       const created = await comercialService.createCotizacion(payload)
       const newId = created?.idCotizacion
@@ -1666,28 +1747,6 @@ const handleCotizacionSaved = async ({ isEdit, cotizacionId, payload, documentos
     showToast(err.response?.data?.message || 'Error al guardar cotización.', 'error')
   } finally {
     done?.()
-  }
-}
-
-const handleCambiarEstadoCotizacion = async (cotizacion, nuevoEstado) => {
-  let motivo = ''
-  if (nuevoEstado === 'RECHAZADA') {
-    const confirmed = await confirmAction(
-      `¿Está seguro de marcar como RECHAZADA la cotización ${cotizacion.codigoCotizacion}?`,
-      'Confirmar Rechazo de Cotización'
-    )
-    if (!confirmed) return
-  }
-
-  try {
-    await comercialService.updateCotizacionEstado(cotizacion.idCotizacion, {
-      estado: nuevoEstado,
-      motivoObservacion: motivo
-    })
-    showToast(`Cotización marcada como ${nuevoEstado}.`)
-    await loadData()
-  } catch (err) {
-    showToast(err.response?.data?.message || 'Error al actualizar estado.', 'error')
   }
 }
 
@@ -1727,36 +1786,6 @@ const getCotizacionLabel = (estado) => {
     ANULADA: 'Anulada'
   }
   return map[estado] || estado
-}
-
-const getExpedienteSeverity = (estado) => {
-  if (estado === 'LEVANTE_AUTORIZADO' || estado === 'CONCLUIDO') return 'success'
-  if (estado === 'ANULADO') return 'danger'
-  if (estado === 'CON_CANAL') return 'warn'
-  return 'info'
-}
-
-const getCanalSeverity = (canal) => {
-  if (canal === 'VERDE') return 'success'
-  if (canal === 'NARANJA') return 'warn'
-  if (canal === 'ROJO') return 'danger'
-  return 'info'
-}
-
-const formatRegimen = (regimen) => {
-  if (!regimen) return '—'
-  return regimen.replace(/_/g, ' ')
-}
-
-const formatDateTime = (dtStr) => {
-  if (!dtStr) return '—'
-  return dtStr.replace('T', ' ').substring(0, 16)
-}
-
-const getCotizacionBadgeClass = (estado) => {
-  if (estado === 'APROBADA') return 'status-approved'
-  if (estado === 'RECHAZADA') return 'status-rejected'
-  return 'status-pending'
 }
 
 onMounted(() => {
@@ -2293,7 +2322,7 @@ onMounted(() => {
 .doc-code {
   font-weight: 700;
   color: var(--color-text-main);
-  font-family: monospace;
+  font-family: var(--font-mono);
   font-size: 0.85rem;
 }
 
@@ -2304,7 +2333,7 @@ onMounted(() => {
   border: 1px solid var(--color-success-border);
   padding: 0.2rem 0.5rem;
   border-radius: 4px;
-  font-family: monospace;
+  font-family: var(--font-mono);
   font-size: 0.85rem;
 }
 
@@ -2476,7 +2505,7 @@ onMounted(() => {
 
 .doc-number {
   font-weight: 700;
-  font-family: monospace;
+  font-family: var(--font-mono);
 }
 
 .contact-text,

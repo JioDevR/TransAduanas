@@ -1,5 +1,6 @@
 package pe.sga.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 
 import java.time.LocalDate;
@@ -24,4 +25,15 @@ public class ConductorResponseDTO {
     private String telefono;
     private String estadoOperativo;
     private Boolean estadoActivo;
+    private String observaciones;
+
+    @JsonProperty("categoriaLicencia")
+    public String getCategoriaLicencia() {
+        return tipoLicencia;
+    }
+
+    @JsonProperty("usuarioUsername")
+    public String getUsuarioUsername() {
+        return username;
+    }
 }

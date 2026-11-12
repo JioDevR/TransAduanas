@@ -6,18 +6,31 @@
 ---
 
 ## Índice del Capítulo
-1. [Matriz General del Stack Tecnológico](#2-matriz-general-del-stack-tecnológico)
-2. [Catálogo Detallado de Librerías y Dependencias](#3-catálogo-detallado-de-librerías-y-dependencias)
-   - [2.1 Ecosistema Spring Boot 4.1.2 (Starters Oficiales)](#31-ecosistema-spring-boot-412-starters-oficiales)
-   - [2.2 Persistencia y Base de Datos (MySQL Connector & JPA)](#32-persistencia-y-base-de-datos-mysql-connector--jpa)
-   - [2.3 Seguridad Criptográfica y JWT (JJWT 0.13.0)](#33-seguridad-criptográfica-y-jwt-jjwt-0130)
-   - [2.4 Productividad y Calidad de Código (Project Lombok)](#34-productividad-y-calidad-de-código-project-lombok)
-   - [2.5 Motor Híbrido de Reportes y Documentos PDF](#35-motor-híbrido-de-reportes-y-documentos-pdf)
-3. [Plugins del Ciclo de Compilación de Maven](#4-plugins-del-ciclo-de-compilación-de-maven)
+1. [¿Qué es `pom.xml` y Maven? (Explicación para no técnicos)](#1-qué-es-pomxml-y-maven-explicación-para-no-técnicos)
+2. [Matriz General del Stack Tecnológico](#2-matriz-general-del-stack-tecnológico)
+3. [Catálogo Detallado de Librerías y Dependencias](#3-catálogo-detallado-de-librerías-y-dependencias)
+   - [3.1 Ecosistema Spring Boot 4.1.2 (Starters Oficiales)](#31-ecosistema-spring-boot-412-starters-oficiales)
+   - [3.2 Persistencia y Base de Datos (MySQL Connector & JPA)](#32-persistencia-y-base-de-datos-mysql-connector--jpa)
+   - [3.3 Seguridad Criptográfica y JWT (JJWT 0.13.0)](#33-seguridad-criptográfica-y-jwt-jjwt-0130)
+   - [3.4 Productividad y Calidad de Código (Project Lombok)](#34-productividad-y-calidad-de-código-project-lombok)
+   - [3.5 Motor de Reportes y Documentos PDF (Thymeleaf + OpenHTMLtoPDF)](#35-motor-de-reportes-y-documentos-pdf-thymeleaf--openhtmltopdf)
+4. [Plugins del Ciclo de Compilación de Maven](#4-plugins-del-ciclo-de-compilación-de-maven)
 
 ---
 
-## 1. Matriz General del Stack Tecnológico
+## 1. ¿Qué es `pom.xml` y Maven? (Explicación para no técnicos)
+
+### La Analogía de la Lista de Materiales de una Constructora
+Cuando un arquitecto diseña un edificio, no fabrica los ladrillos, las ventanas ni el cemento desde cero; encarga materiales certificados a proveedores especializados y deja por escrito en una lista oficial de materiales exactamente qué marca, modelo y resistencia debe tener cada elemento.
+
+En el mundo del software:
+- **Apache Maven** es el director de compras y logística del proyecto.
+- El archivo [`backend/pom.xml`](../../backend/pom.xml) (*Project Object Model*) es la lista oficial de componentes externos que el backend necesita para funcionar.
+- Cuando ejecutas `mvn clean compile`, Maven se conecta a repositorios seguros en internet, descarga exactamente las versiones especificadas de cada librería, comprueba que sean compatibles entre sí y las ensambla junto a nuestro código para generar el programa ejecutable.
+
+---
+
+## 2. Matriz General del Stack Tecnológico
 
 | Componente | Versión | Tipo de Licencia | Rol en la Arquitectura |
 | :--- | :---: | :---: | :--- |
@@ -26,17 +39,17 @@
 | **MySQL Connector/J** | Runtime | GPL v2 / FOSS Exception | Controlador JDBC para comunicar Java con el motor MySQL 8.4 InnoDB. |
 | **JJWT (Java JWT)** | **0.13.0** | Apache 2.0 | Librería para generar, firmar con HMAC-SHA256 y validar tokens de sesión Bearer. |
 | **Project Lombok** | **1.18.x** | MIT | Generador de código en tiempo de compilación (elimina getters, setters y constructores repetitivos). |
-| **JasperReports** | **7.0.8** | LGPL v3 | Motor dinámico para compilar y exportar padrones y certificados aduaneros oficiales en PDF. |
-| **Thymeleaf** | Starter | Apache 2.0 | Motor de plantillas HTML5 server-side para diseño visual de reportes ejecutivos. |
-| **OpenHTMLtoPDF** | **1.0.10** | LGPL v2.1 | Convertidor de HTML5 + CSS3 a documentos PDF corporativos de alta fidelidad. |
+| **Thymeleaf** | Starter | Apache 2.0 | Motor de plantillas HTML5 server-side para diseño visual de reportes ejecutivos y padrones TI. |
+| **OpenHTMLtoPDF** | **1.0.10** | LGPL v2.1 | Convertidor de HTML5 + CSS3 a documentos PDF corporativos de alta fidelidad (vía PDFBox). |
+| **Jackson JSR-310** | Starter | Apache 2.0 | Serialización y deserialización ISO-8601 de fechas Java Time (`LocalDate`, `LocalDateTime`). |
 
 ---
 
-## 2. Catálogo Detallado de Librerías y Dependencias
+## 3. Catálogo Detallado de Librerías y Dependencias
 
-A continuación se detalla cada dependencia incluida en el archivo [`backend/pom.xml`](file:///home/jiodev/Documents/Proyects/TransAduanas/backend/pom.xml):
+A continuación se detalla cada dependencia incluida en el archivo [`backend/pom.xml`](../../backend/pom.xml):
 
-### 2.1 Ecosistema Spring Boot 4.1.2 (Starters Oficiales)
+### 3.1 Ecosistema Spring Boot 4.1.2 (Starters Oficiales)
 
 #### A. `spring-boot-starter-webmvc`
 - **Artefacto:** `org.springframework.boot:spring-boot-starter-webmvc`
@@ -64,7 +77,7 @@ A continuación se detalla cada dependencia incluida en el archivo [`backend/pom
 
 ---
 
-### 2.2 Persistencia y Base de Datos (MySQL Connector & JPA)
+### 3.2 Persistencia y Base de Datos (MySQL Connector & JPA)
 
 #### `mysql-connector-j`
 - **Artefacto:** `com.mysql:mysql-connector-j` (Scope: `runtime`)
@@ -74,7 +87,7 @@ A continuación se detalla cada dependencia incluida en el archivo [`backend/pom
 
 ---
 
-### 2.3 Seguridad Criptográfica y JWT (JJWT 0.13.0)
+### 3.3 Seguridad Criptográfica y JWT (JJWT 0.13.0)
 
 El proyecto utiliza la suite **JJWT** (*Java JWT*) en su versión estándar moderna 0.13.0, dividida en 3 módulos:
 
@@ -88,7 +101,7 @@ El proyecto utiliza la suite **JJWT** (*Java JWT*) en su versión estándar mode
 
 ---
 
-### 2.4 Productividad y Calidad de Código (Project Lombok)
+### 3.4 Productividad y Calidad de Código (Project Lombok)
 
 #### `lombok`
 - **Artefacto:** `org.projectlombok:lombok` (Optional: `true`)
@@ -98,29 +111,22 @@ El proyecto utiliza la suite **JJWT** (*Java JWT*) en su versión estándar mode
 
 ---
 
-### 2.5 Motor Híbrido de Reportes y Documentos PDF
+### 3.5 Motor de Reportes y Documentos PDF (Thymeleaf + OpenHTMLtoPDF)
 
-El backend cuenta con una arquitectura de reportería dual diseñada para satisfacer tanto reportes técnicos de alta densidad de datos como documentos ejecutivos de presentación visual:
+El backend implementa un motor unificado de reportería basado en HTML5/CSS3 y conversión vectorial a PDF (las antiguas dependencias de JasperReports fueron retiradas del `pom.xml`):
 
-#### A. JasperReports 7.0.8 (Para Reportes Corporativos Vectoriales)
-- **Artefactos:**
-  - `net.sf.jasperreports:jasperreports` (Motor central)
-  - `net.sf.jasperreports:jasperreports-pdf` (Exportador nativo PDF)
-  - `net.sf.jasperreports:jasperreports-jdt` (Compilador de expresiones en memoria con Eclipse JDT)
-- **¿Para qué sirve?** Compila plantillas estructuradas en memoria para generar padrones maestros de transporte, hojas de liquidación y documentos oficiales con tablas extensas y paginación matemática estricta.
-
-#### B. Thymeleaf & OpenHTMLtoPDF (Para Documentos con Diseño Visual Moderno)
+#### Thymeleaf & OpenHTMLtoPDF
 - **Artefactos:**
   - `org.springframework.boot:spring-boot-starter-thymeleaf`
   - `com.openhtmltopdf:openhtmltopdf-pdfbox` (Versión `1.0.10`)
-- **¿Para qué sirve?** Permite diseñar documentos en **HTML5 y CSS3 estándar** (con la tipografía, colores del sistema *Warm Editorial* y logos de la empresa) ubicados en `templates/reports/` (`reporte-mercancias.html`, `reporte-puertos.html`, `reporte-sedes.html`, `reporte-tipos-carga.html`) y convertirlos directamente a archivos PDF vectoriales de alta resolución.
-- **Ventaja de esta combinación:** Los diseñadores o desarrolladores web pueden maquetar un reporte usando código HTML/CSS idéntico al del frontend sin necesidad de aprender herramientas complejas de diseño gráfico de reportes.
+- **¿Para qué sirve?** Permite diseñar documentos en **HTML5 y CSS3 estándar** (con la tipografía, colores del sistema *Warm Editorial* y logos de la empresa) ubicados en `templates/reports/` (`ti-listado-base.html`, `reporte-usuarios.html`, `reporte-usuarios-portal.html`, `reporte-sedes.html`, `reporte-puertos.html`, `reporte-tipos-carga.html` y `reporte-mercancias.html`) y convertirlos directamente a archivos PDF vectoriales de alta resolución.
+- **Ventaja de esta combinación:** Los diseñadores o desarrolladores web pueden maquetar un reporte usando código HTML/CSS idéntico al del frontend sin depender de plantillas `.jrxml` ni compiladores externos.
 
 ---
 
-## 3. Plugins del Ciclo de Compilación de Maven
+## 4. Plugins del Ciclo de Compilación de Maven
 
-El archivo [`backend/pom.xml`](file:///home/jiodev/Documents/Proyects/TransAduanas/backend/pom.xml) cuenta con 2 plugins esenciales en su sección `<build>`:
+El archivo [`backend/pom.xml`](../../backend/pom.xml) cuenta con 2 plugins esenciales en su sección `<build>`:
 
 ```xml
 <plugins>

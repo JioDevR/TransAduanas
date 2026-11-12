@@ -42,7 +42,7 @@ npm run dev
 `app-sga` incluye pruebas unitarias automatizadas desarrolladas con **Vitest**, que garantizan que las reglas matemáticas y los controles de seguridad no se rompan tras modificaciones en el código.
 
 ### 2.1 Pruebas de Roles y Permisos
-- **Archivo:** [`src/core/auth/__tests__/roles.test.js`](file:///home/jiodev/Documents/Proyects/TransAduanas/app-sga/src/core/auth/__tests__/roles.test.js)
+- **Archivo:** [`src/core/auth/__tests__/roles.test.js`](../../app-sga/src/core/auth/__tests__/roles.test.js)
 - **Qué valida:** Verifica que los 8 roles institucionales estén correctamente definidos, que cada rol tenga asignada una ruta de inicio (`homePath`) válida y que no existan inconsistencias de nomenclatura entre frontend y backend.
 
 ### 2.2 Pruebas de la Calculadora de Cotizaciones
@@ -53,7 +53,7 @@ npm run dev
 - **Qué valida:** Comprueba las fórmulas matemáticas de flete marítimo y aéreo, el cálculo del Ad-Valórem según el arancel NANDINA, la aplicación del IGV (18%) y que los puertos se filtren adecuadamente según la modalidad seleccionada.
 
 ### 2.3 Pruebas de Utilidades y Descarga de Archivos
-- **Archivo:** [`src/shared/utils/__tests__/download.test.js`](file:///home/jiodev/Documents/Proyects/TransAduanas/app-sga/src/shared/utils/__tests__/download.test.js)
+- **Archivo:** [`src/shared/utils/__tests__/download.test.js`](../../app-sga/src/shared/utils/__tests__/download.test.js)
 - **Qué valida:** Verifica que la función de descarga invoque `URL.createObjectURL(blob)`, simule el clic del enlace temporal y ejecute inmediatamente `URL.revokeObjectURL(...)` para evitar fugas de memoria en el navegador.
 
 ### 2.4 Ejecución de Pruebas

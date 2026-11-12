@@ -465,6 +465,7 @@ import { gestionAduaneraService } from '@/features/aduanas/services/gestionAduan
 import DocumentosManagerModal from '@/shared/components/DocumentosManagerModal.vue'
 import { useNotification } from '@/shared/composables/useNotification'
 import { useNavigationStore } from '@/core/stores/navigationStore'
+import { formatDate, getTodayDateInput } from '@/shared/utils/dateUtils'
 
 const route = useRoute()
 const router = useRouter()
@@ -574,7 +575,7 @@ const openNuevoRecursoModal = (exp) => {
     tipo: 'RECLAMACION',
     autoridad: 'Intendencia de Aduana Marítima del Callao',
     codigoExpediente: exp ? exp.codigoExpediente : (expedientesList.value[0]?.codigoExpediente || ''),
-    fechaVencimientoPlazo: plazo.toISOString().substring(0, 10),
+    fechaVencimientoPlazo: getTodayDateInput(plazo),
     materia: exp ? `Impugnación de Canal ${exp.canalSunat} / Diligencia DAM ${exp.numeroDam || exp.codigoExpediente}` : 'Recurso de Reclamación Aduanero',
     fundamentos: 'Se formula impugnación formal acreditando el correcto valor de transacción conforme al Artículo 1 del Acuerdo de Valor de la OMC.'
   }
@@ -613,15 +614,6 @@ const openRecursoDocs = (r) => {
     openDocsModal(exp)
   } else {
     showInfo(`Mostrando repositorio documental para recurso ${r.numeroExpedienteLegal}`)
-  }
-}
-
-const formatDate = (val) => {
-  if (!val) return '—'
-  try {
-    return new Date(val).toLocaleDateString('es-PE', { year: 'numeric', month: '2-digit', day: '2-digit' })
-  } catch {
-    return val
   }
 }
 
@@ -701,7 +693,7 @@ onMounted(() => {
 }
 
 .badge-kicker {
-  font-family: var(--font-family-mono, monospace);
+  font-family: var(--font-mono);
   font-size: var(--font-size-xs, 0.75rem);
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -834,7 +826,7 @@ onMounted(() => {
   font-size: 0.7rem;
   padding: 0.1rem 0.45rem;
   border-radius: 12px;
-  font-family: var(--font-family-mono, monospace);
+  font-family: var(--font-mono);
 }
 
 .tab-counter-danger {
@@ -844,7 +836,7 @@ onMounted(() => {
   font-size: 0.7rem;
   padding: 0.1rem 0.45rem;
   border-radius: 12px;
-  font-family: var(--font-family-mono, monospace);
+  font-family: var(--font-mono);
   font-weight: 700;
 }
 
@@ -890,7 +882,7 @@ onMounted(() => {
 }
 
 .kpi-index {
-  font-family: var(--font-family-mono, monospace);
+  font-family: var(--font-mono);
   font-size: var(--font-size-xs, 0.75rem);
   font-weight: 700;
   color: var(--color-text-subtle, #998c7e);

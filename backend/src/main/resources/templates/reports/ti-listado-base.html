@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head th:fragment="tiHead(pageTitle)">
+    <meta charset="UTF-8" />
+    <title th:text="${pageTitle}">Informe de Usuarios - Administración TI</title>
+    <style>
+        @page {
+            size: A4 portrait;
+            margin: 15mm 13mm 17mm 13mm;
+            @top-right {
+                content: "SGA // ADMINISTRACIÓN TI &amp; SEGURIDAD";
+                font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+                font-size: 7pt;
+                font-weight: bold;
+                color: #9a7f60;
+            }
+            @bottom-left {
+                content: "Listado emitido por Administración de TI - TransAduanas del Perú S.A.C.";
+                font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+                font-size: 7pt;
+                color: #8c827a;
+            }
+            @bottom-right {
+                content: "Página " counter(page) " de " counter(pages);
+                font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+                font-size: 7.5pt;
+                font-weight: bold;
+                color: #352f2a;
+            }
+        }
+
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            color: #2b2520;
+            background-color: #ffffff;
+            font-size: 8.5pt;
+            line-height: 1.35;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Cabecera de Listado TI */
+        .ti-header-table {
+            width: 100%;
+            border-bottom: 2px solid #352f2a;
+            padding-bottom: 10px;
+            margin-bottom: 12px;
+        }
+
+        .ti-header-left {
+            width: 48%;
+            vertical-align: top;
+        }
+
+        .ti-header-right {
+            width: 52%;
+            text-align: right;
+            vertical-align: top;
+        }
+
+        .ti-brand-badge {
+            display: inline-block;
+            background-color: #352f2a;
+            color: #f6f3ee;
+            font-weight: bold;
+            font-size: 9.5pt;
+            padding: 3px 8px;
+            border-radius: 4px;
+            letter-spacing: 0.08em;
+            margin-bottom: 4px;
+            white-space: nowrap;
+        }
+
+        .ti-company-title {
+            font-size: 12pt;
+            font-weight: bold;
+            color: #352f2a;
+            margin: 2px 0;
+            letter-spacing: -0.01em;
+        }
+
+        .ti-company-sub {
+            font-size: 7.5pt;
+            color: #6f6356;
+            margin: 0;
+        }
+
+        .ti-kicker {
+            font-size: 6.5pt;
+            font-weight: bold;
+            letter-spacing: 0.09em;
+            text-transform: uppercase;
+            color: #9a7f60;
+            background-color: #f6f3ee;
+            padding: 2px 6px;
+            border: 1px solid #e4dacb;
+            border-radius: 3px;
+            display: inline-block;
+            margin-bottom: 4px;
+            white-space: nowrap;
+        }
+
+        .ti-report-title {
+            font-size: 11pt;
+            font-weight: bold;
+            color: #2b2520;
+            margin: 2px 0 4px 0;
+        }
+
+        .ti-meta-box {
+            font-size: 7.5pt;
+            color: #6f6356;
+            line-height: 1.45;
+        }
+
+        /* Franja de Resumen del Listado */
+        .ti-summary-table {
+            width: 100%;
+            margin-bottom: 12px;
+            border-collapse: separate;
+            border-spacing: 6px 0;
+        }
+
+        .ti-summary-box {
+            width: 33.33%;
+            background-color: #fdfbf7;
+            border: 1px solid #e4dacb;
+            border-radius: 5px;
+            padding: 6px 10px;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        .ti-summary-num {
+            font-size: 6pt;
+            font-family: monospace;
+            font-weight: bold;
+            color: #9a7f60;
+            display: block;
+        }
+
+        .ti-summary-label {
+            font-size: 7pt;
+            font-weight: bold;
+            text-transform: uppercase;
+            color: #6f6356;
+            display: block;
+            margin-top: 1px;
+        }
+
+        .ti-summary-value {
+            font-size: 13pt;
+            font-weight: bold;
+            color: #352f2a;
+            margin-top: 2px;
+            display: block;
+        }
+
+        /* Tabla Principal del Listado */
+        .ti-list-table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+            -fs-table-paginate: paginate;
+            margin-top: 4px;
+        }
+
+        .ti-list-table thead {
+            display: table-header-group;
+        }
+
+        .ti-list-table tr {
+            page-break-inside: avoid;
+        }
+
+        .ti-list-table th {
+            background-color: #352f2a;
+            color: #ffffff;
+            font-size: 7.2pt;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding: 6.5px 5px;
+            border: 1px solid #352f2a;
+            text-align: left;
+        }
+
+        .ti-list-table td {
+            font-size: 7.2pt;
+            padding: 5px 5px;
+            border: 1px solid #e4dacb;
+            color: #2b2520;
+            vertical-align: middle;
+            word-wrap: break-word;
+        }
+
+        .ti-list-table tbody tr:nth-child(even) {
+            background-color: #faf7f2;
+        }
+
+        .ti-user-chip {
+            font-family: monospace;
+            font-weight: bold;
+            font-size: 7pt;
+            color: #352f2a;
+            background-color: #f6f3ee;
+            border: 1px solid #e4dacb;
+            padding: 1.5px 4px;
+            border-radius: 3px;
+            display: inline-block;
+        }
+
+        .ti-email-text {
+            font-family: monospace;
+            font-size: 6.7pt;
+            color: #4b4139;
+        }
+
+        .ti-empty-row {
+            text-align: center;
+            padding: 18px 10px;
+            color: #6f6356;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+
+    <table th:fragment="tiHeader(kickerText, reportTitle, scopeText, generatedAt, itemCount, itemUnit)" class="ti-header-table">
+        <tr>
+            <td class="ti-header-left">
+                <span class="ti-brand-badge">SGA // TI</span>
+                <div class="ti-company-title">TRANSADUANAS DEL PERÚ S.A.C.</div>
+                <p class="ti-company-sub">
+                    Módulo de Administración de TI &amp; Control de Accesos<br />
+                    RUC: <strong>20601234567</strong> | Av. Elmer Faucett 2823, Callao - Perú
+                </p>
+            </td>
+            <td class="ti-header-right">
+                <span class="ti-kicker" th:text="${kickerText}">ADMINISTRACIÓN TI</span>
+                <div class="ti-report-title" th:text="${reportTitle}">Listado de Usuarios Activos</div>
+                <div class="ti-meta-box">
+                    <strong>Fecha Emisión:</strong> <span th:text="${generatedAt}">10/11/2026 19:30</span><br />
+                    <strong>Alcance:</strong> <span th:text="${scopeText}">Solo cuentas activas</span><br />
+                    <strong>Registros en informe:</strong> <strong th:text="${itemCount}">0</strong> <span th:text="${itemUnit}">usuarios</span>
+                </div>
+            </td>
+        </tr>
+    </table>
+
+    <table th:fragment="tiSummary(label1, value1, label2, value2, label3, value3)" class="ti-summary-table">
+        <tr>
+            <td class="ti-summary-box">
+                <span class="ti-summary-num">01</span>
+                <span class="ti-summary-label" th:text="${label1}">Usuarios Activos</span>
+                <span class="ti-summary-value" style="color: #1e6638;" th:text="${value1}">0</span>
+            </td>
+            <td class="ti-summary-box">
+                <span class="ti-summary-num">02</span>
+                <span class="ti-summary-label" th:text="${label2}">Cobertura</span>
+                <span class="ti-summary-value" th:text="${value2}">0</span>
+            </td>
+            <td class="ti-summary-box">
+                <span class="ti-summary-num">03</span>
+                <span class="ti-summary-label" th:text="${label3}">Total en Sistema</span>
+                <span class="ti-summary-value" style="color: #6f6356;" th:text="${value3}">0</span>
+            </td>
+        </tr>
+    </table>
+
+</body>
+</html>

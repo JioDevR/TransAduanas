@@ -24,7 +24,7 @@
 
 ## 1. Capa Compartida (`shared/`)
 
-Ubicada en [`app-portal-cliente/src/shared/`](file:///home/jiodev/Documents/Proyects/TransAduanas/app-portal-cliente/src/shared/), reúne utilidades y componentes transversales:
+Ubicada en [`app-portal-cliente/src/shared/`](../../app-portal-cliente/src/shared/), reúne utilidades y componentes transversales:
 
 ### 1.1 `BaseModal.vue`: Diálogo Accesible para Clientes
 > [!NOTE]
@@ -51,7 +51,7 @@ export function downloadBlob(blob, filename) {
 ```
 
 ### 1.4 `useTheme.js` & `useNotification.js`
-- **`useTheme.js`:** Administra el Modo Oscuro y Modo Claro aplicando el atributo `data-theme` a la etiqueta `<html>` y guardando la preferencia del cliente en `localStorage.getItem('portal_theme')`.
+- **`useTheme.js`:** Administra el Modo Oscuro y Modo Claro aplicando la clase CSS `.dark-theme` a la etiqueta `<html>` y guardando la preferencia del cliente en `localStorage.getItem('sga-portal-theme')`.
 - **`useNotification.js`:** Expone los métodos `showSuccess`, `showError` y `showWarning` para presentar notificaciones *Toast* no intrusivas en la esquina superior de la pantalla.
 
 ---
@@ -61,28 +61,37 @@ export function downloadBlob(blob, filename) {
 Ubicados dentro de cada módulo en `features/*/services/`, consumen la instancia `apiClient`:
 
 ### 2.1 `portalExpedienteService.js`
-- `getExpedientes()`: Consulta la lista de expedientes de la empresa (`GET /api/v1/portal/expedientes`).
-- `getExpedienteById(id)`: Obtiene los detalles de la DAM, chofer y contenedor (`GET /api/v1/portal/expedientes/{id}`).
-- `descargarDocumento(idDocumento)`: Descarga un archivo digital con `responseType: 'blob'` (`GET /api/v1/portal/documentos/descargar/{id}`).
+- `listarExpedientes()`: Consulta la lista de expedientes de la empresa (`GET /api/v1/portal/expedientes`).
+- `listarDocumentosExpediente(id)`: Lista los documentos adjuntos de un expediente (`GET /api/v1/portal/expedientes/{id}/documentos`).
+- `descargarDocumento(idDocumento)`: Descarga un archivo digital con `responseType: 'blob'` (`GET /api/v1/documentos/{id}/descargar`).
+- `previsualizarDocumento(idDocumento)`: Obtiene el blob para previsualización en navegador (`GET /api/v1/documentos/{id}/preview`).
 
 ### 2.2 `portalCotizacionService.js`
-- `getCotizaciones()`: Lista las proformas de la empresa (`GET /api/v1/portal/cotizaciones`).
-- `descargarPdf(idCotizacion)`: Descarga el PDF formal de la cotización (`GET /api/v1/cotizaciones/{id}/pdf`).
+- `listarCotizaciones()`: Lista las proformas de la empresa (`GET /api/v1/portal/cotizaciones`).
+- `obtenerDetalle(id)`: Obtiene el detalle económico y arancelario (`GET /api/v1/portal/cotizaciones/{id}`).
+- `solicitarCotizacion(payload)`: Envía una solicitud de cotización (`POST /api/v1/portal/cotizaciones/solicitar`).
+- `aceptarCotizacion(id)`: Acepta formalmente una cotización (`PATCH /api/v1/portal/cotizaciones/{id}/aceptar`).
+- `subirDocumentosCotizacion(idCotizacion, queuedDocs)`: Sube documentos adjuntos vía `POST /api/v1/documentos/upload`.
 
 ### 2.3 `portalPagoService.js`
-- `getEstadoCuenta()`: Retorna el consolidado de facturación y saldo vivo en USD (`GET /api/v1/portal/dashboard`).
-- `getObligacionesPendientes()`: Retorna la **deuda heredada** de cotizaciones y liquidaciones (`GET /api/v1/portal/obligaciones-pendientes`).
-- `registrarPago(formData)`: Envía el voucher bancario y datos de la operación con `multipart/form-data` (`POST /api/v1/portal/pagos`).
+- `obtenerResumenFinanciero()`: Retorna el consolidado de facturación y saldo vivo en USD (`GET /api/v1/portal/pagos/resumen`).
+- `listarObligacionesPendientes()`: Retorna la **deuda heredada** de cotizaciones y liquidaciones (`GET /api/v1/portal/pagos/obligaciones-pendientes`).
+- `listarAnticipos()`: Lista los anticipos registrados (`GET /api/v1/portal/pagos/anticipos`).
+- `subirComprobantePago(file, ...)`: Sube el voucher bancario con `multipart/form-data` (`POST /api/v1/portal/pagos/upload-comprobante`).
+- `registrarVoucher(payload)`: Registra un voucher en JSON (`POST /api/v1/portal/pagos/registrar-voucher`).
+- `corregirAnticipo(idPago, payload)`: Subsana un anticipo observado (`PUT /api/v1/portal/pagos/anticipos/{idPago}/corregir`).
 
 ### 2.4 `portalNotificationService.js`
-- `getNotificaciones()`: Lista los avisos y alertas (`GET /api/v1/portal/notificaciones`).
-- `marcarLeida(idNotificacion)`: Cambia el estado a leído (`PUT /api/v1/portal/notificaciones/{id}/leer`).
+- `listarNotificaciones()`: Lista los avisos y alertas (`GET /api/v1/portal/notificaciones`).
+- `obtenerResumen()`: Retorna el conteo de no leídas (`GET /api/v1/portal/notificaciones/resumen`).
+- `marcarLeida(idNotificacion)`: Cambia el estado a leído (`PATCH /api/v1/portal/notificaciones/{id}/leer`).
+- `marcarTodasLeidas()`: Marca todas como leídas (`PATCH /api/v1/portal/notificaciones/marcar-todas-leidas`).
 
 ---
 
 ## 3. Pruebas Unitarias Automatizadas con Vitest
 
-El portal cuenta con una suite de pruebas automatizadas en [`app-portal-cliente/src/core/stores/__tests__/authStore.test.js`](file:///home/jiodev/Documents/Proyects/TransAduanas/app-portal-cliente/src/core/stores/__tests__/authStore.test.js):
+El portal cuenta con una suite de pruebas automatizadas en [`app-portal-cliente/src/core/stores/__tests__/authStore.test.js`](../../app-portal-cliente/src/core/stores/__tests__/authStore.test.js):
 
 ### Qué valida la suite:
 1. **Inicio de sesión exitoso:** Verifica que el token JWT y los datos del RUC se almacenen adecuadamente en el estado de Pinia y en `localStorage`.

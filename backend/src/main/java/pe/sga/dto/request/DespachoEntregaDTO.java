@@ -27,5 +27,7 @@ public class DespachoEntregaDTO {
 
     private String detalleIncidencia;
 
+    private Integer kilometrajeLlegada;
+
     private String observaciones;
 }

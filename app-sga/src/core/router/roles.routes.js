@@ -17,7 +17,7 @@ export const rolesRoutes = [
     component: () => import('@/features/aduanas/views/GestionAduaneraView.vue'),
     meta: {
       requiresAuth: true,
-      roles: [ROLES.ADMINISTRADOR_TI, ROLES.GERENTE_GENERAL, ROLES.SUPERVISOR_ADUANERO],
+      roles: [ROLES.ADMINISTRADOR_TI, ROLES.GERENTE_GENERAL, ROLES.SUPERVISOR_ADUANERO, ROLES.AGENTE_ADUANERO],
       title: 'Gestión Aduanera - SGA'
     }
   },
@@ -34,7 +34,7 @@ export const rolesRoutes = [
   {
     path: '/agente-aduanero',
     name: 'AgenteAduaneroModule',
-    component: () => import('@/features/almacen/views/AgenteAduaneroView.vue'),
+    component: () => import('@/features/agente-aduanero/views/AgenteAduaneroView.vue'),
     meta: {
       requiresAuth: true,
       roles: [ROLES.ADMINISTRADOR_TI, ROLES.GERENTE_GENERAL, ROLES.SUPERVISOR_ADUANERO, ROLES.AGENTE_ADUANERO],

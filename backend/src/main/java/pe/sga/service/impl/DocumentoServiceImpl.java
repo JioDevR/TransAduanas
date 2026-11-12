@@ -16,6 +16,7 @@ import pe.sga.entity.Expediente;
 import pe.sga.entity.Usuario;
 import pe.sga.entity.enums.CategoriaDocumento;
 import pe.sga.entity.enums.EntidadDocumento;
+import pe.sga.entity.enums.RolUsuario;
 import pe.sga.exception.ResourceNotFoundException;
 import pe.sga.repository.ClienteRepository;
 import pe.sga.repository.CotizacionPagoRepository;
@@ -27,6 +28,8 @@ import pe.sga.repository.UsuarioRepository;
 import pe.sga.service.IDocumentoService;
 import pe.sga.service.IStorageService;
 
+import java.nio.file.Paths;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -55,11 +58,11 @@ public class DocumentoServiceImpl implements IDocumentoService {
             Integer idEntidad,
             Integer idUsuario
     ) {
-        Usuario usuario = null;
-        if (idUsuario != null && usuarioRepository.existsById(idUsuario)) {
-            usuario = usuarioRepository.findById(idUsuario).get();
-        } else {
-            usuario = usuarioRepository.findAll().stream().findFirst()
+        Usuario usuario = (idUsuario != null)
+                ? usuarioRepository.findById(idUsuario).orElse(null)
+                : null;
+        if (usuario == null) {
+            usuario = usuarioRepository.findFirstByOrderByIdUsuarioAsc()
                     .orElseThrow(() -> new ResourceNotFoundException("No se encontró ningún usuario del sistema registrado"));
         }
 
@@ -90,11 +93,13 @@ public class DocumentoServiceImpl implements IDocumentoService {
         }
 
         List<DocumentoResponseDTO> resultados = new ArrayList<>();
+        String subpath = resolverSubdirectorio(entidadTipo, cotizacion, expediente, cliente, categoria, descripcion);
 
         for (MultipartFile file : files) {
             if (file == null || file.isEmpty()) continue;
 
-            String storedFilename = storageService.store(file);
+            String storedRelativePath = storageService.store(file, subpath);
+            String storedFilename = Paths.get(storedRelativePath).getFileName().toString();
             String originalFilename = StringUtils.cleanPath(file.getOriginalFilename() != null ? file.getOriginalFilename() : "documento");
 
             String extension = "";
@@ -111,7 +116,7 @@ public class DocumentoServiceImpl implements IDocumentoService {
                     .formatoMime(mimeType)
                     .extension(extension)
                     .tamanoBytes(file.getSize())
-                    .rutaAlmacenamiento(storedFilename)
+                    .rutaAlmacenamiento(storedRelativePath)
                     .categoria(categoria != null ? categoria : CategoriaDocumento.GENERAL)
                     .descripcion(descripcion)
                     .entidadTipo(entidadTipo)
@@ -139,25 +144,10 @@ public class DocumentoServiceImpl implements IDocumentoService {
             Integer idCliente,
             CategoriaDocumento categoria
     ) {
-        List<DocumentoAdjunto> lista;
-
-        if (idCotizacion != null) {
-            lista = documentoRepository.findByCotizacionIdCotizacionAndActivoTrueOrderByFechaCreacionDesc(idCotizacion);
-        } else if (idExpediente != null) {
-            lista = documentoRepository.findByExpedienteIdExpedienteAndActivoTrueOrderByFechaCreacionDesc(idExpediente);
-        } else if (idCliente != null) {
-            lista = documentoRepository.findByClienteIdClienteAndActivoTrueOrderByFechaCreacionDesc(idCliente);
-        } else if (entidadTipo != null) {
-            lista = documentoRepository.findByEntidadTipoAndActivoTrueOrderByFechaCreacionDesc(entidadTipo);
-        } else {
-            lista = documentoRepository.findByActivoTrueOrderByFechaCreacionDesc();
-        }
-
-        if (categoria != null) {
-            lista = lista.stream().filter(d -> d.getCategoria() == categoria).toList();
-        }
-
-        return lista.stream().map(this::toDTO).toList();
+        return obtenerDocumentosFiltrados(entidadTipo, idCotizacion, idExpediente, idCliente, categoria)
+                .stream()
+                .map(this::toDTO)
+                .toList();
     }
 
     @Override
@@ -171,7 +161,10 @@ public class DocumentoServiceImpl implements IDocumentoService {
     @Transactional(readOnly = true)
     public Resource descargarArchivo(Integer id) {
         DocumentoAdjunto doc = obtenerEntidad(id);
-        return storageService.loadAsResource(doc.getNombreAlmacenado());
+        String ruta = (doc.getRutaAlmacenamiento() != null && !doc.getRutaAlmacenamiento().isBlank())
+                ? doc.getRutaAlmacenamiento()
+                : doc.getNombreAlmacenado();
+        return storageService.loadAsResource(ruta);
     }
 
     @Override
@@ -288,6 +281,86 @@ public class DocumentoServiceImpl implements IDocumentoService {
         throw new AccessDeniedException("Acceso denegado: el documento solicitado no pertenece a su empresa");
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public void validarAccesoComercialCotizacion(Usuario usuario, Integer idCotizacion, boolean permitirSinAsignar) {
+        if (usuario == null || usuario.getRol() != RolUsuario.AGENTE_COMERCIAL || idCotizacion == null) {
+            return;
+        }
+        Cotizacion cot = cotizacionRepository.findById(idCotizacion)
+                .orElseThrow(() -> new ResourceNotFoundException("Cotización no encontrada con ID: " + idCotizacion));
+        if (!puedeAccederCotizacionComercial(usuario, cot, permitirSinAsignar)) {
+            throw new AccessDeniedException("Acceso denegado: no tiene permisos sobre los documentos de esta cotización");
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public void validarAccesoDocumentoComercial(Usuario usuario, DocumentoAdjunto doc, boolean permitirSinAsignar) {
+        if (usuario == null || usuario.getRol() != RolUsuario.AGENTE_COMERCIAL || doc == null) {
+            return;
+        }
+        if (doc.getCotizacion() != null && !puedeAccederCotizacionComercial(usuario, doc.getCotizacion(), permitirSinAsignar)) {
+            throw new AccessDeniedException("Acceso denegado: el documento pertenece a una cotización de otro asesor comercial");
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<DocumentoResponseDTO> listarParaUsuario(
+            Usuario usuario,
+            EntidadDocumento entidadTipo,
+            Integer idCotizacion,
+            Integer idExpediente,
+            Integer idCliente,
+            CategoriaDocumento categoria
+    ) {
+        if (usuario != null && usuario.getRol() == RolUsuario.AGENTE_COMERCIAL) {
+            if (idCotizacion != null) {
+                validarAccesoComercialCotizacion(usuario, idCotizacion, true);
+            }
+            List<DocumentoAdjunto> base = obtenerDocumentosFiltrados(entidadTipo, idCotizacion, idExpediente, idCliente, categoria);
+            return base.stream()
+                    .filter(d -> d.getCotizacion() == null || puedeAccederCotizacionComercial(usuario, d.getCotizacion(), true))
+                    .map(this::toDTO)
+                    .toList();
+        }
+        return listar(entidadTipo, idCotizacion, idExpediente, idCliente, categoria);
+    }
+
+    private boolean puedeAccederCotizacionComercial(Usuario usuario, Cotizacion cot, boolean permitirSinAsignar) {
+        if (cot == null) return true;
+        if (cot.getUsuarioComercial() == null) {
+            return permitirSinAsignar;
+        }
+        return cot.getUsuarioComercial().getIdUsuario().equals(usuario.getIdUsuario());
+    }
+
+    private List<DocumentoAdjunto> obtenerDocumentosFiltrados(
+            EntidadDocumento entidadTipo,
+            Integer idCotizacion,
+            Integer idExpediente,
+            Integer idCliente,
+            CategoriaDocumento categoria
+    ) {
+        List<DocumentoAdjunto> lista;
+        if (idCotizacion != null) {
+            lista = documentoRepository.findByCotizacionIdCotizacionAndActivoTrueOrderByFechaCreacionDesc(idCotizacion);
+        } else if (idExpediente != null) {
+            lista = documentoRepository.findByExpedienteIdExpedienteAndActivoTrueOrderByFechaCreacionDesc(idExpediente);
+        } else if (idCliente != null) {
+            lista = documentoRepository.findByClienteIdClienteAndActivoTrueOrderByFechaCreacionDesc(idCliente);
+        } else if (entidadTipo != null) {
+            lista = documentoRepository.findByEntidadTipoAndActivoTrueOrderByFechaCreacionDesc(entidadTipo);
+        } else {
+            lista = documentoRepository.findByActivoTrueOrderByFechaCreacionDesc();
+        }
+        if (categoria != null) {
+            lista = lista.stream().filter(d -> d.getCategoria() == categoria).toList();
+        }
+        return lista;
+    }
+
     private DocumentoResponseDTO toDTO(DocumentoAdjunto d) {
         return DocumentoResponseDTO.builder()
                 .idDocumento(d.getIdDocumento())
@@ -309,5 +382,61 @@ public class DocumentoServiceImpl implements IDocumentoService {
                 .usuarioCreadorNombre(d.getUsuarioCreador() != null ? d.getUsuarioCreador().getNombreCompleto() : null)
                 .fechaCreacion(d.getFechaCreacion())
                 .build();
+    }
+
+    private String resolverSubdirectorio(
+            EntidadDocumento entidadTipo,
+            Cotizacion cotizacion,
+            Expediente expediente,
+            Cliente cliente,
+            CategoriaDocumento categoria,
+            String descripcion
+    ) {
+        LocalDate hoy = LocalDate.now();
+        String anio = String.valueOf(hoy.getYear());
+        String mes = String.format("%02d", hoy.getMonthValue());
+        String catFolder = categoria != null ? categoria.name().toLowerCase() : "general";
+
+        if (expediente != null) {
+            String expAnio = expediente.getFechaApertura() != null
+                    ? String.valueOf(expediente.getFechaApertura().getYear())
+                    : anio;
+            String expCod = (expediente.getCodigoExpediente() != null && !expediente.getCodigoExpediente().isBlank())
+                    ? sanitizarNombreDirectorio(expediente.getCodigoExpediente())
+                    : "EXP-" + expediente.getIdExpediente();
+            return "expedientes/" + expAnio + "/" + expCod + "/" + catFolder;
+        }
+
+        if (cotizacion != null) {
+            String cotAnio = cotizacion.getFechaEmision() != null
+                    ? String.valueOf(cotizacion.getFechaEmision().getYear())
+                    : anio;
+            String cotCod = (cotizacion.getCodigoCotizacion() != null && !cotizacion.getCodigoCotizacion().isBlank())
+                    ? sanitizarNombreDirectorio(cotizacion.getCodigoCotizacion())
+                    : "COT-" + cotizacion.getIdCotizacion();
+            return "cotizaciones/" + cotAnio + "/" + cotCod;
+        }
+
+        if (entidadTipo == EntidadDocumento.CLIENTE || cliente != null) {
+            String cliCod = (cliente != null && cliente.getNumeroDocumento() != null && !cliente.getNumeroDocumento().isBlank())
+                    ? sanitizarNombreDirectorio(cliente.getNumeroDocumento())
+                    : (cliente != null ? "CLI-" + cliente.getIdCliente() : "clientes-varios");
+
+            boolean esPago = (descripcion != null && (descripcion.toLowerCase().contains("voucher")
+                    || descripcion.toLowerCase().contains("pago")
+                    || descripcion.toLowerCase().contains("abono")))
+                    || (categoria == CategoriaDocumento.GENERAL && descripcion != null && descripcion.toLowerCase().contains("abono"));
+            if (esPago) {
+                return "pagos/" + anio + "/" + mes + "/" + cliCod;
+            }
+            return "clientes/" + cliCod + "/" + catFolder;
+        }
+
+        return "general/" + anio + "/" + mes;
+    }
+
+    private String sanitizarNombreDirectorio(String input) {
+        if (input == null) return "general";
+        return input.trim().replaceAll("[^a-zA-Z0-9._-]", "_");
     }
 }

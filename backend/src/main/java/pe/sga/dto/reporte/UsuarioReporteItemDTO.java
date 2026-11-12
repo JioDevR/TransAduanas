@@ -9,11 +9,9 @@ import lombok.*;
 @Builder
 public class UsuarioReporteItemDTO {
 
-    private Integer idUsuario;
     private String username;
-    private String nombreCompleto;
-    private String rol;
-    private String cargoTitulo;
-    private String sedeAgencia;
-    private String estadoActivo;
+    private String correo;
+    private String numero;
+    private String cargo;
+    private String sede;
 }

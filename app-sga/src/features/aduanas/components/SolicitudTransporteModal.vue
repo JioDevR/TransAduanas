@@ -110,6 +110,7 @@
 import { ref, watch } from 'vue'
 import BaseModal from '@/shared/components/BaseModal.vue'
 import { expedienteService } from '../services/expedienteService'
+import { getNowDateTimeInput } from '@/shared/utils/dateUtils'
 
 const props = defineProps({
   visible: { type: Boolean, default: false },
@@ -138,8 +139,7 @@ watch(
       const tomorrow = new Date()
       tomorrow.setDate(tomorrow.getDate() + 1)
       tomorrow.setHours(8, 0, 0, 0)
-      const tzOffset = tomorrow.getTimezoneOffset() * 60000
-      const localISOTime = new Date(tomorrow.getTime() - tzOffset).toISOString().slice(0, 16)
+      const localISOTime = getNowDateTimeInput(tomorrow)
 
       form.value = {
         direccionPartida: 'Terminal Portuario DP World / APM Terminals Callao',
@@ -198,9 +198,9 @@ const handleSubmit = async () => {
   align-items: flex-start;
   gap: 0.85rem;
   padding: 0.85rem 1rem;
-  background: #f0fdf4;
-  border: 1px solid #bbf7d0;
-  color: #166534;
+  background: var(--color-success-bg);
+  border: 1px solid var(--color-success-border);
+  color: var(--color-success-text);
   border-radius: 6px;
 }
 
@@ -236,7 +236,7 @@ const handleSubmit = async () => {
 .field-item label {
   font-size: 0.75rem;
   font-weight: 700;
-  color: #3b2f2f;
+  color: var(--color-text-main);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -245,10 +245,10 @@ const handleSubmit = async () => {
 .textarea-input {
   width: 100%;
   padding: 0.6rem 0.85rem;
-  border: 1px solid #d4c5b9;
+  border: 1px solid var(--color-border);
   border-radius: 4px;
-  background: #fdfbf7;
-  color: #1a1515;
+  background: var(--color-bg-subtle);
+  color: var(--color-text-main);
   font-size: 0.875rem;
   transition: all 0.2s ease;
 }
@@ -256,9 +256,9 @@ const handleSubmit = async () => {
 .text-input:focus,
 .textarea-input:focus {
   outline: none;
-  border-color: #78350f;
-  background: #ffffff;
-  box-shadow: 0 0 0 2px rgba(120, 53, 15, 0.15);
+  border-color: var(--color-primary);
+  background: var(--color-bg-surface);
+  box-shadow: 0 0 0 2px rgba(53, 47, 42, 0.15);
 }
 
 .modal-actions {
@@ -266,14 +266,14 @@ const handleSubmit = async () => {
   justify-content: flex-end;
   gap: 0.75rem;
   padding-top: 1rem;
-  border-top: 1px solid #ebdcd0;
+  border-top: 1px solid var(--color-border-subtle);
 }
 
 .btn-modal-cancel {
   padding: 0.6rem 1.2rem;
   background: transparent;
-  border: 1px solid #c7b299;
-  color: #5c4033;
+  border: 1px solid var(--color-border);
+  color: var(--color-text-main);
   border-radius: 4px;
   font-size: 0.875rem;
   font-weight: 600;
@@ -282,7 +282,7 @@ const handleSubmit = async () => {
 }
 
 .btn-modal-cancel:hover:not(:disabled) {
-  background: #f5ede6;
+  background: var(--color-bg-subtle);
 }
 
 .btn-modal-save {
@@ -290,9 +290,9 @@ const handleSubmit = async () => {
   align-items: center;
   gap: 0.5rem;
   padding: 0.6rem 1.25rem;
-  background: #1e3a5f;
-  border: 1px solid #142842;
-  color: #ffffff;
+  background: var(--color-info-bg);
+  border: 1px solid var(--color-info-border);
+  color: var(--color-info-text);
   border-radius: 4px;
   font-size: 0.875rem;
   font-weight: 600;
@@ -301,7 +301,7 @@ const handleSubmit = async () => {
 }
 
 .btn-modal-save:hover:not(:disabled) {
-  background: #2c5282;
+  filter: brightness(0.95);
 }
 
 .btn-modal-save:disabled,

@@ -57,58 +57,6 @@
       </div>
     </header>
 
-    <!-- 2. Pestañas Principales del Módulo (Sincronizadas con Sidebar) -->
-    <div class="module-tabs-nav">
-      <!-- Sub-opción 01: Dashboard Financiero -->
-      <button
-        type="button"
-        class="tab-nav-btn"
-        :class="{ active: activeTab === 'dashboard' }"
-        @click="switchTab('dashboard')"
-      >
-        <i class="pi pi-chart-pie"></i>
-        <span>Dashboard Financiero</span>
-      </button>
-
-      <!-- Sub-opción 02: Pagos Pre-Expedientes -->
-      <button
-        type="button"
-        class="tab-nav-btn"
-        :class="{ active: activeTab === 'pre-expedientes' || activeTab === 'anticipos' }"
-        @click="switchTab('pre-expedientes')"
-      >
-        <i class="pi pi-shield"></i>
-        <span>Pagos Pre-Expedientes</span>
-        <span class="tab-counter" :class="{ 'counter-alert': anticiposPendientesCount > 0 }">
-          {{ cotizacionesAprobadas.length }}
-        </span>
-      </button>
-
-      <!-- Sub-opción 03: Liquidación de Cuentas -->
-      <button
-        type="button"
-        class="tab-nav-btn"
-        :class="{ active: activeTab === 'liquidaciones' || activeTab === 'por-liquidar' }"
-        @click="switchTab('liquidaciones')"
-      >
-        <i class="pi pi-receipt"></i>
-        <span>Liquidación de Cuentas</span>
-        <span class="tab-counter">{{ liquidacionesList.length }}</span>
-      </button>
-
-      <!-- Sub-opción 04: Facturación & Conciliación -->
-      <button
-        type="button"
-        class="tab-nav-btn"
-        :class="{ active: activeTab === 'conciliacion' }"
-        @click="switchTab('conciliacion')"
-      >
-        <i class="pi pi-wallet"></i>
-        <span>Conciliación & Arqueo</span>
-        <span class="tab-counter">{{ pagosRealizadosList.length }}</span>
-      </button>
-    </div>
-
     <!-- ===================================================================== -->
     <!-- SUB-OPCIÓN 01: DASHBOARD FINANCIERO EJECUTIVO                          -->
     <!-- ===================================================================== -->
@@ -433,6 +381,242 @@
                     <i class="pi pi-list"></i>
                     <span>Ver Abonos</span>
                   </button>
+                </div>
+              </template>
+            </Column>
+          </DataTable>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- SUB-OPCIÓN 02: REVISIÓN DE ABONOS B2B (VOUCHERS PENDIENTES)           -->
+    <!-- ===================================================================== -->
+    <div v-if="activeTab === 'abonos-b2b'" class="tab-container fade-in">
+      <div class="tab-content-section">
+        <div class="section-header-row">
+          <div>
+            <span class="badge-kicker">BANDEJA DE AUDITORÍA CONTABLE // PORTAL CLIENTES B2B</span>
+            <h3 class="section-title">Revisión de Abonos y Comprobantes B2B</h3>
+            <p class="section-subtitle">
+              Validación de anticipos y cancelaciones registrados por importadores para autorizar la apertura del Expediente Aduanero.
+            </p>
+          </div>
+
+          <div class="section-controls">
+            <!-- Botón Actualizar -->
+            <button
+              type="button"
+              class="btn-outline-warm"
+              @click="loadAllData"
+              :disabled="loadingAnticipos"
+            >
+              <i :class="['pi pi-sync', { 'pi-spin': loadingAnticipos }]"></i>
+              <span>Actualizar</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 4 Mini KPIs específicos de Abonos B2B -->
+        <div class="sub-kpi-bar mb-4">
+          <div class="sub-kpi-item">
+            <span class="sub-kpi-lbl">Abonos por Validar</span>
+            <strong class="sub-kpi-val font-mono" :class="anticiposPendientesCount > 0 ? 'text-warning font-bold' : ''">
+              {{ anticiposPendientesCount }}
+            </strong>
+          </div>
+          <div class="sub-kpi-item">
+            <span class="sub-kpi-lbl">Total Abonos Conformes</span>
+            <strong class="sub-kpi-val font-mono text-success">
+              {{ anticiposAprobadosCount }}
+            </strong>
+          </div>
+          <div class="sub-kpi-item">
+            <span class="sub-kpi-lbl">Abonos Observados</span>
+            <strong class="sub-kpi-val font-mono" :class="anticiposObservadosCount > 0 ? 'text-danger font-bold' : ''">
+              {{ anticiposObservadosCount }}
+            </strong>
+          </div>
+          <div class="sub-kpi-item">
+            <span class="sub-kpi-lbl">Total Vouchers B2B</span>
+            <strong class="sub-kpi-val font-mono">{{ anticiposList.length }}</strong>
+          </div>
+        </div>
+
+        <!-- Barra de Filtros de Estado y Búsqueda -->
+        <div class="table-filter-bar mb-3">
+          <div class="filter-pills-wrap">
+            <button
+              type="button"
+              class="filter-pill"
+              :class="{ active: filterEstadoAnticipo === 'PENDIENTE_REVISION' }"
+              @click="filterEstadoAnticipo = 'PENDIENTE_REVISION'"
+            >
+              <i class="pi pi-clock"></i>
+              <span>Pendientes de Revisión ({{ anticiposPendientesCount }})</span>
+            </button>
+            <button
+              type="button"
+              class="filter-pill"
+              :class="{ active: filterEstadoAnticipo === '' }"
+              @click="filterEstadoAnticipo = ''"
+            >
+              Todos los Abonos ({{ anticiposList.length }})
+            </button>
+            <button
+              type="button"
+              class="filter-pill"
+              :class="{ active: filterEstadoAnticipo === 'APROBADO' }"
+              @click="filterEstadoAnticipo = 'APROBADO'"
+            >
+              Aprobados / Conformes ({{ anticiposAprobadosCount }})
+            </button>
+            <button
+              type="button"
+              class="filter-pill"
+              :class="{ active: filterEstadoAnticipo === 'OBSERVADO' }"
+              @click="filterEstadoAnticipo = 'OBSERVADO'"
+            >
+              Observados ({{ anticiposObservadosCount }})
+            </button>
+          </div>
+
+          <div class="search-input-wrap">
+            <i class="pi pi-search search-icon"></i>
+            <input
+              v-model="searchQueryAnticipo"
+              type="text"
+              placeholder="Buscar por cotización, cliente u operación..."
+              class="search-input"
+            />
+          </div>
+        </div>
+
+        <!-- Tabla de Anticipos / Vouchers B2B -->
+        <div class="table-container">
+          <DataTable
+            :value="filteredAnticipos"
+            :loading="loadingAnticipos"
+            responsiveLayout="scroll"
+            class="custom-datatable"
+            dataKey="idPago"
+          >
+            <template #empty>
+              <div class="empty-state">
+                <i class="pi pi-verified empty-icon"></i>
+                <p class="empty-title">No hay abonos en este estado</p>
+                <p class="empty-desc">Los comprobantes y pagos que registren los clientes desde el Portal B2B aparecerán aquí para revisión contable.</p>
+              </div>
+            </template>
+
+            <Column header="N° Pago">
+              <template #body="{ data: a }">
+                <div class="client-cell">
+                  <span class="font-mono font-bold text-xs">{{ a.codigoPago }}</span>
+                  <span class="client-sub">{{ formatDateTime(a.fechaRegistro) }}</span>
+                </div>
+              </template>
+            </Column>
+
+            <Column header="Cotización Origen">
+              <template #body="{ data: a }">
+                <div class="client-cell">
+                  <span class="font-mono font-bold text-xs text-primary">{{ a.codigoCotizacion }}</span>
+                  <span class="client-sub">Total: ${{ Number(a.totalCotizado || 0).toLocaleString('en-US', { minimumFractionDigits: 2 }) }}</span>
+                </div>
+              </template>
+            </Column>
+
+            <Column header="Cliente Importador">
+              <template #body="{ data: a }">
+                <div class="client-cell">
+                  <span class="client-name">{{ a.clienteRazonSocial || 'Cliente no asignado' }}</span>
+                  <span class="client-sub">Doc: {{ a.clienteNumeroDocumento }}</span>
+                </div>
+              </template>
+            </Column>
+
+            <Column header="Monto Abonado">
+              <template #body="{ data: a }">
+                <div class="client-cell">
+                  <span class="font-mono font-bold text-sm text-success">
+                    {{ a.moneda === 'PEN' ? 'S/' : '$' }} {{ Number(a.montoAbonado || 0).toLocaleString('en-US', { minimumFractionDigits: 2 }) }}
+                  </span>
+                  <span v-if="a.moneda === 'USD'" class="client-sub">
+                    Equiv: S/ {{ Number(a.montoEquivalentePen || 0).toLocaleString('es-PE', { minimumFractionDigits: 2 }) }}
+                  </span>
+                </div>
+              </template>
+            </Column>
+
+            <Column header="Banco & N° Operación">
+              <template #body="{ data: a }">
+                <div class="client-cell">
+                  <span class="font-bold text-xs">{{ a.bancoDestino }}</span>
+                  <span class="client-sub font-mono">Op: {{ a.numeroOperacion }} ({{ a.fechaOperacion }})</span>
+                </div>
+              </template>
+            </Column>
+
+            <Column header="Modalidad">
+              <template #body="{ data: a }">
+                <Tag
+                  :value="formatTipoAbono(a.tipoAbono)"
+                  severity="info"
+                  rounded
+                />
+              </template>
+            </Column>
+
+            <Column header="Estado Finanzas">
+              <template #body="{ data: a }">
+                <Tag
+                  :value="getEstadoAnticipoLabel(a.estadoPago)"
+                  :severity="getEstadoAnticipoSeverity(a.estadoPago)"
+                  rounded
+                />
+              </template>
+            </Column>
+
+            <Column header="Acciones de Control" headerClass="text-right" bodyClass="text-right">
+              <template #body="{ data: a }">
+                <div class="actions-wrapper">
+                  <!-- Botón Ver Voucher -->
+                  <button
+                    v-if="a.idDocumentoComprobante || a.documentoComprobanteUrl"
+                    type="button"
+                    class="btn-action-outline"
+                    title="Ver comprobante bancario"
+                    @click="verVoucherAnticipo(a)"
+                  >
+                    <i class="pi pi-file-pdf"></i>
+                    <span>Voucher</span>
+                  </button>
+
+                  <!-- Si está pendiente de revisión -->
+                  <template v-if="a.estadoPago === 'PENDIENTE_REVISION'">
+                    <button
+                      type="button"
+                      class="btn-action-approve"
+                      title="Aprobar abono y habilitar cotización para Expediente Aduanero"
+                      @click="openValidarAnticipo(a, 'APROBAR')"
+                    >
+                      <i class="pi pi-check"></i>
+                      <span>Aprobar</span>
+                    </button>
+                    <button
+                      type="button"
+                      class="btn-action-observe"
+                      title="Observar abono bancario"
+                      @click="openValidarAnticipo(a, 'OBSERVAR')"
+                    >
+                      <i class="pi pi-eye"></i>
+                      <span>Observar</span>
+                    </button>
+                  </template>
+                  <span v-else class="text-xs text-muted">
+                    {{ a.usuarioFinanzasNombre ? 'Validado por ' + a.usuarioFinanzasNombre : 'Conforme' }}
+                  </span>
                 </div>
               </template>
             </Column>
@@ -1257,7 +1441,7 @@
                   <div class="actions-wrapper">
                     <!-- Botón Ver Voucher -->
                     <button
-                      v-if="a.idDocumentoComprobante"
+                      v-if="a.idDocumentoComprobante || a.documentoComprobanteUrl"
                       type="button"
                       class="btn-action-outline"
                       title="Ver comprobante bancario"
@@ -1729,30 +1913,156 @@
     </Dialog>
 
     <!-- ===================================================================== -->
-    <!-- MODAL 4: VALIDACIÓN FINANCIERA DE ANTICIPO / PAGO DE COTIZACIÓN       -->
+    <!-- MODAL 4: PREVISUALIZACIÓN DE VOUCHER BANCARIO B2B                     -->
+    <!-- ===================================================================== -->
+    <Dialog
+      v-model:visible="showVoucherPreviewModal"
+      modal
+      :header="voucherPreviewAnticipo ? `Comprobante Bancario — ${voucherPreviewAnticipo.codigoPago}` : 'Previsualización de Voucher'"
+      :style="{ width: '860px', maxWidth: '96vw' }"
+      class="custom-dialog-warm voucher-preview-dialog"
+      :closable="true"
+      @hide="closeVoucherPreview"
+    >
+      <div v-if="voucherPreviewAnticipo" class="voucher-modal-content">
+        <!-- Barra de Metadatos del Abono -->
+        <div class="voucher-metadata-bar">
+          <div class="meta-item">
+            <span class="meta-lbl">Cotización</span>
+            <span class="meta-val font-bold text-primary font-mono">{{ voucherPreviewAnticipo.codigoCotizacion }}</span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-lbl">Cliente Importador</span>
+            <span class="meta-val truncate" :title="voucherPreviewAnticipo.clienteRazonSocial">{{ voucherPreviewAnticipo.clienteRazonSocial || 'Cliente' }}</span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-lbl">Entidad / N° Op.</span>
+            <span class="meta-val font-mono font-bold">{{ voucherPreviewAnticipo.bancoDestino }} — {{ voucherPreviewAnticipo.numeroOperacion }}</span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-lbl">Monto Abonado</span>
+            <span class="meta-val font-mono font-bold text-success">
+              {{ voucherPreviewAnticipo.moneda === 'PEN' ? 'S/' : '$' }} {{ Number(voucherPreviewAnticipo.montoAbonado || 0).toLocaleString('en-US', { minimumFractionDigits: 2 }) }}
+              <span v-if="voucherPreviewAnticipo.moneda === 'USD'" class="text-xs text-muted block font-normal">(Equiv: S/ {{ Number(voucherPreviewAnticipo.montoEquivalentePen || 0).toLocaleString('es-PE', { minimumFractionDigits: 2 }) }})</span>
+            </span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-lbl">Estado</span>
+            <Tag
+              :value="getEstadoAnticipoLabel(voucherPreviewAnticipo.estadoPago)"
+              :severity="getEstadoAnticipoSeverity(voucherPreviewAnticipo.estadoPago)"
+              rounded
+            />
+          </div>
+        </div>
+
+        <!-- Visor del Comprobante (PDF o Imagen) -->
+        <div class="voucher-viewer-wrap">
+          <div v-if="loadingVoucher" class="voucher-loading-state">
+            <i class="pi pi-spin pi-spinner text-3xl text-primary mb-2"></i>
+            <p>Cargando comprobante bancario digital...</p>
+          </div>
+
+          <template v-else-if="voucherBlobUrl">
+            <iframe
+              v-if="voucherMimeType.includes('pdf')"
+              :src="voucherBlobUrl"
+              class="voucher-iframe"
+              title="Voucher Bancario PDF"
+            ></iframe>
+            <div v-else class="voucher-img-container">
+              <img
+                :src="voucherBlobUrl"
+                alt="Voucher Bancario"
+                class="voucher-img"
+              />
+            </div>
+          </template>
+
+          <div v-else class="voucher-empty-state">
+            <i class="pi pi-file-excel text-4xl text-muted mb-2"></i>
+            <p class="font-bold">No se pudo cargar la vista previa del documento</p>
+            <p class="text-sm text-muted">Es posible que el archivo se encuentre en un formato no soportado o no esté disponible temporalmente.</p>
+          </div>
+        </div>
+      </div>
+
+      <template #footer>
+        <div class="voucher-footer-row">
+          <div class="footer-left">
+            <button
+              v-if="voucherPreviewAnticipo?.idDocumentoComprobante"
+              type="button"
+              class="btn-outline-warm"
+              @click="descargarVoucherActual"
+            >
+              <i class="pi pi-download"></i>
+              <span>Descargar Archivo</span>
+            </button>
+          </div>
+          <div class="footer-right">
+            <button
+              type="button"
+              class="btn-outline-warm"
+              @click="closeVoucherPreview"
+            >
+              Cerrar
+            </button>
+
+            <!-- Acciones directas si el abono está pendiente de revisión -->
+            <template v-if="voucherPreviewAnticipo?.estadoPago === 'PENDIENTE_REVISION'">
+              <button
+                type="button"
+                class="btn-action-observe"
+                @click="openValidarAnticipo(voucherPreviewAnticipo, 'OBSERVAR')"
+              >
+                <i class="pi pi-eye"></i>
+                <span>Observar Abono</span>
+              </button>
+              <button
+                type="button"
+                class="btn-action-approve"
+                @click="openValidarAnticipo(voucherPreviewAnticipo, 'APROBAR')"
+              >
+                <i class="pi pi-check"></i>
+                <span>Aprobar Abono</span>
+              </button>
+            </template>
+          </div>
+        </div>
+      </template>
+    </Dialog>
+
+    <!-- ===================================================================== -->
+    <!-- MODAL 5: VALIDACIÓN FINANCIERA DE ANTICIPO / PAGO DE COTIZACIÓN       -->
     <!-- ===================================================================== -->
     <Dialog
       v-model:visible="showValidarAnticipoModal"
       modal
-      :header="validarAccion === 'APROBAR' ? 'Aprobación de Pago / Anticipo' : 'Observación de Pago Bancario'"
-      :style="{ width: '560px', maxWidth: '95vw' }"
+      :header="validarAccion === 'APROBAR' ? 'Aprobación de Pago / Anticipo Bancario' : 'Observación de Comprobante de Pago'"
+      :style="{ width: '600px', maxWidth: '95vw' }"
       class="custom-dialog-warm"
     >
       <div v-if="selectedAnticipo" class="modal-body">
+        <!-- Resumen del Pago -->
         <div class="anticipo-validation-summary mb-3">
           <div class="summary-line">
             <span class="label">Cotización:</span>
-            <strong class="val">{{ selectedAnticipo.codigoCotizacion }} — {{ selectedAnticipo.clienteRazonSocial }}</strong>
+            <strong class="val font-mono text-primary">{{ selectedAnticipo.codigoCotizacion }} — {{ selectedAnticipo.clienteRazonSocial }}</strong>
           </div>
           <div class="summary-line">
             <span class="label">Operación Bancaria:</span>
             <span class="val font-mono">{{ selectedAnticipo.bancoDestino }} (N° {{ selectedAnticipo.numeroOperacion }})</span>
           </div>
           <div class="summary-line">
+            <span class="label">Fecha Operación:</span>
+            <span class="val font-mono">{{ selectedAnticipo.fechaOperacion || 'No especificada' }}</span>
+          </div>
+          <div class="summary-line">
             <span class="label">Monto Abonado:</span>
-            <strong class="val text-success">
+            <strong class="val text-success font-mono font-bold">
               {{ selectedAnticipo.moneda === 'PEN' ? 'S/' : '$' }} {{ Number(selectedAnticipo.montoAbonado || 0).toLocaleString('en-US', { minimumFractionDigits: 2 }) }}
-              <span v-if="selectedAnticipo.moneda === 'USD'" class="text-xs text-muted">(Equiv: S/ {{ Number(selectedAnticipo.montoEquivalentePen || 0).toLocaleString('es-PE', { minimumFractionDigits: 2 }) }})</span>
+              <span v-if="selectedAnticipo.moneda === 'USD'" class="text-xs text-muted font-normal">(Equiv: S/ {{ Number(selectedAnticipo.montoEquivalentePen || 0).toLocaleString('es-PE', { minimumFractionDigits: 2 }) }})</span>
             </strong>
           </div>
           <div class="summary-line">
@@ -1761,24 +2071,106 @@
           </div>
         </div>
 
-        <div v-if="validarAccion === 'APROBAR'" class="alert-box-success mb-3">
-          <i class="pi pi-check-circle mr-2"></i>
-          <span>Al aprobar este pago, la cotización quedará <strong>habilitada financieramente</strong> y se desbloqueará la Apertura de Expediente Aduanero.</span>
-        </div>
-        <div v-else class="alert-box-warning mb-3">
-          <i class="pi pi-exclamation-triangle mr-2"></i>
-          <span>Al observar este abono, se notificará al área comercial para que rectifique el voucher o número de operación.</span>
-        </div>
+        <!-- Banner Explicativo APROBAR -->
+        <template v-if="validarAccion === 'APROBAR'">
+          <div class="alert-box-success mb-3">
+            <i class="pi pi-check-circle mr-2 text-lg"></i>
+            <div>
+              <strong>Conformidad Contable:</strong> Al aprobar este pago, la cotización quedará <strong>habilitada financieramente</strong> y se desbloqueará de inmediato la Apertura de Expediente Aduanero.
+            </div>
+          </div>
 
-        <div class="form-group mb-3">
-          <label class="form-label">Notas / Observaciones de Finanzas</label>
-          <textarea
-            v-model="observacionFinanzas"
-            rows="3"
-            class="form-textarea"
-            :placeholder="validarAccion === 'APROBAR' ? 'Ej. Abono verificado conforme en extracto bancario BCP...' : 'Indique el motivo de discrepancia o por qué no se ubica la operación...'"
-          ></textarea>
-        </div>
+          <!-- Casilla de Cotejo Bancario Obligatoria -->
+          <div class="check-confirmation-box mb-3">
+            <label class="check-confirm-label">
+              <input
+                type="checkbox"
+                v-model="confirmacionCotejo"
+                class="check-confirm-input"
+              />
+              <span class="check-confirm-text">
+                He verificado en la cuenta bancaria de TransAduanas que el importe y número de operación son fidedignos y están acreditados en el extracto.
+              </span>
+            </label>
+          </div>
+
+          <div class="form-group mb-2">
+            <label class="form-label">Anotación Contable / Auditoría (Opcional)</label>
+            <textarea
+              v-model="observacionFinanzas"
+              rows="2"
+              class="form-textarea"
+              placeholder="Ej. Abono verificado conforme en extracto bancario BCP..."
+            ></textarea>
+          </div>
+        </template>
+
+        <!-- Banner Explicativo OBSERVAR -->
+        <template v-else>
+          <div class="alert-box-warning mb-3">
+            <i class="pi pi-exclamation-triangle mr-2 text-lg"></i>
+            <div>
+              <strong>Notificación al Cliente:</strong> Al observar este abono, se notificará al importador en el Portal B2B para que rectifique el voucher o número de operación ingresado.
+            </div>
+          </div>
+
+          <!-- Chips de Motivos Comunes de Observación -->
+          <div class="form-group mb-3">
+            <label class="form-label">Seleccione un motivo común o escriba uno personalizado:</label>
+            <div class="obs-chips-wrap">
+              <button
+                type="button"
+                class="obs-chip"
+                :class="{ active: motivoObservacionSeleccionado === 'Voucher ilegible o incompleto' }"
+                @click="selectMotivoObservacion('Voucher ilegible o incompleto')"
+              >
+                Voucher ilegible
+              </button>
+              <button
+                type="button"
+                class="obs-chip"
+                :class="{ active: motivoObservacionSeleccionado === 'Monto abonado no coincide con cotización' }"
+                @click="selectMotivoObservacion('Monto abonado no coincide con cotización')"
+              >
+                Monto no coincide
+              </button>
+              <button
+                type="button"
+                class="obs-chip"
+                :class="{ active: motivoObservacionSeleccionado === 'N° de Operación no figura en extracto bancario' }"
+                @click="selectMotivoObservacion('N° de Operación no figura en extracto bancario')"
+              >
+                N° de Op. no figura
+              </button>
+              <button
+                type="button"
+                class="obs-chip"
+                :class="{ active: motivoObservacionSeleccionado === 'Comprobante no corresponde a TransAduanas' }"
+                @click="selectMotivoObservacion('Comprobante no corresponde a TransAduanas')"
+              >
+                Comprobante no corresponde
+              </button>
+              <button
+                type="button"
+                class="obs-chip"
+                :class="{ active: motivoObservacionSeleccionado === 'Moneda o cuenta destino incorrecta' }"
+                @click="selectMotivoObservacion('Moneda o cuenta destino incorrecta')"
+              >
+                Moneda/Cuenta errónea
+              </button>
+            </div>
+          </div>
+
+          <div class="form-group mb-2">
+            <label class="form-label">Detalle de la Observación (Obligatorio) <span class="text-danger">*</span></label>
+            <textarea
+              v-model="observacionFinanzas"
+              rows="3"
+              class="form-textarea"
+              placeholder="Indique con claridad qué debe corregir el cliente en su comprobante o transferencia..."
+            ></textarea>
+          </div>
+        </template>
       </div>
 
       <template #footer>
@@ -1788,11 +2180,11 @@
         <button
           type="button"
           :class="validarAccion === 'APROBAR' ? 'btn-primary-action' : 'btn-danger-action'"
-          :disabled="submittingValidacion"
+          :disabled="submittingValidacion || (validarAccion === 'APROBAR' && !confirmacionCotejo) || (validarAccion === 'OBSERVAR' && (!observacionFinanzas || !observacionFinanzas.trim()))"
           @click="submitValidarAnticipo"
         >
           <i :class="[validarAccion === 'APROBAR' ? 'pi pi-check' : 'pi pi-times', { 'pi-spin': submittingValidacion }]"></i>
-          <span>{{ validarAccion === 'APROBAR' ? 'Confirmar Aprobación Bancaria' : 'Confirmar Observación' }}</span>
+          <span>{{ validarAccion === 'APROBAR' ? 'Confirmar Aprobación Bancaria' : 'Notificar Observación al Cliente' }}</span>
         </button>
       </template>
     </Dialog>
@@ -1917,7 +2309,7 @@
               <template #body="{ data: p }">
                 <div class="actions-wrapper">
                   <button
-                    v-if="p.idDocumentoComprobante"
+                    v-if="p.idDocumentoComprobante || p.documentoComprobanteUrl"
                     type="button"
                     class="btn-action-outline"
                     title="Ver comprobante bancario"
@@ -1978,9 +2370,12 @@ import RegistroPagoFullView from '../components/RegistroPagoFullView.vue'
 
 import finanzasService from '../services/finanzasService.js'
 import { expedienteService } from '../services/expedienteService.js'
+import { documentoService } from '@/features/documentos/services/documentoService.js'
 import { useNavigationStore } from '@/core/stores/navigationStore'
 import { useNotification } from '@/shared/composables/useNotification'
 import { useConfirmation } from '@/shared/composables/useConfirmation'
+import { formatDate, formatDateTime, getNowDateTimeInput } from '@/shared/utils/dateUtils'
+import { formatCurrency, formatEstado, getEstadoSeverity, getCanalSeverity } from '@/shared/utils/formatters'
 
 const route = useRoute()
 const router = useRouter()
@@ -2038,7 +2433,7 @@ const showDocsModal = ref(false)
 const showValidarAnticipoModal = ref(false)
 const showRegistroPagoFullView = ref(false)
 
-// Estado para Anticipos de Cotización
+// Estado para Anticipos de Cotización & Voucher
 const anticiposList = ref([])
 const loadingAnticipos = ref(false)
 const filterEstadoAnticipo = ref('')
@@ -2047,6 +2442,15 @@ const selectedAnticipo = ref(null)
 const validarAccion = ref('APROBAR')
 const observacionFinanzas = ref('')
 const submittingValidacion = ref(false)
+const confirmacionCotejo = ref(false)
+const motivoObservacionSeleccionado = ref('')
+
+// Visor Dedicado de Comprobante / Voucher
+const showVoucherPreviewModal = ref(false)
+const voucherPreviewAnticipo = ref(null)
+const voucherBlobUrl = ref(null)
+const voucherMimeType = ref('')
+const loadingVoucher = ref(false)
 
 const submittingEmision = ref(false)
 const submittingPago = ref(false)
@@ -2073,7 +2477,7 @@ const pagoForm = ref({
   bancoDestino: 'BCP',
   numeroOperacion: '',
   numeroFactura: '',
-  fechaPago: new Date().toISOString().slice(0, 16),
+  fechaPago: getNowDateTimeInput(),
   observaciones: ''
 })
 
@@ -2378,7 +2782,7 @@ function openPagoModal(liquidacion) {
     bancoDestino: 'BCP',
     numeroOperacion: '',
     numeroFactura: liquidacion.numeroFactura || '',
-    fechaPago: new Date().toISOString().slice(0, 16),
+    fechaPago: getNowDateTimeInput(),
     observaciones: ''
   }
   showPagoModal.value = true
@@ -2436,51 +2840,24 @@ async function confirmAnular(liquidacion) {
 // =========================================================================
 
 function formatCurrencyPen(val) {
-  const num = Number(val || 0)
-  return 'S/ ' + num.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+  return formatCurrency(val, 'PEN')
 }
 
 function formatEstadoPago(st) {
   if (!st) return 'DESCONOCIDO'
-  switch (st.toUpperCase()) {
-    case 'PENDIENTE': return 'Pendiente de Cobro'
-    case 'PAGADO': return 'Cobrado / Conforme'
-    case 'ANULADO': return 'Anulado'
-    default: return st
-  }
-}
-
-function getEstadoSeverity(st) {
-  switch (st?.toUpperCase()) {
-    case 'PAGADO': return 'success'
-    case 'PENDIENTE': return 'warn'
-    case 'ANULADO': return 'danger'
-    default: return 'info'
-  }
-}
-
-function getCanalSeverity(canal) {
-  switch (canal?.toUpperCase()) {
-    case 'VERDE': return 'success'
-    case 'NARANJA': return 'warn'
-    case 'ROJO': return 'danger'
-    default: return 'info'
-  }
-}
-
-function formatDate(dt) {
-  if (!dt) return '—'
-  return String(dt).split('T')[0]
-}
-
-function formatDateTime(dt) {
-  if (!dt) return '—'
-  const d = new Date(dt)
-  return isNaN(d.getTime()) ? dt : d.toLocaleString('es-PE')
+  return formatEstado(st)
 }
 
 const anticiposPendientesCount = computed(() => {
   return anticiposList.value.filter((a) => a.estadoPago === 'PENDIENTE_REVISION').length
+})
+
+const anticiposAprobadosCount = computed(() => {
+  return anticiposList.value.filter((a) => a.estadoPago === 'APROBADO').length
+})
+
+const anticiposObservadosCount = computed(() => {
+  return anticiposList.value.filter((a) => a.estadoPago === 'OBSERVADO').length
 })
 
 const filteredAnticipos = computed(() => {
@@ -2534,19 +2911,54 @@ function getEstadoAnticipoSeverity(st) {
 function openValidarAnticipo(anticipo, accion = 'APROBAR') {
   selectedAnticipo.value = anticipo
   validarAccion.value = accion
-  observacionFinanzas.value = accion === 'APROBAR' ? 'Abono verificado y conforme en cuenta bancaria.' : ''
+  confirmacionCotejo.value = false
+  motivoObservacionSeleccionado.value = ''
+  observacionFinanzas.value = accion === 'APROBAR'
+    ? 'Abono verificado y conforme en extracto bancario de TransAduanas.'
+    : ''
   showValidarAnticipoModal.value = true
+}
+
+function selectMotivoObservacion(motivo) {
+  motivoObservacionSeleccionado.value = motivo
+  observacionFinanzas.value = motivo
 }
 
 async function submitValidarAnticipo() {
   if (!selectedAnticipo.value) return
+
+  if (validarAccion.value === 'APROBAR' && !confirmacionCotejo.value) {
+    showError('Debe marcar la casilla confirmando que ha cotejado la operación en la cuenta bancaria.')
+    return
+  }
+
+  if (validarAccion.value === 'OBSERVAR' && (!observacionFinanzas.value || !observacionFinanzas.value.trim())) {
+    showError('Debe ingresar el motivo de observación para que el cliente pueda subsanarlo.')
+    return
+  }
+
   submittingValidacion.value = true
   try {
     await finanzasService.validarAnticipo(selectedAnticipo.value.idPago, {
       accion: validarAccion.value,
       observacionFinanzas: observacionFinanzas.value
     })
+
+    const esAprobado = validarAccion.value === 'APROBAR'
     showValidarAnticipoModal.value = false
+
+    if (showVoucherPreviewModal.value) {
+      closeVoucherPreview()
+    }
+
+    showSuccess(
+      esAprobado
+        ? `¡Abono ${selectedAnticipo.value.codigoPago} aprobado con éxito! La cotización quedó habilitada para apertura de expediente aduanero.`
+        : `Abono ${selectedAnticipo.value.codigoPago} observado. Se ha notificado al cliente vía Portal B2B para su corrección.`,
+      esAprobado ? 'Abono Aprobado' : 'Abono Observado',
+      4500
+    )
+
     await Promise.all([loadAnticipos(), loadCotizacionesAprobadas(), loadMetricas()])
     if (selectedCotizacionHistorial.value) {
       const data = await finanzasService.getPagosCotizacion(selectedCotizacionHistorial.value.idCotizacion)
@@ -2554,18 +2966,86 @@ async function submitValidarAnticipo() {
     }
   } catch (err) {
     console.error('Error al validar anticipo:', err)
-    showError(err.response?.data?.message || 'Error al validar el pago bancario.')
+    showError(err.response?.data?.message || 'Error al procesar la validación bancaria.')
   } finally {
     submittingValidacion.value = false
   }
 }
 
-function verVoucherAnticipo(anticipo) {
-  if (anticipo.idCotizacion) {
-    selectedDocEntidadId.value = anticipo.idCotizacion
-    selectedDocCodigo.value = anticipo.codigoCotizacion || `COT-${anticipo.idCotizacion}`
-    selectedDocTitulo.value = `Documentos y Voucher - ${anticipo.codigoCotizacion}`
-    showDocsModal.value = true
+async function verVoucherAnticipo(anticipo) {
+  if (!anticipo) return
+  voucherPreviewAnticipo.value = anticipo
+  voucherBlobUrl.value = null
+  voucherMimeType.value = ''
+  loadingVoucher.value = true
+  showVoucherPreviewModal.value = true
+
+  try {
+    let idDoc = anticipo.idDocumentoComprobante
+
+    // Si no vino el idDocumentoComprobante directo pero tiene idCotizacion, buscar en documentos
+    if (!idDoc && anticipo.idCotizacion) {
+      const docs = await documentoService.getDocumentos({ idCotizacion: anticipo.idCotizacion })
+      if (docs && docs.length > 0) {
+        const docVoucher = docs.find(
+          (d) =>
+            d.categoria === 'PAGO' ||
+            d.categoria === 'COMPROBANTE' ||
+            d.entidadTipo === 'COTIZACION_PAGO' ||
+            d.nombreOriginal?.toLowerCase().includes('voucher') ||
+            d.descripcion?.toLowerCase().includes('voucher') ||
+            d.descripcion?.toLowerCase().includes('pago')
+        ) || docs[0]
+        idDoc = docVoucher.idDocumento
+        voucherPreviewAnticipo.value.idDocumentoComprobante = idDoc
+        voucherPreviewAnticipo.value.documentoComprobanteNombre = docVoucher.nombreOriginal
+      }
+    }
+
+    if (idDoc) {
+      const res = await documentoService.getPreviewBlobUrl(idDoc)
+      voucherBlobUrl.value = res.url
+      voucherMimeType.value = res.mimeType || 'application/pdf'
+    } else if (anticipo.documentoComprobanteUrl) {
+      voucherBlobUrl.value = anticipo.documentoComprobanteUrl
+      voucherMimeType.value = anticipo.documentoComprobanteUrl.toLowerCase().endsWith('.pdf') ? 'application/pdf' : 'image/jpeg'
+    } else {
+      showError('Esta operación no cuenta con archivo digital adjunto.')
+      showVoucherPreviewModal.value = false
+    }
+  } catch (err) {
+    console.error('Error al previsualizar voucher:', err)
+    showError('No se pudo recuperar la previsualización del voucher bancario.')
+    showVoucherPreviewModal.value = false
+  } finally {
+    loadingVoucher.value = false
+  }
+}
+
+function closeVoucherPreview() {
+  if (voucherBlobUrl.value) {
+    window.URL.revokeObjectURL(voucherBlobUrl.value)
+    voucherBlobUrl.value = null
+  }
+  showVoucherPreviewModal.value = false
+  voucherPreviewAnticipo.value = null
+}
+
+async function descargarVoucherActual() {
+  if (!voucherPreviewAnticipo.value) return
+  const idDoc = voucherPreviewAnticipo.value.idDocumentoComprobante
+  const nombre = voucherPreviewAnticipo.value.documentoComprobanteNombre || `Voucher_${voucherPreviewAnticipo.value.codigoPago}.pdf`
+  if (idDoc) {
+    try {
+      await documentoService.downloadDocumento(idDoc, nombre)
+    } catch {
+      showError('No se pudo descargar el archivo del comprobante.')
+    }
+  } else if (voucherBlobUrl.value) {
+    const a = document.createElement('a')
+    a.href = voucherBlobUrl.value
+    a.download = nombre
+    a.click()
   }
 }
 
@@ -2584,15 +3064,10 @@ function closeRegistroPagoFullView() {
   showRegistroPagoFullView.value = false
   selectedCotizacionForPago.value = null
 }
-const closeRegistrarPagoFullView = closeRegistroPagoFullView
 
 async function handlePagoRegistradoDesdeFullView(data) {
   closeRegistroPagoFullView()
   await onPagoRegistradoEnFinanzas()
-}
-
-function closeRegistrarPagoModal() {
-  closeRegistroPagoFullView()
 }
 
 async function openHistorialCotizacion(cotizacion) {
@@ -2613,6 +3088,15 @@ function switchTab(tab, sub = null) {
   showRegistroPagoFullView.value = false
   selectedCotizacionForPago.value = null
 
+  if (tab === 'abonos-b2b') {
+    activeTab.value = 'abonos-b2b'
+    filterEstadoAnticipo.value = 'PENDIENTE_REVISION'
+    navigationStore.setFinanzasSubOption('abonos-b2b')
+    if (route.query.tab !== 'abonos-b2b') {
+      router.replace({ query: { ...route.query, tab: 'abonos-b2b' } })
+    }
+    return
+  }
   if (tab === 'anticipos') {
     activeTab.value = 'pre-expedientes'
     if (sub) vistaPreExpedientes.value = sub
@@ -2666,6 +3150,7 @@ function formatEstadoPagoCotizacionSeverity(st) {
 function getToolbarTitle() {
   switch (activeTab.value) {
     case 'dashboard': return 'Dashboard Financiero & Monitoreo Ejecutivo'
+    case 'abonos-b2b': return 'Revisión y Validación de Abonos B2B'
     case 'pre-expedientes':
     case 'anticipos': return 'Gestión de Pagos Pre-Expedientes'
     case 'liquidaciones':
@@ -2687,7 +3172,7 @@ async function onPagoRegistradoEnFinanzas() {
 watch(
   () => route.query.tab,
   (newTab) => {
-    if (newTab && ['dashboard', 'pre-expedientes', 'anticipos', 'liquidaciones', 'por-liquidar', 'conciliacion', 'facturacion'].includes(newTab)) {
+    if (newTab && ['dashboard', 'abonos-b2b', 'pre-expedientes', 'anticipos', 'liquidaciones', 'por-liquidar', 'conciliacion', 'facturacion'].includes(newTab)) {
       if (navigationStore.finanzasSubOption !== newTab) {
         navigationStore.setFinanzasSubOption(newTab)
       }
@@ -2706,7 +3191,10 @@ watch(
       selectedCotizacionForPago.value = null
     }
 
-    if (val === 'pre-expedientes' || val === 'anticipos') {
+    if (val === 'abonos-b2b') {
+      activeTab.value = 'abonos-b2b'
+      filterEstadoAnticipo.value = 'PENDIENTE_REVISION'
+    } else if (val === 'pre-expedientes' || val === 'anticipos') {
       activeTab.value = 'pre-expedientes'
       vistaPreExpedientes.value = 'cotizaciones'
     } else if (val === 'liquidaciones' || val === 'liquidacion' || val === 'por-liquidar') {
@@ -2802,7 +3290,7 @@ onMounted(() => {
 }
 
 .badge-kicker {
-  font-family: var(--font-family-mono, monospace);
+  font-family: var(--font-mono);
   font-size: var(--font-size-xs, 0.75rem);
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -2928,8 +3416,8 @@ onMounted(() => {
 }
 
 .tab-nav-btn.active {
-  background: var(--color-primary, #352f2a);
-  color: #fff;
+  background: var(--color-primary);
+  color: var(--color-primary-text);
 }
 
 .tab-counter {
@@ -2940,20 +3428,20 @@ onMounted(() => {
 }
 
 .tab-counter.counter-alert {
-  background: var(--color-warning-bg, #fef3c7);
-  color: var(--color-warning-text, #92400e);
-  border: 1px solid var(--color-warning-border, #fde68a);
+  background: var(--color-warning-bg);
+  color: var(--color-warning-text);
+  border: 1px solid var(--color-warning-border);
   font-weight: 700;
 }
 
 .tab-nav-btn.active .tab-counter {
-  background: rgba(255, 255, 255, 0.25);
-  color: #fff;
+  background: rgba(255, 255, 255, 0.2);
+  color: var(--color-primary-text);
 }
 
 .tab-nav-btn.active .tab-counter.counter-alert {
-  background: #ea580c;
-  color: #ffffff;
+  background: var(--color-warning-text);
+  color: var(--color-bg-surface);
 }
 
 /* Métricas KPI Grid Warm Editorial */
@@ -2992,7 +3480,7 @@ onMounted(() => {
 }
 
 .kpi-index {
-  font-family: var(--font-family-mono, monospace);
+  font-family: var(--font-mono);
   font-size: var(--font-size-xs, 0.75rem);
   font-weight: 700;
   color: var(--color-text-subtle, #998c7e);
@@ -3329,8 +3817,8 @@ onMounted(() => {
 
 .btn-action-danger {
   background: transparent;
-  color: #a34e36;
-  border: 1px solid #e0c2ba;
+  color: var(--color-danger-text);
+  border: 1px solid var(--color-danger-border);
   padding: 0.35rem 0.55rem;
   border-radius: 4px;
   font-size: 0.78rem;
@@ -3338,7 +3826,7 @@ onMounted(() => {
 }
 
 .btn-action-danger:hover {
-  background: #fdf2f0;
+  background: var(--color-danger-bg);
 }
 
 .empty-state {
@@ -3348,20 +3836,20 @@ onMounted(() => {
 
 .empty-icon {
   font-size: 2.5rem;
-  color: var(--color-accent, #9a7f60);
+  color: var(--color-accent-kicker);
   margin-bottom: 0.5rem;
 }
 
 .empty-title {
   font-size: 1.1rem;
   font-weight: 700;
-  color: var(--color-primary, #352f2a);
+  color: var(--color-text-main);
   margin: 0;
 }
 
 .empty-desc {
   font-size: 0.85rem;
-  color: #7c7267;
+  color: var(--color-text-muted);
   margin: 0.25rem 0 0;
 }
 
@@ -3389,34 +3877,34 @@ onMounted(() => {
 }
 
 .form-label {
-  font-size: 0.8rem;
+  font-size: 0.8125rem;
   font-weight: 600;
-  color: var(--color-primary, #352f2a);
+  color: var(--color-text-main);
 }
 
 .form-label.required::after {
   content: ' *';
-  color: #a34e36;
+  color: var(--color-danger-text);
 }
 
 .form-input, .form-textarea {
   padding: 0.5rem 0.75rem;
-  border: 1px solid var(--color-border, #d8cdbf);
+  border: 1px solid var(--color-border);
   border-radius: 6px;
   font-size: 0.88rem;
-  background: var(--color-bg-surface, #ffffff);
-  color: var(--color-text-main, #352f2a);
+  background: var(--color-bg-surface);
+  color: var(--color-text-main);
 }
 
 .form-select {
   appearance: none !important;
   -webkit-appearance: none !important;
-  padding: 0.5rem 2rem 0.5rem 0.75rem;
-  border: 1px solid var(--color-border, #d8cdbf);
+  padding: 0.5rem 2.25rem 0.5rem 0.75rem;
+  border: 1px solid var(--color-border);
   border-radius: 6px;
   font-size: 0.88rem;
-  background-color: var(--color-bg-surface, #ffffff);
-  color: var(--color-text-main, #352f2a);
+  background-color: var(--color-bg-surface);
+  color: var(--color-text-main);
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236f6356' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
   background-repeat: no-repeat !important;
   background-position: right 0.75rem center !important;
@@ -3425,7 +3913,7 @@ onMounted(() => {
 
 .form-input:focus, .form-select:focus, .form-textarea:focus {
   outline: none;
-  border-color: var(--color-primary, #352f2a);
+  border-color: var(--color-primary);
 }
 
 .currency-input-wrap {
@@ -3438,7 +3926,7 @@ onMounted(() => {
   position: absolute;
   left: 0.75rem;
   font-weight: 700;
-  color: #7c7267;
+  color: var(--color-text-muted);
   font-size: 0.85rem;
 }
 
@@ -3448,7 +3936,7 @@ onMounted(() => {
 
 .field-hint {
   font-size: 0.7rem;
-  color: #8c827a;
+  color: var(--color-text-subtle);
 }
 
 .checkbox-group {
@@ -3462,14 +3950,15 @@ onMounted(() => {
   font-size: 0.82rem;
   font-weight: 600;
   cursor: pointer;
-  color: var(--color-primary, #352f2a);
+  color: var(--color-text-main);
 }
 
 .exp-summary-banner {
-  background: var(--color-bg-card, #ede6db);
+  background: var(--color-bg-subtle);
+  border: 1px solid var(--color-border);
+  border-left: 4px solid var(--color-accent-kicker, #d6b476);
   padding: 0.75rem 1rem;
-  border-radius: 6px;
-  border-left: 4px solid var(--color-accent, #9a7f60);
+  border-radius: var(--radius-md, 8px);
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
@@ -3478,20 +3967,20 @@ onMounted(() => {
 .exp-summary-item .label {
   font-weight: 700;
   font-size: 0.78rem;
-  color: #7c7267;
+  color: var(--color-text-muted);
   margin-right: 0.4rem;
 }
 
 .exp-summary-item .val {
   font-size: 0.85rem;
-  color: var(--color-primary, #352f2a);
+  color: var(--color-text-main);
   font-weight: 600;
 }
 
 .totals-breakdown-card {
-  background: #fbf9f6;
-  border: 1px solid var(--color-border-warm, #d8cdbf);
-  border-radius: 6px;
+  background: var(--color-bg-subtle);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md, 8px);
   padding: 0.75rem 1rem;
   display: flex;
   flex-direction: column;
@@ -3502,32 +3991,34 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   font-size: 0.85rem;
-  color: #4a4036;
+  color: var(--color-text-muted);
 }
 
 .total-highlight {
-  border-top: 1px dashed var(--color-border-warm, #d8cdbf);
+  border-top: 1px dashed var(--color-border);
   padding-top: 0.4rem;
   margin-top: 0.2rem;
   font-size: 0.95rem;
+  color: var(--color-text-main);
 }
 
 /* Pago Modal Banner */
 .pago-summary-banner {
-  background: var(--color-bg-card, #ede6db);
+  background: var(--color-bg-subtle);
+  border: 1px solid var(--color-border);
+  border-left: 4px solid var(--color-success-border, #2d5738);
   padding: 1rem;
-  border-radius: 6px;
-  border-left: 4px solid #2e6047;
+  border-radius: var(--radius-md, 8px);
 }
 
 .pago-banner-title {
   font-size: 1.1rem;
-  color: var(--color-primary, #352f2a);
+  color: var(--color-text-main);
 }
 
 .pago-banner-client {
   font-size: 0.85rem;
-  color: #7c7267;
+  color: var(--color-text-muted);
   margin-bottom: 0.5rem;
 }
 
@@ -3536,21 +4027,22 @@ onMounted(() => {
   justify-content: space-between;
   align-items: center;
   font-size: 1rem;
+  color: var(--color-text-main);
 }
 
 /* Voucher de Liquidación Imprimible */
 .invoice-container {
   padding: 1rem;
-  background: #fff;
-  border: 1px solid #d8cdbf;
-  border-radius: 6px;
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md, 8px);
 }
 
 .invoice-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  border-bottom: 2px solid #352f2a;
+  border-bottom: 2px solid var(--color-border-strong);
   padding-bottom: 1rem;
   margin-bottom: 1rem;
 }
@@ -3559,7 +4051,7 @@ onMounted(() => {
   font-size: 1.2rem;
   font-weight: 800;
   letter-spacing: 0.05em;
-  color: #352f2a;
+  color: var(--color-text-main);
 }
 
 .invoice-code-box {
@@ -3570,20 +4062,20 @@ onMounted(() => {
   font-size: 0.8rem;
   font-weight: 700;
   letter-spacing: 0.08em;
-  color: #9a7f60;
+  color: var(--color-accent-kicker);
 }
 
 .invoice-number {
   font-size: 1.25rem;
   font-weight: 800;
-  color: #352f2a;
+  color: var(--color-text-main);
 }
 
 .invoice-meta-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0.5rem;
-  background: #fbf9f6;
+  background: var(--color-bg-subtle);
   padding: 0.75rem 1rem;
   border-radius: 4px;
   margin-bottom: 1rem;
@@ -3592,13 +4084,14 @@ onMounted(() => {
 .meta-label {
   font-size: 0.75rem;
   font-weight: 700;
-  color: #7c7267;
+  color: var(--color-text-muted);
   margin-right: 0.4rem;
 }
 
 .meta-val {
   font-size: 0.85rem;
   font-weight: 600;
+  color: var(--color-text-main);
 }
 
 .invoice-table {
@@ -3608,19 +4101,19 @@ onMounted(() => {
 }
 
 .invoice-table th {
-  background: #ede6db;
+  background: var(--color-bg-subtle);
   padding: 0.5rem 0.75rem;
   font-size: 0.75rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: #352f2a;
-  border-bottom: 1px solid #d8cdbf;
+  color: var(--color-text-main);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .invoice-table td {
   padding: 0.65rem 0.75rem;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--color-border-subtle);
   font-size: 0.85rem;
 }
 
@@ -3630,13 +4123,14 @@ onMounted(() => {
 }
 
 .row-total td {
-  border-top: 2px solid #352f2a;
-  border-bottom: 1px solid #352f2a;
+  border-top: 2px solid var(--color-border-strong);
+  border-bottom: 1px solid var(--color-border-strong);
 }
 
 .invoice-paid-banner {
-  background: #eaf4ed;
-  border: 1px solid #b7dfc3;
+  background: var(--color-success-bg);
+  border: 1px solid var(--color-success-border);
+  color: var(--color-success-text);
   padding: 0.75rem 1rem;
   border-radius: 4px;
   display: flex;
@@ -3647,8 +4141,8 @@ onMounted(() => {
 .badge-paid {
   font-size: 0.75rem;
   font-weight: 800;
-  background: #2e6047;
-  color: #fff;
+  background: var(--color-success-text);
+  color: var(--color-bg-surface);
   padding: 0.2rem 0.5rem;
   border-radius: 4px;
   letter-spacing: 0.05em;
@@ -3684,44 +4178,44 @@ onMounted(() => {
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
-  background: #15803d;
-  color: #fff;
-  border: none;
+  background: var(--color-success-bg);
+  color: var(--color-success-text);
+  border: 1px solid var(--color-success-border);
   padding: 0.35rem 0.65rem;
   border-radius: 4px;
   font-size: 0.78rem;
   font-weight: 700;
   cursor: pointer;
-  transition: opacity 0.2s;
+  transition: filter 0.2s;
 }
 
 .btn-action-approve:hover {
-  opacity: 0.9;
+  filter: brightness(0.95);
 }
 
 .btn-action-observe {
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
-  background: #b45309;
-  color: #fff;
-  border: none;
+  background: var(--color-warning-bg);
+  color: var(--color-warning-text);
+  border: 1px solid var(--color-warning-border);
   padding: 0.35rem 0.65rem;
   border-radius: 4px;
   font-size: 0.78rem;
   font-weight: 700;
   cursor: pointer;
-  transition: opacity 0.2s;
+  transition: filter 0.2s;
 }
 
 .btn-action-observe:hover {
-  opacity: 0.9;
+  filter: brightness(0.95);
 }
 
 .anticipo-validation-summary {
-  background: var(--color-bg-card, #f8f6f0);
-  border: 1px solid var(--color-border-warm, #d8cdbf);
-  border-radius: 6px;
+  background: var(--color-bg-subtle);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md, 8px);
   padding: 0.875rem 1rem;
   display: flex;
   flex-direction: column;
@@ -3736,30 +4230,235 @@ onMounted(() => {
 }
 
 .summary-line .label {
-  color: var(--color-text-muted, #7c7267);
-  font-weight: 600;
+  color: var(--color-text-muted);
+  font-weight: 500;
+}
+
+.summary-line .val {
+  color: var(--color-text-main);
 }
 
 .alert-box-success {
   display: flex;
   align-items: center;
+  gap: 0.65rem;
   padding: 0.75rem 1rem;
-  background: #f0fdf4;
-  border: 1px solid #bbf7d0;
-  border-radius: 6px;
-  color: #166534;
+  background: var(--color-success-bg);
+  border: 1px solid var(--color-success-border);
+  border-radius: var(--radius-md, 8px);
+  color: var(--color-success-text);
   font-size: 0.8125rem;
+  line-height: 1.45;
+}
+
+.alert-box-success strong {
+  color: inherit;
+  font-weight: 700;
 }
 
 .alert-box-warning {
   display: flex;
   align-items: center;
+  gap: 0.65rem;
   padding: 0.75rem 1rem;
-  background: #fffbeb;
-  border: 1px solid #fde68a;
-  border-radius: 6px;
-  color: #92400e;
+  background: var(--color-warning-bg);
+  border: 1px solid var(--color-warning-border);
+  border-radius: var(--radius-md, 8px);
+  color: var(--color-warning-text);
   font-size: 0.8125rem;
+  line-height: 1.45;
+}
+
+.alert-box-warning strong {
+  color: inherit;
+  font-weight: 700;
+}
+
+.btn-danger-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: var(--color-danger-bg);
+  color: var(--color-danger-text);
+  border: 1px solid var(--color-danger-border);
+  padding: 0.55rem 1rem;
+  border-radius: var(--radius-sm, 6px);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast, 0.15s ease);
+}
+
+.btn-danger-action:hover:not(:disabled) {
+  filter: brightness(0.95);
+}
+
+.btn-danger-action:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* Modal de Previsualización de Voucher */
+.voucher-preview-dialog :deep(.p-dialog-content) {
+  padding: 0;
+  background: var(--color-bg-body, #faf8f5);
+}
+
+.voucher-modal-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.voucher-metadata-bar {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 0.75rem;
+  padding: 0.85rem 1.25rem;
+  background: var(--color-bg-surface, #ffffff);
+  border-bottom: 1px solid var(--color-border, #e4dacb);
+}
+
+.voucher-metadata-bar .meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.voucher-metadata-bar .meta-lbl {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted, #7c7267);
+  font-weight: 600;
+}
+
+.voucher-metadata-bar .meta-val {
+  font-size: 0.825rem;
+  color: var(--color-text-main, #2d241e);
+  line-height: 1.25;
+}
+
+.voucher-viewer-wrap {
+  min-height: 480px;
+  max-height: 65vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-bg-subtle, #f2ece1);
+  position: relative;
+  overflow: hidden;
+}
+
+.voucher-iframe {
+  width: 100%;
+  height: 65vh;
+  border: none;
+}
+
+.voucher-img-container {
+  max-width: 100%;
+  max-height: 65vh;
+  overflow: auto;
+  padding: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.voucher-img {
+  max-width: 100%;
+  max-height: 62vh;
+  border-radius: 6px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  object-fit: contain;
+}
+
+.voucher-loading-state,
+.voucher-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2.5rem 1.5rem;
+  text-align: center;
+  color: var(--color-text-muted, #7c7267);
+}
+
+.voucher-footer-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  gap: 1rem;
+}
+
+.voucher-footer-row .footer-right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Casilla de Cotejo Bancario */
+.check-confirmation-box {
+  background: var(--color-bg-surface, #ffffff);
+  border: 1px solid var(--color-border, #e4dacb);
+  border-radius: 6px;
+  padding: 0.75rem 0.9rem;
+}
+
+.check-confirm-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  cursor: pointer;
+}
+
+.check-confirm-input {
+  margin-top: 0.2rem;
+  width: 17px;
+  height: 17px;
+  accent-color: var(--color-primary, #352f2a);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.check-confirm-text {
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  color: var(--color-text-main, #2d241e);
+  font-weight: 500;
+}
+
+/* Chips de Motivo de Observación */
+.obs-chips-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-top: 0.35rem;
+}
+
+.obs-chip {
+  background: var(--color-bg-subtle, #f2ece1);
+  border: 1px solid var(--color-border, #d8cdbf);
+  color: var(--color-text-main, #352f2a);
+  padding: 0.3rem 0.65rem;
+  border-radius: 9999px;
+  font-size: 0.76rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+}
+
+.obs-chip:hover {
+  background: var(--color-border, #d8cdbf);
+  border-color: var(--color-primary, #352f2a);
+}
+
+.obs-chip.active {
+  background: var(--color-warning-subtle, #fef3c7);
+  border-color: #d97706;
+  color: #92400e;
+  font-weight: 700;
 }
 
 /* ========================================================================= */

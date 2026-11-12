@@ -95,11 +95,11 @@ public class LiquidacionFinancieraServiceImpl implements ILiquidacionFinancieraS
 
         BigDecimal tributosUsd = cot != null && cot.getMontoTributosEstimado() != null ? cot.getMontoTributosEstimado() : BigDecimal.ZERO;
         BigDecimal honorariosUsd = cot != null && cot.getMontoHonorariosEstimado() != null ? cot.getMontoHonorariosEstimado() : BigDecimal.ZERO;
-        BigDecimal fleteUsd = cot != null && cot.getMontoFleteEstimado() != null ? cot.getMontoFleteEstimado() : BigDecimal.ZERO;
+        BigDecimal fleteLocalUsd = cot != null && cot.getCostoTransporteInterno() != null ? cot.getCostoTransporteInterno() : BigDecimal.ZERO;
 
         BigDecimal tributos = tributosUsd.multiply(tc).setScale(2, RoundingMode.HALF_UP);
         BigDecimal honorarios = honorariosUsd.multiply(tc).setScale(2, RoundingMode.HALF_UP);
-        BigDecimal flete = fleteUsd.multiply(tc).setScale(2, RoundingMode.HALF_UP);
+        BigDecimal flete = fleteLocalUsd.multiply(tc).setScale(2, RoundingMode.HALF_UP);
 
         BigDecimal almacen = BigDecimal.ZERO;
         var almacenOpt = controlAlmacenRepository.findByExpediente_IdExpediente(idExpediente);

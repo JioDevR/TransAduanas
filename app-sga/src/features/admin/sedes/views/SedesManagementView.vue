@@ -291,7 +291,13 @@ import Column from 'primevue/column'
 import Tag from 'primevue/tag'
 import SedeRegistrationForm from '../components/SedeRegistrationForm.vue'
 import sedeService from '../services/sedeService'
-import { downloadBlob, openBlobInNewTab } from '@/shared/utils/download'
+import { openBlobInNewTab } from '@/shared/utils/download'
+import { useNotification } from '@/shared/composables/useNotification'
+import { useConfirmation } from '@/shared/composables/useConfirmation'
+import { getEstadoSeverity } from '@/shared/utils/formatters'
+
+const { showSuccess, showError } = useNotification()
+const { confirmAction } = useConfirmation()
 
 const sedes = ref([])
 const loading = ref(false)
@@ -369,15 +375,29 @@ const handleSedeSaved = () => {
 }
 
 const handleToggleEstado = async (sede) => {
+  if (sede.estado === 'OPERATIVO') {
+    const confirmed = await confirmAction({
+      header: 'Confirmar Desactivación de Sede',
+      message: `¿Desea desactivar la sede ${sede.codigoSede} — ${sede.nombre}?`,
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Desactivar',
+      acceptClass: 'p-button-danger'
+    })
+    if (!confirmed) return
+  }
+
   try {
     if (sede.estado === 'OPERATIVO') {
       await sedeService.deleteSede(sede.idSede)
+      showSuccess(`Sede ${sede.codigoSede} desactivada correctamente`)
     } else {
       await sedeService.reactivateSede(sede.idSede)
+      showSuccess(`Sede ${sede.codigoSede} reactivada correctamente`)
     }
     await loadSedes()
   } catch (err) {
     console.error('Error al cambiar estado de sede:', err)
+    showError(err.response?.data?.message || 'Error al cambiar estado de la sede')
   }
 }
 
@@ -386,8 +406,10 @@ const handleExportPdf = async () => {
   try {
     const blob = await sedeService.downloadPdf()
     openBlobInNewTab(blob)
+    showSuccess('Reporte oficial de sedes abierto en nueva pestaña')
   } catch (err) {
     console.error('Error al descargar reporte de sedes:', err)
+    showError('No se pudo generar el reporte de sedes')
   } finally {
     exportingPdf.value = false
   }
@@ -413,18 +435,6 @@ const getTipoSeverity = (tipo) => {
       return 'warn'
     default:
       return 'secondary'
-  }
-}
-
-const getEstadoSeverity = (estado) => {
-  switch (estado) {
-    case 'OPERATIVO':
-      return 'success'
-    case 'MANTENIMIENTO':
-      return 'warn'
-    case 'INACTIVO':
-    default:
-      return 'danger'
   }
 }
 
@@ -823,7 +833,7 @@ onMounted(() => {
 
 /* Celdas Custom en Tabla */
 .code-badge {
-  font-family: monospace;
+  font-family: var(--font-mono);
   font-size: 0.775rem;
   font-weight: 800;
   color: var(--color-accent-kicker);

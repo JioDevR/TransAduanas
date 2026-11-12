@@ -3,12 +3,25 @@
     <!-- 1. Header Bar Modular de Navegación y Acciones -->
     <CotizacionFormHeader
       :is-edit-mode="isEditMode"
+      :is-unassigned-claim="isUnassignedClaim"
       :codigo-cotizacion="form.codigoCotizacion"
       :submitting="submitting"
       :is-form-ready="isFormReady"
       @cancel="$emit('cancel')"
       @submit="handleSubmit"
     />
+
+    <!-- Banner de Solicitud Sin Asignar (Portal B2B) -->
+    <div v-if="isUnassignedClaim" class="unassigned-claim-banner">
+      <i class="pi pi-info-circle unassigned-icon"></i>
+      <div class="unassigned-body">
+        <span class="unassigned-kicker">SOLICITUD B2B EN ESPERA DE LIQUIDACIÓN COMERCIAL</span>
+        <strong class="unassigned-title">Esta cotización fue generada por el cliente y aún no tiene asesor asignado:</strong>
+        <p class="unassigned-note">
+          Revise los datos operativos y la documentación sustentatoria en los pasos 01 a 03, y defina los honorarios, seguro y aranceles en el paso 04. Al presionar <strong>"Tomar y Guardar Cotización"</strong>, la solicitud se asignará formalmente a su cartera comercial.
+        </p>
+      </div>
+    </div>
 
     <!-- Banner de Error si la validación falla -->
     <div v-if="errorMessage" class="error-banner">
@@ -867,7 +880,7 @@
 
           <div class="block-body">
             <DocumentosUploadPanel
-              :mode="isEditMode ? 'live' : 'deferred'"
+              :mode="isUnassignedClaim ? 'deferred' : (isEditMode ? 'live' : 'deferred')"
               v-model="queuedDocs"
               :entidad-tipo="'COTIZACION'"
               :id-entidad="props.cotizacionToEdit?.idCotizacion"
@@ -1375,6 +1388,7 @@ const onDestinoDepartamentoChange = () => {
 const form = ref(defaultForm())
 
 const isEditMode = computed(() => !!props.cotizacionToEdit && !!props.cotizacionToEdit.idCotizacion)
+const isUnassignedClaim = computed(() => isEditMode.value && !props.cotizacionToEdit?.idUsuarioComercial)
 
 // Computed de Entidades Seleccionadas
 const selectedClientObject = computed(() => {
@@ -1526,6 +1540,11 @@ watch(
     seguroManual.value = false
 
     if (val && val.idCotizacion) {
+      if (!val.idUsuarioComercial) {
+        currentStep.value = 4
+      } else {
+        currentStep.value = 1
+      }
       form.value = {
         codigoCotizacion: val.codigoCotizacion || '',
         idCliente: val.idCliente || '',
@@ -1793,7 +1812,9 @@ const handleSubmit = () => {
     cotizacionId: props.cotizacionToEdit?.idCotizacion,
     payload: {
       ...form.value,
-      idUsuarioComercial: authStore.user?.idUsuario || form.value.idUsuarioComercial || 1
+      idUsuarioComercial: isEditMode.value
+        ? (props.cotizacionToEdit?.idUsuarioComercial || form.value.idUsuarioComercial || authStore.user?.idUsuario || 1)
+        : (authStore.user?.idUsuario || form.value.idUsuarioComercial || 1)
     },
     documentos: queuedDocs.value,
     done: () => {
@@ -1819,159 +1840,6 @@ defineExpose({
   gap: var(--space-6, 1.5rem);
   padding-bottom: var(--space-10, 2.5rem);
   width: 100%;
-}
-
-/* 1. Header Bar */
-.form-header-bar {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: var(--space-6, 1.5rem);
-  padding: var(--space-6, 1.5rem) var(--space-8, 2rem);
-  background: var(--color-bg-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-xl, 1rem);
-  box-shadow: var(--shadow-subtle);
-  flex-wrap: wrap;
-}
-
-.header-titles {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2, 0.5rem);
-  max-width: 800px;
-}
-
-.btn-back-link {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2, 0.5rem);
-  background: none;
-  border: none;
-  color: var(--color-text-muted);
-  font-size: var(--font-size-xs, 0.75rem);
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  cursor: pointer;
-  padding: 0;
-  margin-bottom: var(--space-1, 0.25rem);
-  transition: color var(--transition-fast);
-}
-
-.btn-back-link:hover {
-  color: var(--color-primary);
-}
-
-.kicker-row {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3, 0.75rem);
-  flex-wrap: wrap;
-}
-
-.badge-kicker {
-  font-size: var(--font-size-2xs, 0.65rem);
-  font-weight: 800;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--color-primary);
-  background: var(--color-bg-subtle);
-  padding: 0.2rem 0.55rem;
-  border-radius: var(--radius-sm, 0.25rem);
-}
-
-.mode-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  font-size: var(--font-size-2xs, 0.65rem);
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  padding: 0.2rem 0.6rem;
-  border-radius: var(--radius-full, 9999px);
-}
-
-.mode-create {
-  background: var(--color-success-bg);
-  color: var(--color-success-text);
-}
-
-.mode-edit {
-  background: var(--color-warning-bg);
-  color: var(--color-warning-text);
-}
-
-.form-main-title {
-  font-family: var(--font-sans);
-  font-size: var(--font-size-2xl, 1.75rem);
-  font-weight: 800;
-  color: var(--color-text-main);
-  line-height: 1.2;
-  margin: 0;
-}
-
-.form-main-desc {
-  font-size: var(--font-size-sm, 0.875rem);
-  color: var(--color-text-muted);
-  line-height: 1.5;
-  margin: 0;
-}
-
-.header-actions {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3, 0.75rem);
-}
-
-.btn-outline-warm {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2, 0.5rem);
-  padding: 0.65rem 1.25rem;
-  font-size: var(--font-size-sm, 0.875rem);
-  font-weight: 700;
-  border-radius: var(--radius-md, 0.5rem);
-  border: 1px solid var(--color-border);
-  background: var(--color-bg-surface);
-  color: var(--color-text-main);
-  cursor: pointer;
-  transition: all var(--transition-fast);
-}
-
-.btn-outline-warm:hover:not(:disabled) {
-  background: var(--color-bg-subtle);
-  border-color: var(--color-border-subtle);
-}
-
-.btn-espresso {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-2, 0.5rem);
-  padding: 0.65rem 1.4rem;
-  font-size: var(--font-size-sm, 0.875rem);
-  font-weight: 700;
-  border-radius: var(--radius-md, 0.5rem);
-  border: none;
-  background: var(--color-primary);
-  color: var(--color-primary-text);
-  cursor: pointer;
-  transition: all var(--transition-fast);
-  box-shadow: var(--shadow-subtle);
-}
-
-.btn-espresso:hover:not(:disabled) {
-  opacity: 0.92;
-  transform: translateY(-1px);
-}
-
-.btn-espresso:disabled,
-.btn-outline-warm:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  transform: none;
 }
 
 /* Banner de Error */
@@ -2009,6 +1877,49 @@ defineExpose({
   border: 1px solid var(--color-warning-border);
   border-radius: var(--radius-lg, 0.75rem);
   color: var(--color-warning-text);
+}
+
+.unassigned-claim-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-4, 1rem);
+  padding: var(--space-4, 1rem) var(--space-5, 1.25rem);
+  background: var(--color-info-bg);
+  border: 1px solid var(--color-info-border);
+  border-radius: var(--radius-lg, 0.75rem);
+  color: var(--color-info-text);
+}
+
+.unassigned-icon {
+  font-size: 1.5rem;
+  margin-top: 0.15rem;
+  flex-shrink: 0;
+}
+
+.unassigned-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.unassigned-kicker {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  opacity: 0.9;
+}
+
+.unassigned-title {
+  font-size: 0.9375rem;
+  font-weight: 700;
+}
+
+.unassigned-note {
+  margin: 0.25rem 0 0;
+  font-size: 0.875rem;
+  line-height: 1.45;
+  font-weight: 500;
 }
 
 .revision-icon {
@@ -2389,7 +2300,7 @@ defineExpose({
 }
 
 .doc-badge {
-  font-family: monospace;
+  font-family: var(--font-mono);
   font-size: var(--font-size-2xs, 0.65rem);
   font-weight: 800;
   padding: 0.15rem 0.45rem;
@@ -2600,7 +2511,7 @@ defineExpose({
 }
 
 .regimen-code-badge {
-  font-family: monospace;
+  font-family: var(--font-mono);
   font-size: var(--font-size-2xs, 0.65rem);
   font-weight: 800;
   background: var(--color-bg-surface);
@@ -2794,7 +2705,7 @@ defineExpose({
 .number-input {
   padding-right: 3rem;
   font-weight: 700;
-  font-family: monospace;
+  font-family: var(--font-mono);
 }
 
 .form-input:focus,
@@ -2898,7 +2809,7 @@ defineExpose({
 }
 
 .doc-code-lg {
-  font-family: monospace;
+  font-family: var(--font-mono);
   font-size: var(--font-size-md, 1rem);
   font-weight: 800;
   letter-spacing: 0.05em;
@@ -3126,7 +3037,7 @@ defineExpose({
 }
 
 .badge-code-select {
-  font-family: var(--font-family-mono, monospace);
+  font-family: var(--font-mono);
   font-size: var(--font-size-2xs, 0.65rem);
   font-weight: 700;
   padding: 0.15rem 0.45rem;
@@ -4003,7 +3914,7 @@ defineExpose({
 }
 
 .ruta-badge-badge {
-  font-family: monospace;
+  font-family: var(--font-mono);
   font-size: var(--font-size-2xs, 0.65rem);
   font-weight: 800;
   letter-spacing: 0.05em;

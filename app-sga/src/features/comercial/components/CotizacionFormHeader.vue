@@ -13,17 +13,19 @@
 
       <div class="kicker-row">
         <span class="badge-kicker">PROPUESTAS ADUANERAS // EMISIÓN COMERCIAL</span>
-        <span :class="['mode-pill', isEditMode ? 'mode-edit' : 'mode-create']">
-          <i :class="isEditMode ? 'pi pi-pencil' : 'pi pi-plus'"></i>
-          <span>{{ isEditMode ? 'MODO EDICIÓN' : 'MODO REGISTRO' }}</span>
+        <span :class="['mode-pill', isUnassignedClaim ? 'mode-unassigned' : (isEditMode ? 'mode-edit' : 'mode-create')]">
+          <i :class="isUnassignedClaim ? 'pi pi-user-plus' : (isEditMode ? 'pi pi-pencil' : 'pi pi-plus')"></i>
+          <span>{{ isUnassignedClaim ? 'SOLICITUD B2B SIN ASIGNAR' : (isEditMode ? 'MODO EDICIÓN' : 'MODO REGISTRO') }}</span>
         </span>
       </div>
 
       <h2 class="form-main-title">
-        {{ isEditMode ? `Editar Cotización: ${codigoCotizacion}` : 'Emitir Nueva Cotización Comercial' }}
+        {{ isUnassignedClaim ? `Liquidar y Tomar Cotización: ${codigoCotizacion}` : (isEditMode ? `Editar Cotización: ${codigoCotizacion}` : 'Emitir Nueva Cotización Comercial') }}
       </h2>
       <p class="form-main-desc">
-        Estructure la propuesta comercial paso a paso: asigne el cliente o prospecto, especifique el régimen de aduanas y liquide los costos estimados de flete, honorarios y aranceles.
+        {{ isUnassignedClaim
+          ? 'Revise la información y documentos registrados por el cliente B2B y complete la estructura de costos y tributos. La cotización se asignará a su cartera comercial recién al guardar.'
+          : 'Estructure la propuesta comercial paso a paso: asigne el cliente o prospecto, especifique el régimen de aduanas y liquide los costos estimados de flete, honorarios y aranceles.' }}
       </p>
     </div>
 
@@ -43,8 +45,8 @@
         :disabled="submitting || !isFormReady"
       >
         <i v-if="submitting" class="pi pi-spin pi-spinner"></i>
-        <i v-else class="pi pi-check"></i>
-        <span>{{ isEditMode ? 'Guardar Cambios' : 'Emitir Cotización' }}</span>
+        <i v-else :class="isUnassignedClaim ? 'pi pi-user-plus' : 'pi pi-check'"></i>
+        <span>{{ isUnassignedClaim ? 'Tomar y Guardar Cotización' : (isEditMode ? 'Guardar Cambios' : 'Emitir Cotización') }}</span>
       </button>
     </div>
   </div>
@@ -53,6 +55,10 @@
 <script setup>
 defineProps({
   isEditMode: {
+    type: Boolean,
+    default: false
+  },
+  isUnassignedClaim: {
     type: Boolean,
     default: false
   },
@@ -156,6 +162,13 @@ defineEmits(['cancel', 'submit'])
   background: var(--color-warning-bg);
   color: var(--color-warning-text);
   border: 1px solid var(--color-warning-border);
+}
+
+.mode-unassigned {
+  background: var(--color-warning-bg);
+  color: var(--color-warning-text);
+  border: 1px solid var(--color-warning-border);
+  font-weight: 700;
 }
 
 .form-main-title {

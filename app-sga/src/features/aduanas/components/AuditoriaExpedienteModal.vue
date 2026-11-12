@@ -34,7 +34,7 @@
 
           <span v-if="activeData.codigoExpediente" class="exp-linked-badge">
             <i class="pi pi-folder"></i>
-            <span>EXPEDIENTE: {{ activeData.codigoExpediente }}</span>
+            <span>EXPEDIENTE: <span class="font-mono">{{ activeData.codigoExpediente }}</span></span>
           </span>
         </div>
 
@@ -531,7 +531,7 @@
             <div class="payment-clearance-strip">
               <div class="strip-col">
                 <span class="strip-label">ESTADO DEL PAGO</span>
-                <span class="strip-val font-bold" :style="{ color: activeData.tienePagoAprobado ? '#15803d' : '#8c5b16' }">
+                <span class="strip-val font-bold" :style="{ color: activeData.tienePagoAprobado ? 'var(--color-success-text)' : 'var(--color-warning-text)' }">
                   <i :class="activeData.tienePagoAprobado ? 'pi pi-check-circle' : 'pi pi-clock'"></i>
                   {{ activeData.estadoPago || (activeData.tienePagoAprobado ? 'PAGO_VALIDADO' : 'PENDIENTE') }}
                 </span>
@@ -857,10 +857,10 @@ const getStatusIcon = (estado) => {
 }
 
 const getCanalColor = (canal) => {
-  if (canal === 'VERDE') return '#15803d'
-  if (canal === 'NARANJA') return '#ea580c'
-  if (canal === 'ROJO') return '#dc2626'
-  return '#64748b'
+  if (canal === 'VERDE') return 'var(--color-success-text)'
+  if (canal === 'NARANJA') return 'var(--color-warning-text)'
+  if (canal === 'ROJO') return 'var(--color-danger-text)'
+  return 'var(--color-text-muted)'
 }
 </script>
 
@@ -946,15 +946,15 @@ const getCanalColor = (canal) => {
 }
 
 .modalidad-pill.aereo {
-  background: #e0f2fe;
-  color: #0369a1;
-  border: 1px solid #bae6fd;
+  background: var(--color-info-bg);
+  color: var(--color-info-text);
+  border: 1px solid var(--color-info-border);
 }
 
 .modalidad-pill.maritimo {
-  background: #fef3c7;
-  color: #92400e;
-  border: 1px solid #fde68a;
+  background: var(--color-warning-bg);
+  color: var(--color-warning-text);
+  border: 1px solid var(--color-warning-border);
 }
 
 .canal-pill {
@@ -968,26 +968,27 @@ const getCanalColor = (canal) => {
 }
 
 .canal-pill.canal-verde {
-  background: #dcfce7;
-  color: #15803d;
-  border: 1px solid #bbf7d0;
+  background: var(--color-success-bg);
+  color: var(--color-success-text);
+  border: 1px solid var(--color-success-border);
 }
 
 .canal-pill.canal-naranja {
-  background: #ffedd5;
-  color: #c2410c;
-  border: 1px solid #fed7aa;
+  background: var(--color-warning-bg);
+  color: var(--color-warning-text);
+  border: 1px solid var(--color-warning-border);
 }
 
 .canal-pill.canal-rojo {
-  background: #fee2e2;
-  color: #b91c1c;
-  border: 1px solid #fecaca;
+  background: var(--color-danger-bg);
+  color: var(--color-danger-text);
+  border: 1px solid var(--color-danger-border);
 }
 
 .canal-pill.canal-pendiente {
-  background: #f1f5f9;
-  color: #475569;
+  background: var(--color-bg-subtle);
+  color: var(--color-text-muted);
+  border: 1px solid var(--color-border);
 }
 
 .status-badge {
@@ -1000,10 +1001,26 @@ const getCanalColor = (canal) => {
   border-radius: 4px;
 }
 
-.status-approved { background: #dcfce7; color: #15803d; }
-.status-rejected { background: #fee2e2; color: #b91c1c; }
-.status-pending { background: #ffedd5; color: #c2410c; }
-.status-progress { background: #dbeafe; color: #1d4ed8; }
+.status-approved {
+  background: var(--color-success-bg);
+  color: var(--color-success-text);
+  border: 1px solid var(--color-success-border);
+}
+.status-rejected {
+  background: var(--color-danger-bg);
+  color: var(--color-danger-text);
+  border: 1px solid var(--color-danger-border);
+}
+.status-pending {
+  background: var(--color-warning-bg);
+  color: var(--color-warning-text);
+  border: 1px solid var(--color-warning-border);
+}
+.status-progress {
+  background: var(--color-info-bg);
+  color: var(--color-info-text);
+  border: 1px solid var(--color-info-border);
+}
 
 .exp-linked-badge {
   display: inline-flex;
@@ -1011,9 +1028,9 @@ const getCanalColor = (canal) => {
   gap: 0.35rem;
   font-size: 0.75rem;
   font-weight: 700;
-  background: #f1f5f9;
-  color: #1e293b;
-  border: 1px solid #cbd5e1;
+  background: var(--color-bg-subtle);
+  color: var(--color-text-main);
+  border: 1px solid var(--color-border);
   padding: 0.25rem 0.625rem;
   border-radius: 4px;
 }
@@ -1047,9 +1064,9 @@ const getCanalColor = (canal) => {
   gap: 0.375rem;
   font-size: 0.75rem;
   font-weight: 700;
-  color: #8c5b16;
-  background: #fdf5e6;
-  border: 1px solid #f8dab3;
+  color: var(--color-warning-text);
+  background: var(--color-warning-bg);
+  border: 1px solid var(--color-warning-border);
   padding: 0.5rem 0.875rem;
   border-radius: 6px;
 }
@@ -1076,8 +1093,8 @@ const getCanalColor = (canal) => {
 }
 
 .form-block-card.highlight-border {
-  border-color: #fbd38d;
-  background: #fffcf8;
+  border-color: var(--color-border-strong);
+  background: var(--color-bg-surface);
 }
 
 .block-header {
@@ -1097,13 +1114,14 @@ const getCanalColor = (canal) => {
   height: 2rem;
   border-radius: 50%;
   background: var(--color-accent-kicker, #9a7f60);
-  color: #fff;
+  color: var(--color-primary-text, #fff);
   font-weight: 800;
   font-size: 0.875rem;
 }
 
 .block-idx.sunat-idx {
-  background: #c2410c;
+  background: var(--color-accent-copper, #c2410c);
+  color: #ffffff;
 }
 
 .block-title {
@@ -1127,9 +1145,21 @@ const getCanalColor = (canal) => {
   border-radius: 9999px;
 }
 
-.canal-badge-lg.canal-verde { background: #dcfce7; color: #15803d; }
-.canal-badge-lg.canal-naranja { background: #ffedd5; color: #c2410c; }
-.canal-badge-lg.canal-rojo { background: #fee2e2; color: #b91c1c; }
+.canal-badge-lg.canal-verde {
+  background: var(--color-success-bg);
+  color: var(--color-success-text);
+  border: 1px solid var(--color-success-border);
+}
+.canal-badge-lg.canal-naranja {
+  background: var(--color-warning-bg);
+  color: var(--color-warning-text);
+  border: 1px solid var(--color-warning-border);
+}
+.canal-badge-lg.canal-rojo {
+  background: var(--color-danger-bg);
+  color: var(--color-danger-text);
+  border: 1px solid var(--color-danger-border);
+}
 
 .panel-header-badge {
   margin-left: auto;
@@ -1181,8 +1211,16 @@ const getCanalColor = (canal) => {
   padding: 0.2rem 0.5rem;
   border-radius: 4px;
 }
-.type-cliente { background: #dbeafe; color: #1e40af; }
-.type-prospecto { background: #fef3c7; color: #92400e; }
+.type-cliente {
+  background: var(--color-info-bg);
+  color: var(--color-info-text);
+  border: 1px solid var(--color-info-border);
+}
+.type-prospecto {
+  background: var(--color-warning-bg);
+  color: var(--color-warning-text);
+  border: 1px solid var(--color-warning-border);
+}
 
 .regimen-tag-box {
   display: flex;
@@ -1194,11 +1232,11 @@ const getCanalColor = (canal) => {
 .regimen-code-pill {
   font-size: 0.75rem;
   font-weight: 800;
-  background: #f1f5f9;
-  color: #0f172a;
+  background: var(--color-bg-subtle);
+  color: var(--color-text-main);
   padding: 0.2rem 0.5rem;
   border-radius: 4px;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--color-border);
 }
 
 .regimen-name-text {
@@ -1264,7 +1302,7 @@ const getCanalColor = (canal) => {
   width: 2rem;
   height: 2rem;
   border-radius: 50%;
-  background: #fff;
+  background: var(--color-bg-surface);
   border: 1px solid var(--color-border);
   color: var(--color-accent-kicker);
 }
@@ -1274,7 +1312,7 @@ const getCanalColor = (canal) => {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  background: #fff;
+  background: var(--color-bg-subtle);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md, 8px);
   padding: 0.75rem 1rem;
@@ -1288,9 +1326,9 @@ const getCanalColor = (canal) => {
   gap: 0.375rem;
   font-size: 0.75rem;
   font-weight: 800;
-  background: #eff6ff;
-  color: #1d4ed8;
-  border: 1px solid #bfdbfe;
+  background: var(--color-info-bg);
+  color: var(--color-info-text);
+  border: 1px solid var(--color-info-border);
   padding: 0.25rem 0.625rem;
   border-radius: 4px;
 }
@@ -1315,8 +1353,8 @@ const getCanalColor = (canal) => {
   display: flex;
   align-items: flex-start;
   gap: 0.75rem;
-  background: #fdfaf6;
-  border: 1px solid #fed7aa;
+  background: var(--color-warning-bg);
+  border: 1px solid var(--color-warning-border);
   border-left: 4px solid var(--color-accent-copper, #c2410c);
   border-radius: var(--radius-md, 8px);
   padding: 0.875rem 1rem;
@@ -1340,7 +1378,7 @@ const getCanalColor = (canal) => {
 
 .callout-desc {
   font-size: 0.8125rem;
-  color: #431407;
+  color: var(--color-text-main);
   margin: 0;
   line-height: 1.45;
 }
@@ -1350,8 +1388,8 @@ const getCanalColor = (canal) => {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  background: var(--color-bg-subtle);
+  border: 1px solid var(--color-border);
   padding: 0.625rem 1rem;
   border-radius: var(--radius-md, 8px);
   font-size: 0.8125rem;
@@ -1359,12 +1397,16 @@ const getCanalColor = (canal) => {
   flex-wrap: wrap;
 }
 
+.route-arrow {
+  color: var(--color-accent-kicker);
+}
+
 .flete-cost-tag {
   margin-left: auto;
   font-weight: 700;
-  color: var(--color-accent-copper);
-  background: #fff;
-  border: 1px solid #cbd5e1;
+  color: var(--color-accent-copper, #c2410c);
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
   padding: 0.2rem 0.5rem;
   border-radius: 4px;
 }
@@ -1380,15 +1422,15 @@ const getCanalColor = (canal) => {
 .cif-card {
   display: flex;
   flex-direction: column;
-  background: #f8fafc;
+  background: var(--color-bg-subtle);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md, 8px);
   padding: 0.875rem 1rem;
 }
 
 .cif-card.highlight {
-  background: #f0fdf4;
-  border-color: #86efac;
+  background: var(--color-success-bg);
+  border-color: var(--color-success-border);
 }
 
 .cif-card-label {
@@ -1406,7 +1448,7 @@ const getCanalColor = (canal) => {
 }
 
 .cif-card.highlight .cif-card-val {
-  color: #15803d;
+  color: var(--color-success-text);
 }
 
 .cif-card-sub {
@@ -1613,7 +1655,7 @@ const getCanalColor = (canal) => {
 }
 
 .checklist-row.valid i {
-  color: #15803d;
+  color: var(--color-success-text);
 }
 
 .checklist-audit-stamp {
@@ -1644,7 +1686,7 @@ const getCanalColor = (canal) => {
 
 /* Panels */
 .inline-action-panel {
-  background: #fff;
+  background: var(--color-bg-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg, 12px);
   padding: 1.25rem 1.5rem;
@@ -1663,6 +1705,7 @@ const getCanalColor = (canal) => {
   gap: 0.5rem;
   font-size: 1rem;
   font-weight: 700;
+  color: var(--color-text-main);
 }
 
 .btn-close-panel {
@@ -1702,9 +1745,9 @@ const getCanalColor = (canal) => {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  background: var(--color-primary-espresso, #2b231d);
-  color: #fff;
-  border: 1px solid var(--color-primary-espresso, #2b231d);
+  background: var(--color-primary);
+  color: var(--color-primary-text);
+  border: 1px solid var(--color-primary);
   padding: 0.5rem 1rem;
   border-radius: var(--radius-md, 8px);
   font-size: 0.8125rem;
@@ -1714,43 +1757,45 @@ const getCanalColor = (canal) => {
 }
 
 .btn-espresso:hover:not(:disabled) {
-  background: var(--color-accent-copper, #c2410c);
-  border-color: var(--color-accent-copper, #c2410c);
+  background: var(--color-primary-hover);
+  border-color: var(--color-primary-hover);
 }
 
 .btn-danger-action {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  background: #fee2e2;
-  color: #b91c1c;
-  border: 1px solid #fecaca;
+  background: var(--color-danger-bg);
+  color: var(--color-danger-text);
+  border: 1px solid var(--color-danger-border);
   padding: 0.5rem 1rem;
   border-radius: var(--radius-md, 8px);
   font-size: 0.8125rem;
   font-weight: 700;
   cursor: pointer;
+  transition: all 0.15s ease;
 }
 
 .btn-warm-action {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  background: #ffedd5;
-  color: #c2410c;
-  border: 1px solid #fed7aa;
+  background: var(--color-warning-bg);
+  color: var(--color-warning-text);
+  border: 1px solid var(--color-warning-border);
   padding: 0.5rem 1rem;
   border-radius: var(--radius-md, 8px);
   font-size: 0.8125rem;
   font-weight: 700;
   cursor: pointer;
+  transition: all 0.15s ease;
 }
 
 .btn-outline-warm {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  background: transparent;
+  background: var(--color-bg-surface);
   color: var(--color-text-main);
   border: 1px solid var(--color-border);
   padding: 0.5rem 1rem;
@@ -1758,6 +1803,13 @@ const getCanalColor = (canal) => {
   font-size: 0.8125rem;
   font-weight: 600;
   cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-outline-warm:hover:not(:disabled) {
+  background: var(--color-bg-subtle);
+  border-color: var(--color-border-strong);
+  color: var(--color-text-main);
 }
 
 .obs-full-text {

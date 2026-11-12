@@ -122,7 +122,7 @@
                     type="text"
                     :placeholder="docPlaceholder"
                     :maxlength="docMaxLength"
-                    class="form-input"
+                    class="form-input font-mono"
                     required
                     :disabled="submitting"
                   />
@@ -145,7 +145,7 @@
                     v-model.trim="form.codigoSunat"
                     type="text"
                     placeholder="Ej. SUNAT-DESP-0104 o AUX-8921"
-                    class="form-input sunat-input"
+                    class="form-input sunat-input font-mono"
                     :disabled="submitting"
                   />
                 </div>
@@ -516,7 +516,7 @@
             <div class="credential-data-rows">
               <div class="cred-row">
                 <span class="cred-k">Documento:</span>
-                <span class="cred-v">
+                <span class="cred-v font-mono">
                   {{ form.tipoDocumento }}: {{ form.numeroDocumento || '—' }}
                 </span>
               </div>
@@ -524,7 +524,7 @@
               <!-- Insignia SUNAT destacada -->
               <div class="cred-row sunat-row">
                 <span class="cred-k">Acreditación:</span>
-                <span v-if="form.codigoSunat" class="cred-sunat-badge">
+                <span v-if="form.codigoSunat" class="cred-sunat-badge font-mono">
                   <i class="pi pi-verified"></i> {{ form.codigoSunat }}
                 </span>
                 <span v-else class="cred-v text-muted">Sin código SUNAT</span>
@@ -836,8 +836,8 @@ const previewInitials = computed(() => {
 
 const avatarBgStyle = computed(() => {
   return {
-    background: '#352f2a',
-    color: '#efe7dd'
+    background: 'var(--color-primary)',
+    color: 'var(--color-primary-text)'
   }
 })
 
@@ -1335,25 +1335,15 @@ defineExpose({
   font-size: 0.6rem;
   font-weight: 800;
   letter-spacing: 0.08em;
-  color: #92400e;
-  background: #fef3c7;
+  color: var(--color-warning-text);
+  background: var(--color-warning-bg);
   padding: 0.15rem 0.45rem;
   border-radius: 4px;
-  border: 1px solid #fde68a;
-}
-
-:global(.dark-theme) .sunat-kicker-badge {
-  background: rgba(245, 158, 11, 0.2);
-  color: #fde68a;
-  border-color: rgba(245, 158, 11, 0.4);
+  border: 1px solid var(--color-warning-border);
 }
 
 .sunat-icon {
-  color: #b45309;
-}
-
-:global(.dark-theme) .sunat-icon {
-  color: #fde68a;
+  color: var(--color-warning-text);
 }
 
 .sunat-input {
@@ -1450,7 +1440,7 @@ defineExpose({
   align-items: center;
   justify-content: center;
   font-size: 0.65rem;
-  color: #ffffff;
+  color: var(--color-primary-text);
   transition: all var(--transition-fast);
 }
 
@@ -1628,8 +1618,8 @@ defineExpose({
   right: 0;
   width: 22px;
   height: 22px;
-  background: #059669;
-  color: #ffffff;
+  background: var(--color-success-text);
+  color: var(--color-bg-surface);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -1698,19 +1688,13 @@ defineExpose({
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
-  background: #fef3c7;
-  color: #92400e;
-  border: 1px solid #fde68a;
+  background: var(--color-warning-bg);
+  color: var(--color-warning-text);
+  border: 1px solid var(--color-warning-border);
   font-size: 0.65rem;
   font-weight: 700;
   padding: 0.15rem 0.45rem;
   border-radius: 4px;
-}
-
-:global(.dark-theme) .cred-sunat-badge {
-  background: rgba(245, 158, 11, 0.2);
-  color: #fde68a;
-  border-color: rgba(245, 158, 11, 0.4);
 }
 
 .credential-footer {
@@ -1735,19 +1719,11 @@ defineExpose({
   gap: 0.35rem;
   font-size: 0.65rem;
   font-weight: 700;
-  color: #854d0e;
-}
-
-:global(.dark-theme) .footer-status-pill {
-  color: #fde68a;
+  color: var(--color-warning-text);
 }
 
 .footer-status-pill.ok {
-  color: #15803d;
-}
-
-:global(.dark-theme) .footer-status-pill.ok {
-  color: #86efac;
+  color: var(--color-success-text);
 }
 
 .status-circle {
@@ -1799,10 +1775,10 @@ defineExpose({
 }
 
 .text-success {
-  color: #16a34a;
+  color: var(--color-success-text);
 }
 .text-muted {
-  color: #b5a491;
+  color: var(--color-text-subtle);
 }
 
 /* Botones de acción en sidebar */

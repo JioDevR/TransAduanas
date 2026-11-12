@@ -213,13 +213,14 @@ const currentTitle = computed(() => {
     const vMap = {
       dashboard: 'Dashboard Comercial & Ventas',
       cotizaciones: 'Registro de Cotizaciones Comerciales',
-      clientes: 'Directorio de Clientes & Prospectos',
-      ordenes: 'Expedientes Aduaneros'
+      solicitudes: 'Solicitudes Sin Asignar (Portal B2B)',
+      clientes: 'Directorio de Clientes & Prospectos'
     }
     return vMap[navigationStore.comercialSubOption] || 'Recepción Comercial'
   }
   if (navigationStore.currentModule === 'gestion-aduanera') {
     const sMap = {
+      dashboard: 'Dashboard y Control Operativo Aduanero',
       cotizaciones: 'Bandeja de Cotizaciones para Revisión Técnica',
       apertura: 'Apertura de Expedientes Aduaneros',
       expedientes: 'Gestión Integral de Expedientes Aduaneros',
@@ -257,8 +258,8 @@ const currentKicker = computed(() => {
     const kMap = {
       dashboard: 'PANEL COMERCIAL // INTELIGENCIA DE VENTAS',
       cotizaciones: 'PROPUESTAS ADUANERAS // EMISIÓN & SEGUIMIENTO',
-      clientes: 'CARTERA COMERCIAL // CLIENTES & PROSPECTOS',
-      ordenes: 'CONTROL OPERATIVO // SEGUIMIENTO ADUANERO'
+      solicitudes: 'PORTAL B2B // SOLICITUDES PENDIENTES DE ASIGNACIÓN',
+      clientes: 'CARTERA COMERCIAL // CLIENTES & PROSPECTOS'
     }
     return kMap[navigationStore.comercialSubOption] || 'RECEPCIÓN COMERCIAL // PROSPECTOS & COTIZACIONES'
   }
@@ -312,6 +313,7 @@ const currentKicker = computed(() => {
   if (navigationStore.currentModule === 'finanzas') {
     const fKickers = {
       dashboard: 'PANEL FINANCIERO // RECAUDACIÓN & LIQUIDEZ',
+      'abonos-b2b': 'VALIDACIÓN DE ABONOS B2B // VOUCHERS PENDIENTES PORTAL',
       'pre-expedientes': 'VALIDACIÓN DE ANTICIPOS // APERTURA OPERATIVA',
       liquidaciones: 'CIERRE FINANCIERO // LIQUIDACIONES DE EXPEDIENTE',
       conciliacion: 'TESORERÍA & BANCOS // CONCILIACIÓN DE ABONOS'
@@ -332,11 +334,11 @@ const currentSubtitle = computed(() => {
   if (navigationStore.currentModule === 'comercial') {
     const sMap = {
       dashboard: 'Métricas de ventas, conversión de propuestas, cartera comercial y atajos rápidos de gestión.',
-      cotizaciones: 'Supervisión de prospectos comerciales, emisión de presupuestos de despacho aduanero y control de estados.',
-      clientes: 'Gestión unificada de prospectos en evaluación y clientes formalizados para operaciones aduaneras.',
-      ordenes: 'Seguimiento de expedientes operativos y enlace directo con cotizaciones comerciales aprobadas.'
+      cotizaciones: 'Emisión de presupuestos de despacho aduanero, corrección de observaciones y control de estados.',
+      solicitudes: 'Solicitudes de cotización registradas desde el Portal B2B pendientes de ser tomadas por un asesor comercial.',
+      clientes: 'Gestión unificada de prospectos en evaluación y clientes formalizados para operaciones aduaneras.'
     }
-    return sMap[navigationStore.comercialSubOption] || 'Supervisión comercial, emisión de presupuestos aduaneros y formalización de expedientes operativos.'
+    return sMap[navigationStore.comercialSubOption] || 'Supervisión comercial, emisión de presupuestos aduaneros y seguimiento de solicitudes.'
   }
   if (navigationStore.currentModule === 'gerencia-general') {
     const gSubs = {
@@ -376,6 +378,7 @@ const currentSubtitle = computed(() => {
   }
   if (navigationStore.currentModule === 'gestion-aduanera') {
     const sMap = {
+      dashboard: 'Métricas ejecutivas en tiempo real, monitoreo de canales SUNAT y accesos directos de supervisión.',
       cotizaciones: 'Auditoría técnica de propuestas comerciales, control de partidas arancelarias y validación normativa.',
       apertura: 'Formalización y apertura operativa de expedientes aduaneros para cotizaciones con pago verificado.',
       expedientes: 'Gestión integral de expedientes aduaneros, asignación de canales SUNAT y autorización de levante.'
@@ -393,6 +396,7 @@ const currentSubtitle = computed(() => {
   if (navigationStore.currentModule === 'finanzas') {
     const fSubs = {
       dashboard: 'Visibilidad consolidada de ingresos, validación de vouchers bancarios, detracciones SPOT y flujo de caja.',
+      'abonos-b2b': 'Revisión y confirmación contable de anticipos y vouchers de pago remitidos por clientes desde el portal B2B.',
       'pre-expedientes': 'Verificación de abonos de adelanto y tributos para habilitar la apertura de expedientes aduaneros.',
       liquidaciones: 'Cálculo y facturación definitiva de servicios logísticos, almacenaje, transporte y gastos operativos.',
       conciliacion: 'Auditoría y conciliación bancaria de transferencias, depósitos y comprobantes registrados.'

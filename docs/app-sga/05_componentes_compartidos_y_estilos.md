@@ -27,7 +27,7 @@
 
 ## 1. El Sistema de Diseño "Warm Editorial"
 
-Definido en [`app-sga/src/style.css`](file:///home/jiodev/Documents/Proyects/TransAduanas/app-sga/src/style.css), el sistema visual busca erradicar la frialdad genérica de las aplicaciones corporativas mediante una identidad cálida y profesional.
+Definido en [`app-sga/src/style.css`](../../app-sga/src/style.css), el sistema visual busca erradicar la frialdad genérica de las aplicaciones corporativas mediante una identidad cálida y profesional.
 
 ### 1.1 Paleta Cromática y Tokens de Color
 Los colores están nombrados semánticamente con variables CSS nativas:
@@ -58,15 +58,15 @@ No se usan márgenes improvisados. Todos los espacios derivan de una escala mate
 ## 2. Alternancia Nativa de Modo Claro / Modo Oscuro
 
 El sistema no requiere recargar hojas de estilo adicionales para alternar entre día y noche:
-- El composable [`useTheme.js`](file:///home/jiodev/Documents/Proyects/TransAduanas/app-sga/src/shared/composables/useTheme.js) gestiona la preferencia del usuario y la guarda en `localStorage.getItem('sga_theme')`.
-- Al cambiar de modo, inyecta el atributo `data-theme="dark"` o `data-theme="light"` en la etiqueta raíz `<html>`.
+- El composable [`useTheme.js`](../../app-sga/src/shared/composables/useTheme.js) gestiona la preferencia del usuario y la guarda en `localStorage.getItem('sga-theme')`.
+- Al cambiar de modo, añade o retira la clase CSS `.dark-theme` en la etiqueta raíz `<html>`.
 - Las variables CSS se reasignan instantáneamente: los fondos claros pasan a tonos carbón/espresso profundo y la tipografía pasa a tonos marfil cálido, reduciendo el consumo energético en pantallas OLED y protegiendo la vista de los operadores aduaneros nocturnos.
 
 ---
 
 ## 3. Biblioteca de Componentes Compartidos (`shared/components/`)
 
-Todos los componentes reutilizables se ubican en [`app-sga/src/shared/components/`](file:///home/jiodev/Documents/Proyects/TransAduanas/app-sga/src/shared/components/):
+Todos los componentes reutilizables se ubican en [`app-sga/src/shared/components/`](../../app-sga/src/shared/components/):
 
 ### 3.1 `AppSidebar.vue`: Barra Lateral Inteligente por Rol
 - **Detecta el rol del usuario conectado:** Lee `authStore.userRole` y filtra dinámicamente la lista de módulos permitidos.
@@ -125,4 +125,4 @@ Encapsula el cálculo de índices para tablas:
 ### 4.4 `download.js`: Descarga Segura con Revocación de Blobs
 > [!TIP]
 > **Prevención de Fuga de Memoria:**  
-> Cuando se descarga un archivo PDF o imagen generado en el navegador, la función crea una URL temporal con `URL.createObjectURL(blob)`. La utilidad [`download.js`](file:///home/jiodev/Documents/Proyects/TransAduanas/app-sga/src/shared/utils/download.js) revoca automáticamente la URL mediante `URL.revokeObjectURL(...)` tras la descarga, asegurando que el navegador no acumule memoria residual.
+> Cuando se descarga un archivo PDF o imagen generado en el navegador, la función crea una URL temporal con `URL.createObjectURL(blob)`. La utilidad [`download.js`](../../app-sga/src/shared/utils/download.js) revoca automáticamente la URL mediante `URL.revokeObjectURL(...)` tras la descarga, asegurando que el navegador no acumule memoria residual.

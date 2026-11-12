@@ -8,7 +8,7 @@
 # =============================================================================
 
 # Credenciales de conexión a MySQL
-spring.datasource.url=jdbc:mysql://localhost:3306/SGAdb?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+spring.datasource.url=jdbc:mysql://localhost:3306/SGAdb?useSSL=false&serverTimezone=America/Lima&allowPublicKeyRetrieval=true
 spring.datasource.username=root
 spring.datasource.password=tu_contraseña_aqui
 

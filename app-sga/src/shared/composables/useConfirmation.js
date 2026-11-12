@@ -24,8 +24,8 @@ export function useConfirmation() {
         icon: options.icon || 'pi pi-exclamation-triangle',
         acceptLabel: options.acceptLabel || 'Aceptar',
         rejectLabel: options.rejectLabel || 'Cancelar',
-        acceptClass: options.acceptClass || 'p-button-danger',
-        rejectClass: options.rejectClass || 'p-button-secondary p-button-text',
+        acceptClass: options.acceptClass || 'sga-confirm-accept-btn',
+        rejectClass: options.rejectClass || 'sga-confirm-reject-btn',
         accept: async () => {
           if (typeof options.onAccept === 'function') {
             await options.onAccept()

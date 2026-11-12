@@ -36,4 +36,10 @@ public interface DespachoTransporteRepository extends JpaRepository<DespachoTran
             Integer idUsuario, List<String> estados);
 
     List<DespachoTransporte> findByConductor_Usuario_IdUsuarioOrderByFechaProgramadaDesc(Integer idUsuario);
+
+    boolean existsByUnidad_IdUnidadAndEstadoTransporteInAndIdDespachoTransporteNot(
+            Integer idUnidad, List<String> estados, Integer idDespachoTransporte);
+
+    boolean existsByConductor_IdConductorAndEstadoTransporteInAndIdDespachoTransporteNot(
+            Integer idConductor, List<String> estados, Integer idDespachoTransporte);
 }

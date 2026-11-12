@@ -30,14 +30,14 @@ La plataforma erradica los silos operativos entre áreas comerciales, contables,
 
 ## 2. Documentación Técnica Detallada (Docs)
 
-El repositorio cuenta con especificaciones técnicas completas y guías especializadas ubicadas en la carpeta [`docs/`](file:///home/jiodev/Documents/Proyects/TransAduanas/docs):
+El repositorio cuenta con especificaciones técnicas completas y guías especializadas ubicadas en la carpeta [`docs/`](docs):
 
 | Documento                                | Enlace                                                                                                        | Descripción y Contenido Clave                                                                                                                                                                                                                                                                                              |
 | :--------------------------------------- | :------------------------------------------------------------------------------------------------------------ | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Guía de Instalación (Local & Docker)** | [`docs/instalacion.md`](file:///home/jiodev/Documents/Proyects/TransAduanas/docs/instalacion.md)              | **1. Instalación Local (Entorno de Desarrollo):** carga de `schema.sql` y `seed.sql` en MySQL local, configuración de `application-local.properties`, arranque de Backend/Frontends y credenciales de prueba. **2. Instalación con Docker:** _(en implementación)_.                                                        |
-| **Documentación Técnica del Backend**    | [`docs/backend.md`](file:///home/jiodev/Documents/Proyects/TransAduanas/docs/backend.md) y [`docs/backend/`](file:///home/jiodev/Documents/Proyects/TransAduanas/docs/backend) | **Documento Maestro y 6 Capítulos Especializados:** Arquitectura N-Tier, inventario de dependencias `pom.xml`, seguridad RBAC con JWT, catálogo de 21 controladores REST, compuerta financiera, deuda heredada, motor híbrido de reportes PDF y logging rotativo. |
-| **Documentación Técnica del Frontend**   | [`docs/frontend.md`](file:///home/jiodev/Documents/Proyects/TransAduanas/docs/frontend.md), [`docs/app-sga/`](file:///home/jiodev/Documents/Proyects/TransAduanas/docs/app-sga) y [`docs/app-portal-clientes/`](file:///home/jiodev/Documents/Proyects/TransAduanas/docs/app-portal-clientes) | **Documento Maestro y Capítulos Separados:** Frontend Interno SGA (`app-sga/`, 6 capítulos) y Portal del Cliente B2B (`app-portal-cliente/`, 5 capítulos), arquitectura Feature-Based, Pinia stores, Navigation Guards, tokens Warm Editorial y catálogo de módulos. |
-| **Especificación de Lenguaje de Diseño** | [`docs/lenguaje_diseño.md`](file:///home/jiodev/Documents/Proyects/TransAduanas/docs/lenguaje_dise%C3%B1o.md) | Sistema de diseño **Warm Editorial**, tokens CSS de color (arena, latte, espresso), tipografía dual (Inter y JetBrains Mono), rejilla de 4px, preset de PrimeVue Aura y guía de implementación de Modo Claro / Modo Oscuro.                                                                                                |
+| **Guía de Instalación (Local & Docker)** | [`docs/instalacion.md`](docs/instalacion.md)              | **1. Instalación Local (Entorno de Desarrollo):** carga de `schema.sql` y `seed.sql` en MySQL local, configuración de `application-local.properties`, arranque de Backend/Frontends y credenciales de prueba. **2. Instalación con Docker:** _(en implementación)_.                                                        |
+| **Documentación Técnica del Backend**    | [`docs/backend.md`](docs/backend.md) y [`docs/backend/`](docs/backend) | **Documento Maestro y 6 Capítulos Especializados:** Arquitectura N-Tier, inventario de dependencias `pom.xml`, seguridad RBAC con JWT, catálogo de 21 controladores REST, compuerta financiera, deuda heredada, motor de reportes PDF (Thymeleaf + OpenHTMLtoPDF) y logging rotativo. |
+| **Documentación Técnica del Frontend**   | [`docs/frontend.md`](docs/frontend.md), [`docs/app-sga/`](docs/app-sga) y [`docs/app-portal-clientes/`](docs/app-portal-clientes) | **Documento Maestro y Capítulos Separados:** Frontend Interno SGA (`app-sga/`, 6 capítulos) y Portal del Cliente B2B (`app-portal-cliente/`, 5 capítulos), arquitectura Feature-Based, Pinia stores, Navigation Guards, tokens Warm Editorial y catálogo de módulos. |
+| **Especificación de Lenguaje de Diseño** | [`docs/lenguaje_diseño.md`](docs/lenguaje_dise%C3%B1o.md) | Sistema de diseño **Warm Editorial**, tokens CSS de color (arena, latte, espresso), tipografía dual (Inter y JetBrains Mono), rejilla de 4px, preset de PrimeVue Aura y guía de implementación de Modo Claro / Modo Oscuro.                                                                                                |
 
 ---
 
@@ -51,8 +51,8 @@ El repositorio cuenta con especificaciones técnicas completas y guías especial
    Control estricto de accesos a nivel de endpoints con Spring Security (`@PreAuthorize` mediante SpEL en `SecurityRoles.java`) y a nivel de rutas en el cliente web (Navigation Guards en `router.beforeEach`).
 4. **Archivo Documental Centralizado:**  
    Almacenamiento y vinculación de archivos digitales sustentatorios (Factura Comercial, Packing List, BL, Guías de Remisión, Vouchers de Pago, Tickets de Balanza VGM) vinculados polimórficamente a cotizaciones o expedientes.
-5. **Motor Híbrido de Reportería Oficial PDF:**  
-   Emisión de padrones, certificados, cotizaciones y liquidaciones aduaneras en formato PDF corporativo mediante **JasperReports 7.0.8** y plantillas **Thymeleaf + OpenHTMLtoPDF**.
+5. **Motor Oficial de Reportería PDF:**  
+   Emisión de padrones institucionales, usuarios, sedes y catálogos aduaneros en formato PDF corporativo mediante plantillas **Thymeleaf + OpenHTMLtoPDF**.
 6. **Pesaje Certificado VGM y Control de Almacén:**  
    Custodia aduanera en depósito temporal con pesaje obligatorio en báscula certificada VGM (_Verified Gross Mass_) según enmienda SOLAS y verificación de canal SUNAT previo a la autorización de salida.
 
@@ -64,7 +64,7 @@ El sistema adopta una arquitectura desacoplada y moderna, utilizando componentes
 
 ### 4.1 Backend: Java 21 & Spring Boot 4.1.2
 
-Gestionado a través de **Apache Maven** ([`backend/pom.xml`](file:///home/jiodev/Documents/Proyects/TransAduanas/backend/pom.xml)):
+Gestionado a través de **Apache Maven** ([`backend/pom.xml`](backend/pom.xml)):
 
 | Grupo / Artefacto                                         | Versión | Propósito Técnico y Justificación                                                                                                  |
 | :-------------------------------------------------------- | :-----: | :--------------------------------------------------------------------------------------------------------------------------------- |
@@ -73,8 +73,7 @@ Gestionado a través de **Apache Maven** ([`backend/pom.xml`](file:///home/jiode
 | `org.springframework.boot:spring-boot-starter-validation` |  4.1.2  | Validaciones declarativas de contratos de entrada en DTOs con Jakarta Validation (`@NotNull`, `@NotBlank`, `@Size`, `@Positive`).  |
 | `org.springframework.boot:spring-boot-starter-webmvc`     |  4.1.2  | Framework web para la exposición de endpoints RESTful con serialización y deserialización JSON vía Jackson.                        |
 | `org.springframework.boot:spring-boot-starter-thymeleaf`  |  4.1.2  | Motor de plantillas HTML del lado del servidor para la estructuración de documentos y reportes corporativos.                       |
-| `com.openhtmltopdf:openhtmltopdf-pdfbox`                  | 1.0.10  | Motor de conversión de plantillas HTML/CSS a documentos PDF de alta fidelidad.                                                     |
-| `net.sf.jasperreports:jasperreports` (+ `pdf`, `jdt`)     |  7.0.8  | Motor central de compilación y renderizado dinámico de reportes empresariales vectoriales en PDF.                                  |
+| `com.openhtmltopdf:openhtmltopdf-pdfbox`                  | 1.0.10  | Motor de conversión de plantillas HTML/CSS a documentos PDF vectoriales de alta fidelidad.                                         |
 | `io.jsonwebtoken:jjwt-api` (+ `impl`, `jackson`)          | 0.13.0  | API estándar para la creación, firma criptográfica HMAC-SHA256 y validación stateless de tokens JWT Bearer.                        |
 | `com.mysql:mysql-connector-j`                             | Runtime | Driver JDBC oficial para comunicación de alto rendimiento con el motor MySQL 8.4 InnoDB.                                           |
 | `org.projectlombok:lombok`                                | 1.18.x  | Reducción de código repetitivo (Boilerplate) para getters, setters, constructores y patrones Builder en DTOs y entidades.          |
@@ -83,7 +82,7 @@ Gestionado a través de **Apache Maven** ([`backend/pom.xml`](file:///home/jiode
 
 ### 4.2 Frontends del Ecosistema (Interno, Portal B2B y Landing): Vue 3 & Vite
 
-Gestionados a través de **Node.js / npm** como proyectos completamente independientes en [`app-sga/`](file:///home/jiodev/Documents/Proyects/TransAduanas/app-sga), [`app-portal-cliente/`](file:///home/jiodev/Documents/Proyects/TransAduanas/app-portal-cliente) y [`landing/`](file:///home/jiodev/Documents/Proyects/TransAduanas/landing):
+Gestionados a través de **Node.js / npm** como proyectos completamente independientes en [`app-sga/`](app-sga/), [`app-portal-cliente/`](app-portal-cliente/) y [`landing/`](landing/):
 
 | Dependencia                     | Versión (`app-sga` / `app-portal-cliente`) | Propósito Técnico y Justificación                                                                         |
 | :------------------------------ | :-------------------------------------: | :-------------------------------------------------------------------------------------------------------- |
@@ -103,7 +102,7 @@ Gestionados a través de **Node.js / npm** como proyectos completamente independ
 - **Motor:** MySQL 8.4 LTS InnoDB (`SGAdb`).
 - **Juego de Caracteres:** `utf8mb4` con colación `utf8mb4_unicode_ci` y zona horaria `-05:00` (Perú).
 - **Aislamiento y Transaccionalidad:** Cumplimiento ACID completo con llaves foráneas e integridad referencial en 17 tablas normalizadas.
-- **Despliegue:** Contenedor Docker/Podman preconfigurado ([`db/docker-compose.yml`](file:///home/jiodev/Documents/Proyects/TransAduanas/db/docker-compose.yml)) o instancia local en el puerto `3306`.
+- **Despliegue:** Contenedor Docker/Podman preconfigurado ([`db/docker-compose.yml`](db/docker-compose.yml)) o instancia local en el puerto `3306`.
 
 ---
 
@@ -273,20 +272,20 @@ TransAduanas/
 
 > [!IMPORTANT]
 > **Guía de Instalación Separada (`docs/instalacion.md`):**  
-> La documentación de instalación se encuentra estructurada en dos secciones dentro de [`docs/instalacion.md`](file:///home/jiodev/Documents/Proyects/TransAduanas/docs/instalacion.md):
+> La documentación de instalación se encuentra estructurada en dos secciones dentro de [`docs/instalacion.md`](docs/instalacion.md):
 >
 > 1. **Instalación Local (Entorno de Desarrollo):** Con todos los pasos necesarios para configurar y probar el proyecto completo de manera local.
 > 2. **Instalación con Docker:** _(Sección reservada, pendiente de implementación)._
 >
-> 👉 **[Ver Guía Completa de Instalación (`docs/instalacion.md`)](file:///home/jiodev/Documents/Proyects/TransAduanas/docs/instalacion.md)**
+> 👉 **[Ver Guía Completa de Instalación (`docs/instalacion.md`)](docs/instalacion.md)**
 
 ### Resumen Rápido de Servicios (Instalación Local)
 
 | Servicio                       | Directorio                                                                              | Tecnología                  | Puerto Local | Comando de Arranque Rápido                                           |
 | :----------------------------- | :-------------------------------------------------------------------------------------- | :-------------------------- | :----------: | :------------------------------------------------------------------- |
-| **1. Base de Datos (`SGAdb`)** | [`db/`](file:///home/jiodev/Documents/Proyects/TransAduanas/db)                         | MySQL 8.4 InnoDB            |    `3306`    | `mysql -u root -p < db/schema.sql && mysql -u root -p < db/seed.sql` |
-| **2. Backend API REST**        | [`backend/`](file:///home/jiodev/Documents/Proyects/TransAduanas/backend)               | Spring Boot 4.1.2 / Java 21 |    `8085`    | `cd backend && mvn spring-boot:run`                                  |
-| **3. Frontend Interno (SGA)**  | [`app-sga/`](file:///home/jiodev/Documents/Proyects/TransAduanas/app-sga)             | Vue 3 + Vite 8              |    `5180`    | `cd app-sga && npm install && npm run dev`                          |
-| **4. Portal del Cliente B2B**  | [`app-portal-cliente/`](file:///home/jiodev/Documents/Proyects/TransAduanas/app-portal-cliente) | Vue 3 + Vite 6              |    `5174`    | `cd app-portal-cliente && npm install && npm run dev`                    |
+| **1. Base de Datos (`SGAdb`)** | [`db/`](db)                         | MySQL 8.4 InnoDB            |    `3306`    | `mysql -u root -p < db/schema.sql && mysql -u root -p < db/seed.sql` |
+| **2. Backend API REST**        | [`backend/`](backend)               | Spring Boot 4.1.2 / Java 21 |    `8085`    | `cd backend && mvn spring-boot:run`                                  |
+| **3. Frontend Interno (SGA)**  | [`app-sga/`](app-sga)             | Vue 3 + Vite 8              |    `5180`    | `cd app-sga && npm install && npm run dev`                          |
+| **4. Portal del Cliente B2B**  | [`app-portal-cliente/`](app-portal-cliente) | Vue 3 + Vite 6              |    `5174`    | `cd app-portal-cliente && npm install && npm run dev`                    |
 
-Para configurar `application-local.properties`, revisar los requisitos previos o consultar las credenciales de los **8 roles institucionales** y cuentas RUC del **Portal B2B**, dirígete a [`docs/instalacion.md`](file:///home/jiodev/Documents/Proyects/TransAduanas/docs/instalacion.md).
+Para configurar `application-local.properties`, revisar los requisitos previos o consultar las credenciales de los **8 roles institucionales** y cuentas RUC del **Portal B2B**, dirígete a [`docs/instalacion.md`](docs/instalacion.md).

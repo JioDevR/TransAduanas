@@ -230,9 +230,13 @@
               <div 
                 v-for="banco in cuentasBancariasUsd" 
                 :key="banco.id"
+                role="button"
+                tabindex="0"
                 class="bank-account-card"
                 :class="{ selected: form.bancoDestino === banco.nombre }"
                 @click="form.bancoDestino = banco.nombre"
+                @keydown.enter="form.bancoDestino = banco.nombre"
+                @keydown.space.prevent="form.bancoDestino = banco.nombre"
               >
                 <div class="bank-card-header">
                   <div class="bank-badge-title">
@@ -352,7 +356,7 @@
                     <span class="file-name font-mono">{{ archivoVoucher.name }}</span>
                     <span class="file-size">{{ (archivoVoucher.size / 1024).toFixed(1) }} KB</span>
                   </div>
-                  <button type="button" class="btn-remove-file" @click="quitarArchivo" title="Quitar archivo">
+                  <button type="button" class="btn-remove-file" @click="quitarArchivo" title="Quitar archivo" aria-label="Quitar archivo">
                     <i class="pi pi-times"></i>
                   </button>
                 </div>
@@ -396,6 +400,11 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { portalPagoService } from '../services/portalPagoService'
 import { useNotification } from '@/shared/composables/useNotification'
+import {
+  formatCurrency,
+  formatEstadoPago as formatEstado,
+  validarArchivoVoucher
+} from '@/shared/utils/formatters'
 
 const route = useRoute()
 const router = useRouter()
@@ -465,7 +474,7 @@ async function cargarObligaciones() {
 
       let seleccion = null
       if (qId) {
-        if (qTipo === 'EXPEDIENTE') {
+        if (qTipo === 'EXPEDIENTE' || qTipo === 'EXPEDIENTE_HEREDADO') {
           seleccion = obligaciones.value.find(o => o.idExpediente === qId)
         } else {
           seleccion = obligaciones.value.find(o => o.idCotizacion === qId || o.idReferencia === qId)
@@ -549,26 +558,10 @@ function onMontoManualInput() {
   }
 }
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024
-const ALLOWED_MIME_TYPES = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp']
-
-function validarArchivoVoucher(file) {
-  if (!file) return false
-  if (file.size > MAX_FILE_SIZE) {
-    showWarn('El archivo excede el tamaño máximo permitido de 10 MB.')
-    return false
-  }
-  if (!ALLOWED_MIME_TYPES.includes(file.type)) {
-    showWarn('Solo se permiten archivos en formato PDF, PNG, JPG o WEBP.')
-    return false
-  }
-  return true
-}
-
 function onFileSelected(e) {
   const file = e.target.files?.[0]
   if (file) {
-    if (!validarArchivoVoucher(file)) {
+    if (!validarArchivoVoucher(file, showWarn)) {
       e.target.value = ''
       return
     }
@@ -579,7 +572,7 @@ function onFileSelected(e) {
 function onFileDrop(e) {
   const file = e.dataTransfer?.files?.[0]
   if (file) {
-    if (!validarArchivoVoucher(file)) {
+    if (!validarArchivoVoucher(file, showWarn)) {
       return
     }
     archivoVoucher.value = file
@@ -639,16 +632,6 @@ async function confirmarYRegistrar() {
 
 function volver() {
   router.push('/pagos')
-}
-
-function formatCurrency(val) {
-  if (val == null) return '0.00'
-  return Number(val).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-}
-
-function formatEstado(st) {
-  if (!st) return 'PENDIENTE'
-  return st.replace(/_/g, ' ')
 }
 </script>
 
@@ -846,9 +829,9 @@ function formatEstado(st) {
   width: fit-content;
 }
 
-.canal-badge.verde { background: #e6f4ea; color: #137333; }
-.canal-badge.naranja { background: #fef7e0; color: #b06000; }
-.canal-badge.rojo { background: #fce8e6; color: #c5221f; }
+.canal-badge.verde { background: var(--color-success-bg); color: var(--color-success-text); }
+.canal-badge.naranja { background: var(--color-warning-bg); color: var(--color-warning-text); }
+.canal-badge.rojo { background: var(--color-danger-bg); color: var(--color-danger-text); }
 
 .status-pill {
   font-size: 0.7rem;
@@ -945,8 +928,8 @@ function formatEstado(st) {
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  background: var(--color-primary, #352f2a);
-  color: #fff;
+  background: var(--color-primary);
+  color: var(--color-primary-text);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1204,13 +1187,17 @@ function formatEstado(st) {
 }
 
 .custom-input, .custom-select, .custom-textarea {
-  border: 1px solid var(--color-border, #e4dacb);
+  border: 1px solid var(--color-border);
   border-radius: 6px;
   padding: 0.65rem 0.85rem;
   font-size: 0.9rem;
-  color: var(--color-text-main, #2b2520);
-  background: var(--color-bg-surface, #ffffff);
+  color: var(--color-text-main);
+  background-color: var(--color-bg-surface);
   width: 100%;
+}
+
+.custom-select {
+  padding-right: 2.25rem;
 }
 
 .custom-input:focus, .custom-select:focus, .custom-textarea:focus {

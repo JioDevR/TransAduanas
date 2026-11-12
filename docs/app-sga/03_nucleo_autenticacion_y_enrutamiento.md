@@ -23,7 +23,7 @@
 
 ## 1. El Núcleo del Frontend (`core/`)
 
-La carpeta [`app-sga/src/core/`](file:///home/jiodev/Documents/Proyects/TransAduanas/app-sga/src/core/) contiene los servicios horizontales indispensables para que toda la aplicación funcione:
+La carpeta [`app-sga/src/core/`](../../app-sga/src/core/) contiene los servicios horizontales indispensables para que toda la aplicación funcione:
 - La conexión con el backend mediante Axios.
 - La tabla de roles y rutas asignadas.
 - La shell visual común que envuelve a todas las páginas (*Layout*).
@@ -33,7 +33,7 @@ La carpeta [`app-sga/src/core/`](file:///home/jiodev/Documents/Proyects/TransAdu
 
 ## 2. Cliente HTTP con Interceptores (`apiClient.js`)
 
-Todas las comunicaciones con la API REST del backend pasan obligatoriamente por la instancia de Axios centralizada en [`app-sga/src/core/api/apiClient.js`](file:///home/jiodev/Documents/Proyects/TransAduanas/app-sga/src/core/api/apiClient.js).
+Todas las comunicaciones con la API REST del backend pasan obligatoriamente por la instancia de Axios centralizada en [`app-sga/src/core/api/apiClient.js`](../../app-sga/src/core/api/apiClient.js).
 
 ### 2.1 Inyección Automática del Token Bearer
 Para que los desarrolladores no tengan que escribir manualmente el token de seguridad en cada petición, Axios intercepta cada solicitud antes de que salga hacia internet:
@@ -74,7 +74,7 @@ apiClient.interceptors.response.use(
 
 ## 3. Definición de Roles y Rutas Base (`roles.js`)
 
-El archivo [`app-sga/src/core/auth/roles.js`](file:///home/jiodev/Documents/Proyects/TransAduanas/app-sga/src/core/auth/roles.js) estandariza los 8 roles institucionales y asocia a cada uno su ruta de aterrizaje (*Home Path*):
+El archivo [`app-sga/src/core/auth/roles.js`](../../app-sga/src/core/auth/roles.js) estandariza los 8 roles institucionales y asocia a cada uno su ruta de aterrizaje (*Home Path*):
 
 | Constante de Rol | Etiqueta Visual | Ruta de Inicio por Defecto (`homePath`) |
 | :--- | :--- | :--- |
@@ -92,21 +92,21 @@ El archivo [`app-sga/src/core/auth/roles.js`](file:///home/jiodev/Documents/Proy
 ## 4. Gestión de Estado Global (Stores de Pinia)
 
 ### 4.1 `authStore`: Control de Sesión y Credenciales
-Ubicado en [`app-sga/src/features/auth/stores/authStore.js`](file:///home/jiodev/Documents/Proyects/TransAduanas/app-sga/src/features/auth/stores/authStore.js):
+Ubicado en [`app-sga/src/features/auth/stores/authStore.js`](../../app-sga/src/features/auth/stores/authStore.js):
 
 - **Estado (`State`):**
   - `token`: Cadena JWT almacenada de forma persistente en `localStorage`.
   - `user`: Objeto con nombres, apellidos, correo institucional, sede y rol.
 - **Getters Reactivos:**
   - `isAuthenticated`: Retorna `true` si hay un token válido.
-  - `userRole`: Retorna la clave del rol (ej. `ROLE_AGENTE_COMERCIAL`).
+  - `userRole`: Retorna la clave del rol (ej. `AGENTE_COMERCIAL`).
   - `homePath`: Retorna la URL a la que debe redirigirse al usuario al iniciar sesión.
 - **Acciones (`Actions`):**
-  - `login(username, password)`: Envía las credenciales a `/api/v1/auth/login`, guarda el token y perfil, y devuelve la respuesta.
+  - `login(credentials)`: Envía las credenciales a `/api/v1/auth/login`, guarda el token y perfil, y devuelve los datos del usuario.
   - `logout()`: Elimina el token de `localStorage`, resetea el estado en memoria y navega a `/login`.
 
 ### 4.2 `navigationStore`: Módulo Activo y Sidebar
-Ubicado en [`app-sga/src/core/stores/navigationStore.js`](file:///home/jiodev/Documents/Proyects/TransAduanas/app-sga/src/core/stores/navigationStore.js):
+Ubicado en [`app-sga/src/core/stores/navigationStore.js`](../../app-sga/src/core/stores/navigationStore.js):
 
 - **Estado:**
   - `activeModule`: Identificador del módulo abierto (ej. `comercial`, `aduanas`, `finanzas`).
@@ -118,7 +118,7 @@ Ubicado en [`app-sga/src/core/stores/navigationStore.js`](file:///home/jiodev/Do
 
 ## 5. Enrutamiento y Guardias de Navegación (`router/index.js`)
 
-El archivo [`app-sga/src/core/router/index.js`](file:///home/jiodev/Documents/Proyects/TransAduanas/app-sga/src/core/router/index.js) configura el enrutador con historial HTML5 (`createWebHistory()`).
+El archivo [`app-sga/src/core/router/index.js`](../../app-sga/src/core/router/index.js) configura el enrutador con historial HTML5 (`createWebHistory()`).
 
 ### 5.1 Guardia Global `router.beforeEach`
 Antes de que cualquier página se renderice en pantalla, el guardia global ejecuta una verificación en 4 pasos:
@@ -143,13 +143,13 @@ Para mantener el archivo principal limpio, las rutas se importan modularmente:
 - `authRoutes`: Pantallas públicas de inicio de sesión (`/login`).
 - `adminRoutes`: Rutas exclusivas del Administrador TI (`/administracion-ti/*`).
 - `gerenciaRoutes`: Cuadros de mando y auditoría (`/gerencia-general/*`).
-- `rolesRoutes`: Rutas operativas de los roles de negocio ([`roles.routes.js`](file:///home/jiodev/Documents/Proyects/TransAduanas/app-sga/src/core/router/roles.routes.js)).
+- `rolesRoutes`: Rutas operativas de los roles de negocio ([`roles.routes.js`](../../app-sga/src/core/router/roles.routes.js)).
 
 ---
 
 ## 6. El Shell Maestro Contenedor (`AppLayout.vue`)
 
-Todas las pantallas operativas se renderizan dentro de [`app-sga/src/core/layouts/AppLayout.vue`](file:///home/jiodev/Documents/Proyects/TransAduanas/app-sga/src/core/layouts/AppLayout.vue):
+Todas las pantallas operativas se renderizan dentro de [`app-sga/src/core/layouts/AppLayout.vue`](../../app-sga/src/core/layouts/AppLayout.vue):
 
 ```
 ┌────────────────────────────────────────────────────────────────────────┐

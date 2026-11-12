@@ -789,7 +789,7 @@ const handleSubmit = () => {
 }
 
 .doc-num-input {
-  font-family: monospace;
+  font-family: var(--font-mono);
   font-weight: 800;
   letter-spacing: 0.06em;
   font-size: var(--font-size-md, 1rem);

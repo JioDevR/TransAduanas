@@ -1,5 +1,19 @@
 import apiClient from '@/core/api/apiClient'
 
+export async function descargarDocumentoBlob(idDocumento) {
+  const response = await apiClient.get(`/documentos/${idDocumento}/descargar`, {
+    responseType: 'blob'
+  })
+  return response.data
+}
+
+export async function previsualizarDocumentoBlob(idDocumento) {
+  const response = await apiClient.get(`/documentos/${idDocumento}/preview`, {
+    responseType: 'blob'
+  })
+  return response.data
+}
+
 /**
  * Servicio de dominio para el módulo de Cotizaciones del Portal del Cliente B2B.
  */
@@ -76,7 +90,86 @@ export const portalCotizacionService = {
       params: { soloActivos }
     })
     return response.data?.data || []
-  }
+  },
+
+  /**
+   * Sube secuencialmente una lista de documentos adjuntos asociados a una cotización,
+   * capturando fallos individuales sin abortar el resto del lote.
+   * @param {number|string} idCotizacion - ID de la cotización
+   * @param {Array<{ file: File, categoria?: string, descripcion?: string }>} queuedDocs - Lista de documentos
+   * @returns {Promise<{ uploaded: Array, failed: Array<{ name: string, error: string }> }>}
+   */
+  async subirDocumentosCotizacion(idCotizacion, queuedDocs = []) {
+    const uploaded = []
+    const failed = []
+
+    if (!queuedDocs || !Array.isArray(queuedDocs) || queuedDocs.length === 0) {
+      return { uploaded, failed }
+    }
+
+    for (const doc of queuedDocs) {
+      const file = doc.file || doc
+      const fileName = file?.name || doc?.name || 'documento'
+
+      try {
+        const formData = new FormData()
+        formData.append('files', file)
+        formData.append('categoria', doc.categoria || 'GENERAL')
+        formData.append('descripcion', doc.descripcion || '')
+        formData.append('entidadTipo', 'COTIZACION')
+        formData.append('idEntidad', String(idCotizacion))
+
+        const response = await apiClient.post('/documentos/upload', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        })
+
+        const savedDocs = response.data?.data || response.data
+        if (Array.isArray(savedDocs)) {
+          uploaded.push(...savedDocs)
+        } else if (savedDocs) {
+          uploaded.push(savedDocs)
+        }
+      } catch (err) {
+        failed.push({
+          name: fileName,
+          error: err.response?.data?.message || err.message || 'Error al subir el archivo'
+        })
+      }
+    }
+
+    return { uploaded, failed }
+  },
+
+  /**
+   * Obtiene la lista de documentos adjuntos registrados para una cotización.
+   * @param {number|string} idCotizacion - ID de la cotización
+   * @returns {Promise<Array>}
+   */
+  async listarDocumentosCotizacion(idCotizacion) {
+    const response = await apiClient.get('/documentos', {
+      params: {
+        entidadTipo: 'COTIZACION',
+        idCotizacion
+      }
+    })
+    return response.data?.data || []
+  },
+
+  /**
+   * Descarga el archivo binario de un documento adjunto.
+   * @param {number|string} idDocumento - ID del documento
+   * @returns {Promise<Blob>}
+   */
+  descargarDocumento: descargarDocumentoBlob,
+
+  /**
+   * Obtiene el binario de un documento para su previsualización inline en navegador.
+   * @param {number|string} idDocumento - ID del documento
+   * @returns {Promise<Blob>}
+   */
+  previsualizarDocumento: previsualizarDocumentoBlob
 }
 
 export default portalCotizacionService

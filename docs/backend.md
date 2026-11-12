@@ -7,16 +7,16 @@
 
 ## 📚 Estructura de la Documentación Modular del Backend
 
-Para facilitar la lectura tanto a perfiles de negocio como a ingenieros de software, la documentación técnica del backend se encuentra desglosada en **6 capítulos especializados** dentro del directorio [`docs/backend/`](file:///home/jiodev/Documents/Proyects/TransAduanas/docs/backend):
+Para facilitar la lectura tanto a perfiles de negocio como a ingenieros de software, la documentación técnica del backend se encuentra desglosada en **6 capítulos especializados** dentro del directorio [`docs/backend/`](backend):
 
 | Capítulo | Enlace | Contenido Principal |
 | :--- | :--- | :--- |
-| **01. Introducción y Arquitectura** | [`docs/backend/01_introduccion_y_arquitectura.md`](file:///home/jiodev/Documents/Proyects/TransAduanas/docs/backend/01_introduccion_y_arquitectura.md) | Visión para no técnicos (analogías), principios rectores, arquitectura multicapa N-Tier, ciclo de vida de una petición HTTP, patrones de diseño (Builder, DTO, Wrapper, Global Handler) y árbol del código. |
-| **02. Dependencias y Librerías** | [`docs/backend/02_dependencias_y_librerias.md`](file:///home/jiodev/Documents/Proyects/TransAduanas/docs/backend/02_dependencias_y_librerias.md) | Inventario exhaustivo del `pom.xml`, versiones de Spring Boot 4.1.2, Java 21 LTS, JJWT 0.13.0, Lombok, JasperReports, Thymeleaf, OpenHTMLtoPDF y plugins del compilador. |
-| **03. Seguridad, JWT y Roles** | [`docs/backend/03_seguridad_jwt_y_roles.md`](file:///home/jiodev/Documents/Proyects/TransAduanas/docs/backend/03_seguridad_jwt_y_roles.md) | Modelo stateless JWT (HMAC-SHA256), cadena de filtros `SecurityConfig`, matriz de los 8 roles institucionales + Portal B2B, expresiones SpEL en `SecurityRoles` y resolución segura del usuario autenticado. |
-| **04. Reglas de Negocio y Flujos** | [`docs/backend/04_reglas_de_negocio_y_flujos.md`](file:///home/jiodev/Documents/Proyects/TransAduanas/docs/backend/04_reglas_de_negocio_y_flujos.md) | Cotizador de 4 pasos, fórmulas de flete y aranceles NANDINA, Compuerta Financiera Pre-Expediente (*Payment Gate*), pagos y deuda heredada, canales SUNAT (DAM), pesaje VGM, flota MTC, liquidación SPOT (12%) y Soft Delete. |
-| **05. Catálogo de la API REST** | [`docs/backend/05_catalogo_completo_api_rest.md`](file:///home/jiodev/Documents/Proyects/TransAduanas/docs/backend/05_catalogo_completo_api_rest.md) | Inventario completo de los **21 Controladores REST** con sus rutas, verbos HTTP (`GET`, `POST`, `PUT`, `PATCH`, `DELETE`), seguridad requerida y descripción funcional de cada servicio. |
-| **06. Reportes PDF y Archivos** | [`docs/backend/06_reportes_pdf_y_archivos.md`](file:///home/jiodev/Documents/Proyects/TransAduanas/docs/backend/06_reportes_pdf_y_archivos.md) | Motor híbrido de reportería (JasperReports 7.0.8 y plantillas HTML con OpenHTMLtoPDF), almacenamiento seguro de archivos multipart (25 MB) y logging rotativo con `logback-spring.xml`. |
+| **01. Introducción y Arquitectura** | [`docs/backend/01_introduccion_y_arquitectura.md`](backend/01_introduccion_y_arquitectura.md) | Visión para no técnicos (analogías), principios rectores, arquitectura multicapa N-Tier, ciclo de vida de una petición HTTP, patrones de diseño (Builder, DTO, Wrapper, Global Handler) y árbol del código. |
+| **02. Dependencias y Librerías** | [`docs/backend/02_dependencias_y_librerias.md`](backend/02_dependencias_y_librerias.md) | Inventario exhaustivo del `pom.xml`, versiones de Spring Boot 4.1.2, Java 21 LTS, JJWT 0.13.0, Lombok, Thymeleaf, OpenHTMLtoPDF y plugins del compilador. |
+| **03. Seguridad, JWT y Roles** | [`docs/backend/03_seguridad_jwt_y_roles.md`](backend/03_seguridad_jwt_y_roles.md) | Modelo stateless JWT (HMAC-SHA256), cadena de filtros `SecurityConfig`, matriz de los 8 roles institucionales + Portal B2B (`ROLE_CLIENTE_PORTAL`), expresiones SpEL en `SecurityRoles` y resolución segura del usuario autenticado. |
+| **04. Reglas de Negocio y Flujos** | [`docs/backend/04_reglas_de_negocio_y_flujos.md`](backend/04_reglas_de_negocio_y_flujos.md) | Cotizador de 4 pasos, fórmulas de flete y aranceles NANDINA, Compuerta Financiera Pre-Expediente (*Payment Gate*), pagos (`EstadoPagoCotizacion`) y deuda heredada, canales SUNAT (DAM), pesaje VGM, flota MTC (`TRK-YYYY-XXXX`), liquidación SPOT (12%) y Soft Delete. |
+| **05. Catálogo de la API REST** | [`docs/backend/05_catalogo_completo_api_rest.md`](backend/05_catalogo_completo_api_rest.md) | Inventario completo de los **21 Controladores REST** con sus rutas, verbos HTTP (`GET`, `POST`, `PUT`, `PATCH`, `DELETE`), seguridad requerida y descripción funcional de cada servicio. |
+| **06. Reportes PDF y Archivos** | [`docs/backend/06_reportes_pdf_y_archivos.md`](backend/06_reportes_pdf_y_archivos.md) | Motor de reportería PDF (**Thymeleaf + OpenHTMLtoPDF 1.0.10**), almacenamiento seguro de archivos multipart (`LocalStorageServiceImpl`, 25 MB) y logging rotativo con `logback-spring.xml`. |
 
 ---
 
@@ -28,7 +28,7 @@ Para facilitar la lectura tanto a perfiles de negocio como a ingenieros de softw
 4. [Modelo de Seguridad y Roles Institucionales](#4-modelo-de-seguridad-y-roles-institucionales)
 5. [Puntos Críticos y Reglas de Negocio Centrales](#5-puntos-críticos-y-reglas-de-negocio-centrales)
 6. [Resumen del Catálogo de 21 Controladores REST](#6-resumen-del-catálogo-de-21-controladores-rest)
-7. [Motor Híbrido de Reportes PDF](#7-motor-híbrido-de-reportes-pdf)
+7. [Motor de Reportes PDF (Thymeleaf + OpenHTMLtoPDF)](#7-motor-de-reportes-pdf-thymeleaf--openhtmltopdf)
 
 ---
 
@@ -83,13 +83,13 @@ El backend adopta un diseño multicapa desacoplado (*N-Tier Architecture*) que a
 ```
 
 👉 *Para conocer en detalle cada capa, diagramas de secuencia y patrones de diseño, consulta:*  
-**[Capítulo 01: Introducción y Arquitectura (`docs/backend/01_introduccion_y_arquitectura.md`)](file:///home/jiodev/Documents/Proyects/TransAduanas/docs/backend/01_introduccion_y_arquitectura.md)**.
+**[Capítulo 01: Introducción y Arquitectura (`docs/backend/01_introduccion_y_arquitectura.md`)](backend/01_introduccion_y_arquitectura.md)**.
 
 ---
 
 ## 3. Resumen del Stack Tecnológico y Dependencias
 
-Todas las librerías son gestionadas a través de **Apache Maven** en [`backend/pom.xml`](file:///home/jiodev/Documents/Proyects/TransAduanas/backend/pom.xml):
+Todas las librerías son gestionadas a través de **Apache Maven** en [`backend/pom.xml`](../backend/pom.xml):
 
 | Dependencia | Versión | Rol en el Sistema |
 | :--- | :---: | :--- |
@@ -101,11 +101,10 @@ Todas las librerías son gestionadas a través de **Apache Maven** en [`backend/
 | **MySQL Connector/J** | Runtime | Conector JDBC nativo para MySQL 8.4 InnoDB. |
 | **JJWT (API, Impl, Jackson)** | **0.13.0** | Generación y verificación criptográfica de tokens Bearer HMAC-SHA256. |
 | **Project Lombok** | **1.18.x** | Eliminación de boilerplate con anotaciones `@Builder`, `@Getter`, `@Setter`. |
-| **JasperReports (Engine, PDF, JDT)**| **7.0.8** | Motor de compilación en memoria y renderizado de padrones vectoriales en PDF. |
-| **Thymeleaf + OpenHTMLtoPDF** | **1.0.10** | Motor de plantillas HTML5/CSS3 para diseño de reportes corporativos en PDF. |
+| **Thymeleaf + OpenHTMLtoPDF** | **1.0.10** | Motor de plantillas HTML5/CSS3 para diseño y renderizado vectorial de reportes corporativos en PDF. |
 
 👉 *Para conocer para qué sirve cada librería y qué pasaría si no estuviera, consulta:*  
-**[Capítulo 02: Dependencias y Librerías (`docs/backend/02_dependencias_y_librerias.md`)](file:///home/jiodev/Documents/Proyects/TransAduanas/docs/backend/02_dependencias_y_librerias.md)**.
+**[Capítulo 02: Dependencias y Librerías (`docs/backend/02_dependencias_y_librerias.md`)](backend/02_dependencias_y_librerias.md)**.
 
 ---
 
@@ -144,26 +143,26 @@ El sistema implementa seguridad **Stateless** basada en tokens JWT con una vigen
                                 └───────────────────────┘
 ```
 
-- **Expresiones SpEL Centralizadas:** La clase [`SecurityRoles.java`](file:///home/jiodev/Documents/Proyects/TransAduanas/backend/src/main/java/pe/sga/config/SecurityRoles.java) concentra todas las reglas de autorización para `@PreAuthorize`.
+- **Expresiones SpEL Centralizadas:** La clase [`SecurityRoles.java`](../backend/src/main/java/pe/sga/config/SecurityRoles.java) concentra todas las reglas de autorización para `@PreAuthorize`.
 - **Resolución Segura del Usuario:** En todas las operaciones de pago, validación y cambios de estado se obtiene la identidad del usuario directamente desde el `SecurityContextHolder`, eliminando IDs hardcodeados.
 
 👉 *Para revisar la matriz de permisos y el ciclo de vida del token JWT, consulta:*  
-**[Capítulo 03: Seguridad, JWT y Roles (`docs/backend/03_seguridad_jwt_y_roles.md`)](file:///home/jiodev/Documents/Proyects/TransAduanas/docs/backend/03_seguridad_jwt_y_roles.md)**.
+**[Capítulo 03: Seguridad, JWT y Roles (`docs/backend/03_seguridad_jwt_y_roles.md`)](backend/03_seguridad_jwt_y_roles.md)**.
 
 ---
 
 ## 5. Puntos Críticos y Reglas de Negocio Centrales
 
-1. **Compuerta Financiera Pre-Expediente (*Financial Payment Gate*):** Bloqueo en la creación de expedientes aduaneros si la cotización previa no cuenta con un pago en estado `VALIDADO` por el Contador.
-2. **Deuda Heredada (`/api/v1/portal/obligaciones-pendientes`):** Cálculo consolidado de cuotas pendientes de cotizaciones y facturas de liquidación con saldo por pagar.
-3. **Trámite DAM y Canales SUNAT:** Asignación de canal aleatorio Verde (levante inmediato), Naranja (revisión documental) o Rojo (aforo físico) y aprovisionamiento automático de credenciales para clientes nuevos.
+1. **Compuerta Financiera Pre-Expediente (*Financial Payment Gate*):** Bloqueo en la creación de expedientes aduaneros si la cotización previa no se encuentra en estado `ADELANTO_APROBADO` / `PAGADO_TOTAL` ni cuenta con un abono `APROBADO` por el Contador.
+2. **Deuda Heredada (`/api/v1/portal/pagos/obligaciones-pendientes`):** Cálculo consolidado de cuotas pendientes de cotizaciones y facturas de liquidación con saldo por pagar.
+3. **Trámite DAM y Canales SUNAT:** Asignación de canal Verde (levante inmediato), Naranja (revisión documental) o Rojo (aforo físico) y aprovisionamiento automático de credenciales para clientes nuevos.
 4. **Almacén y Báscula VGM:** Verificación de masa bruta según SOLAS y retención de carga ante discrepancias de peso.
-5. **Transporte TMS y Brevete MTC:** Despacho con choferes profesionales (A-IIIa/b/c) y unidades con CITV vigente.
+5. **Transporte TMS y Brevete MTC:** Despacho (`TRK-YYYY-XXXX`) con choferes profesionales (A-IIIa/b/c) y unidades con CITV vigente.
 6. **Liquidación y Detracción SPOT (12%):** Conciliación final de gastos reales y retención de detracción obligatoria para el Banco de la Nación.
 7. **Tolerancia Cero a Borrado Físico (*Soft Delete*):** Mantenimiento histórico de registros mediante banderas lógicas para auditorías fiscales.
 
 👉 *Para profundizar en las fórmulas matemáticas, cálculos de tributos y compuertas, consulta:*  
-**[Capítulo 04: Reglas de Negocio y Flujos (`docs/backend/04_reglas_de_negocio_y_flujos.md`)](file:///home/jiodev/Documents/Proyects/TransAduanas/docs/backend/04_reglas_de_negocio_y_flujos.md)**.
+**[Capítulo 04: Reglas de Negocio y Flujos (`docs/backend/04_reglas_de_negocio_y_flujos.md`)](backend/04_reglas_de_negocio_y_flujos.md)**.
 
 ---
 
@@ -173,43 +172,44 @@ El backend expone sus servicios organizados en 21 controladores RESTful:
 
 | Controlador | Ruta Base | Funcionalidad Principal |
 | :--- | :--- | :--- |
-| [`AuthController`](file:///home/jiodev/Documents/Proyects/TransAduanas/backend/src/main/java/pe/sga/controller/AuthController.java) | `/api/v1/auth` | Inicio de sesión (`/login`), verificación de credenciales y consulta de perfil (`/me`). |
-| [`PortalController`](file:///home/jiodev/Documents/Proyects/TransAduanas/backend/src/main/java/pe/sga/controller/PortalController.java) | `/api/v1/portal` | **Portal B2B:** Dashboard, expedientes, cotizaciones, obligaciones pendientes, pagos con voucher y tracking. |
-| [`UsuarioClienteAdminController`](file:///home/jiodev/Documents/Proyects/TransAduanas/backend/src/main/java/pe/sga/controller/UsuarioClienteAdminController.java) | `/api/v1/admin/usuarios-cliente` | Gobernanza de cuentas B2B (creación, reseteo de claves y activación). |
-| [`AdminLogsController`](file:///home/jiodev/Documents/Proyects/TransAduanas/backend/src/main/java/pe/sga/controller/AdminLogsController.java) | `/api/v1/admin/logs` | Consola de logs en tiempo real (`/tail`) y descarga de bitácora comprimida. |
-| [`UsuarioController`](file:///home/jiodev/Documents/Proyects/TransAduanas/backend/src/main/java/pe/sga/controller/UsuarioController.java) | `/api/v1/usuarios` | Gestión de cuentas y personal interno de los 8 roles institucionales. |
-| [`SedeController`](file:///home/jiodev/Documents/Proyects/TransAduanas/backend/src/main/java/pe/sga/controller/SedeController.java) | `/api/v1/sedes` | Administración de sedes corporativas y terminales portuarios con reporte PDF. |
-| [`RolController`](file:///home/jiodev/Documents/Proyects/TransAduanas/backend/src/main/java/pe/sga/controller/RolController.java) | `/api/v1/roles` | Catálogo maestro de roles y permisos del sistema. |
-| [`CatalogoPuertoController`](file:///home/jiodev/Documents/Proyects/TransAduanas/backend/src/main/java/pe/sga/controller/CatalogoPuertoController.java) | `/api/v1/catalogos/puertos` | Catálogo de 80 puertos y aeropuertos nacionales y mundiales con reporte PDF. |
-| [`CatalogoTipoCargaController`](file:///home/jiodev/Documents/Proyects/TransAduanas/backend/src/main/java/pe/sga/controller/CatalogoTipoCargaController.java) | `/api/v1/catalogos/tipos-carga` | Catálogo de 17 tipologías de carga (FCL, LCL, Reefer, IMO) con reporte PDF. |
-| [`CatalogoMercanciaController`](file:///home/jiodev/Documents/Proyects/TransAduanas/backend/src/main/java/pe/sga/controller/CatalogoMercanciaController.java) | `/api/v1/catalogos/mercancias` | Catálogo de 52 subpartidas NANDINA, aranceles y permisos sectoriales. |
-| [`CotizacionController`](file:///home/jiodev/Documents/Proyects/TransAduanas/backend/src/main/java/pe/sga/controller/CotizacionController.java) | `/api/v1/cotizaciones` | Calculadora comercial de 4 pasos, desglose de costos y proforma en PDF. |
-| [`CotizacionPagoController`](file:///home/jiodev/Documents/Proyects/TransAduanas/backend/src/main/java/pe/sga/controller/CotizacionPagoController.java) | `/api/v1/pagos` | Registro de anticipos y validación contable para liberar la compuerta financiera. |
-| [`ExpedienteController`](file:///home/jiodev/Documents/Proyects/TransAduanas/backend/src/main/java/pe/sga/controller/ExpedienteController.java) | `/api/v1/expedientes` | Apertura de expediente aduanero, numeración DAM, canal SUNAT y levante. |
-| [`ControlAlmacenController`](file:///home/jiodev/Documents/Proyects/TransAduanas/backend/src/main/java/pe/sga/controller/ControlAlmacenController.java) | `/api/v1/almacen` | Recepción de carga en depósito temporal, balanza certificada VGM y salida. |
-| [`DespachoTransporteController`](file:///home/jiodev/Documents/Proyects/TransAduanas/backend/src/main/java/pe/sga/controller/DespachoTransporteController.java) | `/api/v1/despachos` | Asignación de flota pesada, emisión de guía de remisión y tracking en ruta. |
-| [`ConductorController`](file:///home/jiodev/Documents/Proyects/TransAduanas/backend/src/main/java/pe/sga/controller/ConductorController.java) | `/api/v1/conductores` | Padrón de choferes con brevete profesional MTC y control de vigencias. |
-| [`UnidadTransporteController`](file:///home/jiodev/Documents/Proyects/TransAduanas/backend/src/main/java/pe/sga/controller/UnidadTransporteController.java) | `/api/v1/unidades` | Padrón de tractos, camiones y semirremolques con CITV y póliza de seguro. |
-| [`LiquidacionFinancieraController`](file:///home/jiodev/Documents/Proyects/TransAduanas/backend/src/main/java/pe/sga/controller/LiquidacionFinancieraController.java) | `/api/v1/liquidaciones` | Liquidación de tributos, gastos operativos, IGV y SPOT (12%) con hoja PDF. |
-| [`ClienteController`](file:///home/jiodev/Documents/Proyects/TransAduanas/backend/src/main/java/pe/sga/controller/ClienteController.java) | `/api/v1/clientes` | Padrón maestro de clientes importadores/exportadores y prospectos. |
-| [`DocumentoController`](file:///home/jiodev/Documents/Proyects/TransAduanas/backend/src/main/java/pe/sga/controller/DocumentoController.java) | `/api/v1/documentos` | Carga multipart y descarga protegida de archivos digitales (BL, factura, packing). |
-| [`HealthController`](file:///home/jiodev/Documents/Proyects/TransAduanas/backend/src/main/java/pe/sga/controller/HealthController.java) | `/api/v1/health` | Verificación de salud y estado operativo (*liveness probe* para Docker). |
+| [`AuthController`](../backend/src/main/java/pe/sga/controller/AuthController.java) | `/api/v1/auth` | Inicio de sesión (`/login`) y consulta del usuario autenticado (`/me`). |
+| [`PortalController`](../backend/src/main/java/pe/sga/controller/PortalController.java) | `/api/v1/portal` | **Portal B2B:** Login/cambio de contraseña, perfil, cotizaciones, expedientes, pagos con voucher (`/pagos/...`) y notificaciones. |
+| [`UsuarioClienteAdminController`](../backend/src/main/java/pe/sga/controller/UsuarioClienteAdminController.java) | `/api/v1/admin/usuarios-portal` | Gobernanza de cuentas B2B (creación, reseteo de claves, activación y reporte PDF). |
+| [`AdminLogsController`](../backend/src/main/java/pe/sga/controller/AdminLogsController.java) | `/api/v1/admin/logs` | Consola de logs (`GET /`), descarga (`/download`) y limpieza de bitácora (`POST /clear`). |
+| [`UsuarioController`](../backend/src/main/java/pe/sga/controller/UsuarioController.java) | `/api/v1/usuarios` | Gestión de cuentas y personal interno de los 8 roles institucionales, operadores y reporte PDF. |
+| [`SedeController`](../backend/src/main/java/pe/sga/controller/SedeController.java) | `/api/v1/sedes` | Administración de sedes corporativas y terminales portuarios con reporte PDF (`/exportar-pdf`). |
+| [`RolController`](../backend/src/main/java/pe/sga/controller/RolController.java) | `/api/v1/roles` | Consulta de solo lectura (`GET`) del catálogo maestro de los 8 roles institucionales. |
+| [`CatalogoPuertoController`](../backend/src/main/java/pe/sga/controller/CatalogoPuertoController.java) | `/api/v1/catalogos/puertos` | Catálogo de puertos y aeropuertos nacionales y mundiales con reporte PDF (`/exportar-pdf`). |
+| [`CatalogoTipoCargaController`](../backend/src/main/java/pe/sga/controller/CatalogoTipoCargaController.java) | `/api/v1/catalogos/tipos-carga` | Catálogo de tipologías de carga (FCL, LCL, Reefer, IMO) con reporte PDF (`/exportar-pdf`). |
+| [`CatalogoMercanciaController`](../backend/src/main/java/pe/sga/controller/CatalogoMercanciaController.java) | `/api/v1/catalogos/mercancias` | Catálogo de subpartidas NANDINA, aranceles, permisos sectoriales y reporte PDF (`/exportar-pdf`). |
+| [`CotizacionController`](../backend/src/main/java/pe/sga/controller/CotizacionController.java) | `/api/v1/cotizaciones` | Calculadora comercial de 4 pasos, asignación de asesor, revisión técnica y cambio de estado. |
+| [`CotizacionPagoController`](../backend/src/main/java/pe/sga/controller/CotizacionPagoController.java) | `/api/v1` | Registro de anticipos (`/cotizaciones/{idCotizacion}/pagos`) y validación contable (`/finanzas/anticipos/...`) para liberar la compuerta financiera. |
+| [`ExpedienteController`](../backend/src/main/java/pe/sga/controller/ExpedienteController.java) | `/api/v1/expedientes` | Apertura de expediente aduanero, numeración DAM, canal SUNAT, diligencia, levante y hitos de traslado. |
+| [`ControlAlmacenController`](../backend/src/main/java/pe/sga/controller/ControlAlmacenController.java) | `/api/v1/almacen` | Recepción de carga en depósito temporal, balanza certificada VGM y autorización de salida. |
+| [`DespachoTransporteController`](../backend/src/main/java/pe/sga/controller/DespachoTransporteController.java) | `/api/v1/transporte/despachos` | Asignación de flota pesada, tracking `TRK-YYYY-XXXX`, incidencias y confirmación de entrega. |
+| [`ConductorController`](../backend/src/main/java/pe/sga/controller/ConductorController.java) | `/api/v1/transporte/conductores` | Padrón de choferes con brevete profesional MTC y control de vigencias. |
+| [`UnidadTransporteController`](../backend/src/main/java/pe/sga/controller/UnidadTransporteController.java) | `/api/v1/transporte/unidades` | Padrón de tractos, camiones y semirremolques con CITV y póliza de seguro. |
+| [`LiquidacionFinancieraController`](../backend/src/main/java/pe/sga/controller/LiquidacionFinancieraController.java) | `/api/v1/finanzas/liquidaciones` | Métricas, cálculo estimado, liquidación de tributos, gastos operativos, IGV y SPOT (12%). |
+| [`ClienteController`](../backend/src/main/java/pe/sga/controller/ClienteController.java) | `/api/v1/clientes` | Padrón maestro de clientes importadores/exportadores, prospectos y conversión a cliente. |
+| [`DocumentoController`](../backend/src/main/java/pe/sga/controller/DocumentoController.java) | `/api/v1/documentos` | Carga multipart (`/upload`), listado, previsualización (`/preview`) y descarga (`/descargar`) de archivos digitales. |
+| [`HealthController`](../backend/src/main/java/pe/sga/controller/HealthController.java) | `/api/v1/health` | Verificación de salud y estado operativo (*liveness probe*). |
 
 👉 *Para consultar los parámetros JSON, métodos HTTP y respuestas de cada endpoint, consulta:*  
-**[Capítulo 05: Catálogo Completo de la API REST (`docs/backend/05_catalogo_completo_api_rest.md`)](file:///home/jiodev/Documents/Proyects/TransAduanas/docs/backend/05_catalogo_completo_api_rest.md)**.
+**[Capítulo 05: Catálogo Completo de la API REST (`docs/backend/05_catalogo_completo_api_rest.md`)](backend/05_catalogo_completo_api_rest.md)**.
 
 ---
 
-## 7. Motor Híbrido de Reportes PDF
+## 7. Motor de Reportes PDF (Thymeleaf + OpenHTMLtoPDF)
 
-El backend dispone de dos mecanismos complementarios para generar documentos PDF en memoria:
+El backend genera documentos PDF corporativos en memoria mediante el motor unificado **Thymeleaf + OpenHTMLtoPDF (`1.0.10`)**, diseñando las vistas en HTML5/CSS3 con el sistema *Warm Editorial* (ubicadas en `backend/src/main/resources/templates/reports/`):
 
-1. **JasperReports 7.0.8:** Para padrones masivos con tablas vectoriales matemáticas estrictas.
-2. **Thymeleaf + OpenHTMLtoPDF (1.0.10):** Para documentos corporativos de alta calidad visual diseñados en HTML5/CSS3 con el sistema *Warm Editorial* (ubicados en `templates/reports/`):
-   - [`reporte-sedes.html`](file:///home/jiodev/Documents/Proyects/TransAduanas/backend/src/main/resources/templates/reports/reporte-sedes.html)
-   - [`reporte-puertos.html`](file:///home/jiodev/Documents/Proyects/TransAduanas/backend/src/main/resources/templates/reports/reporte-puertos.html)
-   - [`reporte-tipos-carga.html`](file:///home/jiodev/Documents/Proyects/TransAduanas/backend/src/main/resources/templates/reports/reporte-tipos-carga.html)
-   - [`reporte-mercancias.html`](file:///home/jiodev/Documents/Proyects/TransAduanas/backend/src/main/resources/templates/reports/reporte-mercancias.html)
+- [`ti-listado-base.html`](../backend/src/main/resources/templates/reports/ti-listado-base.html) (layout base TI)
+- [`reporte-usuarios.html`](../backend/src/main/resources/templates/reports/reporte-usuarios.html)
+- [`reporte-usuarios-portal.html`](../backend/src/main/resources/templates/reports/reporte-usuarios-portal.html)
+- [`reporte-sedes.html`](../backend/src/main/resources/templates/reports/reporte-sedes.html)
+- [`reporte-puertos.html`](../backend/src/main/resources/templates/reports/reporte-puertos.html)
+- [`reporte-tipos-carga.html`](../backend/src/main/resources/templates/reports/reporte-tipos-carga.html)
+- [`reporte-mercancias.html`](../backend/src/main/resources/templates/reports/reporte-mercancias.html)
 
 👉 *Para revisar la implementación del motor de PDFs, la bóveda multipart y la bitácora rotativa, consulta:*  
-**[Capítulo 06: Reportes PDF y Archivos (`docs/backend/06_reportes_pdf_y_archivos.md`)](file:///home/jiodev/Documents/Proyects/TransAduanas/docs/backend/06_reportes_pdf_y_archivos.md)**.
+**[Capítulo 06: Reportes PDF y Archivos (`docs/backend/06_reportes_pdf_y_archivos.md`)](backend/06_reportes_pdf_y_archivos.md)**.

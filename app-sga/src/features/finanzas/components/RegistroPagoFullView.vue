@@ -774,6 +774,7 @@ import { ref, computed, watch, onMounted } from 'vue'
 import { finanzasService } from '@/features/finanzas/services/finanzasService'
 import { documentoService } from '@/features/documentos/services/documentoService'
 import { useAuthStore } from '@/features/auth/stores/authStore'
+import { getTodayDateInput } from '@/shared/utils/dateUtils'
 
 const props = defineProps({
   cotizacion: {
@@ -809,7 +810,7 @@ const defaultForm = () => ({
   bancoOrigen: '',
   bancoDestino: 'BCP Dólares Cta Cte 191-0023412-1-44',
   numeroOperacion: '',
-  fechaOperacion: new Date().toISOString().substring(0, 10),
+  fechaOperacion: getTodayDateInput(),
   observaciones: '',
   idDocumentoComprobante: null
 })
@@ -1441,11 +1442,15 @@ async function handleSubmit() {
   padding: 0.65rem 0.9rem;
   font-size: 0.875rem;
   color: var(--color-text-main);
-  background: var(--color-bg-surface);
+  background-color: var(--color-bg-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md, 0.5rem);
   outline: none;
   transition: all var(--transition-fast);
+}
+
+.form-select {
+  padding-right: 2.25rem;
 }
 
 .input-icon-box .form-input,

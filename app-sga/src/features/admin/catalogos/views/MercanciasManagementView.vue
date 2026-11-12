@@ -333,13 +333,13 @@ import { ref, computed, onMounted } from 'vue'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import Tag from 'primevue/tag'
-import mercanciaService from '../services/mercanciaService'
+import catalogoService from '../services/catalogoService'
 import MercanciaFormModal from '../components/MercanciaFormModal.vue'
 import { useNotification } from '@/shared/composables/useNotification'
 import { useConfirmation } from '@/shared/composables/useConfirmation'
 import { openBlobInNewTab } from '@/shared/utils/download'
 
-const { showSuccess, showError, showInfo, showWarn } = useNotification()
+const { showSuccess, showError } = useNotification()
 const { confirmAction } = useConfirmation()
 
 // Estado General
@@ -357,18 +357,6 @@ const mercanciasSortBy = ref('codigo-asc')
 // Modal Formulario
 const showMercanciaModal = ref(false)
 const selectedMercancia = ref(null)
-
-const showToast = (message, type = 'success') => {
-  if (type === 'error') {
-    showError(message)
-  } else if (type === 'warn' || type === 'warning') {
-    showWarn(message)
-  } else if (type === 'info') {
-    showInfo(message)
-  } else {
-    showSuccess(message)
-  }
-}
 
 // Métricas Computadas
 const activasCount = computed(() => {
@@ -475,11 +463,11 @@ const sortedAndFilteredMercancias = computed(() => {
 const loadMercancias = async () => {
   loadingMercancias.value = true
   try {
-    const res = await mercanciaService.getMercancias()
+    const res = await catalogoService.getMercancias()
     mercancias.value = Array.isArray(res) ? res : (res?.data || res?.content || [])
   } catch (error) {
     console.error('Error cargando mercancías:', error)
-    showToast('Error al conectar con el catálogo de mercancías', 'error')
+    showError('Error al conectar con el catálogo de mercancías')
   } finally {
     loadingMercancias.value = false
   }
@@ -498,7 +486,7 @@ const openEditMercanciaModal = (mercancia) => {
 
 const onMercanciaSaved = () => {
   showMercanciaModal.value = false
-  showToast('Mercancía guardada exitosamente')
+  showSuccess('Mercancía guardada exitosamente')
   loadMercancias()
 }
 
@@ -513,23 +501,23 @@ const handleDeactivateMercancia = async (mercancia) => {
   if (!confirmed) return
 
   try {
-    await mercanciaService.deleteMercancia(mercancia.idMercancia)
-    showToast(`Mercancía ${mercancia.codigo} desactivada`)
+    await catalogoService.deleteMercancia(mercancia.idMercancia)
+    showSuccess(`Mercancía ${mercancia.codigo} desactivada`)
     loadMercancias()
   } catch (error) {
     console.error('Error desactivando mercancía:', error)
-    showToast('No se pudo desactivar la mercancía', 'error')
+    showError('No se pudo desactivar la mercancía')
   }
 }
 
 const handleReactivateMercancia = async (mercancia) => {
   try {
-    await mercanciaService.reactivarMercancia(mercancia.idMercancia)
-    showToast(`Mercancía ${mercancia.codigo} reactivada exitosamente`)
+    await catalogoService.reactivarMercancia(mercancia.idMercancia)
+    showSuccess(`Mercancía ${mercancia.codigo} reactivada exitosamente`)
     loadMercancias()
   } catch (error) {
     console.error('Error reactivando mercancía:', error)
-    showToast('No se pudo reactivar la mercancía', 'error')
+    showError('No se pudo reactivar la mercancía')
   }
 }
 
@@ -537,12 +525,12 @@ const handleReactivateMercancia = async (mercancia) => {
 const handleExportPdf = async () => {
   exportingPdf.value = true
   try {
-    const blobData = await mercanciaService.downloadPdf()
+    const blobData = await catalogoService.downloadMercanciasPdf()
     openBlobInNewTab(blobData)
-    showToast('Reporte oficial de subpartidas arancelarias abierto en nueva pestaña')
+    showSuccess('Reporte oficial de subpartidas arancelarias abierto en nueva pestaña')
   } catch (err) {
     console.error('Error al descargar reporte de mercancías:', err)
-    showToast('No se pudo generar el reporte de mercancías', 'error')
+    showError('No se pudo generar el reporte de mercancías')
   } finally {
     exportingPdf.value = false
   }

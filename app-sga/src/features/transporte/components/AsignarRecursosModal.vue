@@ -17,7 +17,7 @@
         </div>
         <div class="summary-line">
           <span class="text-xs text-muted">Expediente:</span>
-          <span>{{ despacho.codigoExpediente }}</span>
+          <span class="font-mono">{{ despacho.codigoExpediente }}</span>
         </div>
       </div>
 

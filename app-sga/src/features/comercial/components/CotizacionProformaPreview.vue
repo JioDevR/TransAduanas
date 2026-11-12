@@ -240,7 +240,7 @@ const formatVal = (val) => {
 }
 
 .doc-code-lg {
-  font-family: monospace;
+  font-family: var(--font-mono);
   font-size: var(--font-size-md, 1rem);
   font-weight: 800;
   letter-spacing: 0.05em;

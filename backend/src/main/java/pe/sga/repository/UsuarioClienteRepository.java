@@ -29,10 +29,6 @@ public interface UsuarioClienteRepository extends JpaRepository<UsuarioCliente, 
 
     boolean existsByUsername(String username);
 
-    default boolean existsByCorreoElectronico(String correoElectronico) {
-        return findByCliente_CorreoContacto(correoElectronico).isPresent();
-    }
-
     @Query("SELECT uc FROM UsuarioCliente uc JOIN FETCH uc.cliente c ORDER BY uc.idUsuarioCliente DESC")
     List<UsuarioCliente> findAllWithCliente();
 
@@ -41,20 +37,4 @@ public interface UsuarioClienteRepository extends JpaRepository<UsuarioCliente, 
 
     @Query("SELECT uc FROM UsuarioCliente uc JOIN FETCH uc.cliente c WHERE uc.idUsuarioCliente = :id")
     Optional<UsuarioCliente> findByIdWithCliente(@Param("id") Integer id);
-
-    @Query("SELECT uc FROM UsuarioCliente uc JOIN FETCH uc.cliente c " +
-           "WHERE (:idCliente IS NULL OR c.idCliente = :idCliente) " +
-           "AND (:soloActivos = false OR uc.estadoActivo = true) " +
-           "AND (:termino IS NULL OR :termino = '' OR (" +
-           "   LOWER(uc.username) LIKE LOWER(CONCAT('%', :termino, '%')) OR " +
-           "   LOWER(c.contactoRepresentante) LIKE LOWER(CONCAT('%', :termino, '%')) OR " +
-           "   LOWER(c.correoContacto) LIKE LOWER(CONCAT('%', :termino, '%')) OR " +
-           "   LOWER(c.razonSocial) LIKE LOWER(CONCAT('%', :termino, '%')) OR " +
-           "   c.numeroDocumento LIKE CONCAT('%', :termino, '%') " +
-           ")) " +
-           "ORDER BY uc.idUsuarioCliente DESC")
-    List<UsuarioCliente> buscarConFiltros(
-            @Param("idCliente") Integer idCliente,
-            @Param("soloActivos") boolean soloActivos,
-            @Param("termino") String termino);
 }

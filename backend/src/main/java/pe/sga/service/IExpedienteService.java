@@ -44,6 +44,10 @@ public interface IExpedienteService {
 
     ExpedienteResponseDTO confirmarIngresoOrigen(Integer idExpediente, ExpedienteIngresoOrigenDTO dto);
 
+    ExpedienteResponseDTO confirmarSalidaOrigen(Integer idExpediente, pe.sga.dto.request.ExpedienteSalidaOrigenDTO dto);
+
+    ExpedienteResponseDTO confirmarArriboDestino(Integer idExpediente, pe.sga.dto.request.ExpedienteArriboDestinoDTO dto);
+
     ExpedienteResponseDTO asignarCanal(Integer idExpediente, ExpedienteCanalDTO dto);
 
     ExpedienteResponseDTO registrarDiligencia(Integer idExpediente, ExpedienteDiligenciaDTO dto);

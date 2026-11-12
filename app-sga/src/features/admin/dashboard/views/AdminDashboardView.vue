@@ -366,12 +366,14 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useNavigationStore } from '@/core/stores/navigationStore'
+import { useAuthStore } from '@/features/auth/stores/authStore'
 import userService from '@/features/admin/users/services/userService'
 import logsService from '@/features/admin/services/logsService'
 import { ROLE_LABELS } from '@/core/auth/roles'
 
 const router = useRouter()
 const navigationStore = useNavigationStore()
+const authStore = useAuthStore()
 
 const loading = ref(false)
 const isBackendHealthy = ref(true)
@@ -422,7 +424,9 @@ const loadDashboardData = async () => {
     const [healthRes, usersRes, logsRes] = await Promise.allSettled([
       logsService.getHealth(),
       userService.getUsers(),
-      logsService.getLogs({ tipo: 'all', lines: 100 })
+      authStore.isAdministradorTI
+        ? logsService.getLogs({ tipo: 'all', lines: 100 })
+        : Promise.resolve(null)
     ])
 
     const endTime = performance.now()

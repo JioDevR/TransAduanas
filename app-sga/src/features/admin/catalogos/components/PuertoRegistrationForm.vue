@@ -722,7 +722,7 @@ defineExpose({
 }
 
 .code-input {
-  font-family: monospace;
+  font-family: var(--font-mono);
   font-weight: 700;
   letter-spacing: 0.04em;
 }

@@ -53,6 +53,16 @@ export const comercialService = {
     return response.data.data
   },
 
+  async getCotizacionesSinAsignar() {
+    const response = await apiClient.get('/cotizaciones/sin-asignar')
+    return response.data.data
+  },
+
+  async asignarCotizacion(id, payload = {}) {
+    const response = await apiClient.patch(`/cotizaciones/${id}/asignar`, payload)
+    return response.data.data
+  },
+
   async getCotizacionById(id) {
     const response = await apiClient.get(`/cotizaciones/${id}`)
     return response.data.data

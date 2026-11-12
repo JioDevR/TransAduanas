@@ -10,14 +10,14 @@ export const useNavigationStore = defineStore('navigation', {
     administracionTiSubOption: 'dashboard',
     // Sub-opciones en Gerencia General: 'dashboard' | 'sedes' | 'puertos' | 'tipos-carga' | 'mercancias' | 'flota' | 'conductores'
     gerenciaGeneralSubOption: 'dashboard',
-    // Sub-opciones en Recepción Comercial: 'dashboard' | 'cotizaciones' | 'clientes' | 'ordenes'
+    // Sub-opciones en Recepción Comercial: 'dashboard' | 'cotizaciones' | 'solicitudes' | 'clientes'
     comercialSubOption: 'dashboard',
-    // Sub-opciones en Gestión Aduanera: 'cotizaciones' | 'apertura' | 'expedientes' | 'declaraciones' | 'clasificacion' | 'tributos'
-    gestionAduaneraSubOption: 'cotizaciones',
-    // Sub-opciones en Agente Aduanero: 'almacen' | 'expedientes' | 'despacho'
-    agenteAduaneroSubOption: 'almacen',
-    // Sub-opciones en Transporte y Flota: 'despachos' | 'unidades' | 'conductores'
-    transporteFlotaSubOption: 'despachos',
+    // Sub-opciones en Gestión Aduanera: 'dashboard' | 'cotizaciones' | 'apertura' | 'expedientes' | 'declaraciones' | 'clasificacion' | 'tributos'
+    gestionAduaneraSubOption: 'dashboard',
+    // Sub-opciones en Agente Aduanero: 'dashboard' | 'todos' | 'transito' | 'inspeccion' | 'levante'
+    agenteAduaneroSubOption: 'dashboard',
+    // Sub-opciones en Transporte y Flota: 'dashboard' | 'despachos' | 'cabina' | 'unidades' | 'conductores'
+    transporteFlotaSubOption: 'dashboard',
     // Sub-opciones en Legal y Auditoría: 'expedientes' | 'auditorias'
     legalAuditoriaSubOption: 'expedientes',
     // Sub-opciones en Finanzas: 'dashboard' | 'pre-expedientes' | 'liquidaciones' | 'conciliacion'
@@ -110,8 +110,9 @@ export const useNavigationStore = defineStore('navigation', {
     },
 
     setComercialSubOption(option) {
-      if (this.comercialSubOption === option) return
-      this.comercialSubOption = option
+      const target = option === 'ordenes' ? 'cotizaciones' : option
+      if (this.comercialSubOption === target) return
+      this.comercialSubOption = target
       this.navTick++
     },
     setVentasSubOption(option) {
@@ -140,8 +141,12 @@ export const useNavigationStore = defineStore('navigation', {
     },
 
     setTransporteFlotaSubOption(option) {
-      if (this.transporteFlotaSubOption === option) return
-      this.transporteFlotaSubOption = option
+      let canon = option
+      if (option === 'camion') canon = 'cabina'
+      else if (option === 'viajes') canon = 'despachos'
+
+      if (this.transporteFlotaSubOption === canon) return
+      this.transporteFlotaSubOption = canon
       this.navTick++
     },
     setTransporteSubOption(option) {

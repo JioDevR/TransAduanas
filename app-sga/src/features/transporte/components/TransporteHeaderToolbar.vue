@@ -72,8 +72,8 @@ defineEmits(['recargar', 'programar-despacho'])
   flex-wrap: wrap;
   gap: 1rem;
   padding: 1.25rem 1.5rem;
-  background: var(--bg-surface, #ffffff);
-  border: 1px solid var(--border-color, #e5e7eb);
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-lg, 0.75rem);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
@@ -89,16 +89,16 @@ defineEmits(['recargar', 'programar-despacho'])
   font-size: 0.6875rem;
   font-weight: 700;
   letter-spacing: 0.08em;
-  color: var(--text-tertiary, #8c827a);
+  color: var(--color-text-subtle);
   text-transform: uppercase;
 }
 
 .toolbar-title {
   margin: 0;
-  font-family: var(--font-display, Georgia, serif);
+  font-family: var(--font-sans);
   font-size: 1.5rem;
   font-weight: 700;
-  color: var(--text-primary, #1e1b18);
+  color: var(--color-text-main);
   letter-spacing: -0.02em;
 }
 
@@ -113,21 +113,21 @@ defineEmits(['recargar', 'programar-despacho'])
   display: inline-flex;
   align-items: center;
   gap: 0.375rem;
-  font-family: var(--font-mono, monospace);
+  font-family: var(--font-mono);
   font-size: 0.6875rem;
   font-weight: 700;
-  color: #15803d;
-  background: #f0fdf4;
+  color: var(--color-success-text);
+  background: var(--color-success-bg);
   padding: 0.25rem 0.5rem;
   border-radius: 9999px;
-  border: 1px solid #bbf7d0;
+  border: 1px solid var(--color-success-border);
 }
 
 .live-dot {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #22c55e;
+  background: var(--color-success-text);
 }
 
 .live-dot.pulse {
@@ -145,11 +145,11 @@ defineEmits(['recargar', 'programar-despacho'])
   align-items: center;
   gap: 0.375rem;
   font-size: 0.75rem;
-  color: var(--text-secondary, #5c544d);
-  background: var(--bg-hover, #f5f4f0);
+  color: var(--color-text-muted);
+  background: var(--color-bg-subtle);
   padding: 0.25rem 0.625rem;
   border-radius: 9999px;
-  border: 1px solid var(--border-color, #e5e7eb);
+  border: 1px solid var(--color-border);
 }
 
 .toolbar-right {
@@ -162,9 +162,9 @@ defineEmits(['recargar', 'programar-despacho'])
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  background: #2b2621;
-  color: #ffffff;
-  border: 1px solid #1a1714;
+  background: var(--color-primary);
+  color: var(--color-primary-text);
+  border: 1px solid var(--color-primary);
   padding: 0.625rem 1rem;
   border-radius: var(--radius-md, 0.5rem);
   font-size: 0.875rem;
@@ -174,7 +174,8 @@ defineEmits(['recargar', 'programar-despacho'])
 }
 
 .btn-espresso:hover {
-  background: #1a1714;
+  background: var(--color-primary-hover);
+  border-color: var(--color-primary-hover);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
 }
 
@@ -183,8 +184,8 @@ defineEmits(['recargar', 'programar-despacho'])
   align-items: center;
   gap: 0.5rem;
   background: transparent;
-  color: var(--text-primary, #2b2621);
-  border: 1px solid var(--border-color, #dcd7ce);
+  color: var(--color-text-main);
+  border: 1px solid var(--color-border);
   padding: 0.625rem 0.875rem;
   border-radius: var(--radius-md, 0.5rem);
   font-size: 0.875rem;
@@ -194,6 +195,6 @@ defineEmits(['recargar', 'programar-despacho'])
 }
 
 .btn-outline-warm:hover:not(:disabled) {
-  background: var(--bg-hover, #f5f4f0);
+  background: var(--color-bg-subtle);
 }
 </style>

@@ -1,7 +1,7 @@
 <template>
   <div class="apertura-expediente-view fade-in">
     <!-- Header Bar de Apertura Formal -->
-    <div class="apertura-header-bar">
+    <div class="form-header-bar">
       <div class="header-titles">
         <div class="kicker-row">
           <span class="badge-kicker">CONTROL ADUANERO // FORMALIZACIÓN OPERATIVA</span>
@@ -10,8 +10,8 @@
             <span>FASE OPERATIVA: APERTURA DE EXPEDIENTE</span>
           </span>
         </div>
-        <h1 class="header-main-title">Apertura y Formalización de Expediente Aduanero</h1>
-        <p class="header-desc">
+        <h1 class="form-main-title">Apertura y Formalización de Expediente Aduanero</h1>
+        <p class="form-main-desc">
           Formalice las propuestas comerciales con visto bueno aduanero y abono verificado en Finanzas, asignando al agente especialista e iniciando la numeración y diligencia ante SUNAT.
         </p>
       </div>
@@ -151,7 +151,7 @@
               <div class="summary-col">
                 <span class="summary-label">CLIENTE IMPORTADOR/EXPORTADOR</span>
                 <strong class="summary-val">{{ activeCotizacion.clienteRazonSocial || '—' }}</strong>
-                <span class="summary-sub">RUC/Doc: {{ activeCotizacion.clienteNumeroDocumento }}</span>
+                <span class="summary-sub font-mono">RUC/Doc: {{ activeCotizacion.clienteNumeroDocumento }}</span>
               </div>
 
               <div class="summary-col">
@@ -170,14 +170,14 @@
 
               <div class="summary-col">
                 <span class="summary-label">TOTAL COTIZADO</span>
-                <strong class="summary-val text-accent">
+                <strong class="summary-val text-accent font-mono">
                   ${{ Number(activeCotizacion.totalCotizado || 0).toLocaleString('en-US', { minimumFractionDigits: 2 }) }} USD
                 </strong>
               </div>
 
               <div class="summary-col">
                 <span class="summary-label">ABONO FINANZAS</span>
-                <strong class="summary-val text-success">
+                <strong class="summary-val text-success font-mono">
                   <i class="pi pi-check-circle"></i>
                   ${{ Number(activeCotizacion.totalAbonado || 0).toLocaleString('en-US', { minimumFractionDigits: 2 }) }}
                 </strong>
@@ -337,7 +337,7 @@
           <div class="actions-left">
             <span class="required-note">* Agente aduanero responsable obligatorio.</span>
           </div>
-          <div class="actions-right">
+          <div class="actions-right header-actions">
             <button
               type="button"
               class="btn-outline-warm"
@@ -550,93 +550,26 @@ const handleSubmit = async () => {
   padding-bottom: 3rem;
 }
 
-/* Header Bar */
-.apertura-header-bar {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1.5rem;
-  background: var(--color-bg-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg, 12px);
-  padding: 1.5rem 1.75rem;
-  box-shadow: var(--shadow-subtle);
-}
-
-.kicker-row {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  margin-bottom: 0.5rem;
-}
-
-.badge-kicker {
-  font-size: 0.6875rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  color: var(--color-accent-kicker, #8a4b26);
-  background: var(--color-bg-subtle, #f5f2eb);
-  padding: 0.25rem 0.625rem;
-  border-radius: var(--radius-sm, 4px);
-  text-transform: uppercase;
-}
-
 .flow-pill {
   display: inline-flex;
   align-items: center;
   gap: 0.375rem;
   font-size: 0.6875rem;
   font-weight: 700;
-  color: #15803d;
-  background: #f0fdf4;
-  border: 1px solid #bbf7d0;
+  color: var(--color-success-text);
+  background: var(--color-success-bg);
+  border: 1px solid var(--color-success-border);
   padding: 0.25rem 0.625rem;
   border-radius: 9999px;
-}
-
-.header-main-title {
-  font-size: 1.5rem;
-  font-weight: 800;
-  color: var(--color-text-main);
-  letter-spacing: -0.02em;
-  margin: 0 0 0.5rem 0;
-}
-
-.header-desc {
-  font-size: 0.875rem;
-  color: var(--color-text-subtle);
-  line-height: 1.5;
-  margin: 0;
-  max-width: 850px;
-}
-
-.btn-outline-warm {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.625rem 1rem;
-  border: 1px solid var(--color-border);
-  background: var(--color-bg-surface);
-  color: var(--color-text-main);
-  border-radius: var(--radius-sm, 4px);
-  font-size: 0.8125rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.btn-outline-warm:hover:not(:disabled) {
-  border-color: var(--color-accent-copper, #c27847);
-  color: var(--color-accent-copper, #c27847);
 }
 
 .error-banner {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  background: #fef2f2;
-  border: 1px solid #fecaca;
-  color: #b91c1c;
+  background: var(--color-danger-bg);
+  border: 1px solid var(--color-danger-border);
+  color: var(--color-danger-text);
   padding: 0.875rem 1.25rem;
   border-radius: var(--radius-md, 8px);
   font-size: 0.875rem;
@@ -676,8 +609,9 @@ const handleSubmit = async () => {
 .badge-counter {
   font-size: 0.75rem;
   font-weight: 800;
-  background: rgba(138, 75, 38, 0.1);
-  color: var(--color-accent-kicker, #8a4b26);
+  background: var(--color-bg-subtle);
+  color: var(--color-accent-kicker);
+  border: 1px solid var(--color-border);
   padding: 0.35rem 0.75rem;
   border-radius: 999px;
   white-space: nowrap;
@@ -810,7 +744,7 @@ const handleSubmit = async () => {
 }
 
 .fin-val.text-success {
-  color: #16a34a !important;
+  color: var(--color-success-text) !important;
 }
 
 .btn-formalizar-card {
@@ -820,8 +754,8 @@ const handleSubmit = async () => {
   justify-content: center;
   gap: 0.5rem;
   padding: 0.65rem 1rem;
-  background: var(--color-accent-kicker, #8a4b26);
-  color: #ffffff;
+  background: var(--color-primary);
+  color: var(--color-primary-text);
   border: none;
   border-radius: var(--radius-sm);
   font-size: 0.8125rem;
@@ -831,7 +765,7 @@ const handleSubmit = async () => {
 }
 
 .btn-formalizar-card:hover {
-  background: #6d3a1d;
+  background: var(--color-primary-hover);
 }
 
 /* ============================================================== */
@@ -895,11 +829,11 @@ const handleSubmit = async () => {
 }
 
 .section-idx {
-  font-family: monospace;
+  font-family: var(--font-mono);
   font-size: 1rem;
   font-weight: 800;
-  color: var(--color-accent-kicker, #8a4b26);
-  background: #ffffff;
+  color: var(--color-accent-kicker);
+  background: var(--color-bg-surface);
   border: 1px solid var(--color-border);
   width: 2.25rem;
   height: 2.25rem;
@@ -1029,10 +963,14 @@ const handleSubmit = async () => {
   padding: 0.65rem 0.875rem;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm, 4px);
-  background: #ffffff;
+  background-color: var(--color-bg-surface);
   color: var(--color-text-main);
   font-size: 0.875rem;
   transition: all 0.2s ease;
+}
+
+.select-input {
+  padding-right: 2.25rem;
 }
 
 .input-with-icon select {
@@ -1043,12 +981,8 @@ const handleSubmit = async () => {
 .text-input:focus,
 .textarea-input:focus {
   outline: none;
-  border-color: var(--color-accent-copper, #c27847);
-  box-shadow: 0 0 0 3px rgba(194, 120, 71, 0.15);
-}
-
-.font-mono {
-  font-family: monospace;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(53, 47, 42, 0.15);
 }
 
 .uppercase {
@@ -1075,29 +1009,5 @@ const handleSubmit = async () => {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-}
-
-.btn-espresso {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.65rem 1.25rem;
-  background: var(--color-accent-kicker, #8a4b26);
-  color: #ffffff;
-  border: none;
-  border-radius: var(--radius-sm, 4px);
-  font-size: 0.875rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.btn-espresso:hover:not(:disabled) {
-  background: #6d3a1d;
-}
-
-.btn-espresso:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
 }
 </style>

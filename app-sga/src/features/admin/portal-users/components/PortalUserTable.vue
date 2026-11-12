@@ -103,7 +103,7 @@
               </div>
               <div v-if="user.telefonoContacto" class="contact-phone">
                 <i class="pi pi-phone"></i>
-                <span>{{ user.telefonoContacto }}</span>
+                <span class="font-mono">{{ user.telefonoContacto }}</span>
               </div>
             </div>
           </template>

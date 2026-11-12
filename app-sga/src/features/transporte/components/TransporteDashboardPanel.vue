@@ -294,8 +294,8 @@ const alertasDocumentarias = computed(() => {
 }
 
 .kpi-card {
-  background: var(--bg-surface, #ffffff);
-  border: 1px solid var(--border-color, #e5e7eb);
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-lg, 0.75rem);
   padding: 1.25rem;
   cursor: pointer;
@@ -308,7 +308,7 @@ const alertasDocumentarias = computed(() => {
 .kpi-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
-  border-color: #d1d5db;
+  border-color: var(--color-border-strong);
 }
 
 .kpi-card-header {
@@ -318,23 +318,23 @@ const alertasDocumentarias = computed(() => {
 }
 
 .kpi-num {
-  font-family: var(--font-mono, monospace);
+  font-family: var(--font-mono);
   font-size: 0.75rem;
   font-weight: 700;
-  color: var(--text-tertiary, #9ca3af);
+  color: var(--color-text-subtle);
 }
 
 .kpi-label {
   font-size: 0.8125rem;
   font-weight: 600;
-  color: var(--text-secondary, #4b5563);
+  color: var(--color-text-muted);
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
 
 .kpi-icon {
   font-size: 1.125rem;
-  color: var(--text-tertiary, #9ca3af);
+  color: var(--color-text-subtle);
 }
 
 .kpi-main-stat {
@@ -347,11 +347,11 @@ const alertasDocumentarias = computed(() => {
   font-size: 2.25rem;
   font-weight: 700;
   line-height: 1;
-  color: var(--text-primary, #111827);
+  color: var(--color-text-main);
 }
 
 .kpi-badge {
-  font-family: var(--font-mono, monospace);
+  font-family: var(--font-mono);
   font-size: 0.6875rem;
   font-weight: 700;
   padding: 0.2rem 0.5rem;
@@ -359,20 +359,20 @@ const alertasDocumentarias = computed(() => {
   text-transform: uppercase;
 }
 
-.kpi-badge.info { background: #eff6ff; color: #1d4ed8; }
-.kpi-badge.warning { background: #fffbeb; color: #b45309; }
-.kpi-badge.success { background: #f0fdf4; color: #15803d; }
-.kpi-badge.neutral { background: #f3f4f6; color: #4b5563; }
+.kpi-badge.info { background: var(--color-info-bg); color: var(--color-info-text); border: 1px solid var(--color-info-border); }
+.kpi-badge.warning { background: var(--color-warning-bg); color: var(--color-warning-text); border: 1px solid var(--color-warning-border); }
+.kpi-badge.success { background: var(--color-success-bg); color: var(--color-success-text); border: 1px solid var(--color-success-border); }
+.kpi-badge.neutral { background: var(--color-bg-muted); color: var(--color-text-muted); }
 
 .kpi-footer-note {
   font-size: 0.75rem;
-  color: var(--text-tertiary, #6b7280);
+  color: var(--color-text-subtle);
 }
 
 /* Alertas Técnicas */
 .alerts-section {
-  background: var(--bg-surface, #ffffff);
-  border: 1px solid var(--border-color, #e5e7eb);
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-lg, 0.75rem);
   padding: 1.25rem 1.5rem;
 }
@@ -394,13 +394,14 @@ const alertasDocumentarias = computed(() => {
   margin: 0;
   font-size: 0.9375rem;
   font-weight: 700;
-  color: var(--text-primary, #1f2937);
+  color: var(--color-text-main);
 }
 
 .alerts-counter {
   font-size: 0.75rem;
-  color: #b45309;
-  background: #fef3c7;
+  color: var(--color-warning-text);
+  background: var(--color-warning-bg);
+  border: 1px solid var(--color-warning-border);
   padding: 0.2rem 0.5rem;
   border-radius: 9999px;
   font-weight: 600;
@@ -422,15 +423,15 @@ const alertasDocumentarias = computed(() => {
 }
 
 .alert-card.warning {
-  background: #fffbeb;
-  border-color: #fde68a;
-  color: #92400e;
+  background: var(--color-warning-bg);
+  border-color: var(--color-warning-border);
+  color: var(--color-warning-text);
 }
 
 .alert-card.danger {
-  background: #fef2f2;
-  border-color: #fecaca;
-  color: #991b1b;
+  background: var(--color-danger-bg);
+  border-color: var(--color-danger-border);
+  color: var(--color-danger-text);
 }
 
 .alert-icon-wrap {
@@ -492,8 +493,8 @@ const alertasDocumentarias = computed(() => {
   align-items: center;
   gap: 1rem;
   padding: 1.125rem 1.25rem;
-  background: var(--bg-surface, #ffffff);
-  border: 1px solid var(--border-color, #e5e7eb);
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-lg, 0.75rem);
   cursor: pointer;
   transition: all 0.2s ease;
@@ -501,20 +502,20 @@ const alertasDocumentarias = computed(() => {
 
 .quick-action-card:hover {
   transform: translateY(-2px);
-  border-color: #b45309;
-  box-shadow: 0 4px 12px rgba(180, 83, 9, 0.08);
+  border-color: var(--color-primary);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 .action-icon-box {
   width: 2.75rem;
   height: 2.75rem;
   border-radius: var(--radius-md, 0.5rem);
-  background: var(--bg-hover, #f5f4f0);
+  background: var(--color-bg-subtle);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 1.25rem;
-  color: var(--text-primary, #1f2937);
+  color: var(--color-text-main);
 }
 
 .action-meta {
@@ -525,24 +526,24 @@ const alertasDocumentarias = computed(() => {
   margin: 0 0 0.25rem 0;
   font-size: 0.875rem;
   font-weight: 700;
-  color: var(--text-primary, #1f2937);
+  color: var(--color-text-main);
 }
 
 .action-meta p {
   margin: 0;
   font-size: 0.75rem;
-  color: var(--text-secondary, #6b7280);
+  color: var(--color-text-muted);
   line-height: 1.35;
 }
 
 .action-arrow {
-  color: var(--text-tertiary, #9ca3af);
+  color: var(--color-text-subtle);
   font-size: 0.875rem;
   transition: transform 0.2s ease;
 }
 
 .quick-action-card:hover .action-arrow {
   transform: translateX(4px);
-  color: #b45309;
+  color: var(--color-primary);
 }
 </style>

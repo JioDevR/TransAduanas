@@ -3,11 +3,11 @@
     <!-- ============================================================== -->
     <!-- 1. BARRA SUPERIOR DE NAVEGACIÓN Y CONMUTADOR DE HITOS          -->
     <!-- ============================================================== -->
-    <header class="operacion-top-bar">
-      <div class="top-bar-left">
+    <header class="form-header-bar">
+      <div class="header-titles">
         <button
           type="button"
-          class="btn-back-nav"
+          class="btn-back-link"
           @click="$emit('back')"
           title="Regresar a la vista anterior"
         >
@@ -25,33 +25,35 @@
       </div>
 
       <!-- Selector de Hito / Operación -->
-      <div class="hito-mode-switcher">
-        <button
-          type="button"
-          :class="['switcher-btn', { active: activeMode === 'salida' }]"
-          @click="activeMode = 'salida'"
-        >
-          <i class="pi pi-send"></i>
-          <span>1. Salida de Origen</span>
-        </button>
+      <div class="header-actions">
+        <div class="hito-mode-switcher">
+          <button
+            type="button"
+            :class="['switcher-btn', { active: activeMode === 'salida' }]"
+            @click="activeMode = 'salida'"
+          >
+            <i class="pi pi-send"></i>
+            <span>1. Salida de Origen</span>
+          </button>
 
-        <button
-          type="button"
-          :class="['switcher-btn', { active: activeMode === 'transito' }]"
-          @click="activeMode = 'transito'"
-        >
-          <i class="pi pi-globe"></i>
-          <span>2. Datos de Tránsito</span>
-        </button>
+          <button
+            type="button"
+            :class="['switcher-btn', { active: activeMode === 'transito' }]"
+            @click="activeMode = 'transito'"
+          >
+            <i class="pi pi-globe"></i>
+            <span>2. Datos de Tránsito</span>
+          </button>
 
-        <button
-          type="button"
-          :class="['switcher-btn', { active: activeMode === 'arribo' }]"
-          @click="activeMode = 'arribo'"
-        >
-          <i class="pi pi-compass"></i>
-          <span>3. Confirmar Arribo</span>
-        </button>
+          <button
+            type="button"
+            :class="['switcher-btn', { active: activeMode === 'arribo' }]"
+            @click="activeMode = 'arribo'"
+          >
+            <i class="pi pi-compass"></i>
+            <span>3. Confirmar Arribo</span>
+          </button>
+        </div>
       </div>
     </header>
 
@@ -72,7 +74,7 @@
           </span>
         </div>
 
-        <h1 class="hero-main-title">
+        <h1 class="hero-main-title font-mono">
           {{ expediente.codigoExpediente }}
         </h1>
 
@@ -80,12 +82,12 @@
           <span class="meta-item">
             <i class="pi pi-building"></i>
             <span>Cliente: <strong>{{ expediente.clienteRazonSocial || 'Cliente no registrado' }}</strong></span>
-            <span class="meta-sub" v-if="expediente.clienteRuc">(RUC {{ expediente.clienteRuc }})</span>
+            <span class="meta-sub font-mono" v-if="expediente.clienteRuc">(RUC {{ expediente.clienteRuc }})</span>
           </span>
           <span class="meta-divider">•</span>
           <span class="meta-item">
             <i class="pi pi-file"></i>
-            <span>Cotización: <strong>{{ expediente.codigoCotizacion || '—' }}</strong></span>
+            <span>Cotización: <strong class="font-mono">{{ expediente.codigoCotizacion || '—' }}</strong></span>
           </span>
           <span class="meta-divider">•</span>
           <span class="meta-item">
@@ -232,7 +234,7 @@
           @submit.prevent="handleSalidaSubmit"
           class="op-form-container"
         >
-          <div class="form-header-bar">
+          <div class="op-form-header">
             <div>
               <h2 class="form-title">
                 <i class="pi pi-send"></i>
@@ -435,7 +437,7 @@
           <footer class="op-form-footer">
             <button
               type="button"
-              class="btn-op-secondary"
+              class="btn-outline-warm"
               @click="$emit('back')"
               :disabled="loading"
             >
@@ -443,7 +445,7 @@
             </button>
             <button
               type="submit"
-              class="btn-op-primary"
+              class="btn-espresso"
               :disabled="loading || (tiempoTransitoCalculado && !tiempoTransitoCalculado.esValido)"
             >
               <i v-if="loading" class="pi pi-spin pi-spinner"></i>
@@ -461,7 +463,7 @@
           @submit.prevent="handleTransitoSubmit"
           class="op-form-container"
         >
-          <div class="form-header-bar">
+          <div class="op-form-header">
             <div>
               <h2 class="form-title">
                 <i class="pi pi-globe"></i>
@@ -568,7 +570,7 @@
           <footer class="op-form-footer">
             <button
               type="button"
-              class="btn-op-secondary"
+              class="btn-outline-warm"
               @click="$emit('back')"
               :disabled="loading"
             >
@@ -576,7 +578,7 @@
             </button>
             <button
               type="submit"
-              class="btn-op-primary"
+              class="btn-espresso"
               :disabled="loading"
             >
               <i v-if="loading" class="pi pi-spin pi-spinner"></i>
@@ -594,7 +596,7 @@
           @submit.prevent="handleArriboSubmit"
           class="op-form-container"
         >
-          <div class="form-header-bar">
+          <div class="op-form-header">
             <div>
               <h2 class="form-title">
                 <i class="pi pi-compass"></i>
@@ -687,7 +689,7 @@
           <footer class="op-form-footer">
             <button
               type="button"
-              class="btn-op-secondary"
+              class="btn-outline-warm"
               @click="$emit('back')"
               :disabled="loading"
             >
@@ -695,7 +697,7 @@
             </button>
             <button
               type="submit"
-              class="btn-op-success"
+              class="btn-espresso"
               :disabled="loading"
             >
               <i v-if="loading" class="pi pi-spin pi-spinner"></i>
@@ -1151,50 +1153,9 @@ const getEstadoBadgeClass = (est) => {
   flex-direction: column;
   gap: 1.5rem;
   padding: 1rem 1.5rem 3rem;
-  max-width: 1440px;
-  margin: 0 auto;
+  width: 100%;
   color: var(--color-text-main);
   box-sizing: border-box;
-}
-
-/* 1. Barra Superior */
-.operacion-top-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.75rem 1.25rem;
-  background: var(--color-bg-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg, 10px);
-  gap: 1rem;
-  flex-wrap: wrap;
-}
-
-.top-bar-left {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.btn-back-nav {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  padding: 0.45rem 0.85rem;
-  border-radius: var(--radius-sm, 6px);
-  border: 1px solid var(--color-border);
-  background: var(--color-bg-surface);
-  color: var(--color-text-muted);
-  font-size: 0.8125rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all var(--transition-fast, 0.15s ease);
-}
-
-.btn-back-nav:hover {
-  background: var(--color-bg-subtle);
-  color: var(--color-text-main);
-  border-color: var(--color-border-strong);
 }
 
 .breadcrumbs {
@@ -1603,7 +1564,7 @@ const getEstadoBadgeClass = (est) => {
   gap: 1.5rem;
 }
 
-.form-header-bar {
+.op-form-header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -1882,70 +1843,6 @@ const getEstadoBadgeClass = (est) => {
   gap: 1rem;
   padding-top: 1.25rem;
   border-top: 1px solid var(--color-border-subtle);
-}
-
-.btn-op-secondary {
-  padding: 0.65rem 1.35rem;
-  border-radius: var(--radius-sm, 6px);
-  border: 1px solid var(--color-border);
-  background: var(--color-bg-surface);
-  color: var(--color-text-muted);
-  font-size: 0.875rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all var(--transition-fast, 0.15s ease);
-}
-
-.btn-op-secondary:hover:not(:disabled) {
-  background: var(--color-bg-subtle);
-  color: var(--color-text-main);
-  border-color: var(--color-border-strong);
-}
-
-.btn-op-primary {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.65rem 1.65rem;
-  border-radius: var(--radius-sm, 6px);
-  border: 1px solid var(--color-primary);
-  background: var(--color-primary);
-  color: var(--color-primary-text);
-  font-size: 0.875rem;
-  font-weight: 800;
-  cursor: pointer;
-  transition: all var(--transition-fast, 0.15s ease);
-}
-
-.btn-op-primary:hover:not(:disabled) {
-  background: var(--color-primary-hover);
-  border-color: var(--color-primary-hover);
-}
-
-.btn-op-success {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.65rem 1.65rem;
-  border-radius: var(--radius-sm, 6px);
-  border: 1px solid var(--color-success-text);
-  background: var(--color-success-text);
-  color: #ffffff;
-  font-size: 0.875rem;
-  font-weight: 800;
-  cursor: pointer;
-  transition: all var(--transition-fast, 0.15s ease);
-}
-
-.btn-op-success:hover:not(:disabled) {
-  opacity: 0.9;
-}
-
-.btn-op-primary:disabled,
-.btn-op-success:disabled,
-.btn-op-secondary:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
 }
 
 @media (max-width: 1024px) {

@@ -40,7 +40,7 @@
           <div class="check-info">
             <span class="check-label">Entrega de Carga Verificada</span>
             <span v-if="expediente?.servicioTransporte" class="check-sub">
-              Transporte SGA: Tracking {{ expediente?.codigoTrackingTransporte || '—' }} ({{ expediente?.estadoTransporte || 'PENDIENTE' }})
+              Transporte SGA: Tracking <span class="font-mono">{{ expediente?.codigoTrackingTransporte || '—' }}</span> ({{ expediente?.estadoTransporte || 'PENDIENTE' }})
             </span>
             <span v-else class="check-sub">
               Retiro por el Cliente en Terminal Extraportuario
@@ -189,8 +189,8 @@ const handleSubmit = async () => {
   flex-direction: column;
   gap: 0.75rem;
   padding: 1rem;
-  background: #fdfbf7;
-  border: 1px solid #e2d7cd;
+  background: var(--color-bg-subtle);
+  border: 1px solid var(--color-border);
   border-radius: 6px;
 }
 
@@ -198,7 +198,7 @@ const handleSubmit = async () => {
   margin: 0 0 0.25rem 0;
   font-size: 0.8rem;
   font-weight: 700;
-  color: #3b2f2f;
+  color: var(--color-text-main);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -208,7 +208,7 @@ const handleSubmit = async () => {
   align-items: center;
   gap: 0.75rem;
   padding: 0.35rem 0;
-  border-bottom: 1px dashed #ebdcd0;
+  border-bottom: 1px dashed var(--color-border-subtle);
 }
 
 .check-row:last-child {
@@ -223,24 +223,24 @@ const handleSubmit = async () => {
 .check-label {
   font-size: 0.825rem;
   font-weight: 600;
-  color: #2b1d16;
+  color: var(--color-text-main);
 }
 
 .check-sub {
   font-size: 0.75rem;
-  color: #7a6e65;
+  color: var(--color-text-muted);
 }
 
 .text-success {
-  color: #16a34a;
+  color: var(--color-success-text);
 }
 
 .text-danger {
-  color: #dc2626;
+  color: var(--color-danger-text);
 }
 
 .text-warning {
-  color: #d97706;
+  color: var(--color-warning-text);
 }
 
 .field-item {
@@ -252,23 +252,23 @@ const handleSubmit = async () => {
 .field-item label {
   font-size: 0.75rem;
   font-weight: 700;
-  color: #3b2f2f;
+  color: var(--color-text-main);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
 
 .field-hint {
   font-size: 0.725rem;
-  color: #7a6e65;
+  color: var(--color-text-muted);
 }
 
 .textarea-input {
   width: 100%;
   padding: 0.65rem 0.85rem;
-  border: 1px solid #d4c5b9;
+  border: 1px solid var(--color-border);
   border-radius: 4px;
-  background: #fdfbf7;
-  color: #1a1515;
+  background: var(--color-bg-subtle);
+  color: var(--color-text-main);
   font-size: 0.875rem;
   resize: vertical;
   transition: all 0.2s ease;
@@ -276,9 +276,9 @@ const handleSubmit = async () => {
 
 .textarea-input:focus {
   outline: none;
-  border-color: #78350f;
-  background: #ffffff;
-  box-shadow: 0 0 0 2px rgba(120, 53, 15, 0.15);
+  border-color: var(--color-primary);
+  background: var(--color-bg-surface);
+  box-shadow: 0 0 0 2px rgba(53, 47, 42, 0.15);
 }
 
 .modal-actions {
@@ -286,14 +286,14 @@ const handleSubmit = async () => {
   justify-content: flex-end;
   gap: 0.75rem;
   padding-top: 1rem;
-  border-top: 1px solid #ebdcd0;
+  border-top: 1px solid var(--color-border-subtle);
 }
 
 .btn-modal-cancel {
   padding: 0.6rem 1.2rem;
   background: transparent;
-  border: 1px solid #c7b299;
-  color: #5c4033;
+  border: 1px solid var(--color-border);
+  color: var(--color-text-main);
   border-radius: 4px;
   font-size: 0.875rem;
   font-weight: 600;
@@ -302,7 +302,7 @@ const handleSubmit = async () => {
 }
 
 .btn-modal-cancel:hover:not(:disabled) {
-  background: #f5ede6;
+  background: var(--color-bg-subtle);
 }
 
 .btn-modal-save {
@@ -310,9 +310,9 @@ const handleSubmit = async () => {
   align-items: center;
   gap: 0.5rem;
   padding: 0.6rem 1.25rem;
-  background: #14532d;
-  border: 1px solid #0f3d21;
-  color: #ffffff;
+  background: var(--color-success-bg);
+  border: 1px solid var(--color-success-border);
+  color: var(--color-success-text);
   border-radius: 4px;
   font-size: 0.875rem;
   font-weight: 600;
@@ -321,7 +321,7 @@ const handleSubmit = async () => {
 }
 
 .btn-modal-save:hover:not(:disabled) {
-  background: #166534;
+  filter: brightness(0.95);
 }
 
 .btn-modal-save:disabled,

@@ -42,7 +42,6 @@
           <option value="finanzas">06 Finanzas</option>
           <option value="legal-auditoria">07 Legal y Auditoría</option>
         </select>
-        <i class="pi pi-chevron-down select-chevron-icon"></i>
       </div>
 
       <!-- Indicador Fijo para Operadores con Rol Específico -->
@@ -934,7 +933,7 @@ const handleFinanzasAction = (action) => {
   background-color: var(--color-bg-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
-  padding: 0.45rem 1.65rem 0.45rem 0.6rem;
+  padding: 0.45rem 2.25rem 0.45rem 0.6rem;
   font-size: 0.775rem;
   font-weight: 700;
   color: var(--color-text-main);
@@ -946,14 +945,6 @@ const handleFinanzasAction = (action) => {
 .module-custom-select:focus {
   border-color: var(--color-primary);
   box-shadow: 0 0 0 2px rgba(53, 47, 42, 0.15);
-}
-
-.select-chevron-icon {
-  position: absolute;
-  right: 0.55rem;
-  font-size: 0.65rem;
-  color: var(--color-text-subtle);
-  pointer-events: none;
 }
 
 .static-module-pill {

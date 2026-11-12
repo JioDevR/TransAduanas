@@ -1,31 +1,29 @@
 <template>
   <div class="cotizacion-correction-view fade-in">
     <!-- 1. Header Fijo de Control y Acciones -->
-    <header class="correction-header-bar">
-      <div class="header-left">
-        <button type="button" class="btn-back-action" @click="$emit('cancel')">
+    <header class="form-header-bar">
+      <div class="header-titles">
+        <button type="button" class="btn-back-link" @click="$emit('cancel')">
           <i class="pi pi-arrow-left"></i>
-          <span>Volver</span>
+          <span>Volver a Cotizaciones</span>
         </button>
-        <div class="header-titles">
-          <div class="badges-row">
-            <span class="badge-code">{{ form.codigoCotizacion || 'COT-SIN-CODIGO' }}</span>
-            <span class="badge-status-observed">
-              <i class="pi pi-exclamation-circle"></i>
-              <span>OBSERVADA / EN REVISIÓN</span>
-            </span>
-          </div>
-          <h2 class="header-main-title">Corrección de Propuesta Comercial</h2>
-          <p class="header-subtitle">
-            Ajuste los parámetros técnicos y económicos observados por Supervisión Aduanera en una sola vista.
-          </p>
+        <div class="kicker-row">
+          <span class="badge-code font-mono">{{ form.codigoCotizacion || 'COT-SIN-CODIGO' }}</span>
+          <span class="badge-status-observed">
+            <i class="pi pi-exclamation-circle"></i>
+            <span>OBSERVADA / EN REVISIÓN</span>
+          </span>
         </div>
+        <h2 class="form-main-title">Corrección de Propuesta Comercial</h2>
+        <p class="form-main-desc">
+          Ajuste los parámetros técnicos y económicos observados por Supervisión Aduanera en una sola vista.
+        </p>
       </div>
 
-      <div class="header-right-actions">
+      <div class="header-actions">
         <button
           type="button"
-          class="btn-cancel-flat"
+          class="btn-outline-warm"
           :disabled="submitting"
           @click="$emit('cancel')"
         >
@@ -33,7 +31,7 @@
         </button>
         <button
           type="button"
-          class="btn-submit-correction"
+          class="btn-espresso"
           :disabled="submitting"
           @click="handleSubmitCorrection"
         >
@@ -101,7 +99,7 @@
               <div class="client-meta">
                 <span class="client-label">Cliente Asignado:</span>
                 <strong class="client-name">{{ form.clienteRazonSocial || 'Sin Razón Social' }}</strong>
-                <span class="client-doc">Doc: {{ form.clienteNumeroDocumento || 'S/D' }}</span>
+                <span class="client-doc font-mono">Doc: {{ form.clienteNumeroDocumento || 'S/D' }}</span>
               </div>
               <div v-if="clientes && clientes.length > 0" class="field-group">
                 <label class="form-label-sub">Reasignar Cliente (Opcional):</label>
@@ -362,7 +360,7 @@
                         <label class="loc-label">Departamento *</label>
                         <select
                           v-model="form.origenDepartamento"
-                          class="sga-select-native"
+                          class="form-select"
                           @change="onOrigenDepartamentoChange"
                         >
                           <option v-for="dep in departamentosList" :key="'orig-' + dep" :value="dep">
@@ -375,7 +373,7 @@
                         <label class="loc-label">Provincia *</label>
                         <select
                           v-model="form.origenProvincia"
-                          class="sga-select-native"
+                          class="form-select"
                           :disabled="!form.origenDepartamento"
                         >
                           <option v-for="prov in provinciasOrigenList" :key="'orig-prov-' + prov" :value="prov">
@@ -397,7 +395,7 @@
                         <label class="loc-label">Departamento *</label>
                         <select
                           v-model="form.destinoDepartamento"
-                          class="sga-select-native"
+                          class="form-select"
                           @change="onDestinoDepartamentoChange"
                         >
                           <option v-for="dep in departamentosList" :key="'dest-' + dep" :value="dep">
@@ -410,7 +408,7 @@
                         <label class="loc-label">Provincia *</label>
                         <select
                           v-model="form.destinoProvincia"
-                          class="sga-select-native"
+                          class="form-select"
                           :disabled="!form.destinoDepartamento"
                         >
                           <option v-for="prov in provinciasDestinoList" :key="'dest-prov-' + prov" :value="prov">
@@ -613,38 +611,38 @@
               <div class="liq-rows-list">
                 <div class="liq-row">
                   <span class="liq-label">Valor CIF Calculado (FOB + Flete + Seguro):</span>
-                  <strong class="liq-val">${{ formatMoney(valorCif) }} USD</strong>
+                  <strong class="liq-val font-mono">${{ formatMoney(valorCif) }} USD</strong>
                 </div>
 
                 <template v-if="form.regimenAduanero !== 'EXPORTACION_DEFINITIVA'">
                   <div class="liq-row">
                     <span class="liq-label">Ad-Valórem (Arancel {{ form.tasaAdValorem }}%):</span>
-                    <span class="liq-val">${{ formatMoney(montoAdValorem) }} USD</span>
+                    <span class="liq-val font-mono">${{ formatMoney(montoAdValorem) }} USD</span>
                   </div>
 
                   <div class="liq-row">
                     <span class="liq-label">IGV (16%) + IPM (2%) = 18%:</span>
-                    <span class="liq-val">${{ formatMoney(montoIgv) }} USD</span>
+                    <span class="liq-val font-mono">${{ formatMoney(montoIgv) }} USD</span>
                   </div>
 
                   <div class="liq-row">
                     <span class="liq-label">Percepción SUNAT ({{ form.tasaPercepcion }}%):</span>
-                    <span class="liq-val">${{ formatMoney(montoPercepcion) }} USD</span>
+                    <span class="liq-val font-mono">${{ formatMoney(montoPercepcion) }} USD</span>
                   </div>
 
                   <div class="liq-row liq-subtotal-tributos">
                     <span class="liq-label">Total Tributos de Importación:</span>
-                    <strong class="liq-val">${{ formatMoney(form.montoTributosEstimado) }} USD</strong>
+                    <strong class="liq-val font-mono">${{ formatMoney(form.montoTributosEstimado) }} USD</strong>
                   </div>
 
                   <div v-if="form.servicioTransporte && form.costoTransporteInterno > 0" class="liq-row">
                     <span class="liq-label">Transporte Terrestre Local (SGA):</span>
-                    <span class="liq-val">${{ formatMoney(form.costoTransporteInterno) }} USD</span>
+                    <span class="liq-val font-mono">${{ formatMoney(form.costoTransporteInterno) }} USD</span>
                   </div>
 
                   <div v-if="form.montoHonorariosEstimado > 0" class="liq-row">
                     <span class="liq-label">Comisión Agenciamiento / Honorarios:</span>
-                    <span class="liq-val">${{ formatMoney(form.montoHonorariosEstimado) }} USD</span>
+                    <span class="liq-val font-mono">${{ formatMoney(form.montoHonorariosEstimado) }} USD</span>
                   </div>
                 </template>
                 <div v-else class="liq-row export-exempt-badge">
@@ -660,7 +658,7 @@
                 </div>
                 <div class="total-amount-box">
                   <span class="total-currency">USD</span>
-                  <span class="total-number">${{ formatMoney(form.totalCotizado) }}</span>
+                  <span class="total-number font-mono">${{ formatMoney(form.totalCotizado) }}</span>
                 </div>
               </div>
             </div>
@@ -1052,54 +1050,8 @@ defineExpose({
   width: 100%;
 }
 
-/* 1. Header Bar */
-.correction-header-bar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: var(--space-6, 1.5rem);
-  padding: var(--space-5, 1.25rem) var(--space-6, 1.5rem);
-  background: var(--color-bg-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-xl, 1rem);
-  box-shadow: var(--shadow-subtle);
-  flex-wrap: wrap;
-}
-
-.header-left {
-  display: flex;
-  align-items: center;
-  gap: var(--space-4, 1rem);
-}
-
-.btn-back-action {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.6rem 1rem;
-  background: var(--color-bg-subtle);
-  border: 1px solid var(--color-border);
-  border-radius: 0.5rem;
-  color: var(--color-text-main);
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.btn-back-action:hover {
-  background: var(--color-bg-muted);
-  border-color: var(--color-border-strong);
-}
-
-.badges-row {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 0.25rem;
-}
-
 .badge-code {
-  font-family: var(--font-mono, monospace);
+  font-family: var(--font-mono);
   font-size: 0.85rem;
   font-weight: 700;
   padding: 0.2rem 0.55rem;
@@ -1120,65 +1072,6 @@ defineExpose({
   color: var(--color-warning-text);
   border: 1px solid var(--color-warning-border);
   border-radius: 0.35rem;
-}
-
-.header-main-title {
-  margin: 0;
-  font-size: 1.4rem;
-  font-weight: 800;
-  color: var(--color-text-main);
-}
-
-.header-subtitle {
-  margin: 0.15rem 0 0 0;
-  font-size: 0.88rem;
-  color: var(--color-text-muted);
-}
-
-.header-right-actions {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.btn-cancel-flat {
-  padding: 0.65rem 1.2rem;
-  background: var(--color-bg-subtle);
-  border: 1px solid var(--color-border);
-  border-radius: 0.6rem;
-  color: var(--color-text-main);
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.btn-cancel-flat:hover {
-  background: var(--color-bg-muted);
-}
-
-.btn-submit-correction {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.65rem 1.4rem;
-  background: var(--color-primary);
-  border: 1px solid var(--color-primary);
-  color: var(--color-primary-text);
-  border-radius: 0.6rem;
-  font-weight: 700;
-  cursor: pointer;
-  box-shadow: var(--shadow-subtle);
-  transition: all 0.2s ease;
-}
-
-.btn-submit-correction:hover:not(:disabled) {
-  background: var(--color-primary-hover);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-card);
-}
-
-.btn-submit-correction:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
 }
 
 /* Error Banner */
@@ -1512,7 +1405,7 @@ defineExpose({
 }
 
 .port-code {
-  font-family: monospace;
+  font-family: var(--font-mono);
   font-weight: 700;
   font-size: 0.8rem;
   background: var(--color-bg-subtle);
@@ -2069,21 +1962,6 @@ defineExpose({
   font-size: 0.75rem;
   font-weight: 700;
   color: var(--color-text-muted);
-}
-
-.sga-select-native {
-  width: 100%;
-  padding: 0.55rem 0.65rem;
-  border: 1px solid var(--color-border);
-  border-radius: 0.45rem;
-  font-size: 0.85rem;
-  background-color: var(--color-bg-surface);
-  color: var(--color-text-main);
-  outline: none;
-}
-
-.sga-select-native:focus {
-  border-color: var(--color-primary);
 }
 
 .route-cost-row {

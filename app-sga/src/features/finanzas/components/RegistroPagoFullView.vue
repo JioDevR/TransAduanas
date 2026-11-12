@@ -1442,11 +1442,15 @@ async function handleSubmit() {
   padding: 0.65rem 0.9rem;
   font-size: 0.875rem;
   color: var(--color-text-main);
-  background: var(--color-bg-surface);
+  background-color: var(--color-bg-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md, 0.5rem);
   outline: none;
   transition: all var(--transition-fast);
+}
+
+.form-select {
+  padding-right: 2.25rem;
 }
 
 .input-icon-box .form-input,

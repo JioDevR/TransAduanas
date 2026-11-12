@@ -558,7 +558,7 @@ const getPercentage = (count, total) => {
 .kpi-index {
   font-size: 0.75rem;
   font-weight: 800;
-  font-family: monospace;
+  font-family: var(--font-mono);
   color: var(--color-text-muted);
   opacity: 0.7;
 }
@@ -594,7 +594,7 @@ const getPercentage = (count, total) => {
   font-size: 2rem;
   font-weight: 800;
   line-height: 1;
-  font-family: monospace;
+  font-family: var(--font-mono);
   color: var(--color-text-main);
 }
 

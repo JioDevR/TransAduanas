@@ -833,7 +833,7 @@ onMounted(() => {
 
 /* Celdas Custom en Tabla */
 .code-badge {
-  font-family: monospace;
+  font-family: var(--font-mono);
   font-size: 0.775rem;
   font-weight: 800;
   color: var(--color-accent-kicker);

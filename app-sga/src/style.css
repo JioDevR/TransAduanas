@@ -703,9 +703,9 @@ button, input, select, textarea {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  background: #b91c1c;
-  color: #ffffff !important;
-  border: 1px solid #991b1b;
+  background: var(--color-danger-bg);
+  color: var(--color-danger-text) !important;
+  border: 1px solid var(--color-danger-border);
   padding: 0.55rem 1rem;
   border-radius: var(--radius-sm, 6px);
   font-size: 0.85rem;
@@ -715,7 +715,9 @@ button, input, select, textarea {
 }
 
 .btn-danger-action:hover:not(:disabled) {
-  background: #991b1b;
+  background: var(--color-danger-text);
+  color: var(--color-bg-surface) !important;
+  border-color: var(--color-danger-text);
 }
 
 .btn-danger-action:disabled {
@@ -724,14 +726,15 @@ button, input, select, textarea {
 }
 
 .dark-theme .btn-danger-action {
-  background: #7f1d1d !important;
-  color: #fecaca !important;
-  border-color: #991b1b !important;
+  background: var(--color-danger-bg) !important;
+  color: var(--color-danger-text) !important;
+  border-color: var(--color-danger-border) !important;
 }
 
 .dark-theme .btn-danger-action:hover:not(:disabled) {
-  background: #991b1b !important;
-  color: #ffffff !important;
+  background: var(--color-danger-text) !important;
+  color: var(--color-bg-surface) !important;
+  border-color: var(--color-danger-text) !important;
 }
 
 /* ==========================================================================
@@ -1328,29 +1331,29 @@ textarea.textarea-input:disabled {
 }
 
 .dark-theme .base-modal__header {
-  background: #1c1814;
+  background: var(--color-bg-subtle);
   border-bottom-color: var(--color-border-subtle);
 }
 
 .dark-theme .base-modal__icon {
-  background: #2a231d;
+  background: var(--color-bg-muted);
   color: var(--color-primary);
   border-color: var(--color-border);
 }
 
 .dark-theme .base-modal__close:hover:not(:disabled) {
-  background: #2c251e;
+  background: var(--color-bg-muted);
   color: var(--color-text-main);
 }
 
 .dark-theme .btn-modal-cancel {
-  background: #241f1a;
+  background: var(--color-bg-surface);
   border-color: var(--color-border);
   color: var(--color-text-main);
 }
 
 .dark-theme .btn-modal-cancel:hover:not(:disabled) {
-  background: #2e2821;
+  background: var(--color-bg-subtle);
 }
 
 /* PrimeVue Diálogos */
@@ -1554,14 +1557,14 @@ textarea.textarea-input:disabled {
 .dark-theme .search-input,
 .dark-theme .table-search-input,
 .dark-theme .filter-select {
-  background: var(--color-bg-surface) !important;
+  background-color: var(--color-bg-surface) !important;
   border-color: var(--color-border) !important;
   color: var(--color-text-main) !important;
 }
 
 .dark-theme .filter-select option,
 .dark-theme select option {
-  background: var(--color-bg-surface) !important;
+  background-color: var(--color-bg-surface) !important;
   color: var(--color-text-main) !important;
 }
 
@@ -1725,7 +1728,7 @@ textarea.textarea-input:disabled {
 }
 
 .dark-theme .module-custom-select {
-  background: var(--color-bg-surface);
+  background-color: var(--color-bg-surface);
   border-color: var(--color-border);
   color: var(--color-text-main);
 }

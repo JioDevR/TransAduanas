@@ -55,17 +55,17 @@
         <!-- Identificación Principal del Despacho -->
         <div class="card-identity">
           <div class="code-and-dam">
-            <h3 class="codigo-expediente" @click="$emit('detalle', exp)" title="Clic para ver informe completo">
+            <h3 class="codigo-expediente font-mono" @click="$emit('detalle', exp)" title="Clic para ver informe completo">
               {{ exp.codigoExpediente }}
             </h3>
-            <span class="cotizacion-ref" v-if="exp.codigoCotizacion">
+            <span class="cotizacion-ref font-mono" v-if="exp.codigoCotizacion">
               Ref: {{ exp.codigoCotizacion }}
             </span>
           </div>
 
           <div class="dam-badge">
             <span class="dam-lbl">DAM SUNAT</span>
-            <span class="dam-val">{{ exp.numeroDam || 'Sin numerar' }}</span>
+            <span class="dam-val font-mono">{{ exp.numeroDam || 'Sin numerar' }}</span>
           </div>
         </div>
 
@@ -100,7 +100,7 @@
             </div>
             <div class="logistics-col">
               <span class="log-lbl">{{ isExport(exp) ? 'Embarque:' : 'Arribo a Destino:' }}</span>
-              <span class="log-val date-val">
+              <span class="log-val date-val font-mono">
                 {{ getFechaHito(exp) }}
               </span>
             </div>
@@ -721,6 +721,7 @@ const getProgressTitle = (exp) => {
 
 .codigo-expediente {
   margin: 0;
+  font-family: var(--font-mono);
   font-size: 1.15rem;
   font-weight: 800;
   color: var(--color-text-main);

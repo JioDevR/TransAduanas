@@ -369,8 +369,7 @@ onMounted(() => {
   flex-direction: column;
   gap: 1.25rem;
   padding: 1.5rem;
-  max-width: 1440px;
-  margin: 0 auto;
+  width: 100%;
 }
 
 .transporte-tabs-nav {
@@ -378,7 +377,7 @@ onMounted(() => {
   align-items: center;
   gap: 0.5rem;
   overflow-x: auto;
-  border-bottom: 1px solid var(--border-color, #e5e7eb);
+  border-bottom: 1px solid var(--color-border);
   padding-bottom: 0.5rem;
 }
 
@@ -392,48 +391,48 @@ onMounted(() => {
   border: 1px solid transparent;
   font-size: 0.8125rem;
   font-weight: 600;
-  color: var(--text-secondary, #5c544d);
+  color: var(--color-text-muted);
   cursor: pointer;
   white-space: nowrap;
   transition: all 0.15s ease;
 }
 
 .tab-btn:hover {
-  background: var(--bg-hover, #f5f4f0);
-  color: var(--text-primary, #1e1b18);
+  background: var(--color-bg-subtle);
+  color: var(--color-text-main);
 }
 
 .tab-btn.active {
-  background: var(--bg-surface, #ffffff);
-  color: #b45309;
-  border-color: #dcd7ce;
+  background: var(--color-bg-surface);
+  color: var(--color-primary);
+  border-color: var(--color-border);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .tab-num {
-  font-family: var(--font-mono, monospace);
+  font-family: var(--font-mono);
   font-size: 0.6875rem;
-  color: var(--text-tertiary, #9ca3af);
+  color: var(--color-text-subtle);
 }
 
 .tab-badge {
-  font-family: var(--font-mono, monospace);
+  font-family: var(--font-mono);
   font-size: 0.6875rem;
-  background: var(--bg-hover, #f5f4f0);
+  background: var(--color-bg-subtle);
   padding: 0.1rem 0.4rem;
   border-radius: 9999px;
-  color: var(--text-secondary, #5c544d);
+  color: var(--color-text-muted);
 }
 
 .tab-badge-pulse {
-  font-family: var(--font-mono, monospace);
+  font-family: var(--font-mono);
   font-size: 0.6875rem;
   font-weight: 700;
-  background: #eff6ff;
-  color: #1d4ed8;
+  background: var(--color-info-bg);
+  color: var(--color-info-text);
   padding: 0.1rem 0.5rem;
   border-radius: 9999px;
-  border: 1px solid #bfdbfe;
+  border: 1px solid var(--color-info-border);
 }
 
 .transporte-content-area {
@@ -450,7 +449,7 @@ onMounted(() => {
 .incidencia-subtitle {
   margin: 0;
   font-size: 0.875rem;
-  color: var(--text-secondary, #5c544d);
+  color: var(--color-text-muted);
 }
 
 .form-group {
@@ -462,13 +461,15 @@ onMounted(() => {
 .form-label {
   font-size: 0.8125rem;
   font-weight: 600;
-  color: var(--text-primary, #1e1b18);
+  color: var(--color-text-main);
 }
 
 .form-textarea {
   width: 100%;
   padding: 0.75rem;
-  border: 1px solid var(--border-color, #dcd7ce);
+  background-color: var(--color-bg-surface);
+  color: var(--color-text-main);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-md, 0.5rem);
   font-size: 0.875rem;
   font-family: inherit;
@@ -486,9 +487,9 @@ onMounted(() => {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  background: #2b2621;
-  color: #ffffff;
-  border: 1px solid #1a1714;
+  background: var(--color-primary);
+  color: var(--color-primary-text);
+  border: 1px solid var(--color-primary);
   padding: 0.625rem 1rem;
   border-radius: var(--radius-md, 0.5rem);
   font-size: 0.875rem;
@@ -496,17 +497,26 @@ onMounted(() => {
   cursor: pointer;
 }
 
+.btn-espresso:hover:not(:disabled) {
+  background: var(--color-primary-hover);
+  border-color: var(--color-primary-hover);
+}
+
 .btn-outline-warm {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
   background: transparent;
-  color: var(--text-primary, #2b2621);
-  border: 1px solid var(--border-color, #dcd7ce);
+  color: var(--color-text-main);
+  border: 1px solid var(--color-border);
   padding: 0.625rem 0.875rem;
   border-radius: var(--radius-md, 0.5rem);
   font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
+}
+
+.btn-outline-warm:hover:not(:disabled) {
+  background: var(--color-bg-subtle);
 }
 </style>

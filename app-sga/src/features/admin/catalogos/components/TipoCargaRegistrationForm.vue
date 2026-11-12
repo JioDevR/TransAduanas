@@ -975,7 +975,7 @@ defineExpose({
 }
 
 .code-input {
-  font-family: monospace;
+  font-family: var(--font-mono);
   font-weight: 800;
   letter-spacing: 0.06em;
   font-size: var(--font-size-md, 1rem);
@@ -1253,7 +1253,7 @@ defineExpose({
 
 .card-code-pill {
   display: inline-block;
-  font-family: monospace;
+  font-family: var(--font-mono);
   font-size: var(--font-size-xs, 0.75rem);
   font-weight: 800;
   letter-spacing: 0.06em;

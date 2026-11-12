@@ -34,7 +34,7 @@
 
           <span v-if="activeData.codigoExpediente" class="exp-linked-badge">
             <i class="pi pi-folder"></i>
-            <span>EXPEDIENTE: {{ activeData.codigoExpediente }}</span>
+            <span>EXPEDIENTE: <span class="font-mono">{{ activeData.codigoExpediente }}</span></span>
           </span>
         </div>
 

@@ -252,7 +252,8 @@ defineEmits([
 .supervisor-select {
   height: 100%;
   border: none;
-  background: transparent;
+  background-color: var(--color-bg-surface);
+  padding-right: 2.25rem;
   font-size: var(--font-size-sm, 0.8125rem);
   font-weight: 600;
   color: var(--color-text-main);
@@ -262,11 +263,11 @@ defineEmits([
 
 .filter-select {
   height: 38px;
-  padding: 0 0.75rem;
+  padding: 0 2.25rem 0 0.75rem;
   font-size: var(--font-size-sm, 0.8125rem);
   font-weight: 500;
   color: var(--color-text-main);
-  background: var(--color-bg-surface);
+  background-color: var(--color-bg-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm, 6px);
   outline: none;

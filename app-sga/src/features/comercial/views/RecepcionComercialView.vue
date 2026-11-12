@@ -290,7 +290,7 @@
                   <td>
                     <div class="client-cell">
                       <span class="client-name">{{ c.clienteRazonSocial || 'Cliente N/A' }}</span>
-                      <span class="client-sub">{{ c.clienteNumeroDocumento }}</span>
+                      <span class="client-sub font-mono">{{ c.clienteNumeroDocumento }}</span>
                     </div>
                   </td>
                   <td>
@@ -495,7 +495,7 @@
               <div class="client-cell">
                 <span class="client-name">{{ c.clienteRazonSocial || 'Cliente N/A' }}</span>
                 <div class="client-sub-meta">
-                  <span class="client-sub">{{ c.clienteNumeroDocumento }}</span>
+                  <span class="client-sub font-mono">{{ c.clienteNumeroDocumento }}</span>
                   <span v-if="c.clienteTieneUsuario" class="portal-badge origin-badge origin-portal" title="Empresa formalizada con usuario activo en Portal B2B">
                     <i class="pi pi-id-card"></i> Portal B2B
                   </span>
@@ -528,7 +528,7 @@
                 severity="warn"
                 rounded
               />
-              <span v-else class="total-amount">${{ Number(c.totalCotizado || 0).toLocaleString('en-US', { minimumFractionDigits: 2 }) }}</span>
+              <span v-else class="total-amount font-mono">${{ Number(c.totalCotizado || 0).toLocaleString('en-US', { minimumFractionDigits: 2 }) }}</span>
             </template>
           </Column>
 
@@ -568,7 +568,7 @@
                   :severity="getEstadoPagoSeverity(c.estadoPago)"
                   rounded
                 />
-                <span v-if="c.totalAbonado > 0" class="client-sub" style="color: #15803d; font-weight: 600;">
+                <span v-if="c.totalAbonado > 0" class="client-sub font-mono" style="color: var(--color-success-text); font-weight: 600;">
                   Abono: ${{ Number(c.totalAbonado).toLocaleString('en-US', { minimumFractionDigits: 2 }) }}
                 </span>
                 <span v-else class="client-sub text-muted">
@@ -581,13 +581,13 @@
 
           <Column header="Expediente Aduanero">
             <template #body="{ data: c }">
-              <span v-if="c.tieneExpediente" class="os-linked-tag">
+              <span v-if="c.tieneExpediente" class="os-linked-tag font-mono">
                 <i class="pi pi-folder"></i> {{ c.codigoExpediente }}
               </span>
-              <span v-else-if="c.estado === 'APROBADA' && c.tienePagoAprobado" class="text-muted-dash" style="color: #15803d; font-weight: 600;">
+              <span v-else-if="c.estado === 'APROBADA' && c.tienePagoAprobado" class="text-muted-dash" style="color: var(--color-success-text); font-weight: 600;">
                 Aprobada (Pago Validado)
               </span>
-              <span v-else-if="c.estado === 'APROBADA'" class="text-muted-dash" style="color: #b45309;">
+              <span v-else-if="c.estado === 'APROBADA'" class="text-muted-dash" style="color: var(--color-warning-text);">
                 Aprobada (Requiere Pago Finanzas)
               </span>
               <span v-else class="text-muted-dash">—</span>
@@ -939,7 +939,7 @@
               <div class="client-cell">
                 <span class="client-name">{{ s.clienteRazonSocial || 'Cliente N/A' }}</span>
                 <div class="client-sub-meta">
-                  <span class="client-sub">{{ s.clienteNumeroDocumento }}</span>
+                  <span class="client-sub font-mono">{{ s.clienteNumeroDocumento }}</span>
                   <span class="portal-badge origin-badge origin-portal">
                     <i class="pi pi-id-card"></i> Portal B2B
                   </span>
@@ -965,7 +965,7 @@
               <div class="client-cell">
                 <template v-if="Number(s.totalCotizado || 0) <= 0">
                   <Tag value="Por liquidar" severity="warn" rounded />
-                  <span class="client-sub">
+                  <span class="client-sub font-mono">
                     FOB: ${{ Number(s.valorFob || 0).toLocaleString('en-US', { minimumFractionDigits: 2 }) }}
                     <template v-if="Number(s.montoFleteEstimado || 0) > 0">
                       • Flete decl.: ${{ Number(s.montoFleteEstimado || 0).toLocaleString('en-US', { minimumFractionDigits: 2 }) }}
@@ -973,8 +973,8 @@
                   </span>
                 </template>
                 <template v-else>
-                  <span class="total-amount">${{ Number(s.totalCotizado || 0).toLocaleString('en-US', { minimumFractionDigits: 2 }) }}</span>
-                  <span class="client-sub">FOB: ${{ Number(s.valorFob || 0).toLocaleString('en-US', { minimumFractionDigits: 2 }) }}</span>
+                  <span class="total-amount font-mono">${{ Number(s.totalCotizado || 0).toLocaleString('en-US', { minimumFractionDigits: 2 }) }}</span>
+                  <span class="client-sub font-mono">FOB: ${{ Number(s.valorFob || 0).toLocaleString('en-US', { minimumFractionDigits: 2 }) }}</span>
                 </template>
               </div>
             </template>
@@ -2322,7 +2322,7 @@ onMounted(() => {
 .doc-code {
   font-weight: 700;
   color: var(--color-text-main);
-  font-family: monospace;
+  font-family: var(--font-mono);
   font-size: 0.85rem;
 }
 
@@ -2333,7 +2333,7 @@ onMounted(() => {
   border: 1px solid var(--color-success-border);
   padding: 0.2rem 0.5rem;
   border-radius: 4px;
-  font-family: monospace;
+  font-family: var(--font-mono);
   font-size: 0.85rem;
 }
 
@@ -2505,7 +2505,7 @@ onMounted(() => {
 
 .doc-number {
   font-weight: 700;
-  font-family: monospace;
+  font-family: var(--font-mono);
 }
 
 .contact-text,

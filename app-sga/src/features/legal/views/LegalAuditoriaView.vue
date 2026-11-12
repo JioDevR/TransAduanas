@@ -693,7 +693,7 @@ onMounted(() => {
 }
 
 .badge-kicker {
-  font-family: var(--font-family-mono, monospace);
+  font-family: var(--font-mono);
   font-size: var(--font-size-xs, 0.75rem);
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -826,7 +826,7 @@ onMounted(() => {
   font-size: 0.7rem;
   padding: 0.1rem 0.45rem;
   border-radius: 12px;
-  font-family: var(--font-family-mono, monospace);
+  font-family: var(--font-mono);
 }
 
 .tab-counter-danger {
@@ -836,7 +836,7 @@ onMounted(() => {
   font-size: 0.7rem;
   padding: 0.1rem 0.45rem;
   border-radius: 12px;
-  font-family: var(--font-family-mono, monospace);
+  font-family: var(--font-mono);
   font-weight: 700;
 }
 
@@ -882,7 +882,7 @@ onMounted(() => {
 }
 
 .kpi-index {
-  font-family: var(--font-family-mono, monospace);
+  font-family: var(--font-mono);
   font-size: var(--font-size-xs, 0.75rem);
   font-weight: 700;
   color: var(--color-text-subtle, #998c7e);

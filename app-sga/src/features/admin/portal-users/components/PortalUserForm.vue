@@ -19,7 +19,8 @@
             <span class="badge-kicker">PLANTILLA DE ACCESO B2B // PORTAL DE CLIENTES</span>
             <span :class="['mode-pill', isEditMode ? 'mode-edit' : 'mode-create']">
               <i :class="isEditMode ? 'pi pi-user-edit' : 'pi pi-user-plus'"></i>
-              {{ isEditMode ? `MODO EDICIÓN (ID #${userToEdit?.idUsuarioCliente})` : 'NUEVO USUARIO CLIENTE' }}
+              <template v-if="isEditMode">MODO EDICIÓN (<span class="font-mono">ID #{{ userToEdit?.idUsuarioCliente }}</span>)</template>
+              <template v-else>NUEVO USUARIO CLIENTE</template>
             </span>
           </div>
           <h2 class="form-main-title">
@@ -268,7 +269,7 @@
                   id="telefono-input"
                   v-model="form.telefonoContacto"
                   type="text"
-                  class="custom-input"
+                  class="custom-input font-mono"
                   placeholder="ej. +51 987 654 321"
                   :disabled="submitting"
                 />
@@ -315,7 +316,7 @@
             </div>
             <div class="preview-item">
               <span class="p-label">Teléfono:</span>
-              <span class="p-val">{{ form.telefonoContacto || 'No registrado' }}</span>
+              <span class="p-val font-mono">{{ form.telefonoContacto || 'No registrado' }}</span>
             </div>
             <div class="preview-item">
               <span class="p-label">Estado:</span>

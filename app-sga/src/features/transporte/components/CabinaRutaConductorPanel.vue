@@ -283,8 +283,8 @@ const formatDateTime = (val) => {
   align-items: center;
   flex-wrap: wrap;
   gap: 0.75rem;
-  background: var(--bg-surface, #ffffff);
-  border: 1px solid var(--border-color, #e5e7eb);
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
   padding: 0.75rem 1rem;
   border-radius: var(--radius-md, 0.5rem);
 }
@@ -308,21 +308,22 @@ const formatDateTime = (val) => {
   gap: 0.5rem;
   padding: 0.35rem 0.75rem;
   border-radius: 9999px;
-  background: var(--bg-hover, #f5f4f0);
-  border: 1px solid var(--border-color, #dcd7ce);
+  background: var(--color-bg-subtle);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-main);
   font-size: 0.75rem;
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .trip-pill:hover {
-  border-color: #b45309;
+  border-color: var(--color-primary);
 }
 
 .trip-pill.active {
-  background: #2b2621;
-  color: #ffffff;
-  border-color: #1a1714;
+  background: var(--color-primary);
+  color: var(--color-primary-text);
+  border-color: var(--color-primary);
 }
 
 .pill-plate {
@@ -338,15 +339,15 @@ const formatDateTime = (val) => {
   font-weight: 700;
 }
 
-.pill-status.en_ruta { background: #dbeafe; color: #1e40af; }
-.pill-status.programado { background: #fef3c7; color: #92400e; }
-.trip-pill.active .pill-status { background: rgba(255, 255, 255, 0.2); color: #ffffff; }
+.pill-status.en_ruta { background: var(--color-info-bg); color: var(--color-info-text); }
+.pill-status.programado { background: var(--color-warning-bg); color: var(--color-warning-text); }
+.trip-pill.active .pill-status { background: rgba(255, 255, 255, 0.2); color: var(--color-primary-text); }
 
 .no-trip-card {
   padding: 4rem 1rem;
   text-align: center;
-  background: var(--bg-surface, #ffffff);
-  border: 1px dashed var(--border-color, #dcd7ce);
+  background: var(--color-bg-surface);
+  border: 1px dashed var(--color-border);
   border-radius: var(--radius-lg, 0.75rem);
   display: flex;
   flex-direction: column;
@@ -356,7 +357,7 @@ const formatDateTime = (val) => {
 
 .no-trip-icon {
   font-size: 3rem;
-  color: var(--text-tertiary, #9ca3af);
+  color: var(--color-text-subtle);
 }
 
 .cabin-tactical-layout {
@@ -366,8 +367,8 @@ const formatDateTime = (val) => {
 }
 
 .cabin-hero-card {
-  background: var(--bg-surface, #ffffff);
-  border: 1px solid var(--border-color, #e5e7eb);
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-lg, 0.75rem);
   padding: 1.5rem;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
@@ -381,10 +382,10 @@ const formatDateTime = (val) => {
 }
 
 .badge-kicker {
-  font-family: var(--font-mono, monospace);
+  font-family: var(--font-mono);
   font-size: 0.6875rem;
   font-weight: 700;
-  color: #b45309;
+  color: var(--color-accent-kicker);
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -393,12 +394,12 @@ const formatDateTime = (val) => {
   margin: 0.25rem 0;
   font-size: 1.75rem;
   font-weight: 800;
-  color: var(--text-primary, #1e1b18);
+  color: var(--color-text-main);
 }
 
 .hero-subtitle {
   font-size: 0.8125rem;
-  color: var(--text-secondary, #5c544d);
+  color: var(--color-text-muted);
 }
 
 .itinerary-grid {
@@ -407,9 +408,9 @@ const formatDateTime = (val) => {
   align-items: center;
   gap: 1.5rem;
   padding: 1.25rem;
-  background: var(--bg-hover, #fbfaf8);
+  background: var(--color-bg-subtle);
   border-radius: var(--radius-md, 0.5rem);
-  border: 1px solid var(--border-color, #eeeae3);
+  border: 1px solid var(--color-border-subtle);
 }
 
 @media (max-width: 768px) {
@@ -432,8 +433,8 @@ const formatDateTime = (val) => {
   width: 2.5rem;
   height: 2.5rem;
   border-radius: 50%;
-  background: #eff6ff;
-  color: #1d4ed8;
+  background: var(--color-info-bg);
+  color: var(--color-info-text);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -442,15 +443,15 @@ const formatDateTime = (val) => {
 }
 
 .node-icon-box.destino-box {
-  background: #f0fdf4;
-  color: #15803d;
+  background: var(--color-success-bg);
+  color: var(--color-success-text);
 }
 
 .node-kicker {
-  font-family: var(--font-mono, monospace);
+  font-family: var(--font-mono);
   font-size: 0.625rem;
   font-weight: 700;
-  color: var(--text-tertiary, #9ca3af);
+  color: var(--color-text-subtle);
   letter-spacing: 0.06em;
 }
 
@@ -458,13 +459,13 @@ const formatDateTime = (val) => {
   margin: 0.2rem 0;
   font-size: 0.875rem;
   font-weight: 700;
-  color: var(--text-primary, #1e1b18);
+  color: var(--color-text-main);
   line-height: 1.3;
 }
 
 .node-time {
   font-size: 0.6875rem;
-  color: var(--text-secondary, #5c544d);
+  color: var(--color-text-muted);
 }
 
 .itinerary-divider {
@@ -479,7 +480,7 @@ const formatDateTime = (val) => {
   position: absolute;
   width: 100%;
   height: 2px;
-  background: #dcd7ce;
+  background: var(--color-border);
   border-style: dashed;
 }
 
@@ -489,13 +490,13 @@ const formatDateTime = (val) => {
   width: 1.75rem;
   height: 1.75rem;
   border-radius: 50%;
-  background: #ffffff;
-  border: 1px solid #dcd7ce;
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 0.75rem;
-  color: #b45309;
+  color: var(--color-accent-kicker);
 }
 
 .cabin-details-grid {
@@ -505,8 +506,8 @@ const formatDateTime = (val) => {
 }
 
 .detail-card {
-  background: var(--bg-surface, #ffffff);
-  border: 1px solid var(--border-color, #e5e7eb);
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-lg, 0.75rem);
   padding: 1.25rem;
 }
@@ -522,7 +523,7 @@ const formatDateTime = (val) => {
   margin: 0;
   font-size: 0.875rem;
   font-weight: 700;
-  color: var(--text-primary, #1e1b18);
+  color: var(--color-text-main);
 }
 
 .detail-rows {
@@ -539,11 +540,11 @@ const formatDateTime = (val) => {
 }
 
 .detail-row .label {
-  color: var(--text-secondary, #6b7280);
+  color: var(--color-text-muted);
 }
 
 .detail-row .value {
-  color: var(--text-primary, #1e1b18);
+  color: var(--color-text-main);
 }
 
 .cabin-actions-bar {
@@ -552,8 +553,8 @@ const formatDateTime = (val) => {
   flex-wrap: wrap;
   gap: 0.75rem;
   padding: 1rem 1.25rem;
-  background: var(--bg-surface, #ffffff);
-  border: 1px solid var(--border-color, #e5e7eb);
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-lg, 0.75rem);
 }
 
@@ -570,32 +571,32 @@ const formatDateTime = (val) => {
 }
 
 .primary-send {
-  background: #1d4ed8;
-  color: #ffffff;
-  border: 1px solid #1e40af;
+  background: var(--color-info-bg);
+  color: var(--color-info-text);
+  border: 1px solid var(--color-info-border);
 }
 
 .primary-send:hover {
-  background: #1e40af;
+  filter: brightness(0.95);
 }
 
 .success-delivery {
-  background: #15803d;
-  color: #ffffff;
-  border: 1px solid #166534;
+  background: var(--color-success-bg);
+  color: var(--color-success-text);
+  border: 1px solid var(--color-success-border);
 }
 
 .success-delivery:hover {
-  background: #166534;
+  filter: brightness(0.95);
 }
 
 .outline-incident {
   background: transparent;
-  color: #b45309;
-  border: 1px solid #fde68a;
+  color: var(--color-warning-text);
+  border: 1px solid var(--color-warning-border);
 }
 
 .outline-incident:hover {
-  background: #fffbeb;
+  background: var(--color-warning-bg);
 }
 </style>

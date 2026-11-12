@@ -1887,7 +1887,7 @@ const formatRegimen = (regimen) => {
 }
 
 .sub-q-num {
-  font-family: monospace;
+  font-family: var(--font-mono);
   font-size: 0.6875rem;
   font-weight: 700;
   opacity: 0.8;
@@ -1950,7 +1950,7 @@ const formatRegimen = (regimen) => {
 }
 
 .phase-idx {
-  font-family: monospace;
+  font-family: var(--font-mono);
   font-size: 0.6875rem;
   font-weight: 700;
   opacity: 0.8;

@@ -954,23 +954,6 @@
       </template>
     </Dialog>
 
-    <!-- Modal: Apertura de Expediente Aduanero -->
-    <AperturaExpedienteModal
-      :visible="showAperturaModal"
-      :cotizacion="selectedCotizacionParaExpediente"
-      :cotizaciones-disponibles="cotizacionesAprobadasSinExpediente"
-      @close="showAperturaModal = false"
-      @saved="onExpedienteAperturado"
-    />
-
-    <!-- Modal: Detalle Integral del Expediente Aduanero -->
-    <DetalleExpedienteModal
-      :visible="showDetalleModal"
-      :expediente="selectedExpedienteParaDetalle"
-      @close="showDetalleModal = false"
-      @open-docs="openDocumentosExpediente"
-    />
-
     <!-- Modal: Asignación de Canal SUNAT / Levante Aduanero -->
     <CanalLevanteModal
       :visible="showCanalLevanteModal"
@@ -1032,9 +1015,7 @@ import { useAuthStore } from '@/features/auth/stores/authStore'
 import { useNavigationStore } from '@/core/stores/navigationStore'
 import { useNotification } from '@/shared/composables/useNotification'
 import { useConfirmation } from '@/shared/composables/useConfirmation'
-import AperturaExpedienteModal from '../components/AperturaExpedienteModal.vue'
 import AperturaExpedienteView from '../components/AperturaExpedienteView.vue'
-import DetalleExpedienteModal from '../components/DetalleExpedienteModal.vue'
 import CanalLevanteModal from '../components/CanalLevanteModal.vue'
 import RetiroDirectoModal from '../components/RetiroDirectoModal.vue'
 import CierreExpedienteModal from '../components/CierreExpedienteModal.vue'
@@ -1074,7 +1055,6 @@ const isAgenteAduanero = computed(() => {
 })
 
 // Filtros y Búsqueda
-const filterEstado = ref('')
 const searchQuery = ref('')
 const filterRegimenExpediente = ref('')
 const filterCanalExpediente = ref('')
@@ -1088,11 +1068,7 @@ const inspectedCotizacion = ref(null)
 const inspectedExpediente = ref(null)
 
 // Modales Operativos Auxiliares
-const showAperturaModal = ref(false)
 const selectedCotizacionParaExpediente = ref(null)
-
-const showDetalleModal = ref(false)
-const selectedExpedienteParaDetalle = ref(null)
 
 const showCanalLevanteModal = ref(false)
 const selectedExpedienteParaTramite = ref(null)
@@ -1222,23 +1198,6 @@ const cotizacionesClasificadas = computed(() => {
   return clasificarCotizacionesAduaneras(cotizaciones.value)
 })
 
-// Métricas Computadas
-const enviadasCount = computed(() => {
-  return cotizaciones.value.filter((c) => c.estado === 'ENVIADA' || c.estado === 'PENDIENTE').length
-})
-
-const revisionCount = computed(() => {
-  return cotizaciones.value.filter((c) => c.estado === 'REVISION' || c.estado === 'OBSERVADA').length
-})
-
-const aprobadasCount = computed(() => {
-  return cotizaciones.value.filter((c) => c.estado === 'APROBADA').length
-})
-
-const cotizacionesAprobadasSinExpediente = computed(() => {
-  return cotizaciones.value.filter((c) => c.estado === 'APROBADA' && c.tienePagoAprobado && !c.tieneExpediente)
-})
-
 // Lista de Agentes Aduaneros Disponibles en Expedientes para Filtro
 const agentesAduanerosDisponibles = computed(() => {
   const map = new Map()
@@ -1287,14 +1246,6 @@ const expedientesPorCanalPendienteCount = computed(() => {
 
 const expedientesEnControlCount = computed(() => {
   return filtrarExpedientesPorFase(baseExpedientes.value, 'CONTROL_SUNAT').length
-})
-
-const expedientesPendienteCanalCount = computed(() => {
-  return expedientesPorCanalPendienteCount.value
-})
-
-const expedientesConCanalCount = computed(() => {
-  return expedientesEnControlCount.value
 })
 
 const expedientesConLevanteCount = computed(() => {
@@ -1402,19 +1353,6 @@ const onExpedienteCreado = (expedienteCreado) => {
   switchTab('expedientes')
 }
 
-const openAperturaModal = (cotizacion = null) => {
-  goToApertura(cotizacion)
-}
-
-const onExpedienteAperturado = (expedienteCreado) => {
-  onExpedienteCreado(expedienteCreado)
-}
-
-const openDetalleExpediente = (exp) => {
-  selectedExpedienteParaDetalle.value = exp
-  showDetalleModal.value = true
-}
-
 const openCanalModal = (exp) => {
   selectedExpedienteParaTramite.value = exp
   canalLevanteActionType.value = 'canal'
@@ -1481,12 +1419,6 @@ const loadData = async () => {
     if (inspectedCotizacion.value) {
       const updated = cotizaciones.value.find((c) => c.idCotizacion === inspectedCotizacion.value.idCotizacion)
       if (updated) inspectedCotizacion.value = updated
-    }
-
-    // Si había un expediente en detalle, refrescar su dato
-    if (selectedExpedienteParaDetalle.value) {
-      const updatedExp = expedientes.value.find((e) => e.idExpediente === selectedExpedienteParaDetalle.value.idExpediente)
-      if (updatedExp) selectedExpedienteParaDetalle.value = updatedExp
     }
   } finally {
     loading.value = false

@@ -111,30 +111,6 @@
     <!-- ============================================================== -->
     <!-- MODALES OPERATIVOS AUXILIARES (IMPORTACIÓN Y COMUNES)           -->
     <!-- ============================================================== -->
-    <!-- Modal: Registrar Salida de Origen y Datos de Embarque -->
-    <RegistrarSalidaOrigenModal
-      :visible="showSalidaOrigenModal"
-      :expediente="selectedExpedienteParaAccion"
-      @close="showSalidaOrigenModal = false"
-      @saved="onSalidaOrigenSaved"
-    />
-
-    <!-- Modal: Confirmar Arribo a Puerto / Aeropuerto de Destino -->
-    <ConfirmarArriboDestinoModal
-      :visible="showArriboDestinoModal"
-      :expediente="selectedExpedienteParaAccion"
-      @close="showArriboDestinoModal = false"
-      @saved="onArriboDestinoSaved"
-    />
-
-    <!-- Modal: Actualizar Tránsito y Embarque (Simplificado y Guiado) -->
-    <ActualizarTransitoModal
-      :visible="showTransitoModal"
-      :expediente="selectedExpedienteParaAccion"
-      @close="showTransitoModal = false"
-      @saved="onTransitoSaved"
-    />
-
     <!-- Modal: Diligencia / Inspección de Campo SUNAT -->
     <DiligenciaCampoModal
       :visible="showDiligenciaModal"
@@ -233,9 +209,6 @@ import AgenteExpedienteInformeView from '../components/AgenteExpedienteInformeVi
 import AgenteOperacionTransitoView from '../components/AgenteOperacionTransitoView.vue'
 
 // Modales operativos compartidos
-import RegistrarSalidaOrigenModal from '@/features/aduanas/components/RegistrarSalidaOrigenModal.vue'
-import ConfirmarArriboDestinoModal from '@/features/aduanas/components/ConfirmarArriboDestinoModal.vue'
-import ActualizarTransitoModal from '@/features/aduanas/components/ActualizarTransitoModal.vue'
 import DiligenciaCampoModal from '@/features/aduanas/components/DiligenciaCampoModal.vue'
 import SolicitudTransporteModal from '@/features/aduanas/components/SolicitudTransporteModal.vue'
 import RetiroDirectoModal from '@/features/aduanas/components/RetiroDirectoModal.vue'
@@ -284,9 +257,6 @@ const {
 // Modales operativos
 const selectedExpedienteParaAccion = ref(null)
 
-const showSalidaOrigenModal = ref(false)
-const showArriboDestinoModal = ref(false)
-const showTransitoModal = ref(false)
 const showDiligenciaModal = ref(false)
 const showSolicitudTransporteModal = ref(false)
 const showRetiroDirectoModal = ref(false)

@@ -51,32 +51,32 @@ uploads/
 
 
 # -----------------------------------------------------------------------------
-# Frontend 
+# App SGA (Vue + Vite)
 # -----------------------------------------------------------------------------
-frontend/node_modules/
-frontend/dist/
-frontend/dist-ssr/
-frontend/*.local
-frontend/.eslintcache
-frontend/npm-debug.log*
-frontend/yarn-debug.log*
-frontend/yarn-error.log*
-frontend/pnpm-debug.log*
-frontend/.vscode/
+app-sga/node_modules/
+app-sga/dist/
+app-sga/dist-ssr/
+app-sga/*.local
+app-sga/.eslintcache
+app-sga/npm-debug.log*
+app-sga/yarn-debug.log*
+app-sga/yarn-error.log*
+app-sga/pnpm-debug.log*
+app-sga/.vscode/
 
 # -----------------------------------------------------------------------------
 # Portal Cliente (Vue + Vite)
 # -----------------------------------------------------------------------------
-portal-cliente/node_modules/
-portal-cliente/dist/
-portal-cliente/dist-ssr/
-portal-cliente/*.local
-portal-cliente/.eslintcache
-portal-cliente/npm-debug.log*
-portal-cliente/yarn-debug.log*
-portal-cliente/yarn-error.log*
-portal-cliente/pnpm-debug.log*
-portal-cliente/.vscode/
+app-portal-cliente/node_modules/
+app-portal-cliente/dist/
+app-portal-cliente/dist-ssr/
+app-portal-cliente/*.local
+app-portal-cliente/.eslintcache
+app-portal-cliente/npm-debug.log*
+app-portal-cliente/yarn-debug.log*
+app-portal-cliente/yarn-error.log*
+app-portal-cliente/pnpm-debug.log*
+app-portal-cliente/.vscode/
 
 # -----------------------------------------------------------------------------
 # Global Node / JS patterns
@@ -85,23 +85,13 @@ portal-cliente/.vscode/
 **/dist/
 **/dist-ssr/
 
-
-# -----------------------------------------------------------------------------
-# Landing (Astro + Vue)
-# -----------------------------------------------------------------------------
-landing/node_modules/
-landing/dist/
-landing/.astro/
-landing/.env
-landing/.env.production
-landing/.vscode/
-
 # -----------------------------------------------------------------------------
 # Database local dumps or temporary files
 # -----------------------------------------------------------------------------
-database/*.tmp
-database/*.bak
+db/*.tmp
+db/*.bak
 backup*.sql
 *.sql.bak
 **/superpowers/
+.superpowers/
 .$Diagrama de procesos.drawio.bkp

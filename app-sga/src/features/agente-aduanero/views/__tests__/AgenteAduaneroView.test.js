@@ -2,7 +2,6 @@ import { describe, it, expect } from 'vitest'
 import AgenteAduaneroView from '../AgenteAduaneroView.vue'
 import AgenteDashboardPanel from '../../components/AgenteDashboardPanel.vue'
 import AgenteHeaderToolbar from '../../components/AgenteHeaderToolbar.vue'
-import AgenteKpiGrid from '../../components/AgenteKpiGrid.vue'
 import AgenteExpedientesTable from '../../components/AgenteExpedientesTable.vue'
 import AgenteExpedientesCanvas from '../../components/AgenteExpedientesCanvas.vue'
 import AgenteExpedienteInformeView from '../../components/AgenteExpedienteInformeView.vue'
@@ -26,12 +25,6 @@ describe('Portal Agente Aduanero - Definición de Componentes y Vistas', () => {
     expect(AgenteHeaderToolbar).toBeDefined()
     expect(typeof AgenteHeaderToolbar).toBe('object')
     expect(AgenteHeaderToolbar.__name).toBe('AgenteHeaderToolbar')
-  })
-
-  it('exporta AgenteKpiGrid como un componente Vue 3 válido', () => {
-    expect(AgenteKpiGrid).toBeDefined()
-    expect(typeof AgenteKpiGrid).toBe('object')
-    expect(AgenteKpiGrid.__name).toBe('AgenteKpiGrid')
   })
 
   it('exporta AgenteExpedientesCanvas como un componente Vue 3 válido para el canvas de expedientes', () => {

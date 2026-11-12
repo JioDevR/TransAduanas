@@ -168,16 +168,6 @@
         </div>
       </form>
     </Dialog>
-
-    <DocumentosManagerModal
-      :visible="showDocsModal"
-      :entidad-tipo="'EXPEDIENTE'"
-      :id-entidad="selectedDocEntidadId"
-      :entidad-id="selectedDocEntidadId"
-      :codigo-entidad="selectedDocCodigo"
-      :titulo-entidad="selectedDocTitulo"
-      @close="showDocsModal = false"
-    />
   </div>
 </template>
 
@@ -196,7 +186,6 @@ import ConductoresManagementPanel from '../components/ConductoresManagementPanel
 import CrearDespachoModal from '../components/CrearDespachoModal.vue'
 import AsignarRecursosModal from '../components/AsignarRecursosModal.vue'
 import ConfirmarEntregaModal from '../components/ConfirmarEntregaModal.vue'
-import DocumentosManagerModal from '@/shared/components/DocumentosManagerModal.vue'
 import { useNotification } from '@/shared/composables/useNotification'
 import { useConfirmation } from '@/shared/composables/useConfirmation'
 
@@ -226,15 +215,10 @@ const showCrearDespachoModal = ref(false)
 const showAsignarRecursosModal = ref(false)
 const showConfirmarEntregaModal = ref(false)
 const showIncidenciaModal = ref(false)
-const showDocsModal = ref(false)
 
 const selectedDespacho = ref(null)
 const incidenciaTexto = ref('')
 const savingIncidencia = ref(false)
-
-const selectedDocEntidadId = ref(null)
-const selectedDocCodigo = ref('')
-const selectedDocTitulo = ref('')
 
 // Métricas computadas
 const enRutaCount = computed(() => {

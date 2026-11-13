@@ -2,6 +2,10 @@
 
 Esta carpeta relaciona los casos documentados con las pruebas ejecutables en `backend/src/test/java/pe/sga`. Las dependencias añadidas a `backend/pom.xml` tienen alcance `test`. No se modifica código productivo.
 
+## Casos funcionales del 1 al 15
+
+La guía actual de las 15 funcionalidades y sus comandos individuales está en [funcionales/README.md](funcionales/README.md). El ejecutor `backend/ejecutar-caso-funcional.ps1` permite elegir un caso y guardar su evidencia por ejecución. Las evidencias históricas descritas más abajo deben distinguirse de los resultados de una ejecución nueva.
+
 ## Ejecutar desde el proyecto
 
 Requisitos: Java 21, conexión para descargar dependencias Maven y permiso para conexiones locales. Abrir una terminal en `backend` y ejecutar:

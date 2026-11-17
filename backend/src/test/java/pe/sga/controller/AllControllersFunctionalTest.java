@@ -289,30 +289,34 @@ var r=ctl.eliminar(id);assertEquals(200,r.getStatusCode().value());assertTrue(r.
 @Test void UC036_CotizacionController_buscarPorId() throws Exception {
 var cotizacionService=mock(ICotizacionService.class);
 var ctl=new CotizacionController(cotizacionService);
+var usuario=interno();
 var id=7;
-var expected=new CotizacionResponseDTO();when(cotizacionService.buscarPorId(id)).thenReturn(expected);var r=ctl.buscarPorId(id);assertEquals(200,r.getStatusCode().value());assertTrue(r.getBody().isSuccess());assertSame(expected,r.getBody().getData());verify(cotizacionService).buscarPorId(id);
+var expected=new CotizacionResponseDTO();when(cotizacionService.buscarPorId(id,usuario)).thenReturn(expected);var r=ctl.buscarPorId(id,usuario);assertEquals(200,r.getStatusCode().value());assertTrue(r.getBody().isSuccess());assertSame(expected,r.getBody().getData());verify(cotizacionService).buscarPorId(id,usuario);
 }
 
 @Test void UC037_CotizacionController_buscarPorCodigo() throws Exception {
 var cotizacionService=mock(ICotizacionService.class);
 var ctl=new CotizacionController(cotizacionService);
+var usuario=interno();
 var codigo="QA";
-var expected=new CotizacionResponseDTO();when(cotizacionService.buscarPorCodigo(codigo)).thenReturn(expected);var r=ctl.buscarPorCodigo(codigo);assertEquals(200,r.getStatusCode().value());assertTrue(r.getBody().isSuccess());assertSame(expected,r.getBody().getData());verify(cotizacionService).buscarPorCodigo(codigo);
+var expected=new CotizacionResponseDTO();when(cotizacionService.buscarPorCodigo(codigo,usuario)).thenReturn(expected);var r=ctl.buscarPorCodigo(codigo,usuario);assertEquals(200,r.getStatusCode().value());assertTrue(r.getBody().isSuccess());assertSame(expected,r.getBody().getData());verify(cotizacionService).buscarPorCodigo(codigo,usuario);
 }
 
 @Test void UC038_CotizacionController_crear() throws Exception {
 var cotizacionService=mock(ICotizacionService.class);
 var ctl=new CotizacionController(cotizacionService);
+var usuario=interno();
 var dto=new CotizacionRequestDTO();
-var expected=new CotizacionResponseDTO();when(cotizacionService.crear(dto)).thenReturn(expected);var r=ctl.crear(dto);assertEquals(201,r.getStatusCode().value());assertTrue(r.getBody().isSuccess());assertSame(expected,r.getBody().getData());verify(cotizacionService).crear(dto);
+var expected=new CotizacionResponseDTO();when(cotizacionService.crear(dto,usuario)).thenReturn(expected);var r=ctl.crear(dto,usuario);assertEquals(201,r.getStatusCode().value());assertTrue(r.getBody().isSuccess());assertSame(expected,r.getBody().getData());verify(cotizacionService).crear(dto,usuario);
 }
 
 @Test void UC039_CotizacionController_actualizar() throws Exception {
 var cotizacionService=mock(ICotizacionService.class);
 var ctl=new CotizacionController(cotizacionService);
+var usuario=interno();
 var id=7;
 var dto=new CotizacionRequestDTO();
-var expected=new CotizacionResponseDTO();when(cotizacionService.actualizar(id, dto)).thenReturn(expected);var r=ctl.actualizar(id,dto);assertEquals(200,r.getStatusCode().value());assertTrue(r.getBody().isSuccess());assertSame(expected,r.getBody().getData());verify(cotizacionService).actualizar(id, dto);
+var expected=new CotizacionResponseDTO();when(cotizacionService.actualizar(id, dto,usuario)).thenReturn(expected);var r=ctl.actualizar(id,dto,usuario);assertEquals(200,r.getStatusCode().value());assertTrue(r.getBody().isSuccess());assertSame(expected,r.getBody().getData());verify(cotizacionService).actualizar(id, dto,usuario);
 }
 
 @Test void UC040_CotizacionController_revisarTecnicamente() throws Exception {
@@ -334,15 +338,16 @@ var expected=new CotizacionResponseDTO();when(cotizacionService.cambiarEstado(id
 @Test void UC042_CotizacionController_eliminar() throws Exception {
 var cotizacionService=mock(ICotizacionService.class);
 var ctl=new CotizacionController(cotizacionService);
+var usuario=interno();
 var id=7;
-var r=ctl.eliminar(id);assertEquals(200,r.getStatusCode().value());assertTrue(r.getBody().isSuccess());assertNull(r.getBody().getData());verify(cotizacionService).anular(id);
+var r=ctl.eliminar(id,usuario);assertEquals(200,r.getStatusCode().value());assertTrue(r.getBody().isSuccess());assertNull(r.getBody().getData());verify(cotizacionService).anular(id,usuario);
 }
 
 @Test void UC043_CotizacionPagoController_listarPorCotizacion() throws Exception {
 var cotizacionPagoService=mock(ICotizacionPagoService.class);
 var ctl=new CotizacionPagoController(cotizacionPagoService);
-var idCotizacion=7;
-var expected=List.of(new CotizacionPagoResponseDTO());when(cotizacionPagoService.listarPorCotizacion(idCotizacion)).thenReturn(expected);var r=ctl.listarPorCotizacion(idCotizacion);assertEquals(200,r.getStatusCode().value());assertTrue(r.getBody().isSuccess());assertSame(expected,r.getBody().getData());verify(cotizacionPagoService).listarPorCotizacion(idCotizacion);
+var idCotizacion=7;var usuario=interno();
+var expected=List.of(new CotizacionPagoResponseDTO());when(cotizacionPagoService.listarPorCotizacion(idCotizacion,usuario)).thenReturn(expected);var r=ctl.listarPorCotizacion(idCotizacion,usuario);assertEquals(200,r.getStatusCode().value());assertTrue(r.getBody().isSuccess());assertSame(expected,r.getBody().getData());verify(cotizacionPagoService).listarPorCotizacion(idCotizacion,usuario);
 }
 
 @Test void UC044_CotizacionPagoController_listarAnticiposPendientes() throws Exception {
@@ -606,33 +611,40 @@ var id=7;
 var expected=new RolResponseDTO();when(rolService.buscarPorId(id)).thenReturn(expected);var r=ctl.buscarPorId(id);assertEquals(200,r.getStatusCode().value());assertTrue(r.getBody().isSuccess());assertSame(expected,r.getBody().getData());verify(rolService).buscarPorId(id);
 }
 
-@Test void UC079_RolController_crear() throws Exception {
+@Test void UC079_RolController_listarTodos() {
 var rolService=mock(IRolService.class);
 var ctl=new RolController(rolService);
-var dto=new RolDTO();
-var expected=new RolResponseDTO();when(rolService.crear(dto)).thenReturn(expected);var r=ctl.crear(dto);assertEquals(201,r.getStatusCode().value());assertTrue(r.getBody().isSuccess());assertSame(expected,r.getBody().getData());verify(rolService).crear(dto);
+var expected=List.of(new RolResponseDTO());
+when(rolService.listarTodos()).thenReturn(expected);
+var r=ctl.listar(false);
+assertEquals(200,r.getStatusCode().value());assertTrue(r.getBody().isSuccess());
+assertSame(expected,r.getBody().getData());verify(rolService).listarTodos();verifyNoMoreInteractions(rolService);
 }
 
-@Test void UC080_RolController_actualizar() throws Exception {
+@Test void UC080_RolController_listarActivos() {
 var rolService=mock(IRolService.class);
 var ctl=new RolController(rolService);
-var id=7;
-var dto=new RolDTO();
-var expected=new RolResponseDTO();when(rolService.actualizar(id, dto)).thenReturn(expected);var r=ctl.actualizar(id,dto);assertEquals(200,r.getStatusCode().value());assertTrue(r.getBody().isSuccess());assertSame(expected,r.getBody().getData());verify(rolService).actualizar(id, dto);
+var expected=List.of(new RolResponseDTO());
+when(rolService.listarActivos()).thenReturn(expected);
+var r=ctl.listar(true);
+assertEquals(200,r.getStatusCode().value());assertTrue(r.getBody().isSuccess());
+assertSame(expected,r.getBody().getData());verify(rolService).listarActivos();verifyNoMoreInteractions(rolService);
 }
 
-@Test void UC081_RolController_eliminarPorEstado() throws Exception {
+@Test void UC081_RolController_listarTodosVacio() {
 var rolService=mock(IRolService.class);
-var ctl=new RolController(rolService);
-var id=7;
-var r=ctl.eliminarPorEstado(id);assertEquals(200,r.getStatusCode().value());assertTrue(r.getBody().isSuccess());assertNull(r.getBody().getData());verify(rolService).eliminarPorEstado(id);
+when(rolService.listarTodos()).thenReturn(List.of());
+var r=new RolController(rolService).listar(false);
+assertEquals(200,r.getStatusCode().value());assertTrue(r.getBody().getData().isEmpty());
+verify(rolService).listarTodos();verifyNoMoreInteractions(rolService);
 }
 
-@Test void UC082_RolController_reactivar() throws Exception {
+@Test void UC082_RolController_listarActivosVacio() {
 var rolService=mock(IRolService.class);
-var ctl=new RolController(rolService);
-var id=7;
-var r=ctl.reactivar(id);assertEquals(200,r.getStatusCode().value());assertTrue(r.getBody().isSuccess());assertNull(r.getBody().getData());verify(rolService).reactivar(id);
+when(rolService.listarActivos()).thenReturn(List.of());
+var r=new RolController(rolService).listar(true);
+assertEquals(200,r.getStatusCode().value());assertTrue(r.getBody().getData().isEmpty());
+verify(rolService).listarActivos();verifyNoMoreInteractions(rolService);
 }
 
 @Test void UC083_SedeController_buscarPorId() throws Exception {
@@ -721,7 +733,7 @@ var r=ctl.reactivar(id);assertEquals(200,r.getStatusCode().value());assertTrue(r
 
 @Test void UC094_UsuarioClienteAdminController_listar() throws Exception {
 var usuarioClienteService=mock(IUsuarioClienteService.class);
-var ctl=new UsuarioClienteAdminController(usuarioClienteService);
+var ctl=new UsuarioClienteAdminController(usuarioClienteService,mock(IReporteJasperService.class));
 var idCliente=7;
 var soloActivos=false;
 var buscar="QA";
@@ -730,21 +742,21 @@ var expected=List.of(new UsuarioClienteResponseDTO());when(usuarioClienteService
 
 @Test void UC095_UsuarioClienteAdminController_buscarPorId() throws Exception {
 var usuarioClienteService=mock(IUsuarioClienteService.class);
-var ctl=new UsuarioClienteAdminController(usuarioClienteService);
+var ctl=new UsuarioClienteAdminController(usuarioClienteService,mock(IReporteJasperService.class));
 var id=7;
 var expected=new UsuarioClienteResponseDTO();when(usuarioClienteService.buscarPorId(id)).thenReturn(expected);var r=ctl.buscarPorId(id);assertEquals(200,r.getStatusCode().value());assertTrue(r.getBody().isSuccess());assertSame(expected,r.getBody().getData());verify(usuarioClienteService).buscarPorId(id);
 }
 
 @Test void UC096_UsuarioClienteAdminController_crear() throws Exception {
 var usuarioClienteService=mock(IUsuarioClienteService.class);
-var ctl=new UsuarioClienteAdminController(usuarioClienteService);
+var ctl=new UsuarioClienteAdminController(usuarioClienteService,mock(IReporteJasperService.class));
 var dto=new UsuarioClienteCreateDTO();
 var expected=new UsuarioClienteResponseDTO();when(usuarioClienteService.crear(dto)).thenReturn(expected);var r=ctl.crear(dto);assertEquals(201,r.getStatusCode().value());assertTrue(r.getBody().isSuccess());assertSame(expected,r.getBody().getData());verify(usuarioClienteService).crear(dto);
 }
 
 @Test void UC097_UsuarioClienteAdminController_actualizar() throws Exception {
 var usuarioClienteService=mock(IUsuarioClienteService.class);
-var ctl=new UsuarioClienteAdminController(usuarioClienteService);
+var ctl=new UsuarioClienteAdminController(usuarioClienteService,mock(IReporteJasperService.class));
 var id=7;
 var dto=new UsuarioClienteUpdateDTO();
 var expected=new UsuarioClienteResponseDTO();when(usuarioClienteService.actualizar(id, dto)).thenReturn(expected);var r=ctl.actualizar(id,dto);assertEquals(200,r.getStatusCode().value());assertTrue(r.getBody().isSuccess());assertSame(expected,r.getBody().getData());verify(usuarioClienteService).actualizar(id, dto);
@@ -752,21 +764,21 @@ var expected=new UsuarioClienteResponseDTO();when(usuarioClienteService.actualiz
 
 @Test void UC098_UsuarioClienteAdminController_eliminarPorEstado() throws Exception {
 var usuarioClienteService=mock(IUsuarioClienteService.class);
-var ctl=new UsuarioClienteAdminController(usuarioClienteService);
+var ctl=new UsuarioClienteAdminController(usuarioClienteService,mock(IReporteJasperService.class));
 var id=7;
 var r=ctl.eliminarPorEstado(id);assertEquals(200,r.getStatusCode().value());assertTrue(r.getBody().isSuccess());assertNull(r.getBody().getData());verify(usuarioClienteService).eliminarPorEstado(id);
 }
 
 @Test void UC099_UsuarioClienteAdminController_reactivar() throws Exception {
 var usuarioClienteService=mock(IUsuarioClienteService.class);
-var ctl=new UsuarioClienteAdminController(usuarioClienteService);
+var ctl=new UsuarioClienteAdminController(usuarioClienteService,mock(IReporteJasperService.class));
 var id=7;
 var r=ctl.reactivar(id);assertEquals(200,r.getStatusCode().value());assertTrue(r.getBody().isSuccess());assertNull(r.getBody().getData());verify(usuarioClienteService).reactivar(id);
 }
 
 @Test void UC100_UsuarioClienteAdminController_resetearPassword() throws Exception {
 var usuarioClienteService=mock(IUsuarioClienteService.class);
-var ctl=new UsuarioClienteAdminController(usuarioClienteService);
+var ctl=new UsuarioClienteAdminController(usuarioClienteService,mock(IReporteJasperService.class));
 var id=7;
 var dto=new UsuarioClienteResetPasswordDTO();
 var r=ctl.resetearPassword(id,dto);assertEquals(200,r.getStatusCode().value());assertTrue(r.getBody().isSuccess());assertNull(r.getBody().getData());verify(usuarioClienteService).resetearPassword(id, dto);
@@ -1050,7 +1062,8 @@ assertThrows(AccessDeniedException.class,()->ctl.me(new Usuario()));verifyNoInte
 @Test void UC143_CotizacionController_listar_estado() throws Exception {
 var cotizacionService=mock(ICotizacionService.class);
 var ctl=new CotizacionController(cotizacionService);
-var expected=List.of(new CotizacionResponseDTO());when(cotizacionService.listarPorEstado(EstadoCotizacion.APROBADA)).thenReturn(expected);var r=ctl.listar(true,EstadoCotizacion.APROBADA,null);assertEquals(200,r.getStatusCode().value());assertTrue(r.getBody().isSuccess());assertSame(expected,r.getBody().getData());verify(cotizacionService).listarPorEstado(EstadoCotizacion.APROBADA);verifyNoMoreInteractions(cotizacionService);
+var usuario=interno();
+var expected=List.of(new CotizacionResponseDTO());when(cotizacionService.listar(true,EstadoCotizacion.APROBADA,null,null,usuario)).thenReturn(expected);var r=ctl.listar(true,EstadoCotizacion.APROBADA,null,null,usuario);assertEquals(200,r.getStatusCode().value());assertTrue(r.getBody().isSuccess());assertSame(expected,r.getBody().getData());verify(cotizacionService).listar(true,EstadoCotizacion.APROBADA,null,null,usuario);verifyNoMoreInteractions(cotizacionService);
 }
 
 @Test void UC144_CatalogoMercanciaController_exportarMercanciasPdf() throws Exception {
@@ -1085,7 +1098,7 @@ byte[] bytes="%PDF-QA".getBytes();when(reporteJasperService.exportarSedesPdf()).
 var usuarioService=mock(IUsuarioService.class);
 var reporteJasperService=mock(IReporteJasperService.class);
 var ctl=new UsuarioController(usuarioService,reporteJasperService);
-byte[] bytes="%PDF-QA".getBytes();when(reporteJasperService.exportarUsuariosPdf()).thenReturn(new ByteArrayInputStream(bytes));var r=ctl.exportarUsuariosPdf();assertEquals(200,r.getStatusCode().value());assertEquals("application/pdf",r.getHeaders().getContentType().toString());assertTrue(r.getHeaders().getFirst("Content-Disposition").startsWith("inline;"));assertArrayEquals(bytes,r.getBody().getInputStream().readAllBytes());verify(reporteJasperService).exportarUsuariosPdf();
+byte[] bytes="%PDF-QA".getBytes();when(reporteJasperService.exportarUsuariosPdf(false)).thenReturn(new ByteArrayInputStream(bytes));var r=ctl.exportarUsuariosPdf(false);assertEquals(200,r.getStatusCode().value());assertEquals("application/pdf",r.getHeaders().getContentType().toString());assertTrue(r.getHeaders().getFirst("Content-Disposition").startsWith("inline;"));assertArrayEquals(bytes,r.getBody().getInputStream().readAllBytes());verify(reporteJasperService).exportarUsuariosPdf(false);
 }
 
 @Test void UC149_AdminLogsController_getLogs() throws Exception {
@@ -1389,7 +1402,7 @@ var files=List.of(mock(MultipartFile.class));var expected=List.of(new DocumentoR
 @Test void UC190_DocumentoController_listar_True() throws Exception {
 var documentoService=mock(IDocumentoService.class);
 var ctl=new DocumentoController(documentoService);
-var expected=List.of(new DocumentoResponseDTO());when(documentoService.listar(EntidadDocumento.CLIENTE,null,null,11,null)).thenReturn(expected);var r=ctl.listar(EntidadDocumento.CLIENTE,null,null,11,null,interno());assertEquals(200,r.getStatusCode().value());assertSame(expected,r.getBody().getData());verify(documentoService).listar(EntidadDocumento.CLIENTE,null,null,11,null);
+var usuario=interno();var expected=List.of(new DocumentoResponseDTO());when(documentoService.listarParaUsuario(usuario,EntidadDocumento.CLIENTE,null,null,11,null)).thenReturn(expected);var r=ctl.listar(EntidadDocumento.CLIENTE,null,null,11,null,usuario);assertEquals(200,r.getStatusCode().value());assertSame(expected,r.getBody().getData());verify(documentoService).listarParaUsuario(usuario,EntidadDocumento.CLIENTE,null,null,11,null);
 }
 
 @Test void UC191_DocumentoController_buscarPorId_True() throws Exception {
@@ -1443,7 +1456,7 @@ var entity=new DocumentoAdjunto();entity.setNombreOriginal("prueba QA.pdf");enti
 @Test void UC199_DocumentoController_eliminar() throws Exception {
 var documentoService=mock(IDocumentoService.class);
 var ctl=new DocumentoController(documentoService);
-var r=ctl.eliminar(7);assertEquals(200,r.getStatusCode().value());assertNull(r.getBody().getData());verify(documentoService).eliminar(7);
+var r=ctl.eliminar(7,interno());assertEquals(200,r.getStatusCode().value());assertNull(r.getBody().getData());verify(documentoService).eliminar(7);
 }
 
 @Test void UC200_DocumentoController_subirSinPrincipal() throws Exception {
@@ -1461,7 +1474,7 @@ assertThrows(AccessDeniedException.class,()->ctl.listar(null,null,null,null,null
 @Test void UC202_DocumentoController_buscarSinPrincipal() throws Exception {
 var documentoService=mock(IDocumentoService.class);
 var ctl=new DocumentoController(documentoService);
-assertThrows(AccessDeniedException.class,()->ctl.buscarPorId(7,null));verifyNoInteractions(documentoService);
+assertThrows(AccessDeniedException.class,()->ctl.buscarPorId(7,null));verify(documentoService).obtenerEntidad(7);verify(documentoService,never()).buscarPorId(anyInt());verifyNoMoreInteractions(documentoService);
 }
 
 @Test void UC203_DocumentoController_descargarSinPrincipal() throws Exception {
@@ -1560,7 +1573,7 @@ when(unidadService.buscarPorId(999)).thenThrow(new pe.sga.exception.ResourceNotF
 
 @Test void UC218_UsuarioClienteAdminController_recursoInexistente() throws Exception {
 var usuarioClienteService=mock(IUsuarioClienteService.class);
-var ctl=new UsuarioClienteAdminController(usuarioClienteService);
+var ctl=new UsuarioClienteAdminController(usuarioClienteService,mock(IReporteJasperService.class));
 when(usuarioClienteService.buscarPorId(999)).thenThrow(new pe.sga.exception.ResourceNotFoundException("No existe"));assertThrows(pe.sga.exception.ResourceNotFoundException.class,()->ctl.buscarPorId(999));verify(usuarioClienteService).buscarPorId(999);
 }
 

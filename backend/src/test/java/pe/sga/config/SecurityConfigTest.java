@@ -59,6 +59,11 @@ public class SecurityConfigTest {
     })
     static class TestConfig {
         @Bean
+        tools.jackson.databind.json.JsonMapper jsonMapper() {
+            return tools.jackson.databind.json.JsonMapper.builder().findAndAddModules().build();
+        }
+
+        @Bean
         UsuarioRepository usuarioRepository() {
             return mock(UsuarioRepository.class);
         }

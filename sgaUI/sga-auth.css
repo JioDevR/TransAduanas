@@ -1,0 +1,134 @@
+/* ==========================================================================
+   sgaUI — Estilos Reutilizables de Autenticación (Warm Editorial Pro)
+   Diseñado para integrarse con PrimeVue 4 (InputText, Password, Button, Message)
+   ========================================================================== */
+
+.sga-auth-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-bg-base);
+  padding: 1.5rem;
+  font-family: inherit;
+  position: relative;
+  overflow: hidden;
+}
+
+.sga-auth-page::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 600px;
+  height: 600px;
+  border-radius: 50%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--color-primary) 10%, transparent) 0%, transparent 65%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.sga-auth-wrapper {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 440px;
+}
+
+.sga-auth-card {
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  padding: 2.75rem 2.25rem;
+  box-shadow: var(--shadow-elevated);
+  color: var(--color-text-main);
+  position: relative;
+  overflow: hidden;
+}
+
+.sga-auth-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, var(--color-primary), var(--color-accent-kicker), transparent);
+}
+
+.sga-auth-brand {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.sga-auth-logo {
+  width: 54px;
+  height: 54px;
+  background: var(--color-bg-subtle);
+  border: 1px solid var(--color-border-strong);
+  border-radius: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.85rem;
+  box-shadow: var(--shadow-subtle);
+  transition: transform var(--transition-normal);
+}
+
+.sga-auth-logo:hover {
+  transform: scale(1.04);
+}
+
+.sga-auth-logo i {
+  font-size: 1.65rem;
+  color: var(--color-primary);
+}
+
+.sga-auth-title {
+  font-size: 1.65rem;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  margin: 0;
+  color: var(--color-text-main);
+}
+
+.sga-auth-subtitle {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  margin-top: 0.35rem;
+  margin-bottom: 0;
+}
+
+.sga-auth-alert {
+  margin-bottom: 1.5rem;
+}
+
+.sga-auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.sga-auth-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.sga-auth-label {
+  font-size: 0.825rem;
+  font-weight: 600;
+  color: var(--color-text-main);
+}
+
+.sga-auth-submit {
+  margin-top: 0.5rem;
+}
+
+.sga-auth-footer {
+  text-align: center;
+  font-size: 0.725rem;
+  color: var(--color-text-subtle);
+  margin-top: 1.75rem;
+}

@@ -14,14 +14,14 @@
       <div v-if="actionType === 'canal'" class="canal-form-grid">
         <div class="field-item">
           <label for="dam-num">Número de Declaración Aduanera (DAM) *</label>
-          <input
+          <InputText
             id="dam-num"
             v-model.trim="canalForm.numeroDam"
-            type="text"
             placeholder="Ej. 118-2026-10-123456"
-            class="text-input font-mono"
+            class="font-mono"
             required
             maxlength="30"
+            fluid
           />
           <span class="field-hint">Numeración oficial emitida por la Intendencia de Aduana</span>
         </div>
@@ -71,25 +71,32 @@
 
         <div class="field-item full-width">
           <label for="levante-detalle">Detalle de Inspección / Diligencia Aduanera</label>
-          <textarea
+          <Textarea
             id="levante-detalle"
             v-model.trim="levanteForm.detalleInspeccion"
             rows="3"
+            autoResize
             placeholder="Diligencia conforme por especialista SUNAT. Precintos intactos y bultos verificados según manifiesto..."
-            class="textarea-input"
-          ></textarea>
+            fluid
+          />
         </div>
       </div>
 
       <div class="modal-actions">
-        <button type="button" class="btn-modal-cancel" @click="handleClose" :disabled="loading">
-          Cancelar
-        </button>
-        <button type="submit" class="btn-modal-save" :disabled="loading">
-          <i v-if="loading" class="pi pi-spin pi-spinner"></i>
-          <i v-else class="pi pi-check"></i>
-          <span>{{ actionType === 'canal' ? 'Registrar Canal SUNAT' : 'Autorizar Levante' }}</span>
-        </button>
+        <Button
+          type="button"
+          label="Cancelar"
+          severity="secondary"
+          outlined
+          @click="handleClose"
+          :disabled="loading"
+        />
+        <Button
+          type="submit"
+          :label="actionType === 'canal' ? 'Registrar Canal SUNAT' : 'Autorizar Levante'"
+          icon="pi pi-check"
+          :loading="loading"
+        />
       </div>
     </form>
   </BaseModal>
@@ -97,6 +104,9 @@
 
 <script setup>
 import { ref, watch } from 'vue'
+import Button from 'primevue/button'
+import InputText from 'primevue/inputtext'
+import Textarea from 'primevue/textarea'
 import BaseModal from '@/shared/components/BaseModal.vue'
 import { expedienteService } from '../services/expedienteService'
 

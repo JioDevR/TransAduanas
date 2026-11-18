@@ -1,0 +1,180 @@
+/* ==========================================================================
+   SGA Theme — Estilos Base Unificados (Warm Editorial Pro)
+   ========================================================================== */
+
+:root {
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+
+  /* Tokens semánticos Warm Editorial Pro (Modo Claro) */
+  --color-bg-base: var(--p-surface-50, #fbf9f6);
+  --color-bg-sidebar: var(--p-surface-200, #ede6db);
+  --color-bg-surface: var(--p-surface-0, #ffffff);
+  --color-bg-hero: #ebdcc9;
+  --color-bg-subtle: var(--p-surface-100, #f6f3ee);
+  --color-bg-muted: #efe8de;
+
+  --color-border: var(--p-surface-300, #e4dacb);
+  --color-border-subtle: var(--p-surface-200, #ede6db);
+  --color-border-strong: var(--p-surface-400, #cfc0ab);
+
+  --color-primary: var(--p-primary-color, #d48252);
+  --color-primary-hover: var(--p-primary-hover-color, #bf6e40);
+  --color-primary-text: var(--p-primary-contrast-color, #ffffff);
+  --color-primary-espresso: #352f2a;
+  --color-accent-kicker: #9a7f60;
+  --color-accent-copper: var(--p-primary-color, #d48252);
+
+  --color-text-main: var(--p-surface-800, #352f2a);
+  --color-text-muted: var(--p-surface-600, #6f6356);
+  --color-text-subtle: var(--p-surface-500, #998c7e);
+
+  --color-success-bg: #eaf6ed;
+  --color-success-border: #bce5c6;
+  --color-success-text: #1e6638;
+
+  --color-warning-bg: #fdf5e6;
+  --color-warning-border: #f8dab3;
+  --color-warning-text: #8c5b16;
+
+  --color-danger-bg: #fdf0f0;
+  --color-danger-border: #f6c8c8;
+  --color-danger-text: #9e2a2b;
+
+  --color-info-bg: #eef4fb;
+  --color-info-border: #cadff4;
+  --color-info-text: #21598f;
+
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', Monaco, Consolas, 'Liberation Mono', monospace;
+
+  --radius-xs: 0.25rem;
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-2xl: 1.25rem;
+  --radius-pill: 9999px;
+
+  --shadow-subtle: 0 1px 3px rgba(28, 24, 21, 0.04), 0 1px 2px rgba(28, 24, 21, 0.02);
+  --shadow-card: 0 4px 16px -2px rgba(28, 24, 21, 0.05), 0 2px 6px -1px rgba(28, 24, 21, 0.03);
+  --shadow-elevated: 0 12px 28px -6px rgba(28, 24, 21, 0.1), 0 4px 10px -2px rgba(28, 24, 21, 0.04);
+
+  --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dark-theme,
+.app-dark {
+  --color-bg-base: var(--p-surface-950, #161412);
+  --color-bg-sidebar: #12100e;
+  --color-bg-surface: var(--p-surface-900, #1f1c19);
+  --color-bg-hero: #2b2621;
+  --color-bg-subtle: var(--p-surface-800, #2e2a25);
+  --color-bg-muted: var(--p-surface-700, #3f3a33);
+
+  --color-border: var(--p-surface-800, #2e2a25);
+  --color-border-subtle: #27231f;
+  --color-border-strong: var(--p-surface-700, #3f3a33);
+
+  --color-primary: var(--p-primary-color, #f0b892);
+  --color-primary-hover: var(--p-primary-hover-color, #f6cbb0);
+  --color-primary-text: var(--p-primary-contrast-color, #161412);
+  --color-primary-espresso: #f0b892;
+  --color-accent-kicker: #f6cbb0;
+  --color-accent-copper: var(--p-primary-color, #f0b892);
+
+  --color-text-main: var(--p-surface-50, #f6f2ea);
+  --color-text-muted: var(--p-surface-300, #c4bcab);
+  --color-text-subtle: var(--p-surface-400, #968e7e);
+
+  --color-success-bg: #1c2b1f;
+  --color-success-border: #2d5738;
+  --color-success-text: #7ee79d;
+
+  --color-warning-bg: #342914;
+  --color-warning-border: #695222;
+  --color-warning-text: #fcd34d;
+
+  --color-danger-bg: #321818;
+  --color-danger-border: #652a2a;
+  --color-danger-text: #fca5a5;
+
+  --color-info-bg: #172635;
+  --color-info-border: #254b6d;
+  --color-info-text: #93c5fd;
+
+  --shadow-subtle: 0 1px 3px rgba(0, 0, 0, 0.35);
+  --shadow-card: 0 4px 16px -2px rgba(0, 0, 0, 0.45);
+  --shadow-elevated: 0 12px 28px -6px rgba(0, 0, 0, 0.55);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--p-surface-50, #fbf9f6);
+  color: var(--p-text-color, #352f2a);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* Selector de modo oscuro unificado (.dark-theme o .app-dark) */
+.dark-theme body,
+.app-dark body {
+  background: var(--p-surface-950, #161412);
+  color: var(--p-text-color, #f6f2ea);
+}
+
+/* Números tabulares para códigos DAM, RUC, montos USD y tablas */
+code,
+.p-datatable,
+.p-inputnumber-input {
+  font-variant-numeric: tabular-nums;
+}
+
+code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85em;
+}
+
+/* Jerarquía tipográfica */
+.section-title {
+  margin: 0 0 0.35rem 0;
+  font-size: 1.45rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.section-desc {
+  margin: 0 0 1.25rem 0;
+  color: var(--p-text-muted-color, #6f6356);
+  font-size: 0.925rem;
+}
+
+/* Profundidad y bordes sutiles en tarjetas */
+.p-card {
+  border: 1px solid var(--p-surface-200, #ede6db);
+  box-shadow: 0 1px 2px rgba(28, 24, 21, 0.04);
+}
+
+.dark-theme .p-card,
+.app-dark .p-card {
+  border-color: var(--p-surface-800, #2e2a25);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+}
+
+.p-card-title {
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+
+/* Densidad operativa en tablas */
+.p-datatable .p-datatable-tbody > tr > td,
+.p-datatable .p-datatable-thead > tr > th {
+  padding: 0.65rem 0.9rem;
+}

@@ -14,14 +14,14 @@
         <!-- Código Arancelario / Nomenclatura -->
         <div class="field-item">
           <label for="merc-codigo">Partida / Código Único *</label>
-          <input
+          <InputText
             id="merc-codigo"
             v-model.trim="form.codigo"
-            type="text"
             placeholder="Ej. 3004.90.29.00"
-            class="text-input code-input"
+            class="code-input"
             required
             maxlength="30"
+            fluid
           />
           <span class="field-hint">Código de subpartida nacional o código de producto</span>
         </div>
@@ -29,63 +29,68 @@
         <!-- Categoría -->
         <div class="field-item">
           <label for="merc-categoria">Categoría Arancelaria *</label>
-          <select id="merc-categoria" v-model="form.categoria" class="select-input" required>
-            <option v-for="cat in categoryOptions" :key="cat" :value="cat">
-              {{ cat }}
-            </option>
-          </select>
+          <Select
+            inputId="merc-categoria"
+            v-model="form.categoria"
+            :options="categoryOptions"
+            filter
+            placeholder="Seleccione categoría"
+            fluid
+          />
         </div>
 
         <!-- Nombre de la Mercancía -->
         <div class="field-item full-width">
           <label for="merc-nombre">Descripción Comercial de la Mercancía *</label>
-          <input
+          <InputText
             id="merc-nombre"
             v-model.trim="form.nombre"
-            type="text"
             placeholder="Ej. Paracetamol 500mg en tabletas recubiertas"
-            class="text-input"
             required
             maxlength="150"
+            fluid
           />
         </div>
 
         <!-- Requiere Permiso VUCE -->
         <div class="field-item">
           <label for="merc-permiso">¿Requiere Permiso Especial? *</label>
-          <select id="merc-permiso" v-model="form.requierePermiso" class="select-input" required>
-            <option :value="false">No (Libre Comercialización)</option>
-            <option :value="true">Sí (Carga Restringida SUNAT)</option>
-          </select>
+          <Select
+            inputId="merc-permiso"
+            v-model="form.requierePermiso"
+            :options="permisoOptions"
+            optionLabel="label"
+            optionValue="value"
+            fluid
+          />
         </div>
 
         <!-- Entidad Reguladora -->
         <div class="field-item" v-if="form.requierePermiso">
           <label for="merc-entidad">Entidad Reguladora VUCE *</label>
-          <select id="merc-entidad" v-model="form.entidadReguladora" class="select-input" required>
-            <option value="DIGEMID">DIGEMID (Medicamentos y Cosméticos)</option>
-            <option value="DIGESA">DIGESA (Alimentos y Bebidas)</option>
-            <option value="SENASA">SENASA (Agro y Animal)</option>
-            <option value="SANIPES">SANIPES (Pesca y Acuicultura)</option>
-            <option value="SUCAMEC">SUCAMEC (Explosivos y Armas)</option>
-            <option value="PRODUCE">PRODUCE (Insumos Químicos)</option>
-            <option value="MTC">MTC (Equipos de Telecomunicación)</option>
-          </select>
+          <Select
+            inputId="merc-entidad"
+            v-model="form.entidadReguladora"
+            :options="entidadOptions"
+            optionLabel="label"
+            optionValue="value"
+            fluid
+          />
         </div>
 
         <!-- Arancel Base % -->
         <div class="field-item">
           <label for="merc-arancel">Arancel Base Ad-Valorem (%) *</label>
-          <input
-            id="merc-arancel"
-            v-model.number="form.arancelBasePct"
-            type="number"
-            step="0.01"
-            min="0"
-            max="100"
-            placeholder="0.00"
-            class="text-input"
-            required
+          <InputNumber
+            inputId="merc-arancel"
+            v-model="form.arancelBasePct"
+            :min="0"
+            :max="100"
+            :minFractionDigits="2"
+            :maxFractionDigits="2"
+            suffix="%"
+            placeholder="0.00%"
+            fluid
           />
           <span class="field-hint">Tasa arancelaria porcentual (ej. 0.00%, 6.00%, 11.00%)</span>
         </div>
@@ -93,22 +98,32 @@
         <!-- Estado Operativo -->
         <div class="field-item">
           <label for="merc-estado">Estado *</label>
-          <select id="merc-estado" v-model="form.estado" class="select-input" required>
-            <option value="ACTIVO">ACTIVO (Habilitado)</option>
-            <option value="INACTIVO">INACTIVO (Desactivado)</option>
-          </select>
+          <Select
+            inputId="merc-estado"
+            v-model="form.estado"
+            :options="estadoOptions"
+            optionLabel="label"
+            optionValue="value"
+            fluid
+          />
         </div>
       </div>
 
       <div class="modal-actions">
-        <button type="button" class="btn-modal-cancel" @click="handleClose" :disabled="loading">
-          Cancelar
-        </button>
-        <button type="submit" class="btn-modal-save" :disabled="loading">
-          <i v-if="loading" class="pi pi-spin pi-spinner"></i>
-          <i v-else class="pi pi-check"></i>
-          <span>{{ isEditMode ? 'Guardar Cambios' : 'Registrar Mercancía' }}</span>
-        </button>
+        <Button
+          type="button"
+          label="Cancelar"
+          severity="secondary"
+          outlined
+          @click="handleClose"
+          :disabled="loading"
+        />
+        <Button
+          type="submit"
+          :label="isEditMode ? 'Guardar Cambios' : 'Registrar Mercancía'"
+          icon="pi pi-check"
+          :loading="loading"
+        />
       </div>
     </form>
   </BaseModal>
@@ -116,8 +131,32 @@
 
 <script setup>
 import { ref, computed, watch } from 'vue'
+import Button from 'primevue/button'
+import InputText from 'primevue/inputtext'
+import InputNumber from 'primevue/inputnumber'
+import Select from 'primevue/select'
 import catalogoService from '../services/catalogoService'
 import BaseModal from '@/shared/components/BaseModal.vue'
+
+const permisoOptions = [
+  { label: 'No (Libre Comercialización)', value: false },
+  { label: 'Sí (Carga Restringida SUNAT)', value: true }
+]
+
+const entidadOptions = [
+  { label: 'DIGEMID (Medicamentos y Cosméticos)', value: 'DIGEMID' },
+  { label: 'DIGESA (Alimentos y Bebidas)', value: 'DIGESA' },
+  { label: 'SENASA (Agro y Animal)', value: 'SENASA' },
+  { label: 'SANIPES (Pesca y Acuicultura)', value: 'SANIPES' },
+  { label: 'SUCAMEC (Explosivos y Armas)', value: 'SUCAMEC' },
+  { label: 'PRODUCE (Insumos Químicos)', value: 'PRODUCE' },
+  { label: 'MTC (Equipos de Telecomunicación)', value: 'MTC' }
+]
+
+const estadoOptions = [
+  { label: 'ACTIVO (Habilitado)', value: 'ACTIVO' },
+  { label: 'INACTIVO (Desactivado)', value: 'INACTIVO' }
+]
 
 const props = defineProps({
   visible: {

@@ -19,75 +19,65 @@
 
       <div class="form-field-group">
         <label class="field-label" for="new-password">Nueva Contraseña Temporal *</label>
-        <div class="password-input-wrapper">
-          <input
-            id="new-password"
-            v-model="password"
-            :type="showPassword ? 'text' : 'password'"
-            class="custom-input font-mono"
-            placeholder="Ingrese mínimo 6 caracteres..."
-            autocomplete="new-password"
-            :disabled="submitting"
-          />
-          <button
-            type="button"
-            class="toggle-visibility-btn"
-            @click="showPassword = !showPassword"
-            title="Mostrar / Ocultar contraseña"
-          >
-            <i :class="showPassword ? 'pi pi-eye-slash' : 'pi pi-eye'"></i>
-          </button>
-        </div>
+        <Password
+          inputId="new-password"
+          v-model="password"
+          toggleMask
+          :feedback="false"
+          placeholder="Ingrese mínimo 6 caracteres..."
+          autocomplete="new-password"
+          :disabled="submitting"
+          inputClass="font-mono"
+          fluid
+        />
 
-        <button
+        <Button
           type="button"
-          class="btn-generate-password"
+          label="Generar contraseña segura automática"
+          icon="pi pi-bolt"
+          severity="secondary"
+          outlined
+          size="small"
           @click="generateRandomPassword"
           :disabled="submitting"
-        >
-          <i class="pi pi-bolt"></i>
-          <span>Generar contraseña segura automática</span>
-        </button>
+        />
       </div>
 
       <div class="checkbox-field-group">
-        <label class="custom-checkbox-label">
-          <input
-            type="checkbox"
+        <label class="custom-checkbox-label" for="force-change">
+          <Checkbox
+            inputId="force-change"
             v-model="forceChange"
+            binary
             :disabled="submitting"
-            class="custom-checkbox"
           />
           <span>Exigir cambio obligatorio de contraseña en el próximo ingreso al portal</span>
         </label>
       </div>
 
-      <div v-if="errorMessage" class="error-msg">
-        <i class="pi pi-exclamation-circle"></i>
-        <span>{{ errorMessage }}</span>
-      </div>
+      <Message v-if="errorMessage" severity="error" :closable="false">
+        {{ errorMessage }}
+      </Message>
     </div>
 
     <template #footer>
       <div class="dialog-footer-actions">
-        <button
+        <Button
           type="button"
-          class="btn-outline-warm"
+          label="Cancelar"
+          severity="secondary"
+          outlined
           @click="$emit('update:visible', false)"
           :disabled="submitting"
-        >
-          Cancelar
-        </button>
-        <button
+        />
+        <Button
           type="button"
-          class="btn-espresso"
+          label="Aplicar Nueva Contraseña"
+          icon="pi pi-check"
+          :loading="submitting"
           @click="handleSave"
-          :disabled="submitting || !password || password.length < 6"
-        >
-          <i v-if="submitting" class="pi pi-spin pi-spinner"></i>
-          <i v-else class="pi pi-check"></i>
-          <span>Aplicar Nueva Contraseña</span>
-        </button>
+          :disabled="!password || password.length < 6"
+        />
       </div>
     </template>
   </Dialog>
@@ -96,6 +86,10 @@
 <script setup>
 import { ref, watch } from 'vue'
 import Dialog from 'primevue/dialog'
+import Button from 'primevue/button'
+import Password from 'primevue/password'
+import Checkbox from 'primevue/checkbox'
+import Message from 'primevue/message'
 import { portalUserService } from '../services/portalUserService'
 import { useNotification } from '@/shared/composables/useNotification'
 

@@ -24,25 +24,23 @@
       <div class="ingreso-fields-grid">
         <div class="field-item full-width">
           <label for="ingreso-terminal">Depósito Temporal / Terminal de Salida *</label>
-          <input
+          <InputText
             id="ingreso-terminal"
             v-model.trim="form.terminalAlmacenOrigen"
-            type="text"
-            class="text-input"
             required
             placeholder="Ej. DP World Callao - Muelle Sur / APM Terminals"
+            fluid
           />
         </div>
 
         <div class="field-item">
           <label for="ingreso-ticket">N° Ticket de Balanza / Certificado VGM *</label>
-          <input
+          <InputText
             id="ingreso-ticket"
             v-model.trim="form.numeroTicketIngreso"
-            type="text"
-            class="text-input"
             required
             placeholder="Ej. TKT-VGM-2026-90812"
+            fluid
           />
         </div>
 
@@ -59,49 +57,56 @@
 
         <div class="field-item">
           <label for="ingreso-contenedor">N° Contenedor *</label>
-          <input
+          <InputText
             id="ingreso-contenedor"
             v-model.trim="form.numeroContenedor"
-            type="text"
-            class="text-input font-mono"
+            class="font-mono"
             required
             placeholder="Ej. MSKU9876543"
+            fluid
           />
         </div>
 
         <div class="field-item">
           <label for="ingreso-precinto">N° Precinto Aduanero / Botella *</label>
-          <input
+          <InputText
             id="ingreso-precinto"
             v-model.trim="form.precintoAduanero"
-            type="text"
-            class="text-input font-mono"
+            class="font-mono"
             required
             placeholder="Ej. SUNAT-PR-098231"
+            fluid
           />
         </div>
 
         <div class="field-item full-width">
           <label for="ingreso-obs">Observaciones de Recepción / Patio</label>
-          <textarea
+          <Textarea
             id="ingreso-obs"
             v-model.trim="form.observaciones"
             rows="2"
+            autoResize
             placeholder="Contenedor sin abolladuras, precintos de seguridad intactos, peso verificado en balanza..."
-            class="textarea-input"
-          ></textarea>
+            fluid
+          />
         </div>
       </div>
 
       <div class="modal-actions">
-        <button type="button" class="btn-modal-cancel" @click="handleClose" :disabled="loading">
-          Cancelar
-        </button>
-        <button type="submit" class="btn-modal-save" :disabled="loading">
-          <i v-if="loading" class="pi pi-spin pi-spinner"></i>
-          <i v-else class="pi pi-check"></i>
-          <span>Confirmar Ingreso a Terminal</span>
-        </button>
+        <Button
+          type="button"
+          label="Cancelar"
+          severity="secondary"
+          outlined
+          @click="handleClose"
+          :disabled="loading"
+        />
+        <Button
+          type="submit"
+          label="Confirmar Ingreso a Terminal"
+          icon="pi pi-check"
+          :loading="loading"
+        />
       </div>
     </form>
   </BaseModal>
@@ -109,6 +114,9 @@
 
 <script setup>
 import { ref, watch } from 'vue'
+import Button from 'primevue/button'
+import InputText from 'primevue/inputtext'
+import Textarea from 'primevue/textarea'
 import BaseModal from '@/shared/components/BaseModal.vue'
 import { expedienteService } from '../services/expedienteService'
 import { getNowDateTimeInput } from '@/shared/utils/dateUtils'

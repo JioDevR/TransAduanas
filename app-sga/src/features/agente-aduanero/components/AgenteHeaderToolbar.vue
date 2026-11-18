@@ -7,26 +7,20 @@
 
     <div class="toolbar-controls-group">
       <!-- Conmutador de Vista: Canvas vs Tabla -->
-      <div class="view-mode-toggle">
-        <button
-          type="button"
-          :class="['toggle-btn', { active: viewMode === 'canvas' }]"
-          title="Vista Canvas (Tarjetas Operativas)"
-          @click="$emit('update:viewMode', 'canvas')"
-        >
-          <i class="pi pi-th-large"></i>
-          <span>Canvas</span>
-        </button>
-        <button
-          type="button"
-          :class="['toggle-btn', { active: viewMode === 'table' }]"
-          title="Vista Tabla (Detallada)"
-          @click="$emit('update:viewMode', 'table')"
-        >
-          <i class="pi pi-list"></i>
-          <span>Tabla</span>
-        </button>
-      </div>
+      <SelectButton
+        :modelValue="viewMode"
+        :options="viewModeOptions"
+        optionLabel="label"
+        optionValue="value"
+        :allowEmpty="false"
+        size="small"
+        @update:modelValue="$emit('update:viewMode', $event)"
+      >
+        <template #option="{ option }">
+          <i :class="option.icon"></i>
+          <span>{{ option.label }}</span>
+        </template>
+      </SelectButton>
 
       <!-- Selector de Agente (Exclusivo para Supervisores y Administradores) -->
       <div v-if="esSupervisorOAdmin" class="supervisor-select-wrap">
@@ -34,75 +28,92 @@
           <i class="pi pi-user text-xs"></i>
           <span>Auditar:</span>
         </label>
-        <select
-          id="filter-agente-sel"
-          :value="selectedAgenteId"
-          class="supervisor-select"
-          @change="$emit('update:selectedAgenteId', $event.target.value ? Number($event.target.value) : null)"
-        >
-          <option :value="null">★ Todos los Agentes</option>
-          <option
-            v-for="ag in agentesList"
-            :key="ag.idUsuario"
-            :value="ag.idUsuario"
-          >
-            {{ ag.nombre }} {{ ag.apellidos || '' }}
-          </option>
-        </select>
-      </div>
-
-      <!-- Filtro por Régimen -->
-      <select
-        :value="filterRegimen"
-        class="filter-select"
-        @change="$emit('update:filterRegimen', $event.target.value)"
-      >
-        <option value="">Todos los Regímenes</option>
-        <option value="IMPORTACION">Importación para el Consumo</option>
-        <option value="EXPORTACION">Exportación Definitiva</option>
-      </select>
-
-      <!-- Filtro por Canal SUNAT -->
-      <select
-        :value="filterCanal"
-        class="filter-select"
-        @change="$emit('update:filterCanal', $event.target.value)"
-      >
-        <option value="">Todos los Canales</option>
-        <option value="VERDE">Canal VERDE (Libre)</option>
-        <option value="NARANJA">Canal NARANJA (Documental)</option>
-        <option value="ROJO">Canal ROJO (Aforo Físico)</option>
-        <option value="PENDIENTE">Canal Pendiente</option>
-      </select>
-
-      <!-- Búsqueda rápida -->
-      <div class="search-input-wrap">
-        <i class="pi pi-search search-icon"></i>
-        <input
-          :value="searchQuery"
-          type="text"
-          class="search-input"
-          placeholder="Buscar expediente, DAM, cliente, nave..."
-          @input="$emit('update:searchQuery', $event.target.value)"
+        <Select
+          inputId="filter-agente-sel"
+          :modelValue="selectedAgenteId"
+          :options="agenteOptions"
+          optionLabel="label"
+          optionValue="value"
+          size="small"
+          @update:modelValue="$emit('update:selectedAgenteId', $event)"
         />
       </div>
 
+      <!-- Filtro por Régimen -->
+      <Select
+        :modelValue="filterRegimen"
+        :options="regimenOptions"
+        optionLabel="label"
+        optionValue="value"
+        size="small"
+        @update:modelValue="$emit('update:filterRegimen', $event)"
+      />
+
+      <!-- Filtro por Canal SUNAT -->
+      <Select
+        :modelValue="filterCanal"
+        :options="canalOptions"
+        optionLabel="label"
+        optionValue="value"
+        size="small"
+        @update:modelValue="$emit('update:filterCanal', $event)"
+      />
+
+      <!-- Búsqueda rápida -->
+      <IconField>
+        <InputIcon class="pi pi-search" />
+        <InputText
+          :modelValue="searchQuery"
+          size="small"
+          placeholder="Buscar expediente, DAM, cliente, nave..."
+          @update:modelValue="$emit('update:searchQuery', $event)"
+        />
+      </IconField>
+
       <!-- Botón de refresco manual -->
-      <button
+      <Button
         type="button"
-        class="refresh-btn"
+        icon="pi pi-refresh"
+        severity="secondary"
+        outlined
+        size="small"
         title="Actualizar datos de la bandeja"
-        :disabled="loading"
+        :loading="loading"
         @click="$emit('refresh')"
-      >
-        <i :class="['pi pi-refresh', { 'pi-spin': loading }]"></i>
-      </button>
+      />
     </div>
   </div>
 </template>
 
 <script setup>
-defineProps({
+import { computed } from 'vue'
+import Button from 'primevue/button'
+import IconField from 'primevue/iconfield'
+import InputIcon from 'primevue/inputicon'
+import InputText from 'primevue/inputtext'
+import Select from 'primevue/select'
+import SelectButton from 'primevue/selectbutton'
+
+const viewModeOptions = [
+  { label: 'Canvas', value: 'canvas', icon: 'pi pi-th-large' },
+  { label: 'Tabla', value: 'table', icon: 'pi pi-list' }
+]
+
+const regimenOptions = [
+  { label: 'Todos los Regímenes', value: '' },
+  { label: 'Importación para el Consumo', value: 'IMPORTACION' },
+  { label: 'Exportación Definitiva', value: 'EXPORTACION' }
+]
+
+const canalOptions = [
+  { label: 'Todos los Canales', value: '' },
+  { label: 'Canal VERDE (Libre)', value: 'VERDE' },
+  { label: 'Canal NARANJA (Documental)', value: 'NARANJA' },
+  { label: 'Canal ROJO (Aforo Físico)', value: 'ROJO' },
+  { label: 'Canal Pendiente', value: 'PENDIENTE' }
+]
+
+const props = defineProps({
   viewMode: {
     type: String,
     default: 'canvas'
@@ -144,6 +155,14 @@ defineEmits([
   'update:filterCanal',
   'update:selectedAgenteId',
   'refresh'
+])
+
+const agenteOptions = computed(() => [
+  { label: '★ Todos los Agentes', value: null },
+  ...props.agentesList.map((ag) => ({
+    label: `${ag.nombre} ${ag.apellidos || ''}`.trim(),
+    value: ag.idUsuario
+  }))
 ])
 </script>
 

@@ -30,29 +30,29 @@
     </div>
 
     <div class="header-actions">
-      <button
+      <Button
         type="button"
-        class="btn-outline-warm"
+        label="Cancelar"
+        severity="secondary"
+        outlined
         @click="$emit('cancel')"
         :disabled="submitting"
-      >
-        <span>Cancelar</span>
-      </button>
-      <button
+      />
+      <Button
         type="button"
-        class="btn-espresso"
+        :label="isUnassignedClaim ? 'Tomar y Guardar Cotización' : (isEditMode ? 'Guardar Cambios' : 'Emitir Cotización')"
+        :icon="isUnassignedClaim ? 'pi pi-user-plus' : 'pi pi-check'"
+        :loading="submitting"
+        :disabled="!isFormReady"
         @click="$emit('submit')"
-        :disabled="submitting || !isFormReady"
-      >
-        <i v-if="submitting" class="pi pi-spin pi-spinner"></i>
-        <i v-else :class="isUnassignedClaim ? 'pi pi-user-plus' : 'pi pi-check'"></i>
-        <span>{{ isUnassignedClaim ? 'Tomar y Guardar Cotización' : (isEditMode ? 'Guardar Cambios' : 'Emitir Cotización') }}</span>
-      </button>
+      />
     </div>
   </div>
 </template>
 
 <script setup>
+import Button from 'primevue/button'
+
 defineProps({
   isEditMode: {
     type: Boolean,

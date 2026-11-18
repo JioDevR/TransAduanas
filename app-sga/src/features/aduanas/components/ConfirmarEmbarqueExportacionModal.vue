@@ -24,13 +24,12 @@
       <div class="embarque-fields-grid">
         <div class="field-item full-width">
           <label for="embarque-nave">Nave y Número de Viaje *</label>
-          <input
+          <InputText
             id="embarque-nave"
             v-model.trim="form.naveViaje"
-            type="text"
-            class="text-input"
             required
             placeholder="Ej. MSC CAPELLA / V. 2402W"
+            fluid
           />
         </div>
 
@@ -58,37 +57,43 @@
 
         <div class="field-item full-width">
           <label for="embarque-puerto">Puerto / Aeropuerto de Destino Exterior *</label>
-          <input
+          <InputText
             id="embarque-puerto"
             v-model.trim="form.puertoDestinoExterior"
-            type="text"
-            class="text-input"
             required
             placeholder="Ej. Port of Long Beach, USA / Rotterdam, Netherlands"
+            fluid
           />
         </div>
 
         <div class="field-item full-width">
           <label for="embarque-obs">Detalles de Manifiesto / Observaciones</label>
-          <textarea
+          <Textarea
             id="embarque-obs"
             v-model.trim="form.observaciones"
             rows="2"
+            autoResize
             placeholder="BL marítimo matriz emitido a bordo, estiba en cubierta/bodega conforme..."
-            class="textarea-input"
-          ></textarea>
+            fluid
+          />
         </div>
       </div>
 
       <div class="modal-actions">
-        <button type="button" class="btn-modal-cancel" @click="handleClose" :disabled="loading">
-          Cancelar
-        </button>
-        <button type="submit" class="btn-modal-save" :disabled="loading">
-          <i v-if="loading" class="pi pi-spin pi-spinner"></i>
-          <i v-else class="pi pi-check-circle"></i>
-          <span>Registrar Embarque Internacional</span>
-        </button>
+        <Button
+          type="button"
+          label="Cancelar"
+          severity="secondary"
+          outlined
+          @click="handleClose"
+          :disabled="loading"
+        />
+        <Button
+          type="submit"
+          label="Registrar Embarque Internacional"
+          icon="pi pi-check-circle"
+          :loading="loading"
+        />
       </div>
     </form>
   </BaseModal>
@@ -96,6 +101,9 @@
 
 <script setup>
 import { ref, watch } from 'vue'
+import Button from 'primevue/button'
+import InputText from 'primevue/inputtext'
+import Textarea from 'primevue/textarea'
 import BaseModal from '@/shared/components/BaseModal.vue'
 import { expedienteService } from '../services/expedienteService'
 import { getTodayDateInput } from '@/shared/utils/dateUtils'

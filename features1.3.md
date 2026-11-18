@@ -26,3 +26,10 @@
 - `navigationStore` expone `DEFAULT_MODULE_SUB_OPTION` y la acción `resetModuleToDefaultView(module)`.
 - El router restaura la vista inicial del módulo cuando la ruta no trae `?tab` (comercial, gestión aduanera, agente aduanero, transporte y flota, legal y auditoría, finanzas) en lugar de conservar la sub-opción anterior.
 - Test de `resetModuleToDefaultView` por módulo en `navigationStore.test.js`.
+
+## Portal Cliente B2B sobre el cascarón sgaUI
+
+- Nuevo `app-portal-cliente/src/core/layouts/PortalSidebar.vue`: sidebar `.sga-sidebar` con tarjeta de empresa autenticada (nombre + RUC), navegación en píldora con punto indicador y colapso a 72px.
+- `PortalLayout.vue` reescrito sobre `.sga-shell` (topbar de una línea): título por ruta, campana de notificaciones con badge y popover de cuenta con tema (ToggleSwitch) y cierre de sesión. Se eliminan el header de dos barras y el footer corporativo.
+- Notificaciones deja de ser ítem del menú lateral y pasa al icono de la campana en la topbar; el conteo se carga con `watch` inmediato sobre la ruta.
+- `app-portal-cliente/src/style.css` ya no duplica tokens de color, radios, sombras ni overrides de PrimeVue: los hereda de `sgaUI/sga-theme.css`.

@@ -23,6 +23,7 @@ import MiscSection from './sections/MiscSection.vue'
 import SgaComponentsSection from './sections/SgaComponentsSection.vue'
 import SgaMastersSection from './sections/SgaMastersSection.vue'
 import SgaShellBaseSection from './sections/SgaShellBaseSection.vue'
+import PortalB2BShellSection from './sections/PortalB2BShellSection.vue'
 
 // Preset exacto de app-sga (Warm Editorial: espresso, arena, latte y café)
 const SgaPreset = definePreset(Aura, {
@@ -108,7 +109,8 @@ const categories = [
   { id: 'misc', label: 'Mensajes y Media', icon: 'pi pi-sparkles', component: MiscSection },
   { id: 'sga-custom', label: 'Componentes SGA', icon: 'pi pi-box', component: SgaComponentsSection },
   { id: 'sga-masters', label: 'Maestros SGA (Variantes)', icon: 'pi pi-sitemap', component: SgaMastersSection },
-  { id: 'sga-shell', label: 'Shell Base SGA', icon: 'pi pi-desktop', component: SgaShellBaseSection }
+  { id: 'sga-shell', label: 'Shell Base SGA', icon: 'pi pi-desktop', component: SgaShellBaseSection },
+  { id: 'portal-b2b-shell', label: 'Portal B2B (Shell sgaUI)', icon: 'pi pi-building', component: PortalB2BShellSection }
 ]
 
 const currentComponent = computed(() => {
@@ -169,7 +171,7 @@ const toggleDarkMode = () => {
     </nav>
 
     <main class="content">
-      <component :is="currentComponent" />
+      <component :is="currentComponent" :is-dark="darkMode" @toggle-theme="toggleDarkMode" />
     </main>
   </div>
 </template>

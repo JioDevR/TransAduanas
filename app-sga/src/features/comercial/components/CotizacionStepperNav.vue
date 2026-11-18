@@ -1,75 +1,35 @@
 <template>
-  <div class="stepper-nav-bar">
+  <nav class="sga-stepper-bar" aria-label="Pasos de la cotización">
     <button
+      v-for="step in steps"
+      :key="step.num"
       type="button"
-      :class="['stepper-step-btn', { active: currentStep === 1, completed: currentStep > 1 || !!form.idCliente }]"
-      @click="$emit('update:currentStep', 1)"
+      :class="[
+        'sga-stepper-item',
+        {
+          'is-active': currentStep === step.num,
+          'is-completed': currentStep !== step.num && step.completed
+        }
+      ]"
+      @click="$emit('update:currentStep', step.num)"
     >
-      <span class="step-badge">
-        <i v-if="form.idCliente" class="pi pi-check"></i>
-        <span v-else>1</span>
+      <span class="sga-step-circle">
+        <i v-if="currentStep > step.num && step.completed" class="pi pi-check"></i>
+        <span v-else>{{ step.num }}</span>
       </span>
-      <div class="step-info">
-        <span class="step-label">PASO 01</span>
-        <span class="step-title">Cliente Solicitante</span>
+
+      <div class="sga-step-meta">
+        <span class="sga-step-kicker">{{ step.kicker }}</span>
+        <span class="sga-step-title">{{ step.title }}</span>
       </div>
     </button>
-
-    <div class="stepper-divider"></div>
-
-    <button
-      type="button"
-      :class="['stepper-step-btn', { active: currentStep === 2, completed: currentStep > 2 || !!form.regimenAduanero }]"
-      @click="$emit('update:currentStep', 2)"
-    >
-      <span class="step-badge">
-        <i v-if="form.regimenAduanero && currentStep > 2" class="pi pi-check"></i>
-        <span v-else>2</span>
-      </span>
-      <div class="step-info">
-        <span class="step-label">PASO 02</span>
-        <span class="step-title">Régimen & Plazos</span>
-      </div>
-    </button>
-
-    <div class="stepper-divider"></div>
-
-    <button
-      type="button"
-      :class="['stepper-step-btn', { active: currentStep === 3, completed: currentStep > 3 || docsCount > 0 }]"
-      @click="$emit('update:currentStep', 3)"
-    >
-      <span class="step-badge">
-        <i v-if="docsCount > 0 || currentStep > 3" class="pi pi-check"></i>
-        <span v-else>3</span>
-      </span>
-      <div class="step-info">
-        <span class="step-label">PASO 03</span>
-        <span class="step-title">Documentación</span>
-      </div>
-    </button>
-
-    <div class="stepper-divider"></div>
-
-    <button
-      type="button"
-      :class="['stepper-step-btn', { active: currentStep === 4, completed: form.totalCotizado > 0 }]"
-      @click="$emit('update:currentStep', 4)"
-    >
-      <span class="step-badge">
-        <i v-if="form.totalCotizado > 0" class="pi pi-check"></i>
-        <span v-else>4</span>
-      </span>
-      <div class="step-info">
-        <span class="step-label">PASO 04</span>
-        <span class="step-title">Costos & Liquidación</span>
-      </div>
-    </button>
-  </div>
+  </nav>
 </template>
 
 <script setup>
-defineProps({
+import { computed } from 'vue'
+
+const props = defineProps({
   currentStep: {
     type: Number,
     required: true
@@ -85,93 +45,137 @@ defineProps({
 })
 
 defineEmits(['update:currentStep'])
+
+const steps = computed(() => [
+  {
+    num: 1,
+    kicker: 'PASO 01',
+    title: 'Cliente Solicitante',
+    completed: !!props.form.idCliente
+  },
+  {
+    num: 2,
+    kicker: 'PASO 02',
+    title: 'Régimen & Plazos',
+    completed: !!props.form.regimenAduanero
+  },
+  {
+    num: 3,
+    kicker: 'PASO 03',
+    title: 'Documentación',
+    completed: props.docsCount > 0 || props.currentStep > 3
+  },
+  {
+    num: 4,
+    kicker: 'PASO 04',
+    title: 'Costos & Liquidación',
+    completed: Number(props.form.totalCotizado) > 0
+  }
+])
 </script>
 
 <style scoped>
-.stepper-nav-bar {
-  display: flex;
-  align-items: center;
+.sga-stepper-bar {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(160px, 1fr));
+  gap: 0.75rem;
+  padding: 0.85rem var(--sga-card-padding-x, 2rem);
   background: var(--color-bg-surface);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg, 0.75rem);
-  padding: 0.65rem 1.25rem;
-  box-shadow: var(--shadow-subtle);
-  gap: var(--space-4, 1rem);
+  border-radius: var(--sga-card-radius, 14px);
   overflow-x: auto;
 }
 
-.stepper-step-btn {
+.sga-stepper-item {
   display: flex;
   align-items: center;
-  gap: var(--space-3, 0.75rem);
-  background: none;
+  gap: 0.75rem;
+  background: transparent;
   border: none;
+  padding: 0.35rem 0.5rem;
+  border-radius: 10px;
   cursor: pointer;
-  padding: var(--space-2, 0.5rem) var(--space-3, 0.75rem);
-  border-radius: var(--radius-md, 0.5rem);
-  transition: all var(--transition-fast);
-  flex-shrink: 0;
+  text-align: left;
+  transition: background-color var(--transition-fast);
 }
 
-.stepper-step-btn:hover {
+.sga-stepper-item:hover {
   background: var(--color-bg-subtle);
 }
 
-.step-badge {
-  width: 2rem;
-  height: 2rem;
-  border-radius: 50%;
-  border: 2px solid var(--color-border);
-  background: var(--color-bg-subtle);
-  color: var(--color-text-muted);
-  font-weight: 700;
-  font-size: var(--font-size-xs, 0.75rem);
-  display: flex;
+.sga-step-circle {
+  width: 26px;
+  height: 26px;
+  border-radius: 9999px;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  flex-shrink: 0;
+  border: 1px solid var(--color-border-strong);
+  color: var(--color-text-subtle);
+  background: transparent;
   transition: all var(--transition-fast);
 }
 
-.stepper-step-btn.active .step-badge {
-  background: var(--color-primary);
-  color: var(--color-primary-text, #ffffff);
-  border-color: var(--color-primary);
-}
-
-.stepper-step-btn.completed .step-badge {
-  background: var(--color-success-bg);
-  color: var(--color-success-text);
-  border-color: var(--color-success-border);
-}
-
-.step-info {
+.sga-step-meta {
   display: flex;
   flex-direction: column;
-  text-align: left;
+  min-width: 0;
 }
 
-.step-label {
-  font-size: var(--font-size-2xs, 0.6875rem);
+.sga-step-kicker {
+  font-size: 0.625rem;
   font-weight: 700;
-  letter-spacing: 0.08em;
-  color: var(--color-accent-kicker);
+  letter-spacing: 0.06em;
+  color: var(--color-text-subtle);
+  line-height: 1.2;
 }
 
-.step-title {
-  font-size: var(--font-size-xs, 0.75rem);
+.sga-step-title {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-text-subtle);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Activo */
+.sga-stepper-item.is-active .sga-step-circle {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--color-primary-text);
+}
+
+.sga-stepper-item.is-active .sga-step-kicker {
+  color: var(--color-text-muted);
+}
+
+.sga-stepper-item.is-active .sga-step-title {
+  color: var(--color-text-main);
   font-weight: 700;
-  color: var(--color-text-main);
 }
 
-.stepper-step-btn.active .step-title {
-  color: var(--color-text-main);
-  font-weight: 800;
+/* Completado */
+.sga-stepper-item.is-completed .sga-step-circle {
+  border-color: var(--color-success-text);
+  color: var(--color-success-text);
+  background: transparent;
 }
 
-.stepper-divider {
-  flex: 1;
-  height: 2px;
-  background: var(--color-border-subtle);
-  min-width: 1.5rem;
+.sga-stepper-item.is-completed .sga-step-kicker {
+  color: var(--color-success-text);
+}
+
+.sga-stepper-item.is-completed .sga-step-title {
+  color: var(--color-text-muted);
+}
+
+@media (max-width: 768px) {
+  .sga-stepper-bar {
+    grid-template-columns: repeat(4, minmax(180px, 1fr));
+  }
 }
 </style>

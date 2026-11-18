@@ -58,6 +58,12 @@
   --radius-2xl: 1.25rem;
   --radius-pill: 9999px;
 
+  /* Espaciado estandarizado de contenedores y tarjetas sgaUI */
+  --sga-card-padding-y: 1.75rem;
+  --sga-card-padding-x: 2rem;
+  --sga-card-radius: 14px;
+  --sga-subpanel-padding: 1.25rem 1.35rem;
+
   --shadow-subtle: 0 1px 3px rgba(28, 24, 21, 0.04), 0 1px 2px rgba(28, 24, 21, 0.02);
   --shadow-card: 0 4px 16px -2px rgba(28, 24, 21, 0.05), 0 2px 6px -1px rgba(28, 24, 21, 0.03);
   --shadow-elevated: 0 12px 28px -6px rgba(28, 24, 21, 0.1), 0 4px 10px -2px rgba(28, 24, 21, 0.04);
@@ -177,4 +183,356 @@ code {
 .p-datatable .p-datatable-tbody > tr > td,
 .p-datatable .p-datatable-thead > tr > th {
   padding: 0.65rem 0.9rem;
+}
+
+/* Superficie de tarjeta estandarizada (márgenes laterales uniformes) */
+.sga-card-surface {
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--sga-card-radius, 14px);
+  padding: var(--sga-card-padding-y, 1.75rem) var(--sga-card-padding-x, 2rem);
+}
+
+@media (max-width: 768px) {
+  :root {
+    --sga-card-padding-y: 1.25rem;
+    --sga-card-padding-x: 1.25rem;
+    --sga-subpanel-padding: 1rem;
+  }
+}
+
+/* ==========================================================================
+   Patrón unificado de Listados (Header + Toolbar + DataTable + Canvas Grid)
+   ========================================================================== */
+.sga-list-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.sga-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.sga-panel-title-group {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.sga-panel-title {
+  margin: 0;
+  font-size: 1.45rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--color-text-main);
+}
+
+.sga-table-card {
+  padding: 1.15rem 1.35rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.sga-table-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.sga-toolbar-filters {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  flex: 1;
+  min-width: 280px;
+}
+
+.sga-filter-search {
+  min-width: 240px;
+  max-width: 320px;
+  flex: 1;
+}
+
+.sga-filter-select {
+  min-width: 155px;
+}
+
+.sga-sort-select {
+  min-width: 210px;
+}
+
+.sga-toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.sga-code-cell {
+  font-weight: 600;
+  font-size: 0.85em;
+  color: var(--color-text-main);
+  white-space: nowrap;
+}
+
+.sga-cell-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.sga-cell-primary {
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: var(--color-text-main);
+}
+
+.sga-cell-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.sga-cell-sub {
+  font-size: 0.78rem;
+  color: var(--color-text-subtle);
+}
+
+.sga-cell-muted {
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+}
+
+.sga-mini-tag {
+  font-size: 0.65rem;
+  padding: 0.1rem 0.45rem;
+}
+
+.sga-amount-cell {
+  font-weight: 600;
+  font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-main);
+  white-space: nowrap;
+}
+
+.sga-date-cell {
+  font-size: 0.85em;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.sga-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 2.5rem 1rem;
+  color: var(--color-text-subtle);
+}
+
+.sga-empty-icon {
+  font-size: 1.75rem;
+}
+
+.sga-empty-title {
+  margin: 0;
+  font-weight: 600;
+  color: var(--color-text-main);
+}
+
+.sga-empty-desc {
+  margin: 0;
+  font-size: 0.875rem;
+}
+
+/* Vista Canvas */
+.sga-canvas-wrapper {
+  width: 100%;
+}
+
+.sga-canvas-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 3rem 1rem;
+  color: var(--color-text-subtle);
+}
+
+.sga-state-icon {
+  font-size: 1.75rem;
+}
+
+.sga-state-title {
+  margin: 0;
+  font-weight: 600;
+  color: var(--color-text-main);
+}
+
+.sga-state-desc {
+  margin: 0;
+  font-size: 0.875rem;
+}
+
+.sga-canvas-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+  gap: 1rem;
+}
+
+.sga-canvas-card {
+  background: var(--color-bg-base);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 1.15rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  cursor: pointer;
+  transition: border-color var(--transition-fast), background-color var(--transition-fast);
+}
+
+.sga-canvas-card:hover {
+  border-color: var(--color-border-strong);
+}
+
+.sga-canvas-card.is-selected {
+  border-color: var(--color-primary);
+  background: var(--color-bg-subtle);
+}
+
+.sga-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.sga-card-code {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--color-text-main);
+}
+
+.sga-card-client {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.sga-client-title {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--color-text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sga-client-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
+.sga-client-doc {
+  font-size: 0.78rem;
+  color: var(--color-text-subtle);
+}
+
+.sga-card-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.65rem 0.85rem;
+  padding: 0.75rem 0;
+  border-top: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.sga-meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.sga-meta-item.full-span {
+  grid-column: 1 / -1;
+}
+
+.sga-meta-label {
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--color-text-subtle);
+}
+
+.sga-meta-val {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--color-text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sga-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.sga-footer-left {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.sga-total-amount {
+  font-size: 1rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-main);
+}
+
+.sga-text-success {
+  color: var(--color-success-text);
+}
+
+.sga-text-warn {
+  color: var(--color-warning-text);
+}
+
+.sga-text-info {
+  color: var(--color-info-text);
+}
+
+.sga-text-muted {
+  color: var(--color-text-subtle);
+}
+
+.font-mono {
+  font-family: var(--font-mono);
+}
+
+@media (max-width: 900px) {
+  .sga-filter-search {
+    max-width: none;
+  }
 }

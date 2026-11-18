@@ -20,8 +20,8 @@
     <!-- VISTA PRINCIPAL: BANDEJA Y GESTIÓN MAESTRA ADUANERA            -->
     <!-- ============================================================== -->
     <div v-else class="supervision-master-container">
-      <!-- 1. Barra de Atajos Rápidos y Operatoria Aduanera -->
-      <div class="supervision-action-toolbar">
+      <!-- 1. Barra de Atajos Rápidos y Operatoria Aduanera (en pestañas legacy) -->
+      <div v-if="activeTab !== 'cotizaciones'" class="supervision-action-toolbar">
         <div class="toolbar-left-info">
           <span class="badge-kicker">OPERATORIA & CONTROL ADUANERO</span>
           <h3 class="toolbar-title">Panel de Supervisión Técnica & Expedientes</h3>
@@ -72,75 +72,8 @@
         </div>
       </div>
 
-      <!-- 2. Grid de Métricas KPI Estandarizadas (Solo en Pestaña Cotizaciones) -->
-      <div v-if="activeTab === 'cotizaciones'" class="metrics-supervision-grid">
-        <!-- KPI 01: Por Auditar -->
-        <div class="supervision-kpi-card pending-card" @click="subQueueCotizaciones = 'nuevas'">
-          <div class="kpi-card-header">
-            <span class="kpi-num">01</span>
-            <span class="kpi-label">Nuevas por Auditar</span>
-            <i class="pi pi-clock kpi-icon warning"></i>
-          </div>
-          <div class="kpi-main-stat">
-            <span class="kpi-value text-warning">{{ cotizacionesClasificadas.nuevas.length }}</span>
-            <span class="kpi-badge warning">Revisión Inicial</span>
-          </div>
-          <div class="kpi-footer-note">
-            <span>Propuestas comerciales entrantes</span>
-          </div>
-        </div>
-
-        <!-- KPI 02: En Observación Técnica / Subsanadas -->
-        <div class="supervision-kpi-card alert-card" @click="subQueueCotizaciones = 'subsanadas'">
-          <div class="kpi-card-header">
-            <span class="kpi-num">02</span>
-            <span class="kpi-label">Subsanadas / Reingresos</span>
-            <i class="pi pi-file-edit kpi-icon danger"></i>
-          </div>
-          <div class="kpi-main-stat">
-            <span class="kpi-value text-danger">{{ cotizacionesClasificadas.subsanadas.length }}</span>
-            <span class="kpi-badge danger">Prioridad Alta</span>
-          </div>
-          <div class="kpi-footer-note">
-            <span>Para subsanación o reingresadas</span>
-          </div>
-        </div>
-
-        <!-- KPI 03: En Espera de Pago -->
-        <div class="supervision-kpi-card wait-card" @click="subQueueCotizaciones = 'pendientesPago'">
-          <div class="kpi-card-header">
-            <span class="kpi-num">03</span>
-            <span class="kpi-label">En Espera de Pago</span>
-            <i class="pi pi-wallet kpi-icon"></i>
-          </div>
-          <div class="kpi-main-stat">
-            <span class="kpi-value">{{ cotizacionesClasificadas.pendientesPago.length }}</span>
-            <span class="kpi-badge">Pendiente Finanzas</span>
-          </div>
-          <div class="kpi-footer-note">
-            <span>Aprobadas técnicamente sin pago</span>
-          </div>
-        </div>
-
-        <!-- KPI 04: Listas para Aperturar Expediente -->
-        <div class="supervision-kpi-card ready-card" @click="subQueueCotizaciones = 'listasApertura'">
-          <div class="kpi-card-header">
-            <span class="kpi-num">04</span>
-            <span class="kpi-label">Listas para Expediente</span>
-            <i class="pi pi-folder-open kpi-icon primary"></i>
-          </div>
-          <div class="kpi-main-stat">
-            <span class="kpi-value text-primary">{{ cotizacionesClasificadas.listasApertura.length }}</span>
-            <span class="kpi-badge primary">Con Pago Confirmado</span>
-          </div>
-          <div class="kpi-footer-note">
-            <span>Aprobadas con pago validado</span>
-          </div>
-        </div>
-      </div>
-
       <!-- 2. Grid de Métricas de Expedientes (Solo en Pestaña Expedientes) -->
-      <div v-else-if="activeTab === 'expedientes'" class="metrics-supervision-grid">
+      <div v-if="activeTab === 'expedientes'" class="metrics-supervision-grid">
         <!-- KPI 01: Total Expedientes -->
         <div class="supervision-kpi-card" @click="faseExpediente = 'TODOS'">
           <div class="kpi-card-header">
@@ -222,291 +155,27 @@
       <!-- ============================================================== -->
       <!-- PESTAÑA 02: BANDEJA DE COTIZACIONES ADUANERAS                  -->
       <!-- ============================================================== -->
-      <div v-else-if="activeTab === 'cotizaciones'" class="tab-content-section fade-in">
-        <!-- Barra de Sub-Colas Operativas -->
-        <div class="sub-queues-bar">
-          <button
-            type="button"
-            :class="['sub-queue-btn', { active: subQueueCotizaciones === 'nuevas' }]"
-            @click="subQueueCotizaciones = 'nuevas'"
-          >
-            <span class="sub-q-num">01</span>
-            <span>Nuevas por Auditar</span>
-            <span class="sub-q-badge warning" v-if="cotizacionesClasificadas.nuevas.length > 0">
-              {{ cotizacionesClasificadas.nuevas.length }}
-            </span>
-          </button>
-
-          <button
-            type="button"
-            :class="['sub-queue-btn', { active: subQueueCotizaciones === 'subsanadas' }]"
-            @click="subQueueCotizaciones = 'subsanadas'"
-          >
-            <span class="sub-q-num">02</span>
-            <span>Subsanadas / Reingresos</span>
-            <span class="sub-q-badge danger" v-if="cotizacionesClasificadas.subsanadas.length > 0">
-              {{ cotizacionesClasificadas.subsanadas.length }}
-            </span>
-          </button>
-
-          <button
-            type="button"
-            :class="['sub-queue-btn', { active: subQueueCotizaciones === 'pendientesPago' }]"
-            @click="subQueueCotizaciones = 'pendientesPago'"
-          >
-            <span class="sub-q-num">03</span>
-            <span>En Espera de Pago</span>
-            <span class="sub-q-badge muted" v-if="cotizacionesClasificadas.pendientesPago.length > 0">
-              {{ cotizacionesClasificadas.pendientesPago.length }}
-            </span>
-          </button>
-
-          <button
-            type="button"
-            :class="['sub-queue-btn', { active: subQueueCotizaciones === 'listasApertura' }]"
-            @click="subQueueCotizaciones = 'listasApertura'"
-          >
-            <span class="sub-q-num">04</span>
-            <span>Listas para Apertura</span>
-            <span class="sub-q-badge success" v-if="cotizacionesClasificadas.listasApertura.length > 0">
-              {{ cotizacionesClasificadas.listasApertura.length }}
-            </span>
-          </button>
-
-          <button
-            type="button"
-            :class="['sub-queue-btn', { active: subQueueCotizaciones === 'historico' }]"
-            @click="subQueueCotizaciones = 'historico'"
-          >
-            <span class="sub-q-num">05</span>
-            <span>Histórico / Concluidas</span>
-            <span class="sub-q-badge" v-if="cotizacionesClasificadas.historico.length > 0">
-              {{ cotizacionesClasificadas.historico.length }}
-            </span>
-          </button>
-        </div>
-
-        <div class="section-header-row">
-          <div>
-            <span class="badge-kicker">CONTROL ADUANERO</span>
-            <h3 class="section-title">
-              {{ getSubQueueTitle(subQueueCotizaciones) }} ({{ filteredCotizaciones.length }})
-            </h3>
-          </div>
-
-          <div class="section-controls">
-            <!-- Búsqueda Rápida -->
-            <div class="search-input-wrap">
-              <i class="pi pi-search search-icon"></i>
-              <input
-                v-model="searchQuery"
-                type="text"
-                class="search-input"
-                placeholder="Buscar por código, cliente o RUC..."
-              />
-            </div>
-
-            <!-- Botón de Recarga -->
-            <button type="button" class="btn-outline-warm" @click="loadData" :disabled="loading">
-              <i :class="['pi pi-sync', { 'pi-spin': loading }]"></i>
-              <span>Actualizar</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- Tabla de Cotizaciones -->
-        <div class="table-container">
-          <DataTable
-            :value="filteredCotizaciones"
-            :loading="loading"
-            responsiveLayout="scroll"
-            class="custom-datatable"
-            dataKey="idCotizacion"
-          >
-            <template #empty>
-              <div class="empty-state">
-                <i class="pi pi-check-circle empty-icon"></i>
-                <p class="empty-title">No hay cotizaciones con este criterio</p>
-                <p class="empty-desc">Las cotizaciones emitidas por los ejecutivos de ventas aparecerán aquí para su validación técnica.</p>
-              </div>
-            </template>
-
-            <template #loading>
-              <div class="loading-state">
-                <i class="pi pi-spin pi-spinner"></i>
-                <span>Cargando expedientes aduaneros...</span>
-              </div>
-            </template>
-
-            <Column header="N° Cotización">
-              <template #body="{ data: c }">
-                <div class="code-column">
-                  <span class="doc-code font-mono">{{ c.codigoCotizacion }}</span>
-                  <span class="date-sub font-mono">{{ c.fechaEmision }}</span>
-                </div>
-              </template>
-            </Column>
-
-            <Column header="Cliente / RUC">
-              <template #body="{ data: c }">
-                <div class="client-cell">
-                  <span class="client-name">{{ c.clienteRazonSocial || 'Cliente no asignado' }}</span>
-                  <span class="client-sub font-mono">RUC/Doc: {{ c.clienteNumeroDocumento }}</span>
-                </div>
-              </template>
-            </Column>
-
-            <Column header="Comercial">
-              <template #body="{ data: c }">
-                <span class="comercial-name">{{ c.usuarioComercialNombre || 'Asesor Comercial' }}</span>
-              </template>
-            </Column>
-
-            <Column header="Régimen Aduanero">
-              <template #body="{ data: c }">
-                <span class="regimen-tag">{{ formatRegimen(c.regimenAduanero) }}</span>
-              </template>
-            </Column>
-
-            <Column header="Total Cotizado">
-              <template #body="{ data: c }">
-                <span class="total-amount font-mono">${{ Number(c.totalCotizado || 0).toLocaleString('en-US', { minimumFractionDigits: 2 }) }}</span>
-              </template>
-            </Column>
-
-            <Column header="Estado">
-              <template #body="{ data: c }">
-                <Tag
-                  :value="getEstadoLabel(c.estado)"
-                  :severity="getEstadoSeverity(c.estado)"
-                  rounded
-                />
-              </template>
-            </Column>
-
-            <Column header="Pago / Anticipo">
-              <template #body="{ data: c }">
-                <div v-if="c.estado === 'APROBADA'" class="client-cell">
-                  <Tag
-                    :value="getEstadoPagoLabel(c.estadoPago)"
-                    :severity="getEstadoPagoSeverity(c.estadoPago)"
-                    rounded
-                  />
-                  <span v-if="c.totalAbonado > 0" class="client-sub font-mono font-bold" style="color: var(--color-success-text);">
-                    Abono: ${{ Number(c.totalAbonado).toLocaleString('en-US', { minimumFractionDigits: 2 }) }}
-                  </span>
-                  <span v-else class="client-sub text-muted">
-                    Sin abono confirmado
-                  </span>
-                </div>
-                <span v-else class="text-muted-dash">—</span>
-              </template>
-            </Column>
-
-            <Column header="Expediente Aduanero">
-              <template #body="{ data: c }">
-                <div v-if="c.tieneExpediente" class="exp-linked-tag font-mono">
-                  <i class="pi pi-folder"></i>
-                  <span>{{ c.codigoExpediente }}</span>
-                </div>
-                <span v-else-if="c.estado === 'APROBADA' && c.tienePagoAprobado" class="text-muted-dash" style="color: var(--color-success-text); font-weight: 700;">Listo para Expediente</span>
-                <span v-else-if="c.estado === 'APROBADA'" class="text-muted-dash" style="color: var(--color-warning-text); font-weight: 600;">Requiere Pago Finanzas</span>
-                <span v-else class="text-muted-dash">—</span>
-              </template>
-            </Column>
-
-            <Column header="Acciones de Supervisión" headerClass="text-right" bodyClass="text-right">
-              <template #body="{ data: c }">
-                <div class="actions-wrapper">
-                  <!-- Botón Principal: Auditar en Vista Completa (Modificado según requerimiento) -->
-                  <button
-                    type="button"
-                    class="action-btn-primary"
-                    title="Auditar en vista completa con expediente resumido y documentos"
-                    @click="openInspectModal(c)"
-                  >
-                    <i class="pi pi-eye"></i>
-                    <span>Auditar</span>
-                  </button>
-
-                  <!-- Botón de Documentos Adjuntos Rápidos -->
-                  <button
-                    type="button"
-                    class="action-btn-outline"
-                    title="Gestionar Documentos y Anexos"
-                    @click="openDocumentosCotizacion(c)"
-                  >
-                    <i class="pi pi-paperclip"></i>
-                    <span>Docs</span>
-                  </button>
-
-                  <!-- Botón Rápido de Aprobación -->
-                  <button
-                    v-if="['PENDIENTE', 'EN_REVISION', 'ENVIADA', 'REVISION', 'OBSERVADA'].includes(c.estado)"
-                    type="button"
-                    class="action-btn-outline approve"
-                    title="Aprobar técnicamente para apertura de Expediente Aduanero"
-                    @click="confirmApprove(c)"
-                  >
-                    <i class="pi pi-check"></i>
-                    <span>Aprobar</span>
-                  </button>
-
-                  <!-- Botón Rápido de Observación / Revisión -->
-                  <button
-                    v-if="['PENDIENTE', 'EN_REVISION', 'ENVIADA'].includes(c.estado)"
-                    type="button"
-                    class="action-btn-outline observe"
-                    title="Devolver para Revisión a Ventas"
-                    @click="openObservationModal(c)"
-                  >
-                    <i class="pi pi-file-edit"></i>
-                    <span>Observar</span>
-                  </button>
-
-                  <!-- Botón Rápido de Rechazo -->
-                  <button
-                    v-if="['PENDIENTE', 'EN_REVISION', 'ENVIADA', 'REVISION', 'OBSERVADA'].includes(c.estado)"
-                    type="button"
-                    class="action-btn-outline reject"
-                    title="Rechazar Cotización"
-                    @click="openRejectModal(c)"
-                  >
-                    <i class="pi pi-times"></i>
-                  </button>
-
-                  <!-- Acciones de Expediente cuando está Aprobada -->
-                  <template v-if="c.estado === 'APROBADA' && !c.tieneExpediente">
-                    <button
-                      v-if="c.tienePagoAprobado"
-                      type="button"
-                      class="action-btn-outline"
-                      style="border-color: var(--color-accent-kicker); color: var(--color-accent-kicker); font-weight: 700;"
-                      title="Aperturar Expediente Aduanero para esta cotización"
-                      @click="goToApertura(c)"
-                    >
-                      <i class="pi pi-folder-open"></i>
-                      <span>+ Expediente</span>
-                    </button>
-
-                    <button
-                      v-else
-                      type="button"
-                      class="action-btn-outline"
-                      style="border-color: var(--color-border); color: var(--color-text-subtle); cursor: not-allowed; background: var(--color-bg-subtle);"
-                      disabled
-                      title="Requiere que el área de Finanzas apruebe el pago o adelanto antes de generar el expediente"
-                    >
-                      <i class="pi pi-lock"></i>
-                      <span>+ Expediente</span>
-                    </button>
-                  </template>
-                </div>
-              </template>
-            </Column>
-          </DataTable>
-        </div>
-      </div>
+      <AduanasCotizacionesPanel
+        v-else-if="activeTab === 'cotizaciones'"
+        class="fade-in"
+        :cotizaciones="filteredCotizaciones"
+        :clasificadas="cotizacionesClasificadas"
+        :total-count="cotizaciones.length"
+        :loading="loading"
+        v-model:sub-queue="subQueueCotizaciones"
+        v-model:search-query="searchQuery"
+        v-model:filter-regimen="filterRegimenCotizacion"
+        v-model:sort-by="sortByCotizacion"
+        :has-active-filters="hasActiveCotizacionFilters"
+        @reset-filters="resetCotizacionFilters"
+        @refresh="loadData"
+        @inspect="openInspectModal"
+        @open-docs="openDocumentosCotizacion"
+        @approve="confirmApprove"
+        @observe="openRevisionDialog($event, 'observe')"
+        @reject="openRevisionDialog($event, 'reject')"
+        @open-apertura="goToApertura"
+      />
 
       <!-- ============================================================== -->
       <!-- PESTAÑA 03: APERTURA FORMAL DE EXPEDIENTES ADUANEROS           -->
@@ -867,92 +536,14 @@
     <!-- ============================================================== -->
     <!-- MODALES OPERATIVOS AUXILIARES (APERTURA, DETALLE, CANAL, ETC.) -->
     <!-- ============================================================== -->
-    <!-- Modal: Solicitar Revisión / Observación Rápida desde Tabla -->
-    <Dialog
-      v-model:visible="showObservationDialog"
-      modal
-      header="Solicitar Corrección a Ventas (Revisión)"
-      :style="{ width: '540px', maxWidth: '95vw' }"
-      class="custom-sga-dialog"
-    >
-      <div class="modal-form-content">
-        <p class="modal-desc">
-          Especifique las observaciones técnicas o financieras para que el asesor comercial corrija la cotización
-          <strong>{{ actionCotizacion?.codigoCotizacion }}</strong>. Una vez corregida, volverá automáticamente a su bandeja para aprobación.
-        </p>
-
-        <div class="form-group">
-          <label class="form-label">Detalle de Observación / Motivo de Revisión:</label>
-          <Textarea
-            v-model="observationReason"
-            rows="4"
-            class="custom-textarea"
-            placeholder="Ejemplo: Rectificar partida arancelaria para régimen definitivo o adjuntar póliza de flete estimada..."
-          />
-        </div>
-      </div>
-
-      <template #footer>
-        <div class="dialog-actions-row">
-          <button type="button" class="btn-outline-warm" @click="showObservationDialog = false">
-            <span>Cancelar</span>
-          </button>
-          <button
-            type="button"
-            class="btn-warm-action"
-            :disabled="!observationReason.trim() || processingAction"
-            @click="executeRevision"
-          >
-            <i v-if="processingAction" class="pi pi-spin pi-spinner"></i>
-            <i v-else class="pi pi-send"></i>
-            <span>Enviar a Revisión</span>
-          </button>
-        </div>
-      </template>
-    </Dialog>
-
-    <!-- Modal: Rechazar Cotización Rápido desde Tabla -->
-    <Dialog
-      v-model:visible="showRejectDialog"
-      modal
-      header="Rechazar Propuesta Comercial"
-      :style="{ width: '540px', maxWidth: '95vw' }"
-      class="custom-sga-dialog"
-    >
-      <div class="modal-form-content">
-        <p class="modal-desc">
-          Indique la razón formal por la cual la cotización <strong>{{ actionCotizacion?.codigoCotizacion }}</strong> no es viable técnica ni legalmente.
-        </p>
-
-        <div class="form-group">
-          <label class="form-label">Motivo de Rechazo Aduanero:</label>
-          <Textarea
-            v-model="rejectReason"
-            rows="4"
-            class="custom-textarea"
-            placeholder="Indique la causal de rechazo (incompatibilidad de régimen, restricciones de SUNAT, etc.)..."
-          />
-        </div>
-      </div>
-
-      <template #footer>
-        <div class="dialog-actions-row">
-          <button type="button" class="btn-outline-warm" @click="showRejectDialog = false">
-            <span>Cancelar</span>
-          </button>
-          <button
-            type="button"
-            class="btn-danger-action"
-            :disabled="!rejectReason.trim() || processingAction"
-            @click="executeReject"
-          >
-            <i v-if="processingAction" class="pi pi-spin pi-spinner"></i>
-            <i v-else class="pi pi-times"></i>
-            <span>Confirmar Rechazo</span>
-          </button>
-        </div>
-      </template>
-    </Dialog>
+    <!-- Modal Unificado: Observar o Rechazar Cotización desde Bandeja -->
+    <CotizacionRevisionDialog
+      v-model:visible="showRevisionDialog"
+      :mode="revisionDialogMode"
+      :cotizacion="actionCotizacion"
+      :loading="processingAction"
+      @confirm="handleRevisionConfirm"
+    />
 
     <!-- Modal: Asignación de Canal SUNAT / Levante Aduanero -->
     <CanalLevanteModal
@@ -1006,8 +597,6 @@ import { ref, computed, onMounted, watch } from 'vue'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import Tag from 'primevue/tag'
-import Dialog from 'primevue/dialog'
-import Textarea from 'primevue/textarea'
 import { useRoute, useRouter } from 'vue-router'
 import { gestionAduaneraService } from '../services/gestionAduaneraService'
 import { expedienteService } from '../services/expedienteService'
@@ -1023,10 +612,11 @@ import ActualizarTransitoModal from '../components/ActualizarTransitoModal.vue'
 import DocumentosManagerModal from '@/shared/components/DocumentosManagerModal.vue'
 import AuditoriaExpedienteModal from '../components/AuditoriaExpedienteModal.vue'
 import DashboardAduaneroPanel from '../components/DashboardAduaneroPanel.vue'
-import { getCredencialesPostAprobacionNotification } from '@/features/aduanas/utils/aprobacionAduaneraUtils'
+import AduanasCotizacionesPanel from '../components/AduanasCotizacionesPanel.vue'
+import CotizacionRevisionDialog from '../components/CotizacionRevisionDialog.vue'
+import { useAduanasCotizaciones } from '../composables/useAduanasCotizaciones'
 import { filtrarCotizacionesParaSupervision } from '../utils/supervisionCotizacionUtils'
 import {
-  clasificarCotizacionesAduaneras,
   filtrarExpedientesPorFase,
   obtenerAccionesPermitidasExpediente
 } from '../utils/aduanasWorkflowUtils'
@@ -1045,8 +635,7 @@ const activeTab = ref('dashboard') // 'dashboard' | 'cotizaciones' | 'apertura' 
 const cotizaciones = ref([])
 const expedientes = ref([])
 
-// Sub-cola de Cotizaciones y Fase de Expedientes
-const subQueueCotizaciones = ref('nuevas') // 'nuevas' | 'subsanadas' | 'pendientesPago' | 'listasApertura' | 'historico' | 'todas'
+// Fase de Expedientes y Filtros
 const faseExpediente = ref('TODOS') // 'TODOS' | 'PENDIENTE_CANAL' | 'CONTROL_SUNAT' | 'LEVANTE_AUTORIZADO' | 'CERRADOS'
 
 // Detección de Rol Operativo
@@ -1054,8 +643,7 @@ const isAgenteAduanero = computed(() => {
   return authStore.userRole === 'AGENTE_ADUANERO' || authStore.user?.rol === 'AGENTE_ADUANERO'
 })
 
-// Filtros y Búsqueda
-const searchQuery = ref('')
+// Filtros y Búsqueda de Expedientes
 const filterRegimenExpediente = ref('')
 const filterCanalExpediente = ref('')
 const filterEstadoExpediente = ref('')
@@ -1118,15 +706,10 @@ const openDocumentosExpediente = (expediente) => {
   showDocumentosModal.value = true
 }
 
-// Modales rápidos desde la tabla
-const showObservationDialog = ref(false)
-const observationReason = ref('')
-
-const showRejectDialog = ref(false)
-const rejectReason = ref('')
-
+// Modal unificado de revisión (Observar / Rechazar)
+const showRevisionDialog = ref(false)
+const revisionDialogMode = ref('observe')
 const actionCotizacion = ref(null)
-const processingAction = ref(false)
 
 // Sincronización reactiva con el menú lateral (Sidebar) y URL
 const switchTab = (tabName) => {
@@ -1144,18 +727,6 @@ const handleDashboardNavigate = (tab, subFilter) => {
   } else if (tab === 'expedientes' && subFilter) {
     faseExpediente.value = subFilter
   }
-}
-
-const getSubQueueTitle = (queue) => {
-  const map = {
-    nuevas: 'Cotizaciones Nuevas para Revisión Técnica',
-    subsanadas: 'Cotizaciones Subsanadas / Reingresos Prioritarios',
-    pendientesPago: 'Cotizaciones Aprobadas en Espera de Pago (Finanzas)',
-    listasApertura: 'Cotizaciones Listas para Aperturar Expediente',
-    historico: 'Historial de Cotizaciones Concluidas y Rechazadas',
-    todas: 'Todas las Cotizaciones Registradas'
-  }
-  return map[queue] || 'Bandeja de Cotizaciones'
 }
 
 const getFaseExpedienteTitle = (fase) => {
@@ -1192,11 +763,6 @@ watch(
     }
   }
 )
-
-// Clasificación reactiva de cotizaciones
-const cotizacionesClasificadas = computed(() => {
-  return clasificarCotizacionesAduaneras(cotizaciones.value)
-})
 
 // Lista de Agentes Aduaneros Disponibles en Expedientes para Filtro
 const agentesAduanerosDisponibles = computed(() => {
@@ -1254,47 +820,6 @@ const expedientesConLevanteCount = computed(() => {
 
 const expedientesCerradosCount = computed(() => {
   return filtrarExpedientesPorFase(baseExpedientes.value, 'CERRADOS').length
-})
-
-// Filtrado de Cotizaciones por Sub-Cola
-const filteredCotizaciones = computed(() => {
-  let list = []
-  const clasif = cotizacionesClasificadas.value
-  switch (subQueueCotizaciones.value) {
-    case 'nuevas':
-      list = clasif.nuevas
-      break
-    case 'subsanadas':
-      list = clasif.subsanadas
-      break
-    case 'pendientesPago':
-      list = clasif.pendientesPago
-      break
-    case 'listasApertura':
-      list = clasif.listasApertura
-      break
-    case 'historico':
-      list = clasif.historico
-      break
-    default:
-      list = cotizaciones.value
-  }
-
-  if (searchQuery.value) {
-    const q = searchQuery.value.toLowerCase().trim()
-    list = list.filter((c) => {
-      return (
-        c.codigoCotizacion?.toLowerCase().includes(q) ||
-        c.clienteRazonSocial?.toLowerCase().includes(q) ||
-        c.clienteNumeroDocumento?.toLowerCase().includes(q) ||
-        c.usuarioComercialNombre?.toLowerCase().includes(q) ||
-        c.codigoExpediente?.toLowerCase().includes(q) ||
-        c.mercanciaCodigo?.toLowerCase().includes(q)
-      )
-    })
-  }
-
-  return list
 })
 
 // Filtrado de Expedientes Aduaneros por Etapa Operativa y Criterios
@@ -1429,6 +954,26 @@ onMounted(() => {
   loadData()
 })
 
+const {
+  subQueueCotizaciones,
+  searchQuery,
+  filterRegimen: filterRegimenCotizacion,
+  sortBy: sortByCotizacion,
+  processingAction,
+  cotizacionesClasificadas,
+  filteredCotizaciones,
+  hasActiveFilters: hasActiveCotizacionFilters,
+  resetFilters: resetCotizacionFilters,
+  ejecutarRevisionTecnica,
+  aprobarCotizacion
+} = useAduanasCotizaciones({
+  cotizaciones,
+  authStore,
+  notify: { showSuccess, showError, showInfo },
+  confirmAction,
+  onReload: loadData
+})
+
 // ==========================================
 // ACCIONES DE AUDITORÍA Y SUPERVISIÓN EN VISTA COMPLETA
 // ==========================================
@@ -1452,6 +997,10 @@ const closeAuditoriaCompleta = () => {
   inspectedExpediente.value = null
 }
 
+const confirmApprove = async (cotizacion) => {
+  await aprobarCotizacion(cotizacion)
+}
+
 const handleApproveFromAuditoria = async (cotizacion) => {
   await confirmApprove(cotizacion)
   if (inspectedCotizacion.value) {
@@ -1461,41 +1010,23 @@ const handleApproveFromAuditoria = async (cotizacion) => {
 }
 
 const handleObserveFromAuditoria = async ({ cotizacion, reason }) => {
-  processingAction.value = true
-  try {
-    await gestionAduaneraService.revisarCotizacion(cotizacion.idCotizacion, {
-      idAgenteRevisor: authStore.user?.idUsuario || 1,
-      estado: 'OBSERVADA',
-      motivoObservacion: reason,
-      observaciones: 'Observaciones emitidas en auditoría técnica aduanera.'
-    })
-    showInfo(`Cotización ${cotizacion.codigoCotizacion} devuelta como Observada para corrección por Ventas.`)
-    closeAuditoriaCompleta()
-    await loadData()
-  } catch (err) {
-    showError(err.response?.data?.message || 'Error al solicitar corrección.')
-  } finally {
-    processingAction.value = false
-  }
+  const ok = await ejecutarRevisionTecnica({
+    cotizacion,
+    estado: 'OBSERVADA',
+    motivoObservacion: reason,
+    observaciones: 'Observaciones emitidas en auditoría técnica aduanera.'
+  })
+  if (ok) closeAuditoriaCompleta()
 }
 
 const handleRejectFromAuditoria = async ({ cotizacion, reason }) => {
-  processingAction.value = true
-  try {
-    await gestionAduaneraService.revisarCotizacion(cotizacion.idCotizacion, {
-      idAgenteRevisor: authStore.user?.idUsuario || 1,
-      estado: 'RECHAZADA',
-      motivoObservacion: reason,
-      observaciones: 'Rechazo técnico formal emitido en auditoría aduanera.'
-    })
-    showInfo(`Cotización ${cotizacion.codigoCotizacion} marcada como Rechazada.`)
-    closeAuditoriaCompleta()
-    await loadData()
-  } catch (err) {
-    showError(err.response?.data?.message || 'Error al rechazar cotización.')
-  } finally {
-    processingAction.value = false
-  }
+  const ok = await ejecutarRevisionTecnica({
+    cotizacion,
+    estado: 'RECHAZADA',
+    motivoObservacion: reason,
+    observaciones: 'Rechazo técnico formal emitido en auditoría aduanera.'
+  })
+  if (ok) closeAuditoriaCompleta()
 }
 
 const handleAperturaFromAuditoria = (cotizacion) => {
@@ -1503,141 +1034,29 @@ const handleAperturaFromAuditoria = (cotizacion) => {
   goToApertura(cotizacion)
 }
 
-// Acciones rápidas desde la tabla
-const confirmApprove = async (cotizacion) => {
-  const confirmed = await confirmAction({
-    message: `¿Confirma la aprobación de la Cotización ${cotizacion.codigoCotizacion}? Al aprobar, la propuesta queda formalizada técnicamente para apertura de Expediente Aduanero.`,
-    header: 'Aprobación Técnica Aduanera',
-    icon: 'pi pi-verified',
-    acceptLabel: 'Aprobar Propuesta',
-    rejectLabel: 'Cancelar',
-    acceptClass: 'sga-confirm-accept-btn',
-    rejectClass: 'sga-confirm-reject-btn'
+// Acciones rápidas desde la bandeja (Observación / Rechazo)
+const openRevisionDialog = (cotizacion, mode) => {
+  actionCotizacion.value = cotizacion
+  revisionDialogMode.value = mode
+  showRevisionDialog.value = true
+}
+
+const handleRevisionConfirm = async ({ cotizacion, mode, reason }) => {
+  const isObserve = mode === 'observe'
+  const ok = await ejecutarRevisionTecnica({
+    cotizacion,
+    estado: isObserve ? 'OBSERVADA' : 'RECHAZADA',
+    motivoObservacion: reason,
+    observaciones: isObserve
+      ? 'Observaciones emitidas por Supervisión Aduanera.'
+      : 'Rechazo técnico emitido por Supervisión Aduanera.'
   })
-  if (!confirmed) return
-
-  try {
-    loading.value = true
-    await gestionAduaneraService.revisarCotizacion(cotizacion.idCotizacion, {
-      idAgenteRevisor: authStore.user?.idUsuario || 1,
-      estado: 'APROBADA',
-      motivoObservacion: null,
-      observaciones: 'Aprobada formalmente por Supervisión Aduanera.'
-    })
-    showSuccess(`¡Cotización ${cotizacion.codigoCotizacion} Aprobada! Lista para apertura de Expediente Aduanero.`)
-
-    const notifCred = getCredencialesPostAprobacionNotification(cotizacion)
-    showInfo(notifCred.message, notifCred.title, notifCred.life)
-
-    await loadData()
-  } catch (err) {
-    showError(err.response?.data?.message || 'No se pudo aprobar la cotización.')
-  } finally {
-    loading.value = false
+  if (ok) {
+    showRevisionDialog.value = false
   }
 }
 
-const openObservationModal = (cotizacion) => {
-  actionCotizacion.value = cotizacion
-  observationReason.value = cotizacion.motivoObservacion || ''
-  showObservationDialog.value = true
-}
-
-const executeRevision = async () => {
-  if (!actionCotizacion.value || !observationReason.value.trim()) return
-
-  processingAction.value = true
-  try {
-    await gestionAduaneraService.revisarCotizacion(actionCotizacion.value.idCotizacion, {
-      idAgenteRevisor: authStore.user?.idUsuario || 1,
-      estado: 'OBSERVADA',
-      motivoObservacion: observationReason.value.trim(),
-      observaciones: 'Observaciones emitidas por Supervisión Aduanera.'
-    })
-    showInfo(`Cotización ${actionCotizacion.value.codigoCotizacion} marcada como Observada para corrección por Ventas.`)
-    showObservationDialog.value = false
-    await loadData()
-  } catch (err) {
-    showError(err.response?.data?.message || 'Error al cambiar estado a Revisión.')
-  } finally {
-    processingAction.value = false
-  }
-}
-
-const openRejectModal = (cotizacion) => {
-  actionCotizacion.value = cotizacion
-  rejectReason.value = ''
-  showRejectDialog.value = true
-}
-
-const executeReject = async () => {
-  if (!actionCotizacion.value || !rejectReason.value.trim()) return
-
-  processingAction.value = true
-  try {
-    await gestionAduaneraService.revisarCotizacion(actionCotizacion.value.idCotizacion, {
-      idAgenteRevisor: authStore.user?.idUsuario || 1,
-      estado: 'RECHAZADA',
-      motivoObservacion: rejectReason.value.trim(),
-      observaciones: 'Rechazo técnico emitido por Supervisión Aduanera.'
-    })
-    showInfo(`Cotización ${actionCotizacion.value.codigoCotizacion} marcada como Rechazada.`)
-    showRejectDialog.value = false
-    await loadData()
-  } catch (err) {
-    showError(err.response?.data?.message || 'Error al rechazar cotización.')
-  } finally {
-    processingAction.value = false
-  }
-}
-
-// Helpers de Estilo y Etiquetas
-const getEstadoPagoLabel = (st) => {
-  switch (st) {
-    case 'ADELANTO_APROBADO': return 'Anticipo Aprobado'
-    case 'PAGADO_TOTAL': return 'Pagado 100%'
-    case 'PENDIENTE_REVISION': return 'En Revisión Finanzas'
-    case 'OBSERVADO': return 'Pago Observado'
-    default: return 'Pendiente de Pago'
-  }
-}
-
-const getEstadoPagoSeverity = (st) => {
-  switch (st) {
-    case 'ADELANTO_APROBADO':
-    case 'PAGADO_TOTAL':
-      return 'success'
-    case 'PENDIENTE_REVISION':
-      return 'warn'
-    case 'OBSERVADO':
-      return 'danger'
-    default:
-      return 'info'
-  }
-}
-
-const getEstadoLabel = (estado) => {
-  const map = {
-    ENVIADA: 'Por Revisar (Pendiente)',
-    PENDIENTE: 'Por Revisar (Pendiente)',
-    EN_REVISION: 'En Evaluación Técnica',
-    REVISION: 'Observada (Para Corrección)',
-    OBSERVADA: 'Observada (Para Corrección)',
-    APROBADA: 'Aprobada',
-    RECHAZADA: 'Rechazada',
-    ANULADA: 'Anulada'
-  }
-  return map[estado] || estado
-}
-
-const getEstadoSeverity = (estado) => {
-  if (estado === 'APROBADA') return 'success'
-  if (estado === 'RECHAZADA' || estado === 'ANULADA') return 'danger'
-  if (estado === 'REVISION' || estado === 'OBSERVADA') return 'warn'
-  if (estado === 'EN_REVISION') return 'info'
-  return 'contrast'
-}
-
+// Helpers de Estilo y Etiquetas para Expedientes
 const getCanalSeverity = (canal) => {
   if (canal === 'VERDE') return 'success'
   if (canal === 'NARANJA') return 'warn'

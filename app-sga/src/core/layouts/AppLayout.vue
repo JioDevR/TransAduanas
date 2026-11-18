@@ -151,7 +151,7 @@ const MODULE_TITLES = {
   comercial: {
     default: 'Recepción Comercial',
     sub: {
-      dashboard: 'Dashboard Comercial & Ventas',
+      dashboard: 'Dashboard',
       cotizaciones: 'Registro de Cotizaciones Comerciales',
       solicitudes: 'Solicitudes Sin Asignar (Portal B2B)',
       clientes: 'Directorio de Clientes & Prospectos'

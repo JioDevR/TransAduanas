@@ -105,3 +105,16 @@ app.use(PrimeVue, {
 ```
 
 3. Puedes previsualizar y comparar este tema en vivo contra los presets oficiales de PrimeVue en el proyecto de pruebas [`app-primevue-showcase`](../app-primevue-showcase) (`http://localhost:5190/`).
+
+---
+
+## 5. Patrón de Asistente / Wizard Minimalista (`Split-Screen`)
+
+Referencia aplicada en el wizard de cotización comercial (`app-sga/src/features/comercial`):
+
+* **Cabecera directa:** Una sola fila con título principal (`1.45rem`, peso `700`) a la izquierda y dos botones compactos (`size="small"`) a la derecha: `Cancelar` (secundario `outlined`) y botón primario contextual (`Continuar →` en pasos intermedios; acción de guardado en el último paso). Sin kickers ni párrafos introductorios.
+* **Stepper horizontal:** Barra única (`border-radius: 14px`, `1px solid var(--color-border)`) con círculo numerado (`26px`), micro-etiqueta (`PASO 0X`) y título. Al estar el título visible en el stepper, se omite la cabecera repetida dentro de la tarjeta de cada paso.
+* **Layout `Split-Screen`:** Rejilla `minmax(0, 1fr) 360px` (`gap: 1.5rem`, colapsa a `1fr` en `<= 1120px`). La columna lateral `sticky` muestra el resumen en vivo con `--font-mono` y `tabular-nums`, sin duplicar los botones de acción del header.
+* **Padding lateral estandarizado:** Todas las tarjetas de contenido (`.sga-card-surface` / pasos del wizard / resumen lateral) usan `--sga-card-padding-y: 1.75rem` y `--sga-card-padding-x: 2rem` (`1.25rem` en `<= 768px`), y los subpaneles internos usan `--sga-subpanel-padding: 1.25rem 1.35rem`, garantizando aire uniforme en esquinas y bordes laterales.
+* **Formularios internos:** Etiquetas en micro-mayúsculas (`0.6875rem`, peso `700`, `letter-spacing: 0.04em`, `--color-text-muted`) y controles PrimeVue 4 (`InputText`, `InputNumber`, `Select`, `Textarea`) con `size="small"` y `fluid`.
+

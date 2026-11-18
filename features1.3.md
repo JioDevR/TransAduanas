@@ -33,3 +33,13 @@
 - `PortalLayout.vue` reescrito sobre `.sga-shell` (topbar de una línea): título por ruta, campana de notificaciones con badge y popover de cuenta con tema (ToggleSwitch) y cierre de sesión. Se eliminan el header de dos barras y el footer corporativo.
 - Notificaciones deja de ser ítem del menú lateral y pasa al icono de la campana en la topbar; el conteo se carga con `watch` inmediato sobre la ruta.
 - `app-portal-cliente/src/style.css` ya no duplica tokens de color, radios, sombras ni overrides de PrimeVue: los hereda de `sgaUI/sga-theme.css`.
+
+## Rediseño comercial, bandeja aduanera y reporte ejecutivo PDF
+
+- `RecepcionComercialView` se descompone en paneles: `ComercialDashboardPanel` (KPIs, 3 gráficos con `primevue/chart` y exportación de periodos HOY / 7D / MES), `CotizacionesTablePanel`, `SolicitudesSinAsignarPanel` y `ClientesDirectoryPanel`, cada uno con vista tabla y vista canvas (`*CanvasGrid`).
+- `CotizacionRegistrationForm` pasa de 4098 a 255 líneas: la lógica vive en `useCotizacionForm` y los pasos en `CotizacionStepCliente`, `CotizacionStepRegimen`, `CotizacionStepCostos` y `CotizacionStepDocumentos`; `CotizacionFormHeader` y `CotizacionStepperNav` se rediseñan como wizard split-screen.
+- Nuevo `SgaListShell` compartido (y `ComercialListShell` comercial) para alternar vista tabla / canvas en los listados de ambas bandejas.
+- `GestionAduaneraView` usa `AduanasCotizacionesPanel`, `AduanasCotizacionesCanvasGrid` y `CotizacionRevisionDialog`; el estado se extrae a `useAduanasCotizaciones` y los formateadores a `aduanasFormatters`.
+- Nuevo endpoint `GET /cotizaciones/reporte-comercial-pdf` (`ReporteJasperServiceImpl` + plantilla `reports/reporte-comercial.html`) con filtros por rango de fechas, asesor y régimen; `comercialService.exportarReporteComercialPdf` lo consume como blob y lo abre en pestaña nueva.
+- `sgaUI/sga-theme.css` agrega los tokens `--sga-card-padding-y/x`, `--sga-card-radius` y `--sga-subpanel-padding`, con las clases `.sga-card-surface`, `.sga-list-panel` y `.sga-table-card`; el README documenta el patrón wizard minimalista.
+- Dependencia `chart.js` agregada; nuevos tests para `useComercialDashboard`, `useAduanasCotizaciones`, `aduanasFormatters` y el PDF del reporte comercial.

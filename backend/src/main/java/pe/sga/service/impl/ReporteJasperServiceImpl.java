@@ -9,6 +9,7 @@ import org.thymeleaf.context.Context;
 import org.thymeleaf.spring6.SpringTemplateEngine;
 import pe.sga.dto.reporte.UsuarioPortalReporteItemDTO;
 import pe.sga.dto.reporte.UsuarioReporteItemDTO;
+import pe.sga.dto.response.CotizacionResponseDTO;
 import pe.sga.entity.CatalogoMercancia;
 import pe.sga.entity.CatalogoPuerto;
 import pe.sga.entity.CatalogoTipoCarga;
@@ -16,21 +17,31 @@ import pe.sga.entity.Cliente;
 import pe.sga.entity.Sede;
 import pe.sga.entity.Usuario;
 import pe.sga.entity.UsuarioCliente;
+import pe.sga.entity.enums.EstadoCotizacion;
 import pe.sga.repository.CatalogoMercanciaRepository;
 import pe.sga.repository.CatalogoPuertoRepository;
 import pe.sga.repository.CatalogoTipoCargaRepository;
+import pe.sga.repository.ClienteRepository;
 import pe.sga.repository.SedeRepository;
 import pe.sga.repository.UsuarioClienteRepository;
 import pe.sga.repository.UsuarioRepository;
+import pe.sga.service.ICotizacionService;
 import pe.sga.service.IReporteJasperService;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.text.NumberFormat;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 
@@ -47,6 +58,8 @@ public class ReporteJasperServiceImpl implements IReporteJasperService {
     private final CatalogoPuertoRepository puertoRepository;
     private final CatalogoTipoCargaRepository tipoCargaRepository;
     private final CatalogoMercanciaRepository mercanciaRepository;
+    private final ClienteRepository clienteRepository;
+    private final ICotizacionService cotizacionService;
     private final SpringTemplateEngine templateEngine;
 
     // =========================================================================
@@ -250,6 +263,222 @@ public class ReporteJasperServiceImpl implements IReporteJasperService {
         variables.put("fechaGeneracion", LocalDateTime.now().format(REPORT_DATE_FORMATTER));
 
         return renderHtmlToPdf("reports/reporte-mercancias", variables);
+    }
+
+    // =========================================================================
+    // 06. GESTIÓN COMERCIAL - REPORTE EJECUTIVO DE MÉTRICAS (HTML / OPENHTMLTOPDF)
+    // =========================================================================
+    @Override
+    @Transactional(readOnly = true)
+    public ByteArrayInputStream exportarReporteComercialPdf(
+            LocalDate desde,
+            LocalDate hasta,
+            Integer idUsuarioComercial,
+            String regimen,
+            Usuario usuarioActual) {
+
+        List<CotizacionResponseDTO> base = cotizacionService.listar(false, null, null, idUsuarioComercial, usuarioActual);
+        List<CotizacionResponseDTO> filtradas = base.stream()
+                .filter(c -> desde == null || (c.getFechaEmision() != null && !c.getFechaEmision().isBefore(desde)))
+                .filter(c -> hasta == null || (c.getFechaEmision() != null && !c.getFechaEmision().isAfter(hasta)))
+                .filter(c -> regimen == null || regimen.isBlank() || "ALL".equalsIgnoreCase(regimen)
+                        || regimen.equalsIgnoreCase(c.getRegimenAduanero()))
+                .toList();
+
+        int totalCotizaciones = filtradas.size();
+        BigDecimal totalMonto = filtradas.stream()
+                .map(c -> safeDecimal(c.getTotalCotizado()))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal totalAbonado = filtradas.stream()
+                .map(c -> safeDecimal(c.getTotalAbonado()))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal totalSaldoPendiente = filtradas.stream()
+                .map(c -> safeDecimal(c.getSaldoPendiente()))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        long aprobadasCount = filtradas.stream()
+                .filter(c -> c.getEstado() == EstadoCotizacion.APROBADA)
+                .count();
+        double conversionRate = totalCotizaciones > 0
+                ? (aprobadasCount * 100.0) / totalCotizaciones
+                : 0.0;
+        BigDecimal ticketPromedio = totalCotizaciones > 0
+                ? totalMonto.divide(BigDecimal.valueOf(totalCotizaciones), 2, RoundingMode.HALF_UP)
+                : BigDecimal.ZERO;
+
+        List<Cliente> clientes = clienteRepository.findAll();
+        long clientesEfectivos = clientes.stream().filter(cl -> !Boolean.TRUE.equals(cl.getEsProspecto())).count();
+        long prospectos = clientes.size() - clientesEfectivos;
+        int sinAsignarCount = cotizacionService.listarSinAsignar().size();
+
+        // Desglose por estado
+        List<Map<String, Object>> estadosBreakdown = new ArrayList<>();
+        for (EstadoCotizacion estado : EstadoCotizacion.values()) {
+            List<CotizacionResponseDTO> delEstado = filtradas.stream()
+                    .filter(c -> c.getEstado() == estado)
+                    .toList();
+            BigDecimal montoEstado = delEstado.stream()
+                    .map(c -> safeDecimal(c.getTotalCotizado()))
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            double pct = totalCotizaciones > 0 ? (delEstado.size() * 100.0) / totalCotizaciones : 0.0;
+
+            Map<String, Object> row = new HashMap<>();
+            row.put("label", estado.name().replace('_', ' '));
+            row.put("count", delEstado.size());
+            row.put("porcentajeFmt", String.format(Locale.US, "%.1f%%", pct));
+            row.put("montoFmt", formatUsd(montoEstado));
+            estadosBreakdown.add(row);
+        }
+
+        // Desglose por régimen
+        Map<String, List<CotizacionResponseDTO>> porRegimen = new LinkedHashMap<>();
+        for (CotizacionResponseDTO c : filtradas) {
+            String key = defaultIfBlank(c.getRegimenAduanero(), "OTROS");
+            porRegimen.computeIfAbsent(key, k -> new ArrayList<>()).add(c);
+        }
+        List<Map<String, Object>> regimenesBreakdown = porRegimen.entrySet().stream()
+                .map(entry -> {
+                    BigDecimal montoReg = entry.getValue().stream()
+                            .map(c -> safeDecimal(c.getTotalCotizado()))
+                            .reduce(BigDecimal.ZERO, BigDecimal::add);
+                    Map<String, Object> row = new HashMap<>();
+                    row.put("label", entry.getKey().replace('_', ' '));
+                    row.put("count", entry.getValue().size());
+                    row.put("monto", montoReg);
+                    row.put("montoFmt", formatUsd(montoReg));
+                    return row;
+                })
+                .sorted((a, b) -> ((BigDecimal) b.get("monto")).compareTo((BigDecimal) a.get("monto")))
+                .toList();
+
+        // Top Clientes (máx 8)
+        Map<String, List<CotizacionResponseDTO>> porCliente = new LinkedHashMap<>();
+        for (CotizacionResponseDTO c : filtradas) {
+            String key = defaultIfBlank(c.getClienteNumeroDocumento(), "S/D") + "|" + defaultIfBlank(c.getClienteRazonSocial(), "Cliente N/A");
+            porCliente.computeIfAbsent(key, k -> new ArrayList<>()).add(c);
+        }
+        List<Map<String, Object>> topClientes = porCliente.values().stream()
+                .map(lista -> {
+                    CotizacionResponseDTO sample = lista.get(0);
+                    BigDecimal montoCl = lista.stream()
+                            .map(c -> safeDecimal(c.getTotalCotizado()))
+                            .reduce(BigDecimal.ZERO, BigDecimal::add);
+                    long aprobCl = lista.stream()
+                            .filter(c -> c.getEstado() == EstadoCotizacion.APROBADA)
+                            .count();
+                    Map<String, Object> row = new HashMap<>();
+                    row.put("razonSocial", defaultIfBlank(sample.getClienteRazonSocial(), "Cliente N/A"));
+                    row.put("documento", defaultIfBlank(sample.getClienteNumeroDocumento(), "—"));
+                    row.put("count", lista.size());
+                    row.put("aprobadas", aprobCl);
+                    row.put("monto", montoCl);
+                    row.put("montoFmt", formatUsd(montoCl));
+                    return row;
+                })
+                .sorted((a, b) -> ((BigDecimal) b.get("monto")).compareTo((BigDecimal) a.get("monto")))
+                .limit(8)
+                .toList();
+
+        // Detalle de cotizaciones recientes (máx 40)
+        DateTimeFormatter isoDate = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        List<Map<String, Object>> cotizacionesDetalle = filtradas.stream()
+                .sorted(Comparator.comparing(
+                        CotizacionResponseDTO::getIdCotizacion,
+                        Comparator.nullsLast(Comparator.reverseOrder())))
+                .limit(40)
+                .map(c -> {
+                    Map<String, Object> row = new HashMap<>();
+                    row.put("codigo", defaultIfBlank(c.getCodigoCotizacion(), "—"));
+                    row.put("fecha", c.getFechaEmision() != null ? c.getFechaEmision().format(isoDate) : "—");
+                    row.put("cliente", defaultIfBlank(c.getClienteRazonSocial(), "Cliente N/A"));
+                    row.put("asesor", defaultIfBlank(c.getUsuarioComercialNombre(), "Sin asignar"));
+                    row.put("regimen", defaultIfBlank(c.getRegimenAduanero(), "OTROS").replace('_', ' '));
+                    String est = c.getEstado() != null ? c.getEstado().name() : "PENDIENTE";
+                    row.put("estado", est.replace('_', ' '));
+                    row.put("badgeClass", resolveEstadoBadgeClass(c.getEstado()));
+                    row.put("totalFmt", formatUsd(safeDecimal(c.getTotalCotizado())));
+                    return row;
+                })
+                .toList();
+
+        String periodoTexto = buildPeriodoTexto(desde, hasta, isoDate);
+        String alcanceTexto = resolveAlcanceTexto(idUsuarioComercial, usuarioActual);
+        String regimenTexto = (regimen != null && !regimen.isBlank() && !"ALL".equalsIgnoreCase(regimen))
+                ? regimen.replace('_', ' ')
+                : "Todos los regímenes";
+        String usuarioEmisor = usuarioActual != null
+                ? defaultIfBlank(usuarioActual.getNombreCompleto(), usuarioActual.getUsername())
+                : "Sistema SGA";
+
+        Map<String, Object> variables = new HashMap<>();
+        variables.put("periodoTexto", periodoTexto);
+        variables.put("alcanceTexto", alcanceTexto);
+        variables.put("regimenTexto", regimenTexto);
+        variables.put("usuarioEmisor", usuarioEmisor);
+        variables.put("fechaGeneracion", LocalDateTime.now().format(REPORT_DATE_FORMATTER));
+        variables.put("totalCotizaciones", totalCotizaciones);
+        variables.put("totalMontoCotizadoFmt", formatUsd(totalMonto));
+        variables.put("aprobadasCount", aprobadasCount);
+        variables.put("conversionRateFmt", String.format(Locale.US, "%.1f%%", conversionRate));
+        variables.put("ticketPromedioFmt", formatUsd(ticketPromedio));
+        variables.put("totalAbonadoFmt", formatUsd(totalAbonado));
+        variables.put("totalSaldoPendienteFmt", formatUsd(totalSaldoPendiente));
+        variables.put("totalClientes", clientes.size());
+        variables.put("clientesEfectivos", clientesEfectivos);
+        variables.put("prospectos", prospectos);
+        variables.put("sinAsignarCount", sinAsignarCount);
+        variables.put("estadosBreakdown", estadosBreakdown);
+        variables.put("regimenesBreakdown", regimenesBreakdown);
+        variables.put("topClientes", topClientes);
+        variables.put("cotizacionesDetalle", cotizacionesDetalle);
+
+        return renderHtmlToPdf("reports/reporte-comercial", variables);
+    }
+
+    private BigDecimal safeDecimal(BigDecimal value) {
+        return value != null ? value : BigDecimal.ZERO;
+    }
+
+    private String formatUsd(BigDecimal amount) {
+        NumberFormat nf = NumberFormat.getNumberInstance(Locale.US);
+        nf.setMinimumFractionDigits(2);
+        nf.setMaximumFractionDigits(2);
+        return "$" + nf.format(safeDecimal(amount));
+    }
+
+    private String resolveEstadoBadgeClass(EstadoCotizacion estado) {
+        if (estado == null) return "badge-neutral";
+        return switch (estado) {
+            case APROBADA -> "badge-ok";
+            case PENDIENTE, EN_REVISION -> "badge-warn";
+            case OBSERVADA, RECHAZADA, ANULADA -> "badge-danger";
+        };
+    }
+
+    private String buildPeriodoTexto(LocalDate desde, LocalDate hasta, DateTimeFormatter fmt) {
+        if (desde != null && hasta != null) {
+            return desde.format(fmt) + " al " + hasta.format(fmt);
+        }
+        if (desde != null) {
+            return "Desde " + desde.format(fmt);
+        }
+        if (hasta != null) {
+            return "Hasta " + hasta.format(fmt);
+        }
+        return "Histórico completo";
+    }
+
+    private String resolveAlcanceTexto(Integer idUsuarioComercial, Usuario usuarioActual) {
+        if (usuarioActual != null && usuarioActual.getRol() != null
+                && "AGENTE_COMERCIAL".equalsIgnoreCase(usuarioActual.getRol().name())) {
+            return "Cartera de " + defaultIfBlank(usuarioActual.getNombreCompleto(), usuarioActual.getUsername());
+        }
+        if (idUsuarioComercial != null) {
+            return usuarioRepository.findById(idUsuarioComercial)
+                    .map(u -> "Asesor: " + defaultIfBlank(u.getNombreCompleto(), u.getUsername()))
+                    .orElse("Asesor #" + idUsuarioComercial);
+        }
+        return "Consolidado General";
     }
 
     // =========================================================================

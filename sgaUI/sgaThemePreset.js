@@ -73,14 +73,14 @@ export const SgaThemePreset = definePreset(Aura, {
           400: '#968e7e',
           500: '#6f6759',
           600: '#5c564a',
-          700: '#3f3a33',
-          800: '#2e2a25',
-          900: '#1f1c19',
-          950: '#161412'
+          700: '#4a433c',
+          800: '#38322d',
+          900: '#2b2622',
+          950: '#231f1c'
         },
         primary: {
           color: '#f0b892',
-          contrastColor: '#161412',
+          contrastColor: '#231f1c',
           hoverColor: '#f6cbb0',
           activeColor: '#fae0cc'
         },

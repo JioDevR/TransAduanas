@@ -68,20 +68,20 @@
 
 .dark-theme,
 .app-dark {
-  --color-bg-base: var(--p-surface-950, #161412);
-  --color-bg-sidebar: #12100e;
-  --color-bg-surface: var(--p-surface-900, #1f1c19);
-  --color-bg-hero: #2b2621;
-  --color-bg-subtle: var(--p-surface-800, #2e2a25);
-  --color-bg-muted: var(--p-surface-700, #3f3a33);
+  --color-bg-base: var(--p-surface-950, #231f1c);
+  --color-bg-sidebar: #1d1a17;
+  --color-bg-surface: var(--p-surface-900, #2b2622);
+  --color-bg-hero: #352f2a;
+  --color-bg-subtle: var(--p-surface-800, #38322d);
+  --color-bg-muted: var(--p-surface-700, #4a433c);
 
-  --color-border: var(--p-surface-800, #2e2a25);
-  --color-border-subtle: #27231f;
-  --color-border-strong: var(--p-surface-700, #3f3a33);
+  --color-border: var(--p-surface-800, #38322d);
+  --color-border-subtle: #322c27;
+  --color-border-strong: var(--p-surface-700, #4a433c);
 
   --color-primary: var(--p-primary-color, #f0b892);
   --color-primary-hover: var(--p-primary-hover-color, #f6cbb0);
-  --color-primary-text: var(--p-primary-contrast-color, #161412);
+  --color-primary-text: var(--p-primary-contrast-color, #231f1c);
   --color-primary-espresso: #f0b892;
   --color-accent-kicker: #f6cbb0;
   --color-accent-copper: var(--p-primary-color, #f0b892);
@@ -125,7 +125,7 @@ body {
 /* Selector de modo oscuro unificado (.dark-theme o .app-dark) */
 .dark-theme body,
 .app-dark body {
-  background: var(--p-surface-950, #161412);
+  background: var(--p-surface-950, #231f1c);
   color: var(--p-text-color, #f6f2ea);
 }
 

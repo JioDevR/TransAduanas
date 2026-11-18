@@ -60,3 +60,13 @@ export const useCotizacionCorrection = () => ({
   form: ref({ regimenAduanero: 'IMPORTACION', items: [] }),
   guardarCorreccion: async () => {}
 })
+
+const demoDark = ref(false)
+export const useTheme = () => ({
+  isDark: demoDark,
+  toggleTheme: () => {
+    demoDark.value = !demoDark.value
+    document.documentElement.classList.toggle('app-dark', demoDark.value)
+    document.documentElement.classList.toggle('dark-theme', demoDark.value)
+  }
+})

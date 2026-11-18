@@ -2,6 +2,20 @@ import { defineStore } from 'pinia'
 import { useAuthStore } from '@/features/auth/stores/authStore'
 import { ROLE_MODULE_MAP } from '@/core/auth/roles'
 
+/**
+ * Estándar de vista inicial por módulo: siempre la primera opción del sidebar.
+ */
+export const DEFAULT_MODULE_SUB_OPTION = {
+  'administracion-ti': 'dashboard',
+  'gerencia-general': 'dashboard',
+  comercial: 'dashboard',
+  'gestion-aduanera': 'dashboard',
+  'agente-aduanero': 'dashboard',
+  'transporte-flota': 'dashboard',
+  finanzas: 'dashboard',
+  'legal-auditoria': 'expedientes'
+}
+
 export const useNavigationStore = defineStore('navigation', {
   state: () => ({
     // Módulo activo: 'administracion-ti' | 'gerencia-general' | 'comercial' | 'gestion-aduanera' | 'agente-aduanero' | 'transporte-flota' | 'finanzas' | 'legal-auditoria'
@@ -188,6 +202,27 @@ export const useNavigationStore = defineStore('navigation', {
     triggerFinanzasAction(action) {
       this.finanzasActionTrigger = action
       this.navTick++
+    },
+
+    /**
+     * Restaura la sub-opción de un módulo a su primera vista estándar.
+     */
+    resetModuleToDefaultView(moduleName) {
+      const target = moduleName || this.currentModule
+      const defaultOpt = DEFAULT_MODULE_SUB_OPTION[target]
+      if (!defaultOpt) return
+
+      const setters = {
+        'administracion-ti': (v) => this.setAdministracionTiSubOption(v),
+        'gerencia-general': (v) => this.setGerenciaGeneralSubOption(v),
+        comercial: (v) => this.setComercialSubOption(v),
+        'gestion-aduanera': (v) => this.setGestionAduaneraSubOption(v),
+        'agente-aduanero': (v) => this.setAgenteAduaneroSubOption(v),
+        'transporte-flota': (v) => this.setTransporteFlotaSubOption(v),
+        finanzas: (v) => this.setFinanzasSubOption(v),
+        'legal-auditoria': (v) => this.setLegalAuditoriaSubOption(v)
+      }
+      setters[target]?.(defaultOpt)
     }
   }
 })

@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
-import { useNavigationStore } from '../navigationStore'
+import { useNavigationStore, DEFAULT_MODULE_SUB_OPTION } from '../navigationStore'
 
 describe('navigationStore', () => {
   beforeEach(() => {
@@ -100,5 +100,20 @@ describe('navigationStore', () => {
 
     store.setTransporteFlotaSubOption('viajes')
     expect(store.transporteFlotaSubOption).toBe('despachos')
+  })
+
+  it('restaura cada módulo a su primera vista estándar con resetModuleToDefaultView', () => {
+    const store = useNavigationStore()
+    store.setComercialSubOption('clientes')
+    store.setGestionAduaneraSubOption('expedientes')
+    store.setLegalAuditoriaSubOption('auditorias')
+
+    store.resetModuleToDefaultView('comercial')
+    store.resetModuleToDefaultView('gestion-aduanera')
+    store.resetModuleToDefaultView('legal-auditoria')
+
+    expect(store.comercialSubOption).toBe(DEFAULT_MODULE_SUB_OPTION.comercial)
+    expect(store.gestionAduaneraSubOption).toBe(DEFAULT_MODULE_SUB_OPTION['gestion-aduanera'])
+    expect(store.legalAuditoriaSubOption).toBe(DEFAULT_MODULE_SUB_OPTION['legal-auditoria'])
   })
 })

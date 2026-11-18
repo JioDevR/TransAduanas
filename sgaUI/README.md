@@ -10,6 +10,8 @@ Esta carpeta centraliza el sistema de diseño unificado **`sgaUI`** para servir 
 | :--- | :--- |
 | [`sgaThemePreset.js`](./sgaThemePreset.js) | Preset oficial de PrimeVue 4 (`definePreset(Aura, ...)`), listo para importar en `main.js`. |
 | [`sga-theme.css`](./sga-theme.css) | Reglas CSS base (tipografía, números tabulares, fondos adaptativos, elevación de tarjetas y densidad de tablas). |
+| [`sga-auth.css`](./sga-auth.css) | Estilos reutilizables de pantalla de acceso (`.sga-auth-page`, `.sga-auth-card`, `.sga-auth-brand`, `.sga-auth-form`). |
+| [`sga-shell.css`](./sga-shell.css) | Cascarón principal unificado (`.sga-shell`, `.sga-sidebar`, `.sga-topbar`, `.sga-module-card`, `.sga-page-content`) y espaciados del layout. |
 | [`README.md`](./README.md) | Documentación completa de paleta, tipografía, espaciado, geometría y guía de uso. |
 
 ---
@@ -27,7 +29,7 @@ La identidad **Warm Editorial Pro** separa el **color estructural** (arena, latt
 | **Claro** | `primary.contrastColor` | `#ffffff` | Texto/ícono sobre fondo primario |
 | **Oscuro** | `primary.color` | `#f0b892` | Botones CTA, switches y controles activos en fondo oscuro |
 | **Oscuro** | `primary.hoverColor` | `#f6cbb0` | Hover en modo oscuro |
-| **Oscuro** | `primary.contrastColor` | `#161412` | Texto espresso oscuro sobre acento durazno pastel |
+| **Oscuro** | `primary.contrastColor` | `#231f1c` | Texto espresso suave sobre acento durazno pastel |
 
 ### B. Superficies (`surface`) y Regla de Polaridad en PrimeVue 4
 
@@ -43,9 +45,10 @@ La identidad **Warm Editorial Pro** separa el **color estructural** (arena, latt
   * Resaltado / Selección (`highlight.background`): `#fdf1e8` con texto `#824728`
 
 * **Modo Oscuro (`dark`):**
-  * Fondo general (`surface.950`): `#161412` (Espresso profundo)
-  * Tarjetas / Modales / Topbar (`surface.900`): `#1f1c19`
-  * Bordes sutiles (`surface.800`): `#2e2a25`
+  * Fondo general (`surface.950`): `#231f1c` (Espresso suave / cacao ahumado)
+  * Sidebar (`--color-bg-sidebar`): `#1d1a17`
+  * Tarjetas / Modales / Topbar (`surface.900`): `#2b2622`
+  * Bordes sutiles (`surface.800`): `#38322d`
   * Texto principal (`surface.0` / `surface.50`): `#ffffff` / `#f6f2ea`
   * Texto secundario (`surface.400`): `#968e7e`
   * Resaltado / Selección (`highlight.background`): `rgba(240, 184, 146, 0.16)`
@@ -73,6 +76,10 @@ La identidad **Warm Editorial Pro** separa el **color estructural** (arena, latt
   * Inputs (`formField`): `0.55rem 0.85rem`
   * Tarjetas (`card.body`): `1.25rem` (`gap: 0.75rem`)
   * Tablas (`DataTable` celdas y cabeceras): `0.65rem 0.9rem` (densidad operativa para visualizar más registros sin saturar).
+* **Cascarón Principal (`sga-shell.css`):**
+  * Sidebar: ancho `256px` (colapsado `72px`), padding `1rem 0.75rem`, ítems en píldora (`border-radius: 9999px`) con punto indicador y tarjeta `GESTOR DE MÓDULOS` anclada al pie (`margin-top: auto`).
+  * Topbar: altura mínima `64px` en una sola línea (`padding: 0.75rem 2rem`), título limpio a la izquierda y pill `SEDE` + perfil a la derecha.
+  * Contenido principal: `padding: 1.5rem 2rem` (en móvil `<= 900px` pasa a `1rem`).
 * **Elevación:** En lugar de sombras pesadas, se combinan `1px solid var(--p-surface-200)` (claro) / `var(--p-surface-800)` (oscuro) con sombra mínima.
 
 ---

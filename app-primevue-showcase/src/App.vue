@@ -22,6 +22,7 @@ import MenusSection from './sections/MenusSection.vue'
 import MiscSection from './sections/MiscSection.vue'
 import SgaComponentsSection from './sections/SgaComponentsSection.vue'
 import SgaMastersSection from './sections/SgaMastersSection.vue'
+import SgaShellBaseSection from './sections/SgaShellBaseSection.vue'
 
 // Preset exacto de app-sga (Warm Editorial: espresso, arena, latte y café)
 const SgaPreset = definePreset(Aura, {
@@ -106,7 +107,8 @@ const categories = [
   { id: 'menus', label: 'Menús y Navegación', icon: 'pi pi-bars', component: MenusSection },
   { id: 'misc', label: 'Mensajes y Media', icon: 'pi pi-sparkles', component: MiscSection },
   { id: 'sga-custom', label: 'Componentes SGA', icon: 'pi pi-box', component: SgaComponentsSection },
-  { id: 'sga-masters', label: 'Maestros SGA (Variantes)', icon: 'pi pi-sitemap', component: SgaMastersSection }
+  { id: 'sga-masters', label: 'Maestros SGA (Variantes)', icon: 'pi pi-sitemap', component: SgaMastersSection },
+  { id: 'sga-shell', label: 'Shell Base SGA', icon: 'pi pi-desktop', component: SgaShellBaseSection }
 ]
 
 const currentComponent = computed(() => {

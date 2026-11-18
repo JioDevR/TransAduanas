@@ -25,6 +25,7 @@ export default defineConfig({
       '@/shared/composables/useNotification': r('./src/sga-mocks/composables.js'),
       '@/shared/composables/useConfirmation': r('./src/sga-mocks/composables.js'),
       '@/shared/composables/usePagination': r('./src/sga-mocks/composables.js'),
+      '@/shared/composables/useTheme': r('./src/sga-mocks/composables.js'),
       '@/features/comercial/composables/useCotizacionCalculator': r('./src/sga-mocks/composables.js'),
       '@/features/comercial/composables/useModalidadPuertos': r('./src/sga-mocks/composables.js'),
       '@/shared/utils/dateUtils': r('./src/sga-mocks/utils.js'),

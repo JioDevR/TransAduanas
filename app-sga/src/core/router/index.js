@@ -135,6 +135,8 @@ router.beforeEach(async (to, from, next) => {
     }
     if (to?.query?.tab) {
       navStore.setComercialSubOption(to.query.tab)
+    } else {
+      navStore.resetModuleToDefaultView('comercial')
     }
   } else if (toPath.startsWith('/gestion-aduanera')) {
     if (navStore.activeModule !== 'gestion-aduanera') {
@@ -142,8 +144,10 @@ router.beforeEach(async (to, from, next) => {
     }
     if (to?.query?.tab) {
       navStore.setGestionAduaneraSubOption(to.query.tab)
-    } else if (toPath.includes('liquidacion')) {
-      navStore.setGestionAduaneraSubOption('declaraciones')
+    } else if (toPath.includes('apertura')) {
+      navStore.setGestionAduaneraSubOption('apertura')
+    } else {
+      navStore.resetModuleToDefaultView('gestion-aduanera')
     }
   } else if (toPath.startsWith('/agente-aduanero')) {
     if (navStore.activeModule !== 'agente-aduanero') {
@@ -151,6 +155,8 @@ router.beforeEach(async (to, from, next) => {
     }
     if (to?.query?.tab) {
       navStore.setAgenteAduaneroSubOption(to.query.tab)
+    } else {
+      navStore.resetModuleToDefaultView('agente-aduanero')
     }
   } else if (toPath.startsWith('/transporte-flota')) {
     if (navStore.activeModule !== 'transporte-flota') {
@@ -158,6 +164,8 @@ router.beforeEach(async (to, from, next) => {
     }
     if (to?.query?.tab) {
       navStore.setTransporteFlotaSubOption(to.query.tab)
+    } else {
+      navStore.resetModuleToDefaultView('transporte-flota')
     }
   } else if (toPath.startsWith('/legal-auditoria')) {
     if (navStore.activeModule !== 'legal-auditoria') {
@@ -165,6 +173,8 @@ router.beforeEach(async (to, from, next) => {
     }
     if (to?.query?.tab) {
       navStore.setLegalAuditoriaSubOption(to.query.tab)
+    } else {
+      navStore.resetModuleToDefaultView('legal-auditoria')
     }
   } else if (toPath.startsWith('/finanzas')) {
     if (navStore.activeModule !== 'finanzas') {
@@ -172,6 +182,8 @@ router.beforeEach(async (to, from, next) => {
     }
     if (to?.query?.tab) {
       navStore.setFinanzasSubOption(to.query.tab)
+    } else {
+      navStore.resetModuleToDefaultView('finanzas')
     }
   }
 

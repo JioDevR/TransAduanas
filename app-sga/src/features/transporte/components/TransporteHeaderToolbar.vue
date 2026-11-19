@@ -22,30 +22,30 @@
     </div>
 
     <div class="toolbar-right">
-      <button
+      <Button
         type="button"
-        class="btn-outline-warm"
+        label="Actualizar"
+        icon="pi pi-sync"
+        severity="secondary"
+        outlined
+        :loading="loading"
         @click="$emit('recargar')"
-        :disabled="loading"
         title="Sincronizar despachos y flota"
-      >
-        <i :class="['pi pi-sync', { 'pi-spin': loading }]"></i>
-        <span>Actualizar</span>
-      </button>
+      />
 
-      <button
+      <Button
         type="button"
-        class="btn-espresso"
+        label="Programar Despacho"
+        icon="pi pi-plus"
         @click="$emit('programar-despacho')"
-      >
-        <i class="pi pi-plus"></i>
-        <span>+ Programar Despacho</span>
-      </button>
+      />
     </div>
   </header>
 </template>
 
 <script setup>
+import Button from 'primevue/button'
+
 defineProps({
   loading: {
     type: Boolean,

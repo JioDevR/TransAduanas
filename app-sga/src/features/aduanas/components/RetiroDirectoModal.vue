@@ -24,48 +24,46 @@
       <div class="retiro-fields-grid">
         <div class="field-item">
           <label for="terminal-dep">Terminal Extraportuario / Almacén *</label>
-          <input
+          <InputText
             id="terminal-dep"
             v-model.trim="form.terminalAlmacen"
-            type="text"
-            class="text-input"
             required
             placeholder="Ej. DPW Callao / Almacén Temporal Ransa"
+            fluid
           />
         </div>
 
         <div class="field-item">
           <label for="acta-num">Número de Ticket / Acta de Salida</label>
-          <input
+          <InputText
             id="acta-num"
             v-model.trim="form.numeroActaRetiro"
-            type="text"
-            class="text-input font-mono"
+            class="font-mono"
             placeholder="Ej. ACT-2026-9812"
+            fluid
           />
         </div>
 
         <div class="field-item">
           <label for="receptor-nombre">Nombre de Quien Recibe / Conductor *</label>
-          <input
+          <InputText
             id="receptor-nombre"
             v-model.trim="form.receptorNombre"
-            type="text"
-            class="text-input"
             required
             placeholder="Ej. Carlos Mendoza (Transportes Externos)"
+            fluid
           />
         </div>
 
         <div class="field-item">
           <label for="receptor-dni">DNI / Documento del Receptor *</label>
-          <input
+          <InputText
             id="receptor-dni"
             v-model.trim="form.receptorDni"
-            type="text"
-            class="text-input font-mono"
+            class="font-mono"
             required
             placeholder="Ej. 45678901"
+            fluid
           />
         </div>
 
@@ -81,25 +79,32 @@
 
         <div class="field-item full-width">
           <label for="obs-retiro">Observaciones del Acta de Recepción Externa</label>
-          <textarea
+          <Textarea
             id="obs-retiro"
             v-model.trim="form.observaciones"
             rows="2"
+            autoResize
             placeholder="Placa del vehículo externo, precintos cortados conforme, condición de embalaje..."
-            class="textarea-input"
-          ></textarea>
+            fluid
+          />
         </div>
       </div>
 
       <div class="modal-actions">
-        <button type="button" class="btn-modal-cancel" @click="handleClose" :disabled="loading">
-          Cancelar
-        </button>
-        <button type="submit" class="btn-modal-save" :disabled="loading">
-          <i v-if="loading" class="pi pi-spin pi-spinner"></i>
-          <i v-else class="pi pi-check"></i>
-          <span>Registrar Acta de Retiro</span>
-        </button>
+        <Button
+          type="button"
+          label="Cancelar"
+          severity="secondary"
+          outlined
+          @click="handleClose"
+          :disabled="loading"
+        />
+        <Button
+          type="submit"
+          label="Registrar Acta de Retiro"
+          icon="pi pi-check"
+          :loading="loading"
+        />
       </div>
     </form>
   </BaseModal>
@@ -107,6 +112,9 @@
 
 <script setup>
 import { ref, watch } from 'vue'
+import Button from 'primevue/button'
+import InputText from 'primevue/inputtext'
+import Textarea from 'primevue/textarea'
 import BaseModal from '@/shared/components/BaseModal.vue'
 import { expedienteService } from '../services/expedienteService'
 import { getNowDateTimeInput } from '@/shared/utils/dateUtils'

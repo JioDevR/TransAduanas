@@ -14,47 +14,61 @@
         <!-- Expediente Aduanero -->
         <div class="field-item full-width">
           <label for="desp-expediente">Expediente Aduanero (Con Levante Autorizado) *</label>
-          <select id="desp-expediente" v-model="form.idExpediente" class="select-input" required>
-            <option :value="null" disabled>Seleccione Expediente Aduanero...</option>
-            <option v-for="exp in expedientesList" :key="exp.idExpediente" :value="exp.idExpediente">
-              {{ exp.codigoExpediente }} — {{ exp.clienteRazonSocial }} (DAM: {{ exp.numeroDam || 'S/N' }} - Levante: {{ exp.fechaLevanteAutorizacion ? 'AUTORIZADO' : 'PENDIENTE' }})
-            </option>
-          </select>
+          <Select
+            inputId="desp-expediente"
+            v-model="form.idExpediente"
+            :options="expedienteOptions"
+            optionLabel="label"
+            optionValue="value"
+            filter
+            placeholder="Seleccione Expediente Aduanero..."
+            fluid
+          />
           <span class="field-hint">Solo se pueden despachar expedientes que cuenten con levante o retiro de depósito</span>
         </div>
 
         <!-- Asignación de Recursos Opcional Inmediata -->
         <div class="field-item">
           <label for="desp-chofer">Conductor Asignado</label>
-          <select id="desp-chofer" v-model="form.idConductor" class="select-input">
-            <option :value="null">Sin conductor asignado (Pendiente)</option>
-            <option v-for="c in conductoresList" :key="c.idConductor" :value="c.idConductor">
-              {{ c.nombres }} {{ c.apellidos }} (Brevete: {{ c.numeroLicencia }})
-            </option>
-          </select>
+          <Select
+            inputId="desp-chofer"
+            v-model="form.idConductor"
+            :options="conductorOptions"
+            optionLabel="label"
+            optionValue="value"
+            filter
+            showClear
+            placeholder="Sin conductor asignado (Pendiente)"
+            fluid
+          />
         </div>
 
         <div class="field-item">
           <label for="desp-unidad">Unidad / Tracto Asignado</label>
-          <select id="desp-unidad" v-model="form.idUnidad" class="select-input">
-            <option :value="null">Sin unidad asignada (Pendiente)</option>
-            <option v-for="u in unidadesList" :key="u.idUnidad" :value="u.idUnidad">
-              Placa: {{ u.placaTracto }} ({{ u.marcaModelo || 'Tracto' }} - {{ u.estadoOperativo }})
-            </option>
-          </select>
+          <Select
+            inputId="desp-unidad"
+            v-model="form.idUnidad"
+            :options="unidadOptions"
+            optionLabel="label"
+            optionValue="value"
+            filter
+            showClear
+            placeholder="Sin unidad asignada (Pendiente)"
+            fluid
+          />
         </div>
 
         <!-- Guía de Remisión -->
         <div class="field-item">
           <label for="desp-guia">Guía de Remisión de Transporte (GRE-T) *</label>
-          <input
+          <InputText
             id="desp-guia"
             v-model.trim="form.guiaRemisionTransporte"
-            type="text"
             placeholder="Ej. T001-0004819"
-            class="text-input font-mono uppercase"
+            class="font-mono uppercase"
             required
             maxlength="30"
+            fluid
           />
         </div>
 
@@ -73,86 +87,93 @@
         <!-- Dirección Partida (Origen) -->
         <div class="field-item full-width">
           <label for="desp-dir-salida">Dirección de Partida (Terminal / Depósito) *</label>
-          <input
+          <InputText
             id="desp-dir-salida"
             v-model.trim="form.direccionPartida"
-            type="text"
             placeholder="Ej. Av. Contralmirante Mora 590, Callao"
-            class="text-input"
             required
             maxlength="200"
+            fluid
           />
         </div>
 
         <!-- Dirección Llegada (Destino) -->
         <div class="field-item">
           <label for="desp-dir-llegada">Dirección de Destino / Planta Cliente *</label>
-          <input
+          <InputText
             id="desp-dir-llegada"
             v-model.trim="form.direccionLlegada"
-            type="text"
             placeholder="Ej. Av. Los Industriales 1240, Parque Industrial"
-            class="text-input"
             required
             maxlength="200"
+            fluid
           />
         </div>
 
         <div class="field-item">
           <label for="desp-dist-llegada">Distrito de Llegada *</label>
-          <input
+          <InputText
             id="desp-dist-llegada"
             v-model.trim="form.distritoLlegada"
-            type="text"
             placeholder="Ej. Lurín"
-            class="text-input"
             required
             maxlength="100"
+            fluid
           />
         </div>
 
         <!-- Contacto Recepción -->
         <div class="field-item full-width">
           <label for="desp-contacto">Persona de Contacto en Recepción</label>
-          <input
+          <InputText
             id="desp-contacto"
             v-model.trim="form.contactoRecepcion"
-            type="text"
             placeholder="Ej. Ing. Carlos Mendoza (Jefe de Almacén Planta)"
-            class="text-input"
             maxlength="100"
+            fluid
           />
         </div>
 
         <!-- Observaciones -->
         <div class="field-item full-width">
           <label for="desp-obs">Instrucciones de Ruta</label>
-          <textarea
+          <Textarea
             id="desp-obs"
             v-model.trim="form.observaciones"
             rows="2"
+            autoResize
             placeholder="Precauciones de pesaje, precintos de seguridad o ventanas de descarga..."
-            class="textarea-input"
-          ></textarea>
+            fluid
+          />
         </div>
       </div>
 
       <div class="modal-actions">
-        <button type="button" class="btn-modal-cancel" @click="handleClose" :disabled="loading">
-          Cancelar
-        </button>
-        <button type="submit" class="btn-modal-save" :disabled="loading">
-          <i v-if="loading" class="pi pi-spin pi-spinner"></i>
-          <i v-else class="pi pi-check"></i>
-          <span>Programar Despacho</span>
-        </button>
+        <Button
+          type="button"
+          label="Cancelar"
+          severity="secondary"
+          outlined
+          @click="handleClose"
+          :disabled="loading"
+        />
+        <Button
+          type="submit"
+          label="Programar Despacho"
+          icon="pi pi-check"
+          :loading="loading"
+        />
       </div>
     </form>
   </BaseModal>
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, computed, watch } from 'vue'
+import Button from 'primevue/button'
+import InputText from 'primevue/inputtext'
+import Select from 'primevue/select'
+import Textarea from 'primevue/textarea'
 import BaseModal from '@/shared/components/BaseModal.vue'
 import { transporteFlotaService } from '../services/transporteFlotaService'
 import { expedienteService } from '../services/expedienteService'
@@ -172,6 +193,27 @@ const errorMessage = ref('')
 const expedientesList = ref([])
 const conductoresList = ref([])
 const unidadesList = ref([])
+
+const expedienteOptions = computed(() =>
+  expedientesList.value.map((exp) => ({
+    label: `${exp.codigoExpediente} — ${exp.clienteRazonSocial} (DAM: ${exp.numeroDam || 'S/N'} - Levante: ${exp.fechaLevanteAutorizacion ? 'AUTORIZADO' : 'PENDIENTE'})`,
+    value: exp.idExpediente
+  }))
+)
+
+const conductorOptions = computed(() =>
+  conductoresList.value.map((c) => ({
+    label: `${c.nombres} ${c.apellidos} (Brevete: ${c.numeroLicencia})`,
+    value: c.idConductor
+  }))
+)
+
+const unidadOptions = computed(() =>
+  unidadesList.value.map((u) => ({
+    label: `Placa: ${u.placaTracto} (${u.marcaModelo || 'Tracto'} - ${u.estadoOperativo})`,
+    value: u.idUnidad
+  }))
+)
 
 const defaultForm = () => {
   const now = new Date()

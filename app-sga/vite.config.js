@@ -7,7 +7,8 @@ export default defineConfig({
   plugins: [vue()],
   resolve: {
     alias: {
-      '@': fileURLToPath(new URL('./src', import.meta.url))
+      '@': fileURLToPath(new URL('./src', import.meta.url)),
+      '@primevue/themes': fileURLToPath(new URL('./node_modules/@primevue/themes', import.meta.url))
     }
   },
   build: {

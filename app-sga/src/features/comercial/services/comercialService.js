@@ -98,6 +98,14 @@ export const comercialService = {
     return response.data
   },
 
+  async exportarReporteComercialPdf(params = {}) {
+    const response = await apiClient.get('/cotizaciones/reporte-comercial-pdf', {
+      params,
+      responseType: 'blob'
+    })
+    return response.data
+  },
+
   // ==========================================
   // EXPEDIENTES ADUANEROS (Consolidados via expedienteService)
   // ==========================================

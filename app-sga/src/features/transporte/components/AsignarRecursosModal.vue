@@ -24,65 +24,81 @@
       <div class="form-grid">
         <div class="field-item full-width">
           <label for="asig-cond">Conductor Autorizado *</label>
-          <select id="asig-cond" v-model="form.idConductor" class="select-input" required>
-            <option :value="null" disabled>Seleccione Conductor...</option>
-            <option v-for="c in conductoresList" :key="c.idConductor" :value="c.idConductor">
-              {{ c.nombres }} {{ c.apellidos }} (Brevete: {{ c.numeroLicencia }} - {{ c.tipoLicencia }})
-            </option>
-          </select>
+          <Select
+            inputId="asig-cond"
+            v-model="form.idConductor"
+            :options="conductorOptions"
+            optionLabel="label"
+            optionValue="value"
+            filter
+            placeholder="Seleccione Conductor..."
+            fluid
+          />
         </div>
 
         <div class="field-item full-width">
           <label for="asig-unid">Unidad de Transporte *</label>
-          <select id="asig-unid" v-model="form.idUnidad" class="select-input" required>
-            <option :value="null" disabled>Seleccione Tracto...</option>
-            <option v-for="u in unidadesList" :key="u.idUnidad" :value="u.idUnidad">
-              Placa: {{ u.placaTracto }} {{ u.placaCarreta ? '/ ' + u.placaCarreta : '' }} — {{ u.marcaModelo }}
-            </option>
-          </select>
+          <Select
+            inputId="asig-unid"
+            v-model="form.idUnidad"
+            :options="unidadOptions"
+            optionLabel="label"
+            optionValue="value"
+            filter
+            placeholder="Seleccione Tracto..."
+            fluid
+          />
         </div>
 
         <div class="field-item full-width">
           <label for="asig-guia">Guía de Remisión de Transporte (GRE-T) *</label>
-          <input
+          <InputText
             id="asig-guia"
             v-model.trim="form.guiaRemisionTransporte"
-            type="text"
             placeholder="Ej. T001-0004523"
-            class="text-input font-mono uppercase"
+            class="font-mono uppercase"
             required
             maxlength="30"
+            fluid
           />
         </div>
 
         <div class="field-item full-width">
           <label for="asig-obs">Observaciones / Instrucciones de Asignación</label>
-          <input
+          <InputText
             id="asig-obs"
             v-model.trim="form.observaciones"
-            type="text"
             placeholder="Ej. Asignación para retiro directo de almacén"
-            class="text-input"
+            fluid
           />
         </div>
       </div>
 
       <div class="modal-actions">
-        <button type="button" class="btn-modal-cancel" @click="handleClose" :disabled="loading">
-          Cancelar
-        </button>
-        <button type="submit" class="btn-modal-save" :disabled="loading">
-          <i v-if="loading" class="pi pi-spin pi-spinner"></i>
-          <i v-else class="pi pi-check"></i>
-          <span>Confirmar Asignación</span>
-        </button>
+        <Button
+          type="button"
+          label="Cancelar"
+          severity="secondary"
+          outlined
+          @click="handleClose"
+          :disabled="loading"
+        />
+        <Button
+          type="submit"
+          label="Confirmar Asignación"
+          icon="pi pi-check"
+          :loading="loading"
+        />
       </div>
     </form>
   </BaseModal>
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, computed, watch } from 'vue'
+import Button from 'primevue/button'
+import InputText from 'primevue/inputtext'
+import Select from 'primevue/select'
 import BaseModal from '@/shared/components/BaseModal.vue'
 import { transporteFlotaService } from '../services/transporteFlotaService'
 
@@ -103,6 +119,20 @@ const loading = ref(false)
 const errorMessage = ref('')
 const conductoresList = ref([])
 const unidadesList = ref([])
+
+const conductorOptions = computed(() =>
+  conductoresList.value.map((c) => ({
+    label: `${c.nombres} ${c.apellidos} (Brevete: ${c.numeroLicencia} - ${c.tipoLicencia})`,
+    value: c.idConductor
+  }))
+)
+
+const unidadOptions = computed(() =>
+  unidadesList.value.map((u) => ({
+    label: `Placa: ${u.placaTracto} ${u.placaCarreta ? '/ ' + u.placaCarreta : ''} — ${u.marcaModelo}`,
+    value: u.idUnidad
+  }))
+)
 
 const form = ref({
   idConductor: null,

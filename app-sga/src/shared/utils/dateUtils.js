@@ -171,3 +171,30 @@ export function formatDateShort(val, fallback = '—') {
   return short || String(val)
 }
 
+/**
+ * Resuelve el rango de fechas { desde, hasta } en formato ISO (YYYY-MM-DD)
+ * según el preset seleccionado ('ALL' | 'HOY' | '7D' | '30D' | 'MES_ACTUAL').
+ */
+export function resolvePeriodoRange(periodo, referenceDate = new Date()) {
+  if (!periodo || periodo === 'ALL') {
+    return { desde: null, hasta: null }
+  }
+
+  const end = new Date(referenceDate.getFullYear(), referenceDate.getMonth(), referenceDate.getDate())
+  const start = new Date(end)
+
+  if (periodo === 'HOY') {
+    // mismo día: desde = hasta = hoy
+  } else if (periodo === '7D') {
+    start.setDate(start.getDate() - 6)
+  } else if (periodo === '30D') {
+    start.setDate(start.getDate() - 29)
+  } else if (periodo === 'MES_ACTUAL') {
+    start.setDate(1)
+  } else {
+    return { desde: null, hasta: null }
+  }
+
+  return { desde: getLocalDateString(start), hasta: getLocalDateString(end) }
+}
+

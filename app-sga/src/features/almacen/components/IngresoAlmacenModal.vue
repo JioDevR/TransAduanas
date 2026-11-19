@@ -14,37 +14,45 @@
         <!-- Expediente Aduanero -->
         <div class="field-item">
           <label for="alm-expediente">Expediente Aduanero Vinculado *</label>
-          <select id="alm-expediente" v-model="form.idExpediente" class="select-input" required>
-            <option :value="null" disabled>Seleccione Expediente...</option>
-            <option v-for="exp in expedientesList" :key="exp.idExpediente" :value="exp.idExpediente">
-              {{ exp.codigoExpediente }} — {{ exp.clienteRazonSocial || 'Cliente' }} (Canal: {{ exp.canalSunat || 'PENDIENTE' }})
-            </option>
-          </select>
+          <Select
+            inputId="alm-expediente"
+            v-model="form.idExpediente"
+            :options="expedienteOptions"
+            optionLabel="label"
+            optionValue="value"
+            filter
+            placeholder="Seleccione Expediente..."
+            fluid
+          />
           <span class="field-hint">Expediente aduanero al que corresponde la carga</span>
         </div>
 
         <!-- Sede / Depósito Temporal -->
         <div class="field-item">
           <label for="alm-sede">Sede / Depósito Autorizado *</label>
-          <select id="alm-sede" v-model="form.idSedeDeposito" class="select-input" required>
-            <option :value="null" disabled>Seleccione Terminal/Depósito...</option>
-            <option v-for="s in sedesList" :key="s.idSede" :value="s.idSede">
-              {{ s.codigoSede }} — {{ s.nombre }} ({{ s.distrito }})
-            </option>
-          </select>
+          <Select
+            inputId="alm-sede"
+            v-model="form.idSedeDeposito"
+            :options="sedeOptions"
+            optionLabel="label"
+            optionValue="value"
+            filter
+            placeholder="Seleccione Terminal/Depósito..."
+            fluid
+          />
         </div>
 
         <!-- Ticket de Balanza VGM -->
         <div class="field-item">
           <label for="alm-ticket">Ticket de Pesaje Balanza VGM *</label>
-          <input
+          <InputText
             id="alm-ticket"
             v-model.trim="form.ticketBalanzaVgm"
-            type="text"
             placeholder="Ej. TKT-VGM-2026-90412"
-            class="text-input font-mono"
+            class="font-mono"
             required
             maxlength="30"
+            fluid
           />
           <span class="field-hint">Certificado VGM conforme al convenio SOLAS</span>
         </div>
@@ -52,78 +60,82 @@
         <!-- Tipo de Ingreso -->
         <div class="field-item">
           <label for="alm-tipo-ingreso">Modalidad de Ingreso *</label>
-          <select id="alm-tipo-ingreso" v-model="form.tipoIngreso" class="select-input" required>
-            <option value="DIRECTO_VERDE">DIRECTO_VERDE (Levante Inmediato)</option>
-            <option value="POST_INSPECCION">POST_INSPECCION (Revisión Naranja/Roja)</option>
-          </select>
+          <Select
+            inputId="alm-tipo-ingreso"
+            v-model="form.tipoIngreso"
+            :options="tipoIngresoOptions"
+            optionLabel="label"
+            optionValue="value"
+            fluid
+          />
         </div>
 
         <!-- Peso Bruto Registrado (kg) -->
         <div class="field-item">
           <label for="alm-peso-bruto">Peso Bruto Registrado (kg) *</label>
-          <input
-            id="alm-peso-bruto"
-            v-model.number="form.pesoBrutoRegistradoKg"
-            type="number"
-            step="0.01"
-            min="1"
+          <InputNumber
+            inputId="alm-peso-bruto"
+            v-model="form.pesoBrutoRegistradoKg"
+            :min="1"
+            :minFractionDigits="2"
+            :maxFractionDigits="2"
+            suffix=" kg"
             placeholder="Ej. 24500.00"
-            class="text-input"
-            required
+            fluid
           />
         </div>
 
         <!-- Peso Tara (kg) -->
         <div class="field-item">
           <label for="alm-peso-tara">Peso Tara Contenedor (kg)</label>
-          <input
-            id="alm-peso-tara"
-            v-model.number="form.pesoTaraRegistradoKg"
-            type="number"
-            step="0.01"
-            min="0"
+          <InputNumber
+            inputId="alm-peso-tara"
+            v-model="form.pesoTaraRegistradoKg"
+            :min="0"
+            :minFractionDigits="2"
+            :maxFractionDigits="2"
+            suffix=" kg"
             placeholder="Ej. 3850.00"
-            class="text-input"
+            fluid
           />
         </div>
 
         <!-- Cantidad de Bultos -->
         <div class="field-item">
           <label for="alm-bultos">Cantidad de Bultos / Pallets *</label>
-          <input
-            id="alm-bultos"
-            v-model.number="form.cantidadBultos"
-            type="number"
-            min="1"
+          <InputNumber
+            inputId="alm-bultos"
+            v-model="form.cantidadBultos"
+            :min="1"
+            :useGrouping="false"
             placeholder="Ej. 540"
-            class="text-input"
-            required
+            fluid
           />
         </div>
 
         <!-- Ubicación en Bahía / Almacén -->
         <div class="field-item">
           <label for="alm-bahia">Ubicación de Bahía / Patio</label>
-          <input
+          <InputText
             id="alm-bahia"
             v-model.trim="form.ubicacionBahia"
-            type="text"
             placeholder="Ej. BAHIA-D4 / RACK-12"
-            class="text-input uppercase font-mono"
+            class="uppercase font-mono"
             maxlength="30"
+            fluid
           />
         </div>
 
         <!-- Días Libres de Almacenaje -->
         <div class="field-item">
           <label for="alm-dias-libres">Días Libres de Almacenaje (Terminal)</label>
-          <input
-            id="alm-dias-libres"
-            v-model.number="form.diasLibresAlmacenaje"
-            type="number"
-            min="1"
-            max="30"
-            class="text-input"
+          <InputNumber
+            inputId="alm-dias-libres"
+            v-model="form.diasLibresAlmacenaje"
+            :min="1"
+            :max="30"
+            :useGrouping="false"
+            fluid
           />
           <span class="field-hint">Días sin sobrestadía antes de generar sobrecostos</span>
         </div>
@@ -131,45 +143,71 @@
         <!-- Precinto Verificado -->
         <div class="field-item">
           <label for="alm-precinto">¿Precinto Verificado Físicamente?</label>
-          <select id="alm-precinto" v-model="form.precintoVerificado" class="select-input">
-            <option :value="true">Sí (Precinto Conforme e Intacto)</option>
-            <option :value="false">No (Observación / Pendiente)</option>
-          </select>
+          <Select
+            inputId="alm-precinto"
+            v-model="form.precintoVerificado"
+            :options="precintoOptions"
+            optionLabel="label"
+            optionValue="value"
+            fluid
+          />
         </div>
 
         <!-- Observaciones -->
         <div class="field-item full-width">
           <label for="alm-obs">Observaciones del Depósito</label>
-          <textarea
+          <Textarea
             id="alm-obs"
             v-model.trim="form.observaciones"
             rows="2"
+            autoResize
             placeholder="Anotaciones de estado físico del contenedor o embalaje..."
-            class="textarea-input"
-          ></textarea>
+            fluid
+          />
         </div>
       </div>
 
       <div class="modal-actions">
-        <button type="button" class="btn-modal-cancel" @click="handleClose" :disabled="loading">
-          Cancelar
-        </button>
-        <button type="submit" class="btn-modal-save" :disabled="loading">
-          <i v-if="loading" class="pi pi-spin pi-spinner"></i>
-          <i v-else class="pi pi-check"></i>
-          <span>Registrar Ingreso VGM</span>
-        </button>
+        <Button
+          type="button"
+          label="Cancelar"
+          severity="secondary"
+          outlined
+          @click="handleClose"
+          :disabled="loading"
+        />
+        <Button
+          type="submit"
+          label="Registrar Ingreso VGM"
+          icon="pi pi-check"
+          :loading="loading"
+        />
       </div>
     </form>
   </BaseModal>
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, computed, watch } from 'vue'
+import Button from 'primevue/button'
+import InputText from 'primevue/inputtext'
+import InputNumber from 'primevue/inputnumber'
+import Select from 'primevue/select'
+import Textarea from 'primevue/textarea'
 import BaseModal from '@/shared/components/BaseModal.vue'
 import { almacenService } from '../services/almacenService'
 import { expedienteService } from '../services/expedienteService'
 import { sedeService } from '@/features/admin/sedes/services/sedeService'
+
+const tipoIngresoOptions = [
+  { label: 'DIRECTO_VERDE (Levante Inmediato)', value: 'DIRECTO_VERDE' },
+  { label: 'POST_INSPECCION (Revisión Naranja/Roja)', value: 'POST_INSPECCION' }
+]
+
+const precintoOptions = [
+  { label: 'Sí (Precinto Conforme e Intacto)', value: true },
+  { label: 'No (Observación / Pendiente)', value: false }
+]
 
 const props = defineProps({
   visible: {
@@ -188,6 +226,20 @@ const loading = ref(false)
 const errorMessage = ref('')
 const expedientesList = ref([])
 const sedesList = ref([])
+
+const expedienteOptions = computed(() =>
+  expedientesList.value.map((exp) => ({
+    label: `${exp.codigoExpediente} — ${exp.clienteRazonSocial || 'Cliente'} (Canal: ${exp.canalSunat || 'PENDIENTE'})`,
+    value: exp.idExpediente
+  }))
+)
+
+const sedeOptions = computed(() =>
+  sedesList.value.map((s) => ({
+    label: `${s.codigoSede} — ${s.nombre} (${s.distrito})`,
+    value: s.idSede
+  }))
+)
 
 const defaultForm = () => ({
   idExpediente: null,

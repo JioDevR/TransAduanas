@@ -35,86 +35,91 @@
 
         <div class="field-item">
           <label for="ent-receptor-nombre">Nombre Completo del Receptor *</label>
-          <input
+          <InputText
             id="ent-receptor-nombre"
             v-model.trim="form.receptorNombre"
-            type="text"
             placeholder="Ej. Ing. Carlos Mendoza"
-            class="text-input"
             required
             maxlength="150"
+            fluid
           />
         </div>
 
         <div class="field-item">
           <label for="ent-receptor-dni">DNI / Documento del Receptor *</label>
-          <input
+          <InputText
             id="ent-receptor-dni"
             v-model.trim="form.receptorDni"
-            type="text"
             placeholder="8 dígitos"
-            class="text-input font-mono font-bold"
+            class="font-mono font-bold"
             required
             maxlength="20"
+            fluid
           />
         </div>
 
         <div class="field-item">
           <label for="ent-contacto">Puesto / Área o Contacto de Recepción</label>
-          <input
+          <InputText
             id="ent-contacto"
             v-model.trim="form.contactoRecepcion"
-            type="text"
             placeholder="Ej. Jefe de Almacén Planta Gambetta"
-            class="text-input"
             maxlength="100"
+            fluid
           />
         </div>
 
         <div class="field-item">
           <label for="ent-km">Kilometraje de Llegada (km)</label>
-          <input
-            id="ent-km"
-            v-model.number="form.kilometrajeLlegada"
-            type="number"
-            min="0"
+          <InputNumber
+            inputId="ent-km"
+            v-model="form.kilometrajeLlegada"
+            :min="0"
+            :useGrouping="false"
+            suffix=" km"
             placeholder="Ej. 125430"
-            class="text-input font-mono"
+            fluid
           />
         </div>
 
         <div class="field-item full-width">
           <label for="ent-incidencia">Incidencias de Descarga / Novedades</label>
-          <input
+          <InputText
             id="ent-incidencia"
             v-model.trim="form.detalleIncidencia"
-            type="text"
             placeholder="Ej. Descarga conforme sin daños en precinto"
-            class="text-input"
+            fluid
           />
         </div>
 
         <div class="field-item full-width">
           <label for="ent-obs">Observaciones Finales / Sello GRE-T</label>
-          <textarea
+          <Textarea
             id="ent-obs"
             v-model.trim="form.observaciones"
             rows="2"
+            autoResize
             placeholder="Guía de remisión firmada y sellada por el cliente..."
-            class="textarea-input"
-          ></textarea>
+            fluid
+          />
         </div>
       </div>
 
       <div class="modal-actions">
-        <button type="button" class="btn-modal-cancel" @click="handleClose" :disabled="loading">
-          Cancelar
-        </button>
-        <button type="submit" class="btn-modal-save" :disabled="loading">
-          <i v-if="loading" class="pi pi-spin pi-spinner"></i>
-          <i v-else class="pi pi-check"></i>
-          <span>Confirmar Entrega</span>
-        </button>
+        <Button
+          type="button"
+          label="Cancelar"
+          severity="secondary"
+          outlined
+          @click="handleClose"
+          :disabled="loading"
+        />
+        <Button
+          type="submit"
+          label="Confirmar Entrega"
+          icon="pi pi-check"
+          :loading="loading"
+        />
       </div>
     </form>
   </BaseModal>
@@ -122,6 +127,10 @@
 
 <script setup>
 import { ref, watch } from 'vue'
+import Button from 'primevue/button'
+import InputText from 'primevue/inputtext'
+import InputNumber from 'primevue/inputnumber'
+import Textarea from 'primevue/textarea'
 import BaseModal from '@/shared/components/BaseModal.vue'
 import { transporteFlotaService } from '../services/transporteFlotaService'
 import { getNowDateTimeInput } from '@/shared/utils/dateUtils'

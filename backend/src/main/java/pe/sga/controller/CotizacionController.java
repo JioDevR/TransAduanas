@@ -2,7 +2,11 @@ package pe.sga.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -17,7 +21,10 @@ import pe.sga.dto.response.CotizacionResponseDTO;
 import pe.sga.entity.Usuario;
 import pe.sga.entity.enums.EstadoCotizacion;
 import pe.sga.service.ICotizacionService;
+import pe.sga.service.IReporteJasperService;
 
+import java.io.ByteArrayInputStream;
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -27,6 +34,7 @@ import java.util.List;
 public class CotizacionController {
 
     private final ICotizacionService cotizacionService;
+    private final IReporteJasperService reporteJasperService;
 
     @GetMapping
     public ResponseEntity<ApiResponseDTO<List<CotizacionResponseDTO>>> listar(
@@ -45,6 +53,26 @@ public class CotizacionController {
     public ResponseEntity<ApiResponseDTO<List<CotizacionResponseDTO>>> listarSinAsignar() {
         List<CotizacionResponseDTO> cotizaciones = cotizacionService.listarSinAsignar();
         return ResponseEntity.ok(ApiResponseDTO.ok("Solicitudes sin asignar recuperadas exitosamente", cotizaciones));
+    }
+
+    @GetMapping("/reporte-comercial-pdf")
+    public ResponseEntity<InputStreamResource> exportarReporteComercialPdf(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate hasta,
+            @RequestParam(required = false) Integer idUsuarioComercial,
+            @RequestParam(required = false) String regimen,
+            @AuthenticationPrincipal Usuario usuarioActual) {
+        ByteArrayInputStream pdfStream = reporteJasperService.exportarReporteComercialPdf(
+                desde, hasta, idUsuarioComercial, regimen, usuarioActual
+        );
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=reporte-gestion-comercial.pdf");
+
+        return ResponseEntity.ok()
+                .headers(headers)
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(new InputStreamResource(pdfStream));
     }
 
     @GetMapping("/{id}")

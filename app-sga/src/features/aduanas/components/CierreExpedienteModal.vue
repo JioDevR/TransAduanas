@@ -60,26 +60,33 @@
 
       <div class="field-item">
         <label for="cierre-obs">Acta de Conformidad / Observaciones de Cierre Definitivo *</label>
-        <textarea
+        <Textarea
           id="cierre-obs"
           v-model.trim="form.observacionesCierre"
           rows="3"
+          autoResize
           placeholder="Ej. Se revisaron conformidades de levante aduanero, entrega a satisfacción y archivo de legajo digital del despacho. Expediente cerrado y archivado conforme."
-          class="textarea-input"
           required
-        ></textarea>
+          fluid
+        />
         <span class="field-hint">Esta acción cambiará el estado del expediente a CERRADO y notificará formalmente al cliente.</span>
       </div>
 
       <div class="modal-actions">
-        <button type="button" class="btn-modal-cancel" @click="handleClose" :disabled="loading">
-          Cancelar
-        </button>
-        <button type="submit" class="btn-modal-save" :disabled="loading">
-          <i v-if="loading" class="pi pi-spin pi-spinner"></i>
-          <i v-else class="pi pi-lock"></i>
-          <span>Confirmar Cierre de Expediente</span>
-        </button>
+        <Button
+          type="button"
+          label="Cancelar"
+          severity="secondary"
+          outlined
+          @click="handleClose"
+          :disabled="loading"
+        />
+        <Button
+          type="submit"
+          label="Confirmar Cierre de Expediente"
+          icon="pi pi-lock"
+          :loading="loading"
+        />
       </div>
     </form>
   </BaseModal>
@@ -87,6 +94,8 @@
 
 <script setup>
 import { ref, computed, watch } from 'vue'
+import Button from 'primevue/button'
+import Textarea from 'primevue/textarea'
 import BaseModal from '@/shared/components/BaseModal.vue'
 import { expedienteService } from '../services/expedienteService'
 

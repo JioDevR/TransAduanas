@@ -4,34 +4,37 @@
       Mostrando {{ startIndex }} a {{ endIndex }} de {{ totalItems }} {{ itemLabel }}
     </span>
     <div class="pagination-controls">
-      <button
+      <Button
         type="button"
-        class="page-nav-btn"
+        icon="pi pi-chevron-left"
+        severity="secondary"
+        outlined
+        size="small"
         :disabled="currentPage <= 1 || disabled"
         title="Página anterior"
         @click="handlePrev"
-      >
-        <i class="pi pi-chevron-left"></i>
-      </button>
+      />
 
-      <span class="current-page-tag">
-        Página {{ currentPage }} de {{ totalPages }}
-      </span>
+      <Tag :value="`Página ${currentPage} de ${totalPages}`" severity="secondary" />
 
-      <button
+      <Button
         type="button"
-        class="page-nav-btn"
+        icon="pi pi-chevron-right"
+        severity="secondary"
+        outlined
+        size="small"
         :disabled="currentPage >= totalPages || disabled"
         title="Página siguiente"
         @click="handleNext"
-      >
-        <i class="pi pi-chevron-right"></i>
-      </button>
+      />
     </div>
   </div>
 </template>
 
 <script setup>
+import Button from 'primevue/button'
+import Tag from 'primevue/tag'
+
 /**
  * Componente genérico de paginación con estética cálida editorial de SGA.
  */

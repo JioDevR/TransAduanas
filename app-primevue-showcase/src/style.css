@@ -1,0 +1,19 @@
+/* Estilos específicos del layout de Showcase (los estilos base vienen de sga-theme/sga-theme.css) */
+.showcase-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 1.25rem;
+}
+
+.demo-box {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.demo-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}

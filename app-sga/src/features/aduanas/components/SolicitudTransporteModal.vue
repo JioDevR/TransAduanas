@@ -24,48 +24,44 @@
       <div class="transporte-fields-grid">
         <div class="field-item full-width">
           <label for="dir-partida">Punto de Partida (Terminal / Depósito) *</label>
-          <input
+          <InputText
             id="dir-partida"
             v-model.trim="form.direccionPartida"
-            type="text"
-            class="text-input"
             required
             placeholder="Ej. DP World Callao - Terminal Sur / Almacén Ransa"
+            fluid
           />
         </div>
 
         <div class="field-item">
           <label for="dir-llegada">Dirección de Destino / Entrega *</label>
-          <input
+          <InputText
             id="dir-llegada"
             v-model.trim="form.direccionLlegada"
-            type="text"
-            class="text-input"
             required
             placeholder="Ej. Av. Los Industriales 450, Almacén Central"
+            fluid
           />
         </div>
 
         <div class="field-item">
           <label for="distrito-llegada">Distrito de Llegada *</label>
-          <input
+          <InputText
             id="distrito-llegada"
             v-model.trim="form.distritoLlegada"
-            type="text"
-            class="text-input"
             required
             placeholder="Ej. Ate / Callao / San Luis"
+            fluid
           />
         </div>
 
         <div class="field-item">
           <label for="contacto-recep">Contacto de Recepción</label>
-          <input
+          <InputText
             id="contacto-recep"
             v-model.trim="form.contactoRecepcion"
-            type="text"
-            class="text-input"
             placeholder="Ej. Juan Pérez - Jefe Almacén (999-888-777)"
+            fluid
           />
         </div>
 
@@ -82,25 +78,32 @@
 
         <div class="field-item full-width">
           <label for="obs-trans">Instrucciones Especiales de Descarga</label>
-          <textarea
+          <Textarea
             id="obs-trans"
             v-model.trim="form.observaciones"
             rows="2"
+            autoResize
             placeholder="Requiere rampa hidráulica, montacargas en destino o ventana horaria restringida..."
-            class="textarea-input"
-          ></textarea>
+            fluid
+          />
         </div>
       </div>
 
       <div class="modal-actions">
-        <button type="button" class="btn-modal-cancel" @click="handleClose" :disabled="loading">
-          Cancelar
-        </button>
-        <button type="submit" class="btn-modal-save" :disabled="loading">
-          <i v-if="loading" class="pi pi-spin pi-spinner"></i>
-          <i v-else class="pi pi-send"></i>
-          <span>Enviar Solicitud a Transporte</span>
-        </button>
+        <Button
+          type="button"
+          label="Cancelar"
+          severity="secondary"
+          outlined
+          @click="handleClose"
+          :disabled="loading"
+        />
+        <Button
+          type="submit"
+          label="Enviar Solicitud a Transporte"
+          icon="pi pi-send"
+          :loading="loading"
+        />
       </div>
     </form>
   </BaseModal>
@@ -108,6 +111,9 @@
 
 <script setup>
 import { ref, watch } from 'vue'
+import Button from 'primevue/button'
+import InputText from 'primevue/inputtext'
+import Textarea from 'primevue/textarea'
 import BaseModal from '@/shared/components/BaseModal.vue'
 import { expedienteService } from '../services/expedienteService'
 import { getNowDateTimeInput } from '@/shared/utils/dateUtils'

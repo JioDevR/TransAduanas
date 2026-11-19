@@ -42,7 +42,7 @@ jobs:
           if ([int]$suite.tests -ne 15 -or [int]$suite.failures -ne 0 -or [int]$suite.errors -ne 0 -or [int]$suite.skipped -ne 0) {
             throw 'Se requieren exactamente 15 pruebas, sin fallos, errores ni omisiones.'
           }
-          Get-FileHash -LiteralPath 'target/sga-backend-0.5.0.jar' -Algorithm SHA256 |
+          Get-FileHash -LiteralPath 'target/sga-backend-0.5.1.jar' -Algorithm SHA256 |
             Format-List | Out-File 'target/hash-jar.txt' -Encoding utf8
           "Commit: $env:GITHUB_SHA" | Out-File 'target/commit.txt' -Encoding utf8
       - name: Conservar reportes incluso si fallan las pruebas
@@ -58,7 +58,7 @@ jobs:
         with:
           name: backend-${{ github.sha }}
           path: |
-            backend/target/sga-backend-0.5.0.jar
+            backend/target/sga-backend-0.5.1.jar
             backend/target/hash-jar.txt
             backend/target/commit.txt
           if-no-files-found: error

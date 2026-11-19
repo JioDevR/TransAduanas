@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{reports/ti-listado-base :: tiHead(${tituloDocumento})}"></head>
+<body>
+
+    <table th:replace="~{reports/ti-listado-base :: tiHeader(${kickerTexto}, ${tituloReporte}, ${alcanceTexto}, ${fechaGeneracion}, ${totalListado}, 'cuentas')}"></table>
+
+    <table th:replace="~{reports/ti-listado-base :: tiSummary(${tituloMetrica1}, ${totalListado}, 'Empresas Clientes', ${totalEmpresas}, 'Total Registradas', ${totalRegistrados})}"></table>
+
+    <table class="ti-list-table">
+        <thead>
+            <tr>
+                <th style="width: 15%;">USUARIO</th>
+                <th style="width: 34%;">EMPRESA</th>
+                <th style="width: 21%;">REPRESENTANTE</th>
+                <th style="width: 30%;">CORREO</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:if="${#lists.isEmpty(items)}">
+                <td colspan="4" class="ti-empty-row">No se encontraron usuarios del portal para mostrar en este informe.</td>
+            </tr>
+            <tr th:each="p : ${items}">
+                <td><span class="ti-user-chip" th:text="'@' + ${p.username}">@20370146994</span></td>
+                <td><strong th:text="${p.empresa}">Empresa Cliente S.A.C.</strong></td>
+                <td th:text="${p.representante}">Representante Legal</td>
+                <td><span class="ti-email-text" th:text="${p.correo}">contacto@empresa.pe</span></td>
+            </tr>
+        </tbody>
+    </table>
+
+</body>
+</html>

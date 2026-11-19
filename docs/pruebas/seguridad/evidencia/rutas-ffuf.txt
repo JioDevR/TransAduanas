@@ -1,6 +1,0 @@
-health
-clientes
-usuarios
-auth/me
-portal/perfil
-ruta-inexistente-seguridad

@@ -37,8 +37,8 @@
       :docs-count="isEditMode ? existingDocsCount : queuedDocs.length"
     />
 
-    <div class="sga-wizard-grid">
-      <div class="sga-wizard-main">
+    <div class="sga-split-layout">
+      <div class="sga-split-main">
         <CotizacionStepCliente
           v-show="currentStep === 1"
           v-model:client-search-query="clientSearchQuery"
@@ -234,22 +234,5 @@ defineExpose({
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
-}
-
-.sga-wizard-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 360px;
-  gap: 1.5rem;
-  align-items: start;
-}
-
-.sga-wizard-main {
-  min-width: 0;
-}
-
-@media (max-width: 1120px) {
-  .sga-wizard-grid {
-    grid-template-columns: 1fr;
-  }
 }
 </style>

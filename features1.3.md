@@ -52,3 +52,11 @@
 - Se eliminan `AperturaExpedienteView` y `LiquidacionAduaneraView`, la ruta `/gestion-aduanera/liquidacion` y las sub-opciones `declaraciones`, `clasificacion` y `tributos` del sidebar y del store de navegación.
 - `resolvePeriodoRange` se muda a `shared/utils/dateUtils` (y se reexporta desde `useComercialDashboard`); `aduanasFormatters` agrega `getCanalSeverity` y `getExpedienteSeverity`.
 - Tests nuevos para `useAduanasDashboard`, `useAduanasApertura`, `useAduanasExpedientes` y `useAperturaExpedienteForm` (130 tests en total).
+
+## Extracción de estilos sgaUI para dashboards y formularios
+
+- Nuevo `sgaUI/sga-dashboard.css` con el patrón de dashboards operativos (`.sga-dash-header`, `.sga-dash-actions`, `.sga-filters-card`, `.sga-filter-field`, `.sga-kpis-grid`, `.sga-kpi-card`, `.sga-charts-grid`, `.sga-chart-card`, `.sga-doughnut-wrap`).
+- Nuevo `sgaUI/sga-forms.css` con el patrón de formularios maestros y wizard split-screen (`.sga-form-header`, `.sga-split-layout`, `.sga-stepper-bar`, `.sga-form-field`, `.sga-form-label`, `.sga-dialog-body/footer`, `.sga-banner`).
+- `sgaUI/sga-theme.css` importa ambos archivos y agrega `.sga-kicker`, `.sga-mono`, `.sga-queue-buttons`, `.sga-status-note` y los botones `.sga-confirm-*` de `ConfirmDialog` (con soporte claro/oscuro).
+- `ComercialDashboardPanel`, `DashboardAduaneroPanel`, `CotizacionStepperNav`, `CotizacionFormHeader`, `CotizacionRegistrationForm`, `AperturaExpedienteFormView`, `AduanasCotizacionesPanel`, `AduanasExpedientesPanel` y `CotizacionRevisionDialog` eliminan sus estilos locales duplicados (−742 líneas) y consumen las clases globales.
+- El README de `sgaUI` documenta los patrones de dashboard y de formularios con el detalle de sus clases.

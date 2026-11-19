@@ -9,7 +9,9 @@ Esta carpeta centraliza el sistema de diseño unificado **`sgaUI`** para servir 
 | Archivo | Propósito |
 | :--- | :--- |
 | [`sgaThemePreset.js`](./sgaThemePreset.js) | Preset oficial de PrimeVue 4 (`definePreset(Aura, ...)`), listo para importar en `main.js`. |
-| [`sga-theme.css`](./sga-theme.css) | Reglas CSS base (tipografía, números tabulares, fondos adaptativos, elevación de tarjetas y densidad de tablas). |
+| [`sga-theme.css`](./sga-theme.css) | Reglas CSS base (tipografía, números tabulares, listados, colas `.sga-queue-buttons`, botones `ConfirmDialog` y elevación). Importa automáticamente `sga-dashboard.css` y `sga-forms.css`. |
+| [`sga-dashboard.css`](./sga-dashboard.css) | Patrón unificado de dashboards operativos (`.sga-dash-header`, `.sga-filters-card`, `.sga-kpis-grid`, `.sga-kpi-card`, `.sga-charts-grid`, `.sga-doughnut-wrap`). |
+| [`sga-forms.css`](./sga-forms.css) | Patrón unificado de formularios `Split-Screen` (`.sga-split-layout`, `.sga-form-header`), stepper horizontal (`.sga-stepper-bar`), campos/etiquetas (`.sga-form-field`, `.sga-form-label`), diálogos (`.sga-dialog-body`, `.sga-dialog-footer`) y banners (`.sga-banner`). |
 | [`sga-auth.css`](./sga-auth.css) | Estilos reutilizables de pantalla de acceso (`.sga-auth-page`, `.sga-auth-card`, `.sga-auth-brand`, `.sga-auth-form`). |
 | [`sga-shell.css`](./sga-shell.css) | Cascarón principal unificado (`.sga-shell`, `.sga-sidebar`, `.sga-topbar`, `.sga-module-card`, `.sga-page-content`) y espaciados del layout. |
 | [`README.md`](./README.md) | Documentación completa de paleta, tipografía, espaciado, geometría y guía de uso. |
@@ -110,11 +112,29 @@ app.use(PrimeVue, {
 
 ## 5. Patrón de Asistente / Wizard Minimalista (`Split-Screen`)
 
-Referencia aplicada en el wizard de cotización comercial (`app-sga/src/features/comercial`):
+Referencia aplicada en el wizard de cotización comercial (`app-sga/src/features/comercial`) y apertura de expedientes (`app-sga/src/features/aduanas`), estandarizada en [`sga-forms.css`](./sga-forms.css):
 
-* **Cabecera directa:** Una sola fila con título principal (`1.45rem`, peso `700`) a la izquierda y dos botones compactos (`size="small"`) a la derecha: `Cancelar` (secundario `outlined`) y botón primario contextual (`Continuar →` en pasos intermedios; acción de guardado en el último paso). Sin kickers ni párrafos introductorios.
-* **Stepper horizontal:** Barra única (`border-radius: 14px`, `1px solid var(--color-border)`) con círculo numerado (`26px`), micro-etiqueta (`PASO 0X`) y título. Al estar el título visible en el stepper, se omite la cabecera repetida dentro de la tarjeta de cada paso.
-* **Layout `Split-Screen`:** Rejilla `minmax(0, 1fr) 360px` (`gap: 1.5rem`, colapsa a `1fr` en `<= 1120px`). La columna lateral `sticky` muestra el resumen en vivo con `--font-mono` y `tabular-nums`, sin duplicar los botones de acción del header.
+* **Cabecera directa (`.sga-form-header`, `.sga-form-title`, `.sga-form-actions`):** Una sola fila con título principal (`1.45rem`, peso `700`) a la izquierda y dos botones compactos (`size="small"`) a la derecha: `Cancelar` (secundario `outlined`) y botón primario contextual (`Continuar →` en pasos intermedios; acción de guardado en el último paso). Sin kickers ni párrafos introductorios.
+* **Stepper horizontal (`.sga-stepper-bar`, `.sga-stepper-item`, `.is-active`, `.is-completed`):** Barra única (`border-radius: 14px`, `1px solid var(--color-border)`) con círculo numerado (`26px`), micro-etiqueta (`PASO 0X`) y título. Al estar el título visible en el stepper, se omite la cabecera repetida dentro de la tarjeta de cada paso.
+* **Layout `Split-Screen` (`.sga-split-layout`, `.sga-split-main`, `.sga-split-aside`):** Rejilla `minmax(0, 1fr) 360px` (`gap: 1.5rem`, colapsa a `1fr` en `<= 1120px`). La columna lateral `sticky` muestra el resumen en vivo con `--font-mono` y `tabular-nums`, sin duplicar los botones de acción del header.
 * **Padding lateral estandarizado:** Todas las tarjetas de contenido (`.sga-card-surface` / pasos del wizard / resumen lateral) usan `--sga-card-padding-y: 1.75rem` y `--sga-card-padding-x: 2rem` (`1.25rem` en `<= 768px`), y los subpaneles internos usan `--sga-subpanel-padding: 1.25rem 1.35rem`, garantizando aire uniforme en esquinas y bordes laterales.
-* **Formularios internos:** Etiquetas en micro-mayúsculas (`0.6875rem`, peso `700`, `letter-spacing: 0.04em`, `--color-text-muted`) y controles PrimeVue 4 (`InputText`, `InputNumber`, `Select`, `Textarea`) con `size="small"` y `fluid`.
+* **Formularios internos, diálogos y banners:** Etiquetas en micro-mayúsculas (`.sga-form-label` / `.sga-field-label`, `0.6875rem`, peso `700`, `letter-spacing: 0.04em`, `--color-text-muted`), campos en columna (`.sga-form-field`), pies de diálogo (`.sga-dialog-footer`), banners de estado (`.sga-banner` con `.is-info`, `.is-warn`, `.is-danger`, `.is-success`) y controles PrimeVue 4 (`InputText`, `InputNumber`, `Select`, `Textarea`) con `size="small"` y `fluid`.
+
+---
+
+## 6. Patrón de Dashboards Operativos (`sga-dashboard.css`)
+
+Referencia compartida por **Comercial** (`ComercialDashboardPanel.vue`) y **Gestión Aduanera** (`DashboardAduaneroPanel.vue`), centralizada en [`sga-dashboard.css`](./sga-dashboard.css):
+
+* **Cabecera y barra de filtros:** `.sga-dash-header`, `.sga-dash-actions`, `.sga-filters-card`, `.sga-filters-grid`, `.sga-filter-field`, `.sga-filter-reset`.
+* **Tarjetas KPI:** `.sga-kpis-grid` y `.sga-kpi-card` con variantes `.is-success`, `.is-warn`, `.is-danger` y píldora de porcentaje/estado `.sga-kpi-pill`.
+* **Gráficos Chart.js:** `.sga-charts-grid`, `.sga-chart-card`, `.sga-chart-head`, `.sga-chart-box` (`height: 240px`), y centro de dona `.sga-doughnut-wrap` / `.sga-doughnut-center`.
+
+---
+
+## 7. Listados, Colas de Trabajo y Confirmaciones (`sga-theme.css`)
+
+* **Listados Duales (Tabla / Canvas):** `.sga-list-panel`, `.sga-panel-header`, `.sga-table-card`, `.sga-table-toolbar`, `.sga-canvas-grid`, `.sga-canvas-card`, `.sga-empty-state`.
+* **Sub-barra de Colas y Notas:** `.sga-queue-buttons` y `.sga-status-note` para el slot `#sub-bar` de `SgaListShell.vue`.
+* **ConfirmDialog:** `.sga-confirm-accept-btn`, `.sga-confirm-reject-btn` y `.sga-confirm-delete-btn` con soporte automático para modo claro y oscuro.
 

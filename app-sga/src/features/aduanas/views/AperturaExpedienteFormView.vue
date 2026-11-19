@@ -1,8 +1,8 @@
 <template>
   <div class="sga-apertura-view">
-    <header class="sga-apertura-header">
+    <header class="sga-form-header">
       <div class="sga-apertura-title-group">
-        <h1 class="sga-apertura-title">
+        <h1 class="sga-form-title">
           Aperturar Expediente
           <span v-if="cotizacion?.codigoCotizacion" class="font-mono sga-apertura-code">
             · {{ cotizacion.codigoCotizacion }}
@@ -10,7 +10,7 @@
         </h1>
       </div>
 
-      <div class="sga-apertura-actions">
+      <div class="sga-form-actions">
         <Button
           type="button"
           label="Cancelar"
@@ -46,8 +46,8 @@
       <span>Cargando cotización y especialistas acreditados...</span>
     </div>
 
-    <div v-else-if="cotizacion" class="sga-apertura-grid">
-      <form class="sga-apertura-main" @submit.prevent="handleSubmit">
+    <div v-else-if="cotizacion" class="sga-split-layout">
+      <form class="sga-split-main" @submit.prevent="handleSubmit">
         <section class="sga-card-surface sga-form-section">
           <div class="sga-section-head">
             <span class="sga-step-num font-mono">01</span>
@@ -329,30 +329,8 @@ const handleSubmit = async () => {
   gap: 1.5rem;
 }
 
-.sga-apertura-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  flex-wrap: wrap;
-}
-
-.sga-apertura-title {
-  margin: 0;
-  font-size: 1.45rem;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  color: var(--color-text-main);
-}
-
 .sga-apertura-code {
   color: var(--p-primary-color);
-}
-
-.sga-apertura-actions {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
 }
 
 .sga-apertura-loading {
@@ -366,25 +344,6 @@ const handleSubmit = async () => {
 
 .sga-loading-icon {
   font-size: 1.25rem;
-}
-
-.sga-apertura-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 360px;
-  gap: 1.5rem;
-  align-items: start;
-}
-
-@media (max-width: 1120px) {
-  .sga-apertura-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-.sga-apertura-main {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
 }
 
 .sga-form-section {

@@ -128,24 +128,4 @@ const handleSubmit = () => {
   line-height: 1.5;
   color: var(--color-text-muted);
 }
-
-.sga-form-field {
-  display: flex;
-  flex-direction: column;
-  gap: 0.45rem;
-}
-
-.sga-form-label {
-  font-size: 0.6875rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--color-text-muted);
-}
-
-.sga-dialog-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.5rem;
-}
 </style>

@@ -385,16 +385,4 @@ const onRowDblClick = (event) => {
 }
 </script>
 
-<style scoped>
-.sga-queue-buttons {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.5rem;
-}
 
-.sga-status-note {
-  font-size: 0.8rem;
-  font-weight: 600;
-}
-</style>

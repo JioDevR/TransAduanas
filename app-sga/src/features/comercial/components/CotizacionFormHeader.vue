@@ -1,8 +1,8 @@
 <template>
-  <header class="sga-wizard-header">
-    <h1 class="sga-wizard-title">{{ titleText }}</h1>
+  <header class="sga-form-header">
+    <h1 class="sga-form-title">{{ titleText }}</h1>
 
-    <div class="sga-wizard-actions">
+    <div class="sga-form-actions">
       <Button
         type="button"
         label="Cancelar"
@@ -92,26 +92,4 @@ const submitLabel = computed(() => {
 })
 </script>
 
-<style scoped>
-.sga-wizard-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  flex-wrap: wrap;
-}
 
-.sga-wizard-title {
-  margin: 0;
-  font-size: 1.45rem;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  color: var(--color-text-main);
-}
-
-.sga-wizard-actions {
-  display: flex;
-  align-items: center;
-  gap: 0.625rem;
-}
-</style>

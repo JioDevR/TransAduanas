@@ -7,7 +7,9 @@ import {
   getEstadoPagoLabel,
   getEstadoPagoSeverity,
   isCotizacionRevisable,
-  isCotizacionObservable
+  isCotizacionObservable,
+  getCanalSeverity,
+  getExpedienteSeverity
 } from '../aduanasFormatters'
 
 describe('aduanasFormatters', () => {
@@ -40,5 +42,17 @@ describe('aduanasFormatters', () => {
 
     expect(isCotizacionObservable('PENDIENTE')).toBe(true)
     expect(isCotizacionObservable('OBSERVADA')).toBe(false)
+  })
+
+  it('resuelve severidades de canal SUNAT y estado de expediente', () => {
+    expect(getCanalSeverity('VERDE')).toBe('success')
+    expect(getCanalSeverity('NARANJA')).toBe('warn')
+    expect(getCanalSeverity('ROJO')).toBe('danger')
+    expect(getCanalSeverity('PENDIENTE')).toBe('contrast')
+
+    expect(getExpedienteSeverity('LEVANTE_AUTORIZADO')).toBe('success')
+    expect(getExpedienteSeverity('ANULADO')).toBe('danger')
+    expect(getExpedienteSeverity('CON_CANAL')).toBe('warn')
+    expect(getExpedienteSeverity('ASIGNADO')).toBe('info')
   })
 })

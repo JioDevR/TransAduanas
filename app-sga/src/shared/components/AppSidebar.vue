@@ -172,19 +172,16 @@ const currentNavItems = computed(() => {
   }
 
   if (mod === 'gestion-aduanera') {
-    const resolveAduana = (sub) =>
-      ['declaraciones', 'clasificacion', 'tributos'].includes(sub)
-        ? { path: '/gestion-aduanera/liquidacion', query: { tab: sub } }
-        : { path: '/gestion-aduanera', query: { tab: sub } }
-    const go = (sub) => () => selectSub('gestion-aduanera', navigationStore.setGestionAduaneraSubOption, sub, resolveAduana)
+    const go = (sub) => () =>
+      selectSub('gestion-aduanera', navigationStore.setGestionAduaneraSubOption, sub, {
+        path: '/gestion-aduanera',
+        query: { tab: sub }
+      })
     return [
       { key: 'dashboard', label: 'Dashboard Operativo', match: ['dashboard'], onClick: go('dashboard') },
       { key: 'cotizaciones', label: 'Bandeja Cotizaciones', match: ['cotizaciones'], onClick: go('cotizaciones') },
       { key: 'apertura', label: 'Apertura Expedientes', match: ['apertura'], onClick: go('apertura') },
-      { key: 'expedientes', label: 'Gestión de Expedientes', match: ['expedientes'], onClick: go('expedientes') },
-      { key: 'declaraciones', label: 'Declaraciones DAM', match: ['declaraciones'], onClick: go('declaraciones') },
-      { key: 'clasificacion', label: 'Clasificación Arancelaria', match: ['clasificacion'], onClick: go('clasificacion') },
-      { key: 'tributos', label: 'Cálculo de Tributos', match: ['tributos'], onClick: go('tributos') }
+      { key: 'expedientes', label: 'Gestión de Expedientes', match: ['expedientes'], onClick: go('expedientes') }
     ]
   }
 

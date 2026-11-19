@@ -69,3 +69,17 @@ export const isCotizacionRevisable = (estado) => {
 export const isCotizacionObservable = (estado) => {
   return ['PENDIENTE', 'EN_REVISION', 'ENVIADA'].includes(estado)
 }
+
+export const getCanalSeverity = (canal) => {
+  if (canal === 'VERDE') return 'success'
+  if (canal === 'NARANJA') return 'warn'
+  if (canal === 'ROJO') return 'danger'
+  return 'contrast'
+}
+
+export const getExpedienteSeverity = (estado) => {
+  if (estado === 'LEVANTE_AUTORIZADO' || estado === 'CONCLUIDO') return 'success'
+  if (estado === 'ANULADO') return 'danger'
+  if (estado === 'CON_CANAL') return 'warn'
+  return 'info'
+}

@@ -164,10 +164,7 @@ const MODULE_TITLES = {
       dashboard: 'Dashboard y Control Operativo Aduanero',
       cotizaciones: 'Bandeja de Cotizaciones para Revisión Técnica',
       apertura: 'Apertura de Expedientes Aduaneros',
-      expedientes: 'Gestión Integral de Expedientes Aduaneros',
-      declaraciones: 'Declaraciones DAM (Liquidación)',
-      clasificacion: 'Clasificación Arancelaria NANDINA',
-      tributos: 'Cálculo y Liquidación de Tributos'
+      expedientes: 'Gestión Integral de Expedientes Aduaneros'
     },
     getSub: () => navigationStore.gestionAduaneraSubOption
   },

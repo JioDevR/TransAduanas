@@ -117,21 +117,6 @@
       />
 
       <Button
-        v-if="showExpedienteAction"
-        type="button"
-        label="+ Expediente"
-        :icon="selectedRow?.tienePagoAprobado ? 'pi pi-folder-open' : 'pi pi-lock'"
-        :severity="selectedRow?.tienePagoAprobado ? 'primary' : 'secondary'"
-        outlined
-        size="small"
-        :disabled="!selectedRow?.tienePagoAprobado"
-        :title="selectedRow?.tienePagoAprobado
-          ? 'Aperturar Expediente Aduanero para esta cotización'
-          : 'Requiere que Finanzas apruebe el pago o adelanto antes de generar el expediente'"
-        @click="$emit('open-apertura', selectedRow)"
-      />
-
-      <Button
         type="button"
         label="Actualizar"
         icon="pi pi-sync"
@@ -318,8 +303,7 @@ const emit = defineEmits([
   'open-docs',
   'approve',
   'observe',
-  'reject',
-  'open-apertura'
+  'reject'
 ])
 
 const viewMode = ref('table')
@@ -354,12 +338,6 @@ const subQueueItems = computed(() => [
     badgeSeverity: 'danger'
   },
   {
-    value: 'listasApertura',
-    label: 'Para aperturar',
-    count: props.clasificadas.listasApertura?.length || 0,
-    badgeSeverity: 'success'
-  },
-  {
     value: 'historico',
     label: 'Concluidas',
     count: props.clasificadas.historico?.length || 0,
@@ -390,9 +368,6 @@ const sortOptions = [
 const canApproveSelected = computed(() => isCotizacionRevisable(selectedRow.value?.estado))
 const canRejectSelected = computed(() => isCotizacionRevisable(selectedRow.value?.estado))
 const canObserveSelected = computed(() => isCotizacionObservable(selectedRow.value?.estado))
-const showExpedienteAction = computed(
-  () => selectedRow.value?.estado === 'APROBADA' && !selectedRow.value?.tieneExpediente
-)
 
 watch(
   () => props.cotizaciones,

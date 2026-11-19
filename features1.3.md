@@ -43,3 +43,12 @@
 - Nuevo endpoint `GET /cotizaciones/reporte-comercial-pdf` (`ReporteJasperServiceImpl` + plantilla `reports/reporte-comercial.html`) con filtros por rango de fechas, asesor y régimen; `comercialService.exportarReporteComercialPdf` lo consume como blob y lo abre en pestaña nueva.
 - `sgaUI/sga-theme.css` agrega los tokens `--sga-card-padding-y/x`, `--sga-card-radius` y `--sga-subpanel-padding`, con las clases `.sga-card-surface`, `.sga-list-panel` y `.sga-table-card`; el README documenta el patrón wizard minimalista.
 - Dependencia `chart.js` agregada; nuevos tests para `useComercialDashboard`, `useAduanasCotizaciones`, `aduanasFormatters` y el PDF del reporte comercial.
+
+## Gestión aduanera por bandejas y apertura en vista completa
+
+- `GestionAduaneraView` baja de 1933 a 550 líneas: orquesta `DashboardAduaneroPanel`, `AduanasCotizacionesPanel`, `AduanasAperturaPanel` y `AduanasExpedientesPanel`, cada listado con vista tabla y vista canvas (`AduanasAperturaCanvasGrid`, `AduanasExpedientesCanvasGrid`).
+- `DashboardAduaneroPanel` delega las métricas en `useAduanasDashboard` y añade gráficos Chart.js de canales SUNAT, tendencia y etapas del expediente.
+- La apertura de expedientes deja de ser un modal: nuevo `AperturaExpedienteFormView` en la ruta `/gestion-aduanera/apertura/:idCotizacion`, con `useAperturaExpedienteForm`, aviso de elegibilidad y acción «Formalizar y Aperturar Expediente».
+- Se eliminan `AperturaExpedienteView` y `LiquidacionAduaneraView`, la ruta `/gestion-aduanera/liquidacion` y las sub-opciones `declaraciones`, `clasificacion` y `tributos` del sidebar y del store de navegación.
+- `resolvePeriodoRange` se muda a `shared/utils/dateUtils` (y se reexporta desde `useComercialDashboard`); `aduanasFormatters` agrega `getCanalSeverity` y `getExpedienteSeverity`.
+- Tests nuevos para `useAduanasDashboard`, `useAduanasApertura`, `useAduanasExpedientes` y `useAperturaExpedienteForm` (130 tests en total).

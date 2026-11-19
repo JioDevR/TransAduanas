@@ -1,38 +1,7 @@
 import { computed, ref } from 'vue'
+import { resolvePeriodoRange } from '@/shared/utils/dateUtils'
 
-/**
- * Resuelve el rango de fechas { desde, hasta } en formato ISO (YYYY-MM-DD)
- * según el preset seleccionado y la fecha de referencia.
- */
-export function resolvePeriodoRange(periodo, referenceDate = new Date()) {
-  if (!periodo || periodo === 'ALL') {
-    return { desde: null, hasta: null }
-  }
-
-  const toIso = (d) => {
-    const y = d.getFullYear()
-    const m = String(d.getMonth() + 1).padStart(2, '0')
-    const day = String(d.getDate()).padStart(2, '0')
-    return `${y}-${m}-${day}`
-  }
-
-  const end = new Date(referenceDate.getFullYear(), referenceDate.getMonth(), referenceDate.getDate())
-  const start = new Date(end)
-
-  if (periodo === 'HOY') {
-    // mismo día: desde = hasta = hoy
-  } else if (periodo === '7D') {
-    start.setDate(start.getDate() - 6)
-  } else if (periodo === '30D') {
-    start.setDate(start.getDate() - 29)
-  } else if (periodo === 'MES_ACTUAL') {
-    start.setDate(1)
-  } else {
-    return { desde: null, hasta: null }
-  }
-
-  return { desde: toIso(start), hasta: toIso(end) }
-}
+export { resolvePeriodoRange }
 
 /**
  * Composable de métricas, filtros y datasets Chart.js para el Dashboard Comercial.

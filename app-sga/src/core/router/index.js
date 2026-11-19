@@ -144,8 +144,8 @@ router.beforeEach(async (to, from, next) => {
     }
     if (to?.query?.tab) {
       navStore.setGestionAduaneraSubOption(to.query.tab)
-    } else if (toPath.includes('liquidacion')) {
-      navStore.setGestionAduaneraSubOption('declaraciones')
+    } else if (toPath.includes('apertura')) {
+      navStore.setGestionAduaneraSubOption('apertura')
     } else {
       navStore.resetModuleToDefaultView('gestion-aduanera')
     }

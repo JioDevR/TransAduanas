@@ -28,25 +28,25 @@ informes/
 *.log
 
 # -----------------------------------------------------------------------------
-# Backend 
+# Backend (backend-sga)
 # -----------------------------------------------------------------------------
-backend/target/
-backend/*.class
-backend/*.jar
-backend/*.war
-backend/*.ear
-backend/logs/
-backend/*.log
-backend/.flattened-pom.xml
-backend/build/
+backend-sga/target/
+backend-sga/*.class
+backend-sga/*.jar
+backend-sga/*.war
+backend-sga/*.ear
+backend-sga/logs/
+backend-sga/*.log
+backend-sga/.flattened-pom.xml
+backend-sga/build/
 *application-local.properties
 *.local.properties
-backend/src/main/resources/application-local.properties
+backend-sga/src/main/resources/application-local.properties
 .env
 .env.local
-backend/.env
-backend/uploads/*
-!backend/uploads/.gitkeep
+backend-sga/.env
+backend-sga/uploads/*
+!backend-sga/uploads/.gitkeep
 uploads/
 
 
@@ -65,18 +65,32 @@ app-sga/pnpm-debug.log*
 app-sga/.vscode/
 
 # -----------------------------------------------------------------------------
-# Portal Cliente (Vue + Vite)
+# App B2B (Vue + Vite)
 # -----------------------------------------------------------------------------
-app-portal-cliente/node_modules/
-app-portal-cliente/dist/
-app-portal-cliente/dist-ssr/
-app-portal-cliente/*.local
-app-portal-cliente/.eslintcache
-app-portal-cliente/npm-debug.log*
-app-portal-cliente/yarn-debug.log*
-app-portal-cliente/yarn-error.log*
-app-portal-cliente/pnpm-debug.log*
-app-portal-cliente/.vscode/
+app-b2b/node_modules/
+app-b2b/dist/
+app-b2b/dist-ssr/
+app-b2b/*.local
+app-b2b/.eslintcache
+app-b2b/npm-debug.log*
+app-b2b/yarn-debug.log*
+app-b2b/yarn-error.log*
+app-b2b/pnpm-debug.log*
+app-b2b/.vscode/
+
+# -----------------------------------------------------------------------------
+# App Landing (Vue + Vite)
+# -----------------------------------------------------------------------------
+app-landing/node_modules/
+app-landing/dist/
+app-landing/dist-ssr/
+app-landing/*.local
+app-landing/.eslintcache
+app-landing/npm-debug.log*
+app-landing/yarn-debug.log*
+app-landing/yarn-error.log*
+app-landing/pnpm-debug.log*
+app-landing/.vscode/
 
 # -----------------------------------------------------------------------------
 # Global Node / JS patterns

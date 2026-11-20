@@ -13,7 +13,8 @@ vi.mock('@/features/auth/stores/authStore', () => ({
 vi.mock('../../services/sistemaService', () => ({
   sistemaService: {
     getDashboard: vi.fn(),
-    getEstado: vi.fn()
+    getEstado: vi.fn(),
+    getAlmacenamiento: vi.fn()
   }
 }))
 
@@ -39,6 +40,11 @@ describe('useAdminDashboard', () => {
       distribucionRoles: { ADMINISTRADOR_TI: 2, AGENTE_COMERCIAL: 8 },
       actividadDiaria: [{ fecha: '2026-11-20', exitos: 5, fallos: 1 }]
     })
+    sistemaService.getAlmacenamiento.mockResolvedValueOnce({
+      disponible: true,
+      porEntidad: [{ clave: 'EXPEDIENTE', etiqueta: 'EXPEDIENTE', cantidad: 3, tamanoBytes: 1024 }],
+      porExtension: [{ clave: 'PDF', etiqueta: 'PDF', cantidad: 3, tamanoBytes: 1024 }]
+    })
 
     const dash = useAdminDashboard()
     await dash.loadDashboard()
@@ -48,11 +54,14 @@ describe('useAdminDashboard', () => {
     expect(dash.activeUsersPct.value).toBe(80)
     expect(dash.rolesChartData.value.labels.length).toBe(2)
     expect(dash.actividadChartData.value.labels).toEqual(['11-20'])
+    expect(dash.storageEntidadChartData.value.labels).toEqual(['EXPEDIENTE'])
+    expect(dash.storageExtensionChartData.value.labels).toEqual(['PDF (3)'])
   })
 
   it('hace fallback seguro para GERENTE_GENERAL sin llamar /admin/sistema/dashboard', async () => {
     mockAuthState.isAdministradorTI = false
     sistemaService.getEstado.mockResolvedValueOnce({ bdConectada: true })
+    sistemaService.getAlmacenamiento.mockResolvedValueOnce({ disponible: true })
     userService.getUsers.mockResolvedValueOnce([
       { nombreRol: 'GERENTE_GENERAL', estadoActivo: true },
       { nombreRol: 'CONTADOR', estadoActivo: false }

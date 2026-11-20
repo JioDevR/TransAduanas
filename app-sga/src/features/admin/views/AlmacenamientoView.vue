@@ -1,129 +1,6 @@
 <template>
   <div class="almacenamiento-view fade-in">
-    <!-- 1. KPIs de Almacenamiento & Integridad (sgaUI) -->
-    <section class="sga-kpis-grid">
-      <article class="sga-kpi-card" :class="storage.disponible ? 'is-success' : 'is-danger'">
-        <div class="sga-kpi-head">
-          <span class="sga-kpi-index">01</span>
-          <span class="sga-kpi-label">Repositorio Documental</span>
-          <i class="pi pi-folder-open sga-kpi-icon"></i>
-        </div>
-        <div class="sga-kpi-stat">
-          <span class="sga-kpi-value is-compact">
-            {{ storage.disponible ? 'DISPONIBLE' : 'NO DISPONIBLE' }}
-          </span>
-          <span class="sga-kpi-pill" :class="storage.disponible ? 'is-success' : 'is-danger'">
-            {{ formatBytes(storage.storageTamanoBytes) }}
-          </span>
-        </div>
-        <p class="sga-kpi-foot sga-mono">{{ storage.directorioRaiz || './uploads/documentos' }}</p>
-      </article>
-
-      <article class="sga-kpi-card" :class="(storage.discoOcupacionPct ?? 0) >= 85 ? 'is-warn' : ''">
-        <div class="sga-kpi-head">
-          <span class="sga-kpi-index">02</span>
-          <span class="sga-kpi-label">Volumen del Servidor</span>
-          <i class="pi pi-server sga-kpi-icon"></i>
-        </div>
-        <div class="sga-kpi-stat">
-          <span class="sga-kpi-value">{{ storage.discoOcupacionPct ?? 0 }}%</span>
-          <span class="sga-kpi-pill">
-            {{ formatMb(storage.discoLibreMb) }} libres
-          </span>
-        </div>
-        <p class="sga-kpi-foot">
-          Usado <strong class="sga-mono">{{ formatMb(storage.discoUsadoMb) }}</strong> de
-          <strong class="sga-mono">{{ formatMb(storage.discoTotalMb) }}</strong>
-        </p>
-      </article>
-
-      <article class="sga-kpi-card">
-        <div class="sga-kpi-head">
-          <span class="sga-kpi-index">03</span>
-          <span class="sga-kpi-label">Documentos en BD</span>
-          <i class="pi pi-database sga-kpi-icon"></i>
-        </div>
-        <div class="sga-kpi-stat">
-          <span class="sga-kpi-value">{{ storage.registrosBdActivos ?? 0 }}</span>
-          <span class="sga-kpi-pill">{{ formatBytes(storage.bytesRegistradosBdActivos) }}</span>
-        </div>
-        <p class="sga-kpi-foot">
-          {{ storage.archivosEnDisco ?? 0 }} en disco · {{ storage.registrosBdInactivos ?? 0 }} en baja lógica
-        </p>
-      </article>
-
-      <article
-        class="sga-kpi-card"
-        :class="hasIntegrityAlerts ? 'is-warn' : 'is-success'"
-      >
-        <div class="sga-kpi-head">
-          <span class="sga-kpi-index">04</span>
-          <span class="sga-kpi-label">Integridad Disco ↔ BD</span>
-          <i class="pi pi-shield sga-kpi-icon"></i>
-        </div>
-        <div class="sga-kpi-stat">
-          <span class="sga-kpi-value">{{ storage.archivosSincronizados ?? 0 }}</span>
-          <span class="sga-kpi-pill" :class="hasIntegrityAlerts ? 'is-warn' : 'is-success'">
-            {{ integrityAlertsCount === 0 ? 'Sincronizado' : `${integrityAlertsCount} alertas` }}
-          </span>
-        </div>
-        <p class="sga-kpi-foot">
-          Faltantes: <strong class="sga-mono">{{ storage.archivosFaltantesEnDisco ?? 0 }}</strong> ·
-          Huérfanos: <strong class="sga-mono">{{ storage.archivosHuerfanosEnDisco ?? 0 }}</strong>
-        </p>
-      </article>
-    </section>
-
-    <!-- 2. Gráficos de Distribución (sgaUI) -->
-    <section class="sga-charts-grid">
-      <article class="sga-card-surface sga-chart-card">
-        <div class="sga-chart-head">
-          <div>
-            <span class="sga-kicker">DISTRIBUCIÓN POR ENTIDAD</span>
-            <h3 class="sga-chart-title">Volumen Documental por Módulo</h3>
-          </div>
-          <span class="sga-mono sga-text-muted">{{ storage.porEntidad?.length || 0 }} grupos</span>
-        </div>
-        <div class="sga-chart-box">
-          <Chart
-            v-if="entidadChartData.labels.length > 0"
-            type="bar"
-            :data="entidadChartData"
-            :options="barOptions"
-            class="sga-chart-canvas"
-          />
-          <div v-else class="sga-empty-state">
-            <i class="pi pi-chart-bar sga-empty-icon"></i>
-            <p class="sga-empty-desc">Aún no hay documentos activos registrados para graficar.</p>
-          </div>
-        </div>
-      </article>
-
-      <article class="sga-card-surface sga-chart-card">
-        <div class="sga-chart-head">
-          <div>
-            <span class="sga-kicker">FORMATOS ALMACENADOS</span>
-            <h3 class="sga-chart-title">Consumo por Extensión de Archivo</h3>
-          </div>
-          <span class="sga-mono sga-text-muted">{{ formatBytes(storage.storageTamanoBytes) }}</span>
-        </div>
-        <div class="sga-chart-box sga-doughnut-wrap">
-          <Chart
-            v-if="extensionChartData.labels.length > 0"
-            type="doughnut"
-            :data="extensionChartData"
-            :options="doughnutOptions"
-            class="sga-chart-canvas"
-          />
-          <div v-else class="sga-empty-state">
-            <i class="pi pi-chart-pie sga-empty-icon"></i>
-            <p class="sga-empty-desc">Sin archivos en repositorio para analizar extensiones.</p>
-          </div>
-        </div>
-      </article>
-    </section>
-
-    <!-- 3. Filtros sgaUI -->
+    <!-- 1. Filtros sgaUI -->
     <section class="sga-card-surface sga-filters-card">
       <div class="sga-filters-grid">
         <div class="sga-filter-field">
@@ -196,7 +73,7 @@
       </div>
     </section>
 
-    <!-- 4. Inventario de Archivos (Solo Tabla sgaUI) -->
+    <!-- 2. Inventario de Archivos (Solo Tabla sgaUI) -->
     <section class="sga-list-panel">
       <div class="sga-panel-header">
         <div class="sga-panel-title-group">
@@ -321,7 +198,6 @@
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
 import Button from 'primevue/button'
-import Chart from 'primevue/chart'
 import Column from 'primevue/column'
 import DataTable from 'primevue/datatable'
 import InputText from 'primevue/inputtext'
@@ -329,14 +205,12 @@ import Select from 'primevue/select'
 import Tag from 'primevue/tag'
 import BasePagination from '@/shared/components/BasePagination.vue'
 import { useAuthStore } from '@/features/auth/stores/authStore'
-import { useTheme } from '@/shared/composables/useTheme'
 import { useNotification } from '@/shared/composables/useNotification'
 import { useConfirmation } from '@/shared/composables/useConfirmation'
 import { sistemaService } from '../services/sistemaService'
 import { formatBytes } from '../composables/useAdminDashboard'
 
 const authStore = useAuthStore()
-const { isDark } = useTheme()
 const { showSuccess, showError } = useNotification()
 const { confirmAction } = useConfirmation()
 
@@ -346,25 +220,8 @@ const page = ref(0)
 const pageSize = 20
 
 const storage = ref({
-  directorioRaiz: '',
-  disponible: true,
-  discoTotalMb: 0,
-  discoLibreMb: 0,
-  discoUsadoMb: 0,
-  discoOcupacionPct: 0,
-  storageTamanoBytes: 0,
-  archivosEnDisco: 0,
-  registrosBdTotales: 0,
-  registrosBdActivos: 0,
-  registrosBdInactivos: 0,
-  bytesRegistradosBdActivos: 0,
-  archivosSincronizados: 0,
-  archivosFaltantesEnDisco: 0,
   archivosHuerfanosEnDisco: 0,
   bytesHuerfanosEnDisco: 0,
-  porEntidad: [],
-  porCategoria: [],
-  porExtension: [],
   items: [],
   totalElements: 0,
   totalPages: 0,
@@ -416,11 +273,6 @@ const hasFilters = computed(() =>
   )
 )
 
-const integrityAlertsCount = computed(
-  () => (storage.value.archivosFaltantesEnDisco || 0) + (storage.value.archivosHuerfanosEnDisco || 0)
-)
-const hasIntegrityAlerts = computed(() => integrityAlertsCount.value > 0)
-
 const loadStorage = async (targetPage = 0) => {
   loading.value = true
   try {
@@ -471,90 +323,6 @@ const handleDepurarHuerfanos = async () => {
   } finally {
     purging.value = false
   }
-}
-
-const palette = computed(() =>
-  isDark.value
-    ? {
-        text: '#c4bcab',
-        grid: 'rgba(255, 255, 255, 0.08)',
-        surfaceBorder: '#2b2622',
-        bar: '#f0b892',
-        doughnut: ['#f0b892', '#5cb874', '#38bdf8', '#eab308', '#a78bfa', '#fb923c', '#94a3b8']
-      }
-    : {
-        text: '#6f6356',
-        grid: '#ede6db',
-        surfaceBorder: '#ffffff',
-        bar: '#d48252',
-        doughnut: ['#d48252', '#2e7d32', '#21598f', '#8c5b16', '#6366f1', '#c2413b', '#6f6356']
-      }
-)
-
-const entidadChartData = computed(() => {
-  const list = storage.value.porEntidad || []
-  return {
-    labels: list.map((g) => g.etiqueta),
-    datasets: [
-      {
-        label: 'Archivos activos',
-        data: list.map((g) => g.cantidad),
-        backgroundColor: palette.value.bar,
-        borderRadius: 6
-      }
-    ]
-  }
-})
-
-const extensionChartData = computed(() => {
-  const list = (storage.value.porExtension || []).slice(0, 7)
-  return {
-    labels: list.map((g) => `${g.clave} (${g.cantidad})`),
-    datasets: [
-      {
-        data: list.map((g) => g.tamanoBytes),
-        backgroundColor: palette.value.doughnut,
-        borderColor: palette.value.surfaceBorder,
-        borderWidth: 2
-      }
-    ]
-  }
-})
-
-const barOptions = computed(() => ({
-  responsive: true,
-  maintainAspectRatio: false,
-  plugins: {
-    legend: {
-      position: 'top',
-      align: 'end',
-      labels: { color: palette.value.text, boxWidth: 10, font: { size: 11 } }
-    }
-  },
-  scales: {
-    x: { grid: { display: false }, ticks: { color: palette.value.text } },
-    y: { beginAtZero: true, ticks: { precision: 0, color: palette.value.text }, grid: { color: palette.value.grid } }
-  }
-}))
-
-const doughnutOptions = computed(() => ({
-  responsive: true,
-  maintainAspectRatio: false,
-  cutout: '68%',
-  plugins: {
-    legend: {
-      position: 'bottom',
-      labels: { color: palette.value.text, boxWidth: 10, padding: 12, font: { size: 11 } }
-    }
-  }
-}))
-
-const formatMb = (mb) => {
-  const val = Number(mb || 0)
-  if (val >= 1024) {
-    return `${(val / 1024).toFixed(1)} GB`
-  }
-  return `${val} MB`
 }
 
 const formatFecha = (iso) => {

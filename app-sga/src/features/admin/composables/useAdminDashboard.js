@@ -16,6 +16,7 @@ export function useAdminDashboard() {
   const pingLatency = ref(0)
   const lastCheckedTime = ref('--:--:--')
   const dashboardData = ref(null)
+  const storageDiag = ref(null)
 
   const diasOptions = [
     { label: 'Hoy (24h)', value: 1 },
@@ -42,16 +43,28 @@ export function useAdminDashboard() {
     loading.value = true
     const start = performance.now()
     try {
+      const storagePromise =
+        typeof sistemaService.getAlmacenamiento === 'function'
+          ? sistemaService.getAlmacenamiento({ page: 0, size: 1 }).catch(() => null)
+          : Promise.resolve(null)
+
       if (authStore.isAdministradorTI) {
-        dashboardData.value = await sistemaService.getDashboard({
-          dias: filterDias.value,
-          modulo: filterModulo.value
-        })
-      } else {
-        const [estado, users] = await Promise.all([
-          sistemaService.getEstado(),
-          userService.getUsers(false)
+        const [dashRes, storRes] = await Promise.all([
+          sistemaService.getDashboard({
+            dias: filterDias.value,
+            modulo: filterModulo.value
+          }),
+          storagePromise
         ])
+        dashboardData.value = dashRes
+        storageDiag.value = storRes
+      } else {
+        const [estado, users, storRes] = await Promise.all([
+          sistemaService.getEstado(),
+          userService.getUsers(false),
+          storagePromise
+        ])
+        storageDiag.value = storRes
         const distRoles = {}
         ;(users || []).forEach((u) => {
           const r = u.nombreRol || 'SIN_ROL'
@@ -125,6 +138,31 @@ export function useAdminDashboard() {
     return Math.round(((dashboardData.value?.usuariosActivos || 0) * 100) / total)
   })
 
+  const storageEntidadChartData = computed(() => {
+    const list = storageDiag.value?.porEntidad || []
+    return {
+      labels: list.map((g) => g.etiqueta),
+      datasets: [
+        {
+          label: 'Archivos activos',
+          data: list.map((g) => g.cantidad)
+        }
+      ]
+    }
+  })
+
+  const storageExtensionChartData = computed(() => {
+    const list = (storageDiag.value?.porExtension || []).slice(0, 7)
+    return {
+      labels: list.map((g) => `${g.clave} (${g.cantidad})`),
+      datasets: [
+        {
+          data: list.map((g) => g.tamanoBytes)
+        }
+      ]
+    }
+  })
+
   const hasActiveFilters = computed(() => filterDias.value !== 7 || filterModulo.value !== 'TODOS')
 
   const resetFilters = () => {
@@ -141,10 +179,13 @@ export function useAdminDashboard() {
     pingLatency,
     lastCheckedTime,
     dashboardData,
+    storageDiag,
     sistema,
     isBackendHealthy,
     rolesChartData,
     actividadChartData,
+    storageEntidadChartData,
+    storageExtensionChartData,
     activeUsersPct,
     hasActiveFilters,
     resetFilters,

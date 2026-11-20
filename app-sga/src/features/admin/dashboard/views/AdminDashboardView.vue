@@ -423,6 +423,145 @@
         </div>
       </article>
     </section>
+
+    <!-- 6. Widgets de Almacenamiento & Integridad (sgaUI) -->
+    <section class="sga-kpis-grid">
+      <article
+        class="sga-kpi-card"
+        :class="storage.disponible ? 'is-success' : 'is-danger'"
+        @click="navigateTo('almacenamiento')"
+      >
+        <div class="sga-kpi-head">
+          <span class="sga-kpi-index">07</span>
+          <span class="sga-kpi-label">Repositorio Documental</span>
+          <i class="pi pi-folder-open sga-kpi-icon"></i>
+        </div>
+        <div class="sga-kpi-stat">
+          <span class="sga-kpi-value is-compact">
+            {{ storage.disponible ? 'DISPONIBLE' : 'NO DISPONIBLE' }}
+          </span>
+          <span class="sga-kpi-pill" :class="storage.disponible ? 'is-success' : 'is-danger'">
+            {{ formatBytes(storage.storageTamanoBytes) }}
+          </span>
+        </div>
+        <p class="sga-kpi-foot sga-mono">{{ storage.directorioRaiz || sistema.storageDirectorio || './uploads/documentos' }}</p>
+      </article>
+
+      <article
+        class="sga-kpi-card"
+        :class="(storage.discoOcupacionPct ?? 0) >= 85 ? 'is-warn' : ''"
+        @click="navigateTo('almacenamiento')"
+      >
+        <div class="sga-kpi-head">
+          <span class="sga-kpi-index">08</span>
+          <span class="sga-kpi-label">Volumen del Servidor</span>
+          <i class="pi pi-server sga-kpi-icon"></i>
+        </div>
+        <div class="sga-kpi-stat">
+          <span class="sga-kpi-value">{{ storage.discoOcupacionPct ?? 0 }}%</span>
+          <span class="sga-kpi-pill">
+            {{ formatMb(storage.discoLibreMb) }} libres
+          </span>
+        </div>
+        <p class="sga-kpi-foot">
+          Usado <strong class="sga-mono">{{ formatMb(storage.discoUsadoMb) }}</strong> de
+          <strong class="sga-mono">{{ formatMb(storage.discoTotalMb) }}</strong>
+        </p>
+      </article>
+
+      <article class="sga-kpi-card" @click="navigateTo('almacenamiento')">
+        <div class="sga-kpi-head">
+          <span class="sga-kpi-index">09</span>
+          <span class="sga-kpi-label">Documentos en BD</span>
+          <i class="pi pi-database sga-kpi-icon"></i>
+        </div>
+        <div class="sga-kpi-stat">
+          <span class="sga-kpi-value">{{ storage.registrosBdActivos ?? 0 }}</span>
+          <span class="sga-kpi-pill">{{ formatBytes(storage.bytesRegistradosBdActivos) }}</span>
+        </div>
+        <p class="sga-kpi-foot">
+          {{ storage.archivosEnDisco ?? 0 }} en disco · {{ storage.registrosBdInactivos ?? 0 }} en baja lógica
+        </p>
+      </article>
+
+      <article
+        class="sga-kpi-card"
+        :class="hasIntegrityAlerts ? 'is-warn' : 'is-success'"
+        @click="navigateTo('almacenamiento')"
+      >
+        <div class="sga-kpi-head">
+          <span class="sga-kpi-index">10</span>
+          <span class="sga-kpi-label">Integridad Disco ↔ BD</span>
+          <i class="pi pi-shield sga-kpi-icon"></i>
+        </div>
+        <div class="sga-kpi-stat">
+          <span class="sga-kpi-value">{{ storage.archivosSincronizados ?? 0 }}</span>
+          <span class="sga-kpi-pill" :class="hasIntegrityAlerts ? 'is-warn' : 'is-success'">
+            {{ integrityAlertsCount === 0 ? 'Sincronizado' : `${integrityAlertsCount} alertas` }}
+          </span>
+        </div>
+        <p class="sga-kpi-foot">
+          Faltantes: <strong class="sga-mono">{{ storage.archivosFaltantesEnDisco ?? 0 }}</strong> ·
+          Huérfanos: <strong class="sga-mono">{{ storage.archivosHuerfanosEnDisco ?? 0 }}</strong>
+        </p>
+      </article>
+    </section>
+
+    <!-- 7. Gráficos de Almacenamiento Documental (sgaUI) -->
+    <section class="sga-charts-grid">
+      <article class="sga-card-surface sga-chart-card">
+        <div class="sga-chart-head">
+          <div>
+            <span class="sga-kicker">DISTRIBUCIÓN POR ENTIDAD</span>
+            <h3 class="sga-chart-title">Volumen Documental por Módulo</h3>
+          </div>
+          <Button
+            label="Ver Archivos"
+            icon="pi pi-folder-open"
+            severity="secondary"
+            text
+            size="small"
+            @click="navigateTo('almacenamiento')"
+          />
+        </div>
+        <div class="sga-chart-box">
+          <Chart
+            v-if="storageEntidadChartData.labels.length > 0"
+            type="bar"
+            :data="themedStorageEntidadChartData"
+            :options="barOptions"
+            class="sga-chart-canvas"
+          />
+          <div v-else class="sga-empty-state">
+            <i class="pi pi-chart-bar sga-empty-icon"></i>
+            <p class="sga-empty-desc">Aún no hay documentos activos registrados para graficar.</p>
+          </div>
+        </div>
+      </article>
+
+      <article class="sga-card-surface sga-chart-card">
+        <div class="sga-chart-head">
+          <div>
+            <span class="sga-kicker">FORMATOS ALMACENADOS</span>
+            <h3 class="sga-chart-title">Consumo por Extensión de Archivo</h3>
+          </div>
+          <span class="sga-mono sga-text-muted">{{ formatBytes(storage.storageTamanoBytes) }}</span>
+        </div>
+        <div class="sga-chart-box sga-doughnut-wrap">
+          <Chart
+            v-if="storageExtensionChartData.labels.length > 0"
+            type="doughnut"
+            :data="themedStorageExtensionChartData"
+            :options="doughnutOptions"
+            class="sga-chart-canvas"
+          />
+          <div v-else class="sga-empty-state">
+            <i class="pi pi-chart-pie sga-empty-icon"></i>
+            <p class="sga-empty-desc">Sin archivos en repositorio para analizar extensiones.</p>
+          </div>
+        </div>
+      </article>
+    </section>
   </div>
 </template>
 
@@ -487,15 +626,32 @@ const {
   pingLatency,
   lastCheckedTime,
   dashboardData,
+  storageDiag,
   sistema,
   isBackendHealthy,
   rolesChartData,
   actividadChartData,
+  storageEntidadChartData,
+  storageExtensionChartData,
   activeUsersPct,
   hasActiveFilters,
   resetFilters,
   loadDashboard
 } = useAdminDashboard()
+
+const storage = computed(() => storageDiag.value || {})
+const integrityAlertsCount = computed(
+  () => (storage.value.archivosFaltantesEnDisco || 0) + (storage.value.archivosHuerfanosEnDisco || 0)
+)
+const hasIntegrityAlerts = computed(() => integrityAlertsCount.value > 0)
+
+const formatMb = (mb) => {
+  const val = Number(mb || 0)
+  if (val >= 1024) {
+    return `${(val / 1024).toFixed(1)} GB`
+  }
+  return `${val} MB`
+}
 
 const handleResetFilters = () => {
   resetFilters()
@@ -567,6 +723,25 @@ const themedActividadChartData = computed(() => ({
     ...ds,
     backgroundColor: idx === 0 ? palette.value.ok : palette.value.fail,
     borderRadius: 6
+  }))
+}))
+
+const themedStorageEntidadChartData = computed(() => ({
+  ...storageEntidadChartData.value,
+  datasets: storageEntidadChartData.value.datasets.map((ds) => ({
+    ...ds,
+    backgroundColor: palette.value.doughnut[0],
+    borderRadius: 6
+  }))
+}))
+
+const themedStorageExtensionChartData = computed(() => ({
+  ...storageExtensionChartData.value,
+  datasets: storageExtensionChartData.value.datasets.map((ds) => ({
+    ...ds,
+    backgroundColor: palette.value.doughnut,
+    borderColor: palette.value.surfaceBorder,
+    borderWidth: 2
   }))
 }))
 

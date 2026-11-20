@@ -1,8 +1,10 @@
-# Manual de pruebas por tipo — TransAduanas
+# Inventario general del backend: las 346 pruebas
 
-Este manual organiza **las 346 pruebas ejecutables del backend** por su alcance real. La clasificación usa etiquetas JUnit `@Tag`; los nombres de archivos o carpetas no determinan el tipo. Los grupos son excluyentes para ejecutar y contar: cada prueba pertenece a un solo grupo principal.
+**Referencia general, no la lista de 15 para exponer.** Si vas a sustentar ante el docente, empieza por el [manual principal de las 15 seleccionadas](../docs/pruebas/funcionales/README.md).
 
-## Selección de 15 para presentar al docente
+Este inventario organiza **las 346 pruebas ejecutables del backend** por su alcance real. La clasificación usa etiquetas JUnit `@Tag`; los nombres de archivos o carpetas no determinan el tipo. Los grupos son excluyentes para ejecutar y contar: cada prueba pertenece a un solo grupo principal.
+
+## Cómo se relaciona este inventario con la sustentación
 
 La [selección actual para la evaluación](../docs/pruebas/funcionales/README.md) contiene **4 unitarias, 4 de integración, 4 de sistema del backend y 3 de aceptación automatizada**. Usa la etiqueta `docente15`, incluye herramientas y comandos para cada caso y sustituye la selección anterior que solo tenía integración y sistema. Son 15 métodos del inventario siguiente, no 15 pruebas nuevas ni un quinto grupo principal.
 

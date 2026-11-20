@@ -91,6 +91,16 @@ export const userService = {
   },
 
   /**
+   * Restablecer contraseña de un operador interno
+   * @param {Number} id ID del usuario
+   * @param {String} nuevaPassword Nueva contraseña temporal
+   */
+  async resetPassword(id, nuevaPassword) {
+    const response = await apiClient.patch(`/usuarios/${id}/reset-password`, { nuevaPassword })
+    return response.data
+  },
+
+  /**
    * Obtener catálogo de roles disponibles
    */
   async getRoles() {

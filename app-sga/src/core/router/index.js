@@ -101,6 +101,10 @@ router.beforeEach(async (to, from, next) => {
       navStore.setAdministracionTiSubOption('portal-users')
     } else if (toPath.includes('usuarios')) {
       navStore.setAdministracionTiSubOption('users')
+    } else if (toPath.includes('auditoria')) {
+      navStore.setAdministracionTiSubOption('auditoria')
+    } else if (toPath.includes('roles-accesos')) {
+      navStore.setAdministracionTiSubOption('roles-accesos')
     } else if (toPath.includes('logs')) {
       navStore.setAdministracionTiSubOption('logs')
     } else if (toPath.includes('acerca-de')) {

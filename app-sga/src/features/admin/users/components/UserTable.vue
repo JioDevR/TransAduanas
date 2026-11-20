@@ -1,184 +1,204 @@
 <template>
-  <div class="user-table-container">
-    <!-- Barra de Filtros y Búsqueda -->
-    <div class="table-toolbar">
-      <div class="search-box">
-        <i class="pi pi-search search-icon"></i>
-        <input
+  <SgaListShell v-model:viewMode="viewMode" title="Directorio de Operadores">
+    <template #filters>
+      <div class="sga-filter-search">
+        <InputText
           v-model="searchQuery"
-          type="text"
-          placeholder="Buscar por usuario, nombre, documento, código SUNAT o cargo..."
-          class="search-input"
+          placeholder="Buscar por usuario, nombre, DNI, SUNAT o cargo..."
+          size="small"
+          fluid
         />
-        <button
-          v-if="searchQuery"
-          @click="searchQuery = ''"
-          class="clear-search-btn"
-          type="button"
-          title="Limpiar búsqueda"
-        >
-          <i class="pi pi-times"></i>
-        </button>
       </div>
 
-      <div class="filters-group">
-        <!-- Filtro por Rol -->
-        <select v-model="selectedRoleFilter" class="filter-select">
-          <option value="">Todos los Roles</option>
-          <option v-for="rol in roles" :key="rol.idRol" :value="rol.nombreRol">
-            {{ ROLE_LABELS[rol.nombreRol] || rol.nombreRol }}
-          </option>
-        </select>
+      <Select
+        v-model="selectedRoleFilter"
+        :options="roleOptions"
+        optionLabel="label"
+        optionValue="value"
+        size="small"
+        style="min-width: 190px"
+      />
 
-        <!-- Filtro por Estado -->
-        <select v-model="statusFilter" class="filter-select">
-          <option value="ALL">Todos los Estados</option>
-          <option value="ACTIVE">Solo Activos</option>
-          <option value="INACTIVE">Solo Inactivos</option>
-        </select>
-      </div>
-    </div>
+      <Select
+        v-model="statusFilter"
+        :options="statusOptions"
+        optionLabel="label"
+        optionValue="value"
+        size="small"
+        style="min-width: 160px"
+      />
+    </template>
 
-    <!-- Contenedor de la Tabla con PrimeVue DataTable -->
-    <div class="table-responsive">
+    <template #actions>
+      <Tag :value="`${filteredUsers.length} operadores`" severity="secondary" />
+    </template>
+
+    <div v-if="viewMode === 'table'">
       <DataTable
         :value="paginatedUsers"
         :loading="loading"
+        size="small"
+        stripedRows
         responsiveLayout="scroll"
-        class="custom-datatable"
         dataKey="idUsuario"
-        :rowClass="(data) => ({ 'row-inactive': !data.estadoActivo })"
       >
         <template #empty>
-          <div class="empty-state">
-            <i class="pi pi-users empty-icon"></i>
-            <p class="empty-title">No se encontraron usuarios</p>
-            <p class="empty-desc">Prueba cambiando los filtros o agregando un nuevo usuario.</p>
+          <div class="sga-empty-state">
+            <i class="pi pi-users sga-empty-icon"></i>
+            <p class="sga-empty-title">No se encontraron usuarios</p>
+            <p class="sga-empty-desc">Prueba ajustando los filtros o registrando un nuevo operador.</p>
           </div>
         </template>
 
-        <template #loading>
-          <div class="loading-state">
-            <i class="pi pi-spin pi-spinner"></i>
-            <span>Cargando usuarios del sistema...</span>
-          </div>
-        </template>
-
-        <!-- Columna: Usuario / Nombre -->
-        <Column header="Usuario / Nombre">
+        <Column header="Usuario / Operador">
           <template #body="{ data: user }">
-            <div class="user-info-cell">
-              <div class="user-avatar" :style="getAvatarBg(user.username)">
+            <div class="usr-info-cell">
+              <div class="usr-avatar" :style="getAvatarBg(user.username)">
                 {{ getInitials(user.nombres, user.apellidos) }}
               </div>
-              <div>
-                <div class="user-username-row">
-                  <span class="user-username">@{{ user.username }}</span>
-                  <span v-if="user.numeroDocumento" class="user-doc-badge">
-                    {{ user.tipoDocumento || 'DNI' }}: {{ user.numeroDocumento }}
-                  </span>
+              <div class="usr-stack">
+                <div class="usr-name-row">
+                  <strong class="sga-mono">@{{ user.username }}</strong>
+                  <Tag
+                    v-if="user.numeroDocumento"
+                    :value="`${user.tipoDocumento || 'DNI'}: ${user.numeroDocumento}`"
+                    severity="secondary"
+                  />
                 </div>
-                <div class="user-name">{{ user.nombres }} {{ user.apellidos }}</div>
+                <span>{{ user.nombres }} {{ user.apellidos }}</span>
               </div>
             </div>
           </template>
         </Column>
 
-        <!-- Columna: Rol Asignado -->
-        <Column header="Rol Asignado">
+        <Column header="Rol">
           <template #body="{ data: user }">
             <UserRoleBadge :roleName="user.nombreRol" />
           </template>
         </Column>
 
-        <!-- Columna: Sede Operativa -->
-        <Column header="Sede Operativa">
+        <Column header="Sede">
           <template #body="{ data: user }">
-            <div class="sede-cell">
-              <span class="sede-code">{{ user.codigoSede || '—' }}</span>
-              <span class="sede-name">{{ user.nombreSede || 'Sin sede' }}</span>
+            <div class="usr-stack">
+              <strong class="sga-mono">{{ user.codigoSede || '—' }}</strong>
+              <small class="sga-text-muted">{{ user.nombreSede || 'Sin sede' }}</small>
             </div>
           </template>
         </Column>
 
-        <!-- Columna: Contacto -->
         <Column header="Contacto">
           <template #body="{ data: user }">
-            <div class="contact-cell">
-              <div class="contact-email">
-                <i class="pi pi-envelope"></i>
-                <span>{{ user.correoInstitucional }}</span>
-              </div>
-              <div v-if="user.telefono" class="contact-phone">
-                <i class="pi pi-phone"></i>
-                <span>{{ user.telefono }}</span>
-              </div>
+            <div class="usr-stack">
+              <span class="sga-mono">{{ user.correoInstitucional }}</span>
+              <small v-if="user.telefono" class="sga-mono sga-text-muted">{{ user.telefono }}</small>
             </div>
           </template>
         </Column>
 
-        <!-- Columna: Cargo -->
-        <Column header="Cargo">
+        <Column header="Cargo / SUNAT">
           <template #body="{ data: user }">
-            <div class="cargo-cell">
-              <span class="cargo-text">{{ user.cargoTitulo || '—' }}</span>
-              <span v-if="user.codigoSunat" class="sunat-table-badge" title="Operador acreditado ante SUNAT">
-                <i class="pi pi-verified"></i> {{ user.codigoSunat }}
-              </span>
-              <span v-else class="sunat-table-none">Sin código SUNAT</span>
+            <div class="usr-stack">
+              <span>{{ user.cargoTitulo || '—' }}</span>
+              <Tag v-if="user.codigoSunat" :value="user.codigoSunat" severity="info" />
             </div>
           </template>
         </Column>
 
-        <!-- Columna: Estado -->
-        <Column header="Estado">
+        <Column header="Estado" style="width: 110px">
           <template #body="{ data: user }">
             <Tag
-              :value="user.estadoActivo ? 'Activo' : 'Desactivado'"
+              :value="user.estadoActivo ? 'Activo' : 'Inactivo'"
               :severity="user.estadoActivo ? 'success' : 'danger'"
               rounded
             />
           </template>
         </Column>
 
-        <!-- Columna: Acciones -->
-        <Column header="Acciones" headerClass="text-right" bodyClass="text-right">
+        <Column header="Acciones" style="width: 240px">
           <template #body="{ data: user }">
-            <div class="actions-wrapper">
-              <button
-                type="button"
-                class="action-btn-outline"
-                title="Editar datos y rol del operador"
+            <div class="usr-actions">
+              <Button
+                label="Editar"
+                severity="secondary"
+                outlined
+                size="small"
                 @click="$emit('edit', user)"
-              >
-                Editar
-              </button>
-
-              <button
-                v-if="user.estadoActivo"
-                type="button"
-                class="action-btn-outline btn-danger-action"
-                title="Desactivar usuario (baja lógica)"
+              />
+              <Button
+                icon="pi pi-key"
+                severity="secondary"
+                outlined
+                size="small"
+                title="Restablecer contraseña"
+                @click="$emit('reset-password', user)"
+              />
+              <Button
+                :label="user.estadoActivo ? 'Baja' : 'Activar'"
+                :severity="user.estadoActivo ? 'danger' : 'success'"
+                outlined
+                size="small"
                 @click="$emit('toggle-status', user)"
-              >
-                Eliminar
-              </button>
-              <button
-                v-else
-                type="button"
-                class="action-btn-outline btn-reactivate-action"
-                title="Reactivar usuario"
-                @click="$emit('toggle-status', user)"
-              >
-                Activar
-              </button>
+              />
             </div>
           </template>
         </Column>
       </DataTable>
     </div>
 
-    <!-- Paginador Reutilizable con Estilo Cálido -->
+    <div v-else class="sga-canvas-grid">
+      <article v-for="user in paginatedUsers" :key="user.idUsuario" class="sga-canvas-card">
+        <div class="sga-card-top">
+          <span class="sga-card-code sga-mono">@{{ user.username }}</span>
+          <Tag
+            :value="user.estadoActivo ? 'Activo' : 'Inactivo'"
+            :severity="user.estadoActivo ? 'success' : 'danger'"
+            rounded
+          />
+        </div>
+        <div class="sga-card-client">
+          <h4 class="sga-client-title">{{ user.nombres }} {{ user.apellidos }}</h4>
+          <div class="sga-client-meta">
+            <UserRoleBadge :roleName="user.nombreRol" />
+            <span v-if="user.codigoSunat" class="sga-client-doc sga-mono">{{ user.codigoSunat }}</span>
+          </div>
+        </div>
+        <div class="sga-card-meta-grid">
+          <div class="sga-meta-item">
+            <span class="sga-meta-label">SEDE</span>
+            <span class="sga-meta-val">{{ user.codigoSede || '—' }} · {{ user.nombreSede || 'Sin sede' }}</span>
+          </div>
+          <div class="sga-meta-item">
+            <span class="sga-meta-label">CARGO</span>
+            <span class="sga-meta-val">{{ user.cargoTitulo || '—' }}</span>
+          </div>
+          <div class="sga-meta-item full-span">
+            <span class="sga-meta-label">CORREO</span>
+            <span class="sga-meta-val sga-mono">{{ user.correoInstitucional }}</span>
+          </div>
+        </div>
+        <div class="sga-card-footer">
+          <Button label="Editar" size="small" outlined severity="secondary" @click="$emit('edit', user)" />
+          <div class="usr-actions">
+            <Button
+              icon="pi pi-key"
+              size="small"
+              outlined
+              severity="secondary"
+              title="Restablecer contraseña"
+              @click="$emit('reset-password', user)"
+            />
+            <Button
+              :label="user.estadoActivo ? 'Baja' : 'Activar'"
+              :severity="user.estadoActivo ? 'danger' : 'success'"
+              outlined
+              size="small"
+              @click="$emit('toggle-status', user)"
+            />
+          </div>
+        </div>
+      </article>
+    </div>
+
     <BasePagination
       v-if="filteredUsers.length > 0"
       :current-page="currentPage"
@@ -191,42 +211,52 @@
       @prev="prevPage"
       @next="nextPage"
     />
-  </div>
+  </SgaListShell>
 </template>
 
 <script setup>
 import { ref, computed, watch } from 'vue'
-import DataTable from 'primevue/datatable'
+import Button from 'primevue/button'
 import Column from 'primevue/column'
+import DataTable from 'primevue/datatable'
+import InputText from 'primevue/inputtext'
+import Select from 'primevue/select'
 import Tag from 'primevue/tag'
-import UserRoleBadge from './UserRoleBadge.vue'
+import SgaListShell from '@/shared/components/SgaListShell.vue'
 import BasePagination from '@/shared/components/BasePagination.vue'
 import { usePagination } from '@/shared/composables/usePagination'
 import { ROLE_LABELS } from '@/core/auth/roles'
+import UserRoleBadge from './UserRoleBadge.vue'
 
 const props = defineProps({
-  users: {
-    type: Array,
-    default: () => []
-  },
-  roles: {
-    type: Array,
-    default: () => []
-  },
-  loading: {
-    type: Boolean,
-    default: false
-  }
+  users: { type: Array, default: () => [] },
+  roles: { type: Array, default: () => [] },
+  loading: { type: Boolean, default: false }
 })
 
-defineEmits(['edit', 'toggle-status'])
+defineEmits(['edit', 'toggle-status', 'reset-password'])
 
+const viewMode = ref('table')
 const searchQuery = ref('')
 const selectedRoleFilter = ref('')
 const statusFilter = ref('ALL')
 
-const filteredUsers = computed(() => {
-  return props.users.filter((user) => {
+const roleOptions = computed(() => [
+  { label: 'Todos los Roles', value: '' },
+  ...(props.roles || []).map((r) => ({
+    label: ROLE_LABELS[r.nombreRol] || r.nombreRol,
+    value: r.nombreRol
+  }))
+])
+
+const statusOptions = [
+  { label: 'Todos los Estados', value: 'ALL' },
+  { label: 'Solo Activos', value: 'ACTIVE' },
+  { label: 'Solo Inactivos', value: 'INACTIVE' }
+]
+
+const filteredUsers = computed(() =>
+  props.users.filter((user) => {
     const q = searchQuery.value.toLowerCase().trim()
     const matchesSearch =
       !q ||
@@ -238,21 +268,16 @@ const filteredUsers = computed(() => {
       (user.numeroDocumento && user.numeroDocumento.includes(q)) ||
       (user.codigoSunat && user.codigoSunat.toLowerCase().includes(q))
 
-    const matchesRole =
-      !selectedRoleFilter.value || user.nombreRol === selectedRoleFilter.value
-
-    let matchesStatus = true
-    if (statusFilter.value === 'ACTIVE') {
-      matchesStatus = user.estadoActivo === true
-    } else if (statusFilter.value === 'INACTIVE') {
-      matchesStatus = user.estadoActivo === false
-    }
+    const matchesRole = !selectedRoleFilter.value || user.nombreRol === selectedRoleFilter.value
+    const matchesStatus =
+      statusFilter.value === 'ALL' ||
+      (statusFilter.value === 'ACTIVE' && user.estadoActivo === true) ||
+      (statusFilter.value === 'INACTIVE' && user.estadoActivo === false)
 
     return matchesSearch && matchesRole && matchesStatus
   })
-})
+)
 
-// Gestión de Paginación mediante composable desacoplado
 const {
   currentPage,
   totalPages,
@@ -266,7 +291,6 @@ const {
   resetPage
 } = usePagination(filteredUsers, 15)
 
-// Resetear a primera página al buscar o cambiar filtros
 watch([searchQuery, selectedRoleFilter, statusFilter], () => {
   resetPage()
 })
@@ -282,376 +306,48 @@ const getAvatarBg = (username = '') => {
   for (let i = 0; i < username.length; i++) {
     hash = username.charCodeAt(i) + ((hash << 5) - hash)
   }
-  // Tonos cálidos tierra
   const warmHues = [25, 35, 45, 18, 195, 140]
   const hue = warmHues[Math.abs(hash) % warmHues.length]
-  return {
-    background: `hsl(${hue}, 45%, 38%)`,
-    color: '#ffffff'
-  }
+  return { background: `hsl(${hue}, 45%, 38%)`, color: '#ffffff' }
 }
 </script>
 
 <style scoped>
-.user-table-container {
-  background: var(--color-bg-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  box-shadow: var(--shadow-subtle);
-}
-
-.table-toolbar {
-  padding: 1.15rem 1.5rem;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-  align-items: center;
-  justify-content: space-between;
-  border-bottom: 1px solid var(--color-border-subtle);
-  background: var(--color-bg-subtle);
-}
-
-.search-box {
-  position: relative;
-  flex: 1;
-  min-width: 260px;
-  max-width: 440px;
+.usr-info-cell {
   display: flex;
   align-items: center;
+  gap: 0.7rem;
 }
 
-.search-icon {
-  position: absolute;
-  left: 0.95rem;
-  color: var(--color-text-subtle);
-  font-size: 0.9rem;
-  pointer-events: none;
-}
-
-.search-input {
-  width: 100%;
-  background: var(--color-bg-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  padding: 0.6rem 2.2rem 0.6rem 2.5rem;
-  color: var(--color-text-main);
-  font-size: 0.85rem;
-  outline: none;
-  transition: all var(--transition-fast);
-}
-
-.search-input:focus {
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(216, 185, 125, 0.2);
-}
-
-.clear-search-btn {
-  position: absolute;
-  right: 0.65rem;
-  background: transparent;
-  border: none;
-  color: var(--color-text-subtle);
-  cursor: pointer;
-  padding: 0.25rem;
-}
-
-.filters-group {
-  display: flex;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-}
-
-.filter-select {
-  background-color: var(--color-bg-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  padding: 0.6rem 2.25rem 0.6rem 0.85rem;
-  color: var(--color-text-main);
-  font-size: 0.825rem;
-  font-weight: 500;
-  outline: none;
-  cursor: pointer;
-  transition: border-color var(--transition-fast);
-}
-
-.filter-select:focus {
-  border-color: var(--color-primary);
-}
-
-.table-responsive {
-  width: 100%;
-  overflow-x: auto;
-}
-
-/* Estilos DataTable PrimeVue con estética cálida de la referencia */
-:deep(.custom-datatable.p-datatable) {
-  width: 100%;
-  font-family: inherit;
-  font-size: 0.86rem;
-  background: transparent;
-}
-
-:deep(.custom-datatable .p-datatable-table) {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-:deep(.custom-datatable .p-datatable-thead > tr > th) {
-  background: var(--color-bg-subtle) !important;
-  color: var(--color-text-muted) !important;
-  font-weight: 700 !important;
-  font-size: 0.725rem !important;
-  text-transform: uppercase !important;
-  letter-spacing: 0.06em !important;
-  padding: 0.95rem 1.25rem !important;
-  border-bottom: 1px solid var(--color-border) !important;
-  border-top: none !important;
-  border-left: none !important;
-  border-right: none !important;
-}
-
-:deep(.custom-datatable .p-datatable-tbody > tr) {
-  border-bottom: 1px solid var(--color-border-subtle) !important;
-  transition: background var(--transition-fast) !important;
-  background: var(--color-bg-surface) !important;
-}
-
-:deep(.custom-datatable .p-datatable-tbody > tr:hover) {
-  background: var(--color-bg-subtle) !important;
-}
-
-:deep(.custom-datatable .p-datatable-tbody > tr.row-inactive) {
-  background: var(--color-bg-muted) !important;
-  opacity: 0.75;
-}
-
-:deep(.custom-datatable .p-datatable-tbody > tr > td) {
-  padding: 0.95rem 1.25rem !important;
-  vertical-align: middle !important;
-  border: none !important;
-}
-
-.user-info-cell {
-  display: flex;
-  align-items: center;
-  gap: 0.85rem;
-}
-
-.user-avatar {
-  width: 36px;
-  height: 36px;
+.usr-avatar {
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-weight: 700;
-  font-size: 0.825rem;
-  letter-spacing: -0.02em;
-  flex-shrink: 0;
-  box-shadow: 0 1px 4px rgba(45, 35, 25, 0.15);
-}
-
-.user-username {
-  font-weight: 700;
-  color: var(--color-text-main);
-  font-size: 0.875rem;
-}
-
-.user-name {
-  color: var(--color-text-muted);
-  font-size: 0.785rem;
-  margin-top: 0.1rem;
-}
-
-.sede-cell {
-  display: flex;
-  flex-direction: column;
-}
-
-.sede-code {
-  font-family: var(--font-mono, monospace);
-  font-weight: 700;
-  color: var(--color-text-main);
-  font-size: 0.8rem;
-}
-
-.sede-name {
-  color: var(--color-text-subtle);
   font-size: 0.75rem;
+  font-weight: 700;
+  flex-shrink: 0;
 }
 
-.contact-cell {
+.usr-stack {
   display: flex;
   flex-direction: column;
-  gap: 0.2rem;
-  font-size: 0.785rem;
+  gap: 0.15rem;
 }
 
-.contact-email,
-.contact-phone {
+.usr-name-row {
   display: flex;
   align-items: center;
   gap: 0.4rem;
-  color: var(--color-text-muted);
-}
-
-.contact-email i,
-.contact-phone i {
-  color: var(--color-text-subtle);
-  font-size: 0.75rem;
-}
-
-.user-username-row {
-  display: flex;
-  align-items: center;
-  gap: 0.45rem;
   flex-wrap: wrap;
 }
 
-.user-doc-badge {
-  font-family: var(--font-mono, monospace);
-  font-size: 0.65rem;
-  font-weight: 700;
-  color: var(--color-text-subtle);
-  background: var(--color-bg-subtle);
-  border: 1px solid var(--color-border-subtle);
-  padding: 0.1rem 0.35rem;
-  border-radius: 4px;
-}
-
-.cargo-cell {
+.usr-actions {
   display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.cargo-text {
-  color: var(--color-text-main);
-  font-size: 0.825rem;
-  font-weight: 500;
-}
-
-.sunat-table-badge {
-  font-family: var(--font-mono, monospace);
-  display: inline-flex;
   align-items: center;
-  gap: 0.3rem;
-  background: #fef3c7;
-  color: #92400e;
-  border: 1px solid #fde68a;
-  font-size: 0.65rem;
-  font-weight: 700;
-  padding: 0.1rem 0.35rem;
-  border-radius: 4px;
-  width: fit-content;
+  gap: 0.4rem;
+  flex-wrap: wrap;
 }
-
-:global(.dark-theme) .sunat-table-badge {
-  background: #362e1c;
-  color: #f7d270;
-  border-color: #63522b;
-}
-
-.sunat-table-none {
-  font-size: 0.65rem;
-  color: var(--color-text-subtle);
-}
-
-.status-badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.25rem 0.65rem;
-  border-radius: var(--radius-pill);
-  font-size: 0.75rem;
-  font-weight: 600;
-}
-
-.status-badge.active {
-  background: var(--color-success-bg);
-  color: var(--color-success-text);
-  border: 1px solid var(--color-success-border);
-}
-
-.status-badge.inactive {
-  background: var(--color-danger-bg);
-  color: var(--color-danger-text);
-  border: 1px solid var(--color-danger-border);
-}
-
-.text-right {
-  text-align: right;
-}
-
-.actions-wrapper {
-  display: inline-flex;
-  gap: 0.5rem;
-}
-
-/* Botones Outline de Acción idénticos a [Editar] [Eliminar] de la imagen */
-.action-btn-outline {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--color-bg-surface);
-  border: 1px solid var(--color-border);
-  color: var(--color-text-main);
-  padding: 0.35rem 0.8rem;
-  border-radius: 6px;
-  font-size: 0.785rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all var(--transition-fast);
-}
-
-.action-btn-outline:hover {
-  background: var(--color-bg-subtle);
-  border-color: var(--color-border-strong);
-  color: var(--color-text-main);
-}
-
-.btn-danger-action:hover {
-  background: var(--color-danger-bg);
-  border-color: var(--color-danger-border);
-  color: var(--color-danger-text);
-}
-
-.btn-reactivate-action:hover {
-  background: var(--color-success-bg);
-  border-color: var(--color-success-border);
-  color: var(--color-success-text);
-}
-
-.loading-state,
-.empty-state {
-  text-align: center;
-  padding: 3.5rem 1.5rem;
-  color: var(--color-text-muted);
-}
-
-.loading-state i {
-  font-size: 1.5rem;
-  display: block;
-  margin-bottom: 0.75rem;
-  color: var(--color-primary);
-}
-
-.empty-icon {
-  font-size: 2.25rem;
-  color: var(--color-text-subtle);
-  margin-bottom: 0.75rem;
-}
-
-.empty-title {
-  font-weight: 700;
-  color: var(--color-text-main);
-  margin: 0;
-}
-
-.empty-desc {
-  font-size: 0.8rem;
-  margin: 0.35rem 0 0;
-  color: var(--color-text-muted);
-}
-
 </style>

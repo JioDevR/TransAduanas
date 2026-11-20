@@ -37,6 +37,26 @@ export const adminRoutes = [
   },
 
   {
+    path: '/administracion-ti/auditoria',
+    name: 'AdminAuditoria',
+    component: () => import('@/features/admin/views/AuditoriaTiView.vue'),
+    meta: {
+      requiresAuth: true,
+      roles: [ROLES.ADMINISTRADOR_TI],
+      title: 'Auditoría de Eventos TI - SGA'
+    }
+  },
+  {
+    path: '/administracion-ti/roles-accesos',
+    name: 'AdminRolesAccesos',
+    component: () => import('@/features/admin/views/RolesAlmacenamientoView.vue'),
+    meta: {
+      requiresAuth: true,
+      roles: [ROLES.ADMINISTRADOR_TI, ROLES.GERENTE_GENERAL],
+      title: 'Matriz de Roles y Almacenamiento - SGA'
+    }
+  },
+  {
     path: '/administracion-ti/logs',
     name: 'AdminLogs',
     component: () => import('@/features/admin/views/SystemLogsView.vue'),

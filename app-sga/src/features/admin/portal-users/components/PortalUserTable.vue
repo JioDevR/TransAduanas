@@ -33,7 +33,7 @@
             <InputIcon class="pi pi-search" />
             <InputText
               v-model.trim="searchQuery"
-              placeholder="Buscar por usuario, representante, correo, RUC o empresa..."
+              placeholder="Buscar usuario, empresa, RUC o correo..."
               size="small"
               fluid
             />
@@ -44,6 +44,7 @@
             :options="clienteOptions"
             optionLabel="label"
             optionValue="value"
+            placeholder="Todas las Empresas"
             filter
             size="small"
             class="sga-filter-select"
@@ -54,6 +55,7 @@
             :options="statusOptions"
             optionLabel="label"
             optionValue="value"
+            placeholder="Todos los Estados"
             size="small"
             class="sga-filter-select"
           />
@@ -63,6 +65,7 @@
             :options="securityOptions"
             optionLabel="label"
             optionValue="value"
+            placeholder="Acceso: Todos"
             size="small"
             class="sga-filter-select"
           />
@@ -79,6 +82,7 @@
           <Button
             v-if="hasActiveFilters"
             type="button"
+            label="Limpiar"
             icon="pi pi-filter-slash"
             severity="secondary"
             outlined
@@ -104,8 +108,8 @@
         <article v-for="user in paginatedUsers" :key="user.idUsuarioCliente" class="sga-canvas-card">
           <div class="sga-card-top">
             <div class="ptl-card-identity">
-              <div class="ptl-avatar" :style="getAvatarBg(user.username)">
-                {{ getInitials(user.nombres, user.apellidos) }}
+              <div class="ptl-avatar" :style="getWarmAvatarStyle(user.username)">
+                {{ getInitials(user.nombres, user.apellidos, 'UC') }}
               </div>
               <span class="sga-card-code sga-mono">@{{ user.username }}</span>
             </div>
@@ -198,6 +202,7 @@ import Select from 'primevue/select'
 import Tag from 'primevue/tag'
 import BasePagination from '@/shared/components/BasePagination.vue'
 import { usePagination } from '@/shared/composables/usePagination'
+import { getInitials, getWarmAvatarStyle } from '../../utils/adminFormatters'
 
 const props = defineProps({
   users: { type: Array, default: () => [] },
@@ -207,7 +212,7 @@ const props = defineProps({
 defineEmits(['edit', 'audit', 'reset-password', 'toggle-status', 'refresh', 'create'])
 
 const searchQuery = ref('')
-const selectedClienteFilter = ref('')
+const selectedClienteFilter = ref('ALL')
 const statusFilter = ref('ALL')
 const securityFilter = ref('ALL')
 const sortBy = ref('RECENTS')
@@ -223,7 +228,7 @@ const clienteOptions = computed(() => {
     }
   })
   return [
-    { label: 'Todas las Empresas', value: '' },
+    { label: 'Todas las Empresas', value: 'ALL' },
     ...Array.from(map.values()).sort((a, b) => a.label.localeCompare(b.label))
   ]
 })
@@ -251,7 +256,7 @@ const sortOptions = [
 const hasActiveFilters = computed(() =>
   Boolean(
     searchQuery.value ||
-      selectedClienteFilter.value ||
+      selectedClienteFilter.value !== 'ALL' ||
       statusFilter.value !== 'ALL' ||
       securityFilter.value !== 'ALL' ||
       sortBy.value !== 'RECENTS'
@@ -260,7 +265,7 @@ const hasActiveFilters = computed(() =>
 
 const resetFilters = () => {
   searchQuery.value = ''
-  selectedClienteFilter.value = ''
+  selectedClienteFilter.value = 'ALL'
   statusFilter.value = 'ALL'
   securityFilter.value = 'ALL'
   sortBy.value = 'RECENTS'
@@ -270,7 +275,7 @@ const filteredUsers = computed(() => {
   const list = props.users.filter((user) => {
     if (statusFilter.value === 'ACTIVE' && !user.estadoActivo) return false
     if (statusFilter.value === 'INACTIVE' && user.estadoActivo) return false
-    if (selectedClienteFilter.value && user.idCliente !== Number(selectedClienteFilter.value)) return false
+    if (selectedClienteFilter.value !== 'ALL' && user.idCliente !== Number(selectedClienteFilter.value)) return false
 
     if (securityFilter.value === 'PASS_PENDING' && !user.debeCambiarPassword) return false
     if (securityFilter.value === 'NO_ACCESS' && user.ultimoAcceso) return false
@@ -321,22 +326,6 @@ const {
 watch([searchQuery, selectedClienteFilter, statusFilter, securityFilter, sortBy], () => {
   resetPage()
 })
-
-const getInitials = (nombres = '', apellidos = '') => {
-  const n = (nombres || '').trim().charAt(0)
-  const a = (apellidos || '').trim().charAt(0)
-  return (n + a).toUpperCase() || 'UC'
-}
-
-const getAvatarBg = (username = '') => {
-  let hash = 0
-  for (let i = 0; i < username.length; i++) {
-    hash = username.charCodeAt(i) + ((hash << 5) - hash)
-  }
-  const warmHues = [25, 35, 45, 18, 195, 140]
-  const hue = warmHues[Math.abs(hash) % warmHues.length]
-  return { background: `hsl(${hue}, 45%, 38%)`, color: '#ffffff' }
-}
 
 const formatAccessDate = (val) => {
   if (!val) return '—'

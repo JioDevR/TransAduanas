@@ -314,34 +314,44 @@ const selectedEvent = ref(null)
 
 const filters = reactive({
   buscar: '',
-  modulo: '',
-  resultado: '',
+  modulo: 'ALL',
+  resultado: 'ALL',
   fechaDesde: '',
   fechaHasta: ''
 })
 
 const moduloOptions = [
-  { label: 'Todos los módulos', value: '' },
+  { label: 'Todos los módulos', value: 'ALL' },
   { label: 'Seguridad TI', value: 'SEGURIDAD_TI' },
   { label: 'Portal B2B', value: 'PORTAL_B2B' },
   { label: 'Logs TI', value: 'LOGS_TI' }
 ]
 
 const resultadoOptions = [
-  { label: 'Todos los resultados', value: '' },
+  { label: 'Todos los resultados', value: 'ALL' },
   { label: 'Éxito', value: 'EXITO' },
   { label: 'Fallo / Alerta', value: 'FALLO' }
 ]
 
 const hasFilters = computed(() =>
-  Boolean(filters.buscar || filters.modulo || filters.resultado || filters.fechaDesde || filters.fechaHasta)
+  Boolean(
+    filters.buscar ||
+      filters.modulo !== 'ALL' ||
+      filters.resultado !== 'ALL' ||
+      filters.fechaDesde ||
+      filters.fechaHasta
+  )
 )
 
 const fetchEventos = async (targetPage = 0) => {
   loading.value = true
   try {
     const res = await auditoriaService.listarEventos({
-      ...filters,
+      buscar: filters.buscar,
+      modulo: filters.modulo === 'ALL' ? '' : filters.modulo,
+      resultado: filters.resultado === 'ALL' ? '' : filters.resultado,
+      fechaDesde: filters.fechaDesde,
+      fechaHasta: filters.fechaHasta,
       page: Math.max(0, targetPage),
       size: pageSize
     })
@@ -358,8 +368,8 @@ const fetchEventos = async (targetPage = 0) => {
 
 const resetFilters = () => {
   filters.buscar = ''
-  filters.modulo = ''
-  filters.resultado = ''
+  filters.modulo = 'ALL'
+  filters.resultado = 'ALL'
   filters.fechaDesde = ''
   filters.fechaHasta = ''
   fetchEventos(0)

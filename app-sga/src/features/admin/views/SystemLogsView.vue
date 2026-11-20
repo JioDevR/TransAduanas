@@ -207,7 +207,7 @@ const { confirmDelete } = useConfirmation()
 const loading = ref(false)
 const selectedTipo = ref('all')
 const linesLimit = ref(200)
-const filterLevel = ref('')
+const filterLevel = ref('ALL')
 const searchQuery = ref('')
 const isAutoRefresh = ref(false)
 const lastSyncTime = ref('—')
@@ -234,7 +234,7 @@ const limitOptions = [
 ]
 
 const levelOptions = [
-  { label: 'TODOS', value: '' },
+  { label: 'Todos los niveles', value: 'ALL' },
   { label: 'ERROR', value: 'ERROR' },
   { label: 'WARN', value: 'WARN' },
   { label: 'INFO', value: 'INFO' },
@@ -253,7 +253,7 @@ const formattedFileSize = computed(() => {
 
 const filteredLines = computed(() => {
   let lines = logData.value.lines || []
-  if (filterLevel.value) {
+  if (filterLevel.value && filterLevel.value !== 'ALL') {
     const lvl = filterLevel.value.toUpperCase()
     lines = lines.filter((line) => line.includes(` ${lvl} `) || line.includes(`[${lvl}]`))
   }

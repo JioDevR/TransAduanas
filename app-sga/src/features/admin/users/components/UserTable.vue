@@ -33,7 +33,7 @@
             <InputIcon class="pi pi-search" />
             <InputText
               v-model.trim="searchQuery"
-              placeholder="Buscar por usuario, nombre, DNI, SUNAT o cargo..."
+              placeholder="Buscar usuario, nombre, DNI o SUNAT..."
               size="small"
               fluid
             />
@@ -44,6 +44,7 @@
             :options="roleOptions"
             optionLabel="label"
             optionValue="value"
+            placeholder="Todos los Roles"
             size="small"
             class="sga-filter-select"
           />
@@ -53,6 +54,7 @@
             :options="sedeOptions"
             optionLabel="label"
             optionValue="value"
+            placeholder="Todas las Sedes"
             size="small"
             class="sga-filter-select"
           />
@@ -62,6 +64,7 @@
             :options="statusOptions"
             optionLabel="label"
             optionValue="value"
+            placeholder="Todos los Estados"
             size="small"
             class="sga-filter-select"
           />
@@ -78,6 +81,7 @@
           <Button
             v-if="hasActiveFilters"
             type="button"
+            label="Limpiar"
             icon="pi pi-filter-slash"
             severity="secondary"
             outlined
@@ -103,7 +107,7 @@
         <article v-for="user in paginatedUsers" :key="user.idUsuario" class="sga-canvas-card">
           <div class="sga-card-top">
             <div class="usr-card-identity">
-              <div class="usr-avatar" :style="getAvatarBg(user.username)">
+              <div class="usr-avatar" :style="getWarmAvatarStyle(user.username)">
                 {{ getInitials(user.nombres, user.apellidos) }}
               </div>
               <span class="sga-card-code sga-mono">@{{ user.username }}</span>
@@ -198,6 +202,7 @@ import Tag from 'primevue/tag'
 import BasePagination from '@/shared/components/BasePagination.vue'
 import { usePagination } from '@/shared/composables/usePagination'
 import { ROLE_LABELS } from '@/core/auth/roles'
+import { getInitials, getWarmAvatarStyle } from '../../utils/adminFormatters'
 import UserRoleBadge from './UserRoleBadge.vue'
 
 const props = defineProps({
@@ -209,13 +214,13 @@ const props = defineProps({
 defineEmits(['edit', 'toggle-status', 'reset-password', 'refresh', 'create'])
 
 const searchQuery = ref('')
-const selectedRoleFilter = ref('')
-const selectedSedeFilter = ref('')
+const selectedRoleFilter = ref('ALL')
+const selectedSedeFilter = ref('ALL')
 const statusFilter = ref('ALL')
-const sortBy = ref('NOMBRE_ASC')
+const sortBy = ref('RECENTS')
 
 const roleOptions = computed(() => [
-  { label: 'Todos los Roles', value: '' },
+  { label: 'Todos los Roles', value: 'ALL' },
   ...(props.roles || []).map((r) => ({
     label: ROLE_LABELS[r.nombreRol] || r.nombreRol,
     value: r.nombreRol
@@ -233,7 +238,7 @@ const sedeOptions = computed(() => {
     }
   })
   return [
-    { label: 'Todas las Sedes', value: '' },
+    { label: 'Todas las Sedes', value: 'ALL' },
     ...Array.from(map.values()).sort((a, b) => a.label.localeCompare(b.label))
   ]
 })
@@ -245,28 +250,28 @@ const statusOptions = [
 ]
 
 const sortOptions = [
+  { label: 'Orden: Más recientes', value: 'RECENTS' },
   { label: 'Orden: Nombre A–Z', value: 'NOMBRE_ASC' },
   { label: 'Orden: Nombre Z–A', value: 'NOMBRE_DESC' },
-  { label: 'Orden: Usuario A–Z', value: 'USER_ASC' },
-  { label: 'Orden: Más recientes', value: 'RECENTS' }
+  { label: 'Orden: Usuario A–Z', value: 'USER_ASC' }
 ]
 
 const hasActiveFilters = computed(() =>
   Boolean(
     searchQuery.value ||
-      selectedRoleFilter.value ||
-      selectedSedeFilter.value ||
+      selectedRoleFilter.value !== 'ALL' ||
+      selectedSedeFilter.value !== 'ALL' ||
       statusFilter.value !== 'ALL' ||
-      sortBy.value !== 'NOMBRE_ASC'
+      sortBy.value !== 'RECENTS'
   )
 )
 
 const resetFilters = () => {
   searchQuery.value = ''
-  selectedRoleFilter.value = ''
-  selectedSedeFilter.value = ''
+  selectedRoleFilter.value = 'ALL'
+  selectedSedeFilter.value = 'ALL'
   statusFilter.value = 'ALL'
-  sortBy.value = 'NOMBRE_ASC'
+  sortBy.value = 'RECENTS'
 }
 
 const filteredUsers = computed(() => {
@@ -282,8 +287,8 @@ const filteredUsers = computed(() => {
       (user.numeroDocumento && user.numeroDocumento.includes(q)) ||
       (user.codigoSunat && user.codigoSunat.toLowerCase().includes(q))
 
-    const matchesRole = !selectedRoleFilter.value || user.nombreRol === selectedRoleFilter.value
-    const matchesSede = !selectedSedeFilter.value || user.codigoSede === selectedSedeFilter.value
+    const matchesRole = selectedRoleFilter.value === 'ALL' || user.nombreRol === selectedRoleFilter.value
+    const matchesSede = selectedSedeFilter.value === 'ALL' || user.codigoSede === selectedSedeFilter.value
     const matchesStatus =
       statusFilter.value === 'ALL' ||
       (statusFilter.value === 'ACTIVE' && user.estadoActivo === true) ||
@@ -297,8 +302,8 @@ const filteredUsers = computed(() => {
     const nameB = `${b.nombres || ''} ${b.apellidos || ''}`.trim()
     if (sortBy.value === 'NOMBRE_DESC') return nameB.localeCompare(nameA, 'es')
     if (sortBy.value === 'USER_ASC') return (a.username || '').localeCompare(b.username || '', 'es')
-    if (sortBy.value === 'RECENTS') return (b.idUsuario || 0) - (a.idUsuario || 0)
-    return nameA.localeCompare(nameB, 'es')
+    if (sortBy.value === 'NOMBRE_ASC') return nameA.localeCompare(nameB, 'es')
+    return (b.idUsuario || 0) - (a.idUsuario || 0)
   })
 })
 
@@ -318,22 +323,6 @@ const {
 watch([searchQuery, selectedRoleFilter, selectedSedeFilter, statusFilter, sortBy], () => {
   resetPage()
 })
-
-const getInitials = (nombres = '', apellidos = '') => {
-  const n = nombres.trim().charAt(0) || ''
-  const a = apellidos.trim().charAt(0) || ''
-  return (n + a).toUpperCase() || 'U'
-}
-
-const getAvatarBg = (username = '') => {
-  let hash = 0
-  for (let i = 0; i < username.length; i++) {
-    hash = username.charCodeAt(i) + ((hash << 5) - hash)
-  }
-  const warmHues = [25, 35, 45, 18, 195, 140]
-  const hue = warmHues[Math.abs(hash) % warmHues.length]
-  return { background: `hsl(${hue}, 45%, 38%)`, color: '#ffffff' }
-}
 </script>
 
 <style scoped>

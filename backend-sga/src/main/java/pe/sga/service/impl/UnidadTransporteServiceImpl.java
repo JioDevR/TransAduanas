@@ -1,6 +1,7 @@
 package pe.sga.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pe.sga.dto.request.UnidadTransporteRequestDTO;
@@ -9,6 +10,7 @@ import pe.sga.entity.UnidadTransporte;
 import pe.sga.exception.BadRequestException;
 import pe.sga.exception.ResourceNotFoundException;
 import pe.sga.repository.UnidadTransporteRepository;
+import pe.sga.service.IAuditoriaService;
 import pe.sga.service.IUnidadTransporteService;
 
 import java.util.List;
@@ -18,6 +20,20 @@ import java.util.List;
 public class UnidadTransporteServiceImpl implements IUnidadTransporteService {
 
     private final UnidadTransporteRepository unidadRepository;
+
+    private IAuditoriaService auditoriaService;
+
+    @Autowired(required = false)
+    public void setAuditoriaService(IAuditoriaService auditoriaService) {
+        this.auditoriaService = auditoriaService;
+    }
+
+    private void auditar(String accion, Integer idUnidad, String detalle) {
+        if (auditoriaService != null) {
+            auditoriaService.registrar("TRANSPORTE", accion, "UNIDAD_TRANSPORTE",
+                    idUnidad != null ? String.valueOf(idUnidad) : null, detalle, "EXITO");
+        }
+    }
 
     @Override
     @Transactional(readOnly = true)
@@ -82,7 +98,10 @@ public class UnidadTransporteServiceImpl implements IUnidadTransporteService {
                 .observaciones(dto.getObservaciones() != null ? dto.getObservaciones().trim() : null)
                 .build();
 
-        return mapToResponse(unidadRepository.save(unidad));
+        UnidadTransporte guardada = unidadRepository.save(unidad);
+        auditar("CREAR_UNIDAD", guardada.getIdUnidad(),
+                "Unidad de transporte registrada: " + guardada.getPlacaTracto());
+        return mapToResponse(guardada);
     }
 
     @Override
@@ -111,7 +130,10 @@ public class UnidadTransporteServiceImpl implements IUnidadTransporteService {
         if (dto.getEstadoActivo() != null) unidad.setEstadoActivo(dto.getEstadoActivo());
         if (dto.getObservaciones() != null) unidad.setObservaciones(dto.getObservaciones().trim());
 
-        return mapToResponse(unidadRepository.save(unidad));
+        UnidadTransporte guardada = unidadRepository.save(unidad);
+        auditar("ACTUALIZAR_UNIDAD", guardada.getIdUnidad(),
+                "Unidad de transporte actualizada: " + guardada.getPlacaTracto());
+        return mapToResponse(guardada);
     }
 
     @Override
@@ -122,6 +144,8 @@ public class UnidadTransporteServiceImpl implements IUnidadTransporteService {
         // Borrado lógico estándar
         unidad.setEstadoActivo(false);
         unidadRepository.save(unidad);
+        auditar("DESACTIVAR_UNIDAD", unidad.getIdUnidad(),
+                "Unidad de transporte desactivada: " + unidad.getPlacaTracto());
     }
 
     @Override
@@ -131,6 +155,8 @@ public class UnidadTransporteServiceImpl implements IUnidadTransporteService {
                 .orElseThrow(() -> new ResourceNotFoundException("Unidad no encontrada con ID: " + idUnidad));
         unidad.setEstadoActivo(true);
         unidadRepository.save(unidad);
+        auditar("REACTIVAR_UNIDAD", unidad.getIdUnidad(),
+                "Unidad de transporte reactivada: " + unidad.getPlacaTracto());
     }
 
     private UnidadTransporteResponseDTO mapToResponse(UnidadTransporte u) {

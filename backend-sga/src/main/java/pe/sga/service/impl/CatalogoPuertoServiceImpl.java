@@ -1,6 +1,7 @@
 package pe.sga.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pe.sga.dto.request.CatalogoPuertoDTO;
@@ -9,6 +10,7 @@ import pe.sga.entity.CatalogoPuerto;
 import pe.sga.exception.BadRequestException;
 import pe.sga.exception.ResourceNotFoundException;
 import pe.sga.repository.CatalogoPuertoRepository;
+import pe.sga.service.IAuditoriaService;
 import pe.sga.service.ICatalogoPuertoService;
 
 import java.util.List;
@@ -18,6 +20,20 @@ import java.util.List;
 public class CatalogoPuertoServiceImpl implements ICatalogoPuertoService {
 
     private final CatalogoPuertoRepository puertoRepository;
+
+    private IAuditoriaService auditoriaService;
+
+    @Autowired(required = false)
+    public void setAuditoriaService(IAuditoriaService auditoriaService) {
+        this.auditoriaService = auditoriaService;
+    }
+
+    private void auditar(String accion, Integer idPuerto, String detalle) {
+        if (auditoriaService != null) {
+            auditoriaService.registrar("MAESTROS", accion, "CATALOGO_PUERTO",
+                    idPuerto != null ? String.valueOf(idPuerto) : null, detalle, "EXITO");
+        }
+    }
 
     @Override
     @Transactional(readOnly = true)
@@ -58,7 +74,10 @@ public class CatalogoPuertoServiceImpl implements ICatalogoPuertoService {
                 .estado(dto.getEstado() != null ? dto.getEstado() : "ACTIVO")
                 .build();
 
-        return mapToResponse(puertoRepository.save(puerto));
+        CatalogoPuerto guardado = puertoRepository.save(puerto);
+        auditar("CREAR_PUERTO", guardado.getIdPuerto(),
+                "Puerto creado: " + guardado.getCodigoPuerto() + " - " + guardado.getNombre());
+        return mapToResponse(guardado);
     }
 
     @Override
@@ -72,7 +91,10 @@ public class CatalogoPuertoServiceImpl implements ICatalogoPuertoService {
         if (dto.getTipo() != null) puerto.setTipo(dto.getTipo());
         if (dto.getEstado() != null) puerto.setEstado(dto.getEstado());
 
-        return mapToResponse(puertoRepository.save(puerto));
+        CatalogoPuerto guardado = puertoRepository.save(puerto);
+        auditar("ACTUALIZAR_PUERTO", guardado.getIdPuerto(),
+                "Puerto actualizado: " + guardado.getCodigoPuerto() + " - " + guardado.getNombre());
+        return mapToResponse(guardado);
     }
 
     @Override
@@ -82,6 +104,8 @@ public class CatalogoPuertoServiceImpl implements ICatalogoPuertoService {
                 .orElseThrow(() -> new ResourceNotFoundException("Puerto no encontrado con ID: " + idPuerto));
         puerto.setEstado("INACTIVO");
         puertoRepository.save(puerto);
+        auditar("DESACTIVAR_PUERTO", puerto.getIdPuerto(),
+                "Puerto desactivado: " + puerto.getCodigoPuerto() + " - " + puerto.getNombre());
     }
 
     @Override
@@ -91,6 +115,8 @@ public class CatalogoPuertoServiceImpl implements ICatalogoPuertoService {
                 .orElseThrow(() -> new ResourceNotFoundException("Puerto no encontrado con ID: " + idPuerto));
         puerto.setEstado("ACTIVO");
         puertoRepository.save(puerto);
+        auditar("REACTIVAR_PUERTO", puerto.getIdPuerto(),
+                "Puerto reactivado: " + puerto.getCodigoPuerto() + " - " + puerto.getNombre());
     }
 
     private CatalogoPuertoResponseDTO mapToResponse(CatalogoPuerto p) {

@@ -1,6 +1,7 @@
 package pe.sga.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pe.sga.dto.request.CatalogoMercanciaRequestDTO;
@@ -9,6 +10,7 @@ import pe.sga.entity.CatalogoMercancia;
 import pe.sga.exception.BadRequestException;
 import pe.sga.exception.ResourceNotFoundException;
 import pe.sga.repository.CatalogoMercanciaRepository;
+import pe.sga.service.IAuditoriaService;
 import pe.sga.service.ICatalogoMercanciaService;
 
 import java.util.List;
@@ -18,6 +20,20 @@ import java.util.List;
 public class CatalogoMercanciaServiceImpl implements ICatalogoMercanciaService {
 
     private final CatalogoMercanciaRepository mercanciaRepository;
+
+    private IAuditoriaService auditoriaService;
+
+    @Autowired(required = false)
+    public void setAuditoriaService(IAuditoriaService auditoriaService) {
+        this.auditoriaService = auditoriaService;
+    }
+
+    private void auditar(String accion, Integer idMercancia, String detalle) {
+        if (auditoriaService != null) {
+            auditoriaService.registrar("MAESTROS", accion, "CATALOGO_MERCANCIA",
+                    idMercancia != null ? String.valueOf(idMercancia) : null, detalle, "EXITO");
+        }
+    }
 
     @Override
     @Transactional(readOnly = true)
@@ -76,7 +92,10 @@ public class CatalogoMercanciaServiceImpl implements ICatalogoMercanciaService {
                 .estado(dto.getEstado() != null ? dto.getEstado().trim().toUpperCase() : "ACTIVO")
                 .build();
 
-        return mapToResponse(mercanciaRepository.save(entity));
+        CatalogoMercancia guardada = mercanciaRepository.save(entity);
+        auditar("CREAR_MERCANCIA", guardada.getIdMercancia(),
+                "Mercancía creada: " + guardada.getCodigo() + " - " + guardada.getNombre());
+        return mapToResponse(guardada);
     }
 
     @Override
@@ -92,7 +111,10 @@ public class CatalogoMercanciaServiceImpl implements ICatalogoMercanciaService {
         if (dto.getArancelBasePct() != null) entity.setArancelBasePct(dto.getArancelBasePct());
         if (dto.getEstado() != null) entity.setEstado(dto.getEstado().trim().toUpperCase());
 
-        return mapToResponse(mercanciaRepository.save(entity));
+        CatalogoMercancia guardada = mercanciaRepository.save(entity);
+        auditar("ACTUALIZAR_MERCANCIA", guardada.getIdMercancia(),
+                "Mercancía actualizada: " + guardada.getCodigo() + " - " + guardada.getNombre());
+        return mapToResponse(guardada);
     }
 
     @Override
@@ -102,6 +124,8 @@ public class CatalogoMercanciaServiceImpl implements ICatalogoMercanciaService {
                 .orElseThrow(() -> new ResourceNotFoundException("Mercancía no encontrada con ID: " + idMercancia));
         entity.setEstado("INACTIVO");
         mercanciaRepository.save(entity);
+        auditar("DESACTIVAR_MERCANCIA", entity.getIdMercancia(),
+                "Mercancía desactivada: " + entity.getCodigo() + " - " + entity.getNombre());
     }
 
     @Override
@@ -111,6 +135,8 @@ public class CatalogoMercanciaServiceImpl implements ICatalogoMercanciaService {
                 .orElseThrow(() -> new ResourceNotFoundException("Mercancía no encontrada con ID: " + idMercancia));
         entity.setEstado("ACTIVO");
         mercanciaRepository.save(entity);
+        auditar("REACTIVAR_MERCANCIA", entity.getIdMercancia(),
+                "Mercancía reactivada: " + entity.getCodigo() + " - " + entity.getNombre());
     }
 
     private CatalogoMercanciaResponseDTO mapToResponse(CatalogoMercancia m) {

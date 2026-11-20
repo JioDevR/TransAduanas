@@ -1,6 +1,7 @@
 package pe.sga.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pe.sga.dto.request.CatalogoTipoCargaDTO;
@@ -9,6 +10,7 @@ import pe.sga.entity.CatalogoTipoCarga;
 import pe.sga.exception.BadRequestException;
 import pe.sga.exception.ResourceNotFoundException;
 import pe.sga.repository.CatalogoTipoCargaRepository;
+import pe.sga.service.IAuditoriaService;
 import pe.sga.service.ICatalogoTipoCargaService;
 
 import java.util.List;
@@ -18,6 +20,20 @@ import java.util.List;
 public class CatalogoTipoCargaServiceImpl implements ICatalogoTipoCargaService {
 
     private final CatalogoTipoCargaRepository tipoCargaRepository;
+
+    private IAuditoriaService auditoriaService;
+
+    @Autowired(required = false)
+    public void setAuditoriaService(IAuditoriaService auditoriaService) {
+        this.auditoriaService = auditoriaService;
+    }
+
+    private void auditar(String accion, Integer idTipoCarga, String detalle) {
+        if (auditoriaService != null) {
+            auditoriaService.registrar("MAESTROS", accion, "CATALOGO_TIPO_CARGA",
+                    idTipoCarga != null ? String.valueOf(idTipoCarga) : null, detalle, "EXITO");
+        }
+    }
 
     @Override
     @Transactional(readOnly = true)
@@ -57,7 +73,10 @@ public class CatalogoTipoCargaServiceImpl implements ICatalogoTipoCargaService {
                 .estado(dto.getEstado() != null ? dto.getEstado().trim().toUpperCase() : "ACTIVO")
                 .build();
 
-        return mapToResponse(tipoCargaRepository.save(entity));
+        CatalogoTipoCarga guardado = tipoCargaRepository.save(entity);
+        auditar("CREAR_TIPO_CARGA", guardado.getIdTipoCarga(),
+                "Tipo de carga creado: " + guardado.getCodigo() + " - " + guardado.getNombre());
+        return mapToResponse(guardado);
     }
 
     @Override
@@ -70,7 +89,10 @@ public class CatalogoTipoCargaServiceImpl implements ICatalogoTipoCargaService {
         if (dto.getDescripcion() != null) entity.setDescripcion(dto.getDescripcion().trim());
         if (dto.getEstado() != null) entity.setEstado(dto.getEstado().trim().toUpperCase());
 
-        return mapToResponse(tipoCargaRepository.save(entity));
+        CatalogoTipoCarga guardado = tipoCargaRepository.save(entity);
+        auditar("ACTUALIZAR_TIPO_CARGA", guardado.getIdTipoCarga(),
+                "Tipo de carga actualizado: " + guardado.getCodigo() + " - " + guardado.getNombre());
+        return mapToResponse(guardado);
     }
 
     @Override
@@ -80,6 +102,8 @@ public class CatalogoTipoCargaServiceImpl implements ICatalogoTipoCargaService {
                 .orElseThrow(() -> new ResourceNotFoundException("Tipo de carga no encontrado con ID: " + idTipoCarga));
         entity.setEstado("INACTIVO");
         tipoCargaRepository.save(entity);
+        auditar("DESACTIVAR_TIPO_CARGA", entity.getIdTipoCarga(),
+                "Tipo de carga desactivado: " + entity.getCodigo() + " - " + entity.getNombre());
     }
 
     @Override
@@ -89,6 +113,8 @@ public class CatalogoTipoCargaServiceImpl implements ICatalogoTipoCargaService {
                 .orElseThrow(() -> new ResourceNotFoundException("Tipo de carga no encontrado con ID: " + idTipoCarga));
         entity.setEstado("ACTIVO");
         tipoCargaRepository.save(entity);
+        auditar("REACTIVAR_TIPO_CARGA", entity.getIdTipoCarga(),
+                "Tipo de carga reactivado: " + entity.getCodigo() + " - " + entity.getNombre());
     }
 
     private CatalogoTipoCargaResponseDTO mapToResponse(CatalogoTipoCarga tc) {

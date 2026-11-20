@@ -2,6 +2,7 @@ package pe.sga.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pe.sga.dto.request.ClienteRequestDTO;
@@ -10,6 +11,7 @@ import pe.sga.entity.Cliente;
 import pe.sga.exception.BadRequestException;
 import pe.sga.exception.ResourceNotFoundException;
 import pe.sga.repository.ClienteRepository;
+import pe.sga.service.IAuditoriaService;
 import pe.sga.service.IClienteService;
 
 import java.util.List;
@@ -20,6 +22,19 @@ import java.util.List;
 public class ClienteServiceImpl implements IClienteService {
 
     private final ClienteRepository clienteRepository;
+    private IAuditoriaService auditoriaService;
+
+    @Autowired(required = false)
+    public void setAuditoriaService(IAuditoriaService auditoriaService) {
+        this.auditoriaService = auditoriaService;
+    }
+
+    private void auditar(String accion, Integer idCliente, String detalle) {
+        if (auditoriaService != null) {
+            auditoriaService.registrar("COMERCIAL", accion, "CLIENTE",
+                    idCliente != null ? String.valueOf(idCliente) : null, detalle, "EXITO");
+        }
+    }
 
     @Override
     @Transactional(readOnly = true)
@@ -111,6 +126,8 @@ public class ClienteServiceImpl implements IClienteService {
         Cliente guardado = clienteRepository.save(cliente);
         log.info("Empresa registrada exitosamente: id={}, ruc={}, razonSocial={}, estado={}",
                 guardado.getIdCliente(), guardado.getNumeroDocumento(), guardado.getRazonSocial(), guardado.getEstadoCliente());
+        auditar("CREAR_CLIENTE", guardado.getIdCliente(),
+                "Alta de " + guardado.getEstadoCliente() + ": " + guardado.getRazonSocial() + " (" + guardado.getNumeroDocumento() + ")");
 
         return mapToResponse(guardado);
     }
@@ -143,7 +160,10 @@ public class ClienteServiceImpl implements IClienteService {
             cliente.setEstadoActivo(dto.getEstadoActivo());
         }
 
-        return mapToResponse(clienteRepository.save(cliente));
+        Cliente actualizado = clienteRepository.save(cliente);
+        auditar("ACTUALIZAR_CLIENTE", actualizado.getIdCliente(),
+                "Actualización de cliente: " + actualizado.getRazonSocial() + " (" + actualizado.getNumeroDocumento() + ")");
+        return mapToResponse(actualizado);
     }
 
     @Override
@@ -154,6 +174,7 @@ public class ClienteServiceImpl implements IClienteService {
         // Borrado lógico por estado_activo
         cliente.setEstadoActivo(false);
         clienteRepository.save(cliente);
+        auditar("DESACTIVAR_CLIENTE", id, "Baja lógica de cliente: " + cliente.getRazonSocial());
     }
 
     @Override
@@ -163,6 +184,7 @@ public class ClienteServiceImpl implements IClienteService {
                 .orElseThrow(() -> new ResourceNotFoundException("Cliente no encontrado con id: " + id));
         cliente.setEstadoActivo(true);
         clienteRepository.save(cliente);
+        auditar("REACTIVAR_CLIENTE", id, "Reactivación de cliente: " + cliente.getRazonSocial());
     }
 
     @Override
@@ -171,7 +193,9 @@ public class ClienteServiceImpl implements IClienteService {
         Cliente cliente = clienteRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Cliente no encontrado con id: " + id));
         cliente.setEstadoCliente("CLIENTE");
-        return mapToResponse(clienteRepository.save(cliente));
+        Cliente guardado = clienteRepository.save(cliente);
+        auditar("FORMALIZAR_CLIENTE", guardado.getIdCliente(), "Prospecto formalizado a CLIENTE: " + guardado.getRazonSocial());
+        return mapToResponse(guardado);
     }
 
     private ClienteResponseDTO mapToResponse(Cliente c) {

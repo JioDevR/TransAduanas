@@ -2,6 +2,7 @@ package pe.sga.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -18,6 +19,7 @@ import pe.sga.entity.enums.TipoAbonoCotizacion;
 import pe.sga.exception.BadRequestException;
 import pe.sga.exception.ResourceNotFoundException;
 import pe.sga.repository.*;
+import pe.sga.service.IAuditoriaService;
 import pe.sga.service.IPortalService;
 
 import java.math.BigDecimal;
@@ -54,6 +56,28 @@ public class PortalServiceImpl implements IPortalService {
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider tokenProvider;
 
+    private IAuditoriaService auditoriaService;
+
+    @Autowired(required = false)
+    public void setAuditoriaService(IAuditoriaService auditoriaService) {
+        this.auditoriaService = auditoriaService;
+    }
+
+    private void auditar(String accion, String entidad, Integer idEntidad, String detalle) {
+        if (auditoriaService != null) {
+            auditoriaService.registrar("PORTAL_B2B", accion, entidad,
+                    idEntidad != null ? String.valueOf(idEntidad) : null, detalle, "EXITO");
+        }
+    }
+
+    private void auditarActor(String actor, String accion, Integer idUsuarioCliente, String detalle, String resultado) {
+        if (auditoriaService != null) {
+            auditoriaService.registrarConActor(actor, "CLIENTE_PORTAL", "PORTAL_B2B", accion,
+                    "USUARIO_CLIENTE", idUsuarioCliente != null ? String.valueOf(idUsuarioCliente) : null,
+                    detalle, resultado);
+        }
+    }
+
     @Override
     @Transactional
     public PortalAuthResponseDTO autenticarCliente(LoginRequestDTO loginRequest) {
@@ -61,23 +85,35 @@ public class PortalServiceImpl implements IPortalService {
         UsuarioCliente uc = usuarioClienteRepository.findByUsername(identifier)
                 .or(() -> usuarioClienteRepository.findByCorreoElectronico(identifier))
                 .or(() -> usuarioClienteRepository.findByCliente_NumeroDocumento(identifier).stream().findFirst())
-                .orElseThrow(() -> new BadCredentialsException("Credenciales de cliente incorrectas"));
+                .orElseThrow(() -> {
+                    auditarActor(identifier.isBlank() ? "ANONIMO" : identifier, "LOGIN_PORTAL_FALLIDO",
+                            null, "Usuario o identificador de portal B2B no encontrado", "FALLO");
+                    return new BadCredentialsException("Credenciales de cliente incorrectas");
+                });
 
         if (!Boolean.TRUE.equals(uc.getEstadoActivo())) {
+            auditarActor(uc.getUsername(), "LOGIN_PORTAL_FALLIDO", uc.getIdUsuarioCliente(),
+                    "Cuenta B2B inactiva intentó iniciar sesión", "FALLO");
             throw new BadCredentialsException("La cuenta de cliente se encuentra inactiva");
         }
 
         if (uc.getCliente() == null || !Boolean.TRUE.equals(uc.getCliente().getEstadoActivo())) {
+            auditarActor(uc.getUsername(), "LOGIN_PORTAL_FALLIDO", uc.getIdUsuarioCliente(),
+                    "Cuenta B2B con empresa cliente inactiva intentó iniciar sesión", "FALLO");
             throw new BadCredentialsException("La empresa cliente se encuentra inactiva en el sistema");
         }
 
         if (!passwordEncoder.matches(loginRequest.getPassword(), uc.getPasswordHash())) {
+            auditarActor(uc.getUsername(), "LOGIN_PORTAL_FALLIDO", uc.getIdUsuarioCliente(),
+                    "Contraseña incorrecta en Portal B2B", "FALLO");
             throw new BadCredentialsException("Credenciales de cliente incorrectas");
         }
 
         uc.setUltimoAcceso(LocalDateTime.now());
         usuarioClienteRepository.save(uc);
 
+        auditarActor(uc.getUsername(), "LOGIN_PORTAL_EXITOSO", uc.getIdUsuarioCliente(),
+                "Inicio de sesión exitoso en Portal B2B", "EXITO");
         String token = tokenProvider.generateTokenForPortal(uc);
 
         return PortalAuthResponseDTO.builder()
@@ -226,6 +262,8 @@ public class PortalServiceImpl implements IPortalService {
 
         Cotizacion guardada = cotizacionRepository.save(cotizacion);
         log.info("Nueva cotización {} solicitada por cliente ID {}", codigoCotizacion, idCliente);
+        auditar("SOLICITAR_COTIZACION_PORTAL", "COTIZACION", guardada.getIdCotizacion(),
+                "Cotización " + guardada.getCodigoCotizacion() + " solicitada desde Portal B2B");
         return mapToPortalCotizacion(guardada);
     }
 
@@ -261,6 +299,8 @@ public class PortalServiceImpl implements IPortalService {
 
         cotizacion.setObservaciones((cotizacion.getObservaciones() != null ? cotizacion.getObservaciones() + " | " : "") + "Aceptada formalmente por el cliente vía Portal B2B el " + LocalDateTime.now());
         Cotizacion guardada = cotizacionRepository.save(cotizacion);
+        auditar("ACEPTAR_COTIZACION_PORTAL", "COTIZACION", guardada.getIdCotizacion(),
+                "Cotización " + guardada.getCodigoCotizacion() + " aceptada por cliente en Portal B2B");
         return mapToPortalCotizacion(guardada);
     }
 
@@ -493,6 +533,10 @@ public class PortalServiceImpl implements IPortalService {
                     + "Voucher registrado por cliente el " + LocalDateTime.now() + " (Banco origen: " + dto.getBancoOrigen() + ")");
             liquidacionFinancieraRepository.save(liquidacion);
 
+            auditar("REGISTRAR_VOUCHER_PORTAL", "LIQUIDACION_FINANCIERA", liquidacion.getIdLiquidacion(),
+                    "Voucher de liquidación " + liquidacion.getCodigoLiquidacion()
+                            + " registrado en Portal B2B (op: " + dto.getNumeroOperacion() + ")");
+
             BigDecimal tcLiq = liquidacion.getTipoCambio() != null && liquidacion.getTipoCambio().compareTo(BigDecimal.ZERO) > 0
                     ? liquidacion.getTipoCambio()
                     : new BigDecimal("3.7500");
@@ -584,6 +628,9 @@ public class PortalServiceImpl implements IPortalService {
             cotizacionRepository.save(cotizacion);
         }
 
+        auditar("REGISTRAR_VOUCHER_PORTAL", "COTIZACION_PAGO", guardado.getIdPago(),
+                "Voucher de anticipo registrado en Portal B2B para " + cotizacion.getCodigoCotizacion()
+                        + " (op: " + guardado.getNumeroOperacion() + ")");
         return mapToPortalPagoAnticipo(guardado);
     }
 
@@ -640,6 +687,8 @@ public class PortalServiceImpl implements IPortalService {
         log.info("Pago subsanado y reenviado a revisión contable: idPago={}, clienteId={}, cotizacion={}",
                 pago.getIdPago(), idCliente, cotizacion.getCodigoCotizacion());
 
+        auditar("CORREGIR_PAGO_PORTAL", "COTIZACION_PAGO", guardado.getIdPago(),
+                "Pago observado subsanado en Portal B2B para " + cotizacion.getCodigoCotizacion());
         return mapToPortalPagoAnticipo(guardado);
     }
 
@@ -894,6 +943,9 @@ public class PortalServiceImpl implements IPortalService {
         );
         log.info("Contraseña actualizada exitosamente para usuario cliente: id={}, username={}",
                 usuarioCliente.getIdUsuarioCliente(), usuarioCliente.getUsername());
+        auditarActor(usuarioCliente.getUsername(), "CAMBIAR_PASSWORD_PORTAL",
+                usuarioCliente.getIdUsuarioCliente(),
+                "Contraseña de acceso al Portal B2B actualizada por el usuario", "EXITO");
     }
 
     @Override

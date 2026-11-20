@@ -2,6 +2,7 @@ package pe.sga.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -16,6 +17,7 @@ import pe.sga.entity.enums.RolUsuario;
 import pe.sga.exception.BadRequestException;
 import pe.sga.exception.ResourceNotFoundException;
 import pe.sga.repository.*;
+import pe.sga.service.IAuditoriaService;
 import pe.sga.service.ICotizacionService;
 
 import java.math.BigDecimal;
@@ -46,6 +48,19 @@ public class CotizacionServiceImpl implements ICotizacionService {
     private final UsuarioClienteRepository usuarioClienteRepository;
     private final NotificacionClienteRepository notificacionClienteRepository;
     private final PasswordEncoder passwordEncoder;
+    private IAuditoriaService auditoriaService;
+
+    @Autowired(required = false)
+    public void setAuditoriaService(IAuditoriaService auditoriaService) {
+        this.auditoriaService = auditoriaService;
+    }
+
+    private void auditar(String modulo, String accion, Integer idCot, String detalle) {
+        if (auditoriaService != null) {
+            auditoriaService.registrar(modulo, accion, "COTIZACION",
+                    idCot != null ? String.valueOf(idCot) : null, detalle, "EXITO");
+        }
+    }
 
     @Override
     @Transactional(readOnly = true)
@@ -178,6 +193,8 @@ public class CotizacionServiceImpl implements ICotizacionService {
         if (guardada.getEstado() == EstadoCotizacion.APROBADA) {
             autoFormalizarCliente(guardada.getCliente(), guardada);
         }
+        auditar("COMERCIAL", "CREAR_COTIZACION", guardada.getIdCotizacion(),
+                "Cotización " + guardada.getCodigoCotizacion() + " (" + guardada.getEstado() + ") por " + guardada.getTotalCotizado());
 
         return mapToResponse(guardada);
     }
@@ -269,6 +286,8 @@ public class CotizacionServiceImpl implements ICotizacionService {
         if (guardada.getEstado() == EstadoCotizacion.APROBADA) {
             autoFormalizarCliente(guardada.getCliente(), guardada);
         }
+        auditar("COMERCIAL", "ACTUALIZAR_COTIZACION", guardada.getIdCotizacion(),
+                "Edición de cotización " + guardada.getCodigoCotizacion() + " (estado: " + guardada.getEstado() + ")");
 
         return mapToResponse(guardada);
     }
@@ -333,6 +352,9 @@ public class CotizacionServiceImpl implements ICotizacionService {
             }
         }
 
+        auditar("ADUANAS", "REVISAR_COTIZACION_" + guardada.getEstado().name(), guardada.getIdCotizacion(),
+                "Revisión técnica " + guardada.getCodigoCotizacion() + " → " + guardada.getEstado());
+
         return mapToResponse(guardada);
     }
 
@@ -367,6 +389,8 @@ public class CotizacionServiceImpl implements ICotizacionService {
                 }
             }
         }
+        auditar("ADUANAS", "CAMBIAR_ESTADO_COTIZACION", guardada.getIdCotizacion(),
+                "Cotización " + guardada.getCodigoCotizacion() + " → " + guardada.getEstado());
 
         return mapToResponse(guardada);
     }
@@ -417,6 +441,8 @@ public class CotizacionServiceImpl implements ICotizacionService {
         Cotizacion guardada = cotizacionRepository.save(cotizacion);
         log.info("Cotización {} asignada a {} por usuario {}",
                 guardada.getCodigoCotizacion(), asesorDestino.getUsername(), usuarioActual.getUsername());
+        auditar("COMERCIAL", "ASIGNAR_COTIZACION", guardada.getIdCotizacion(),
+                "Cotización " + guardada.getCodigoCotizacion() + " asignada a @" + asesorDestino.getUsername());
         return mapToResponse(guardada);
     }
 
@@ -428,6 +454,7 @@ public class CotizacionServiceImpl implements ICotizacionService {
         validarAccesoCotizacion(cotizacion, usuarioActual, false);
         cotizacion.setEstado(EstadoCotizacion.ANULADA);
         cotizacionRepository.save(cotizacion);
+        auditar("COMERCIAL", "ANULAR_COTIZACION", id, "Anulación de cotización " + cotizacion.getCodigoCotizacion());
     }
 
     @Override

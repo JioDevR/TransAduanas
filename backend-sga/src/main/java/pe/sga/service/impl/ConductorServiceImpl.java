@@ -1,6 +1,7 @@
 package pe.sga.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pe.sga.dto.request.ConductorRequestDTO;
@@ -11,6 +12,7 @@ import pe.sga.exception.BadRequestException;
 import pe.sga.exception.ResourceNotFoundException;
 import pe.sga.repository.ConductorRepository;
 import pe.sga.repository.UsuarioRepository;
+import pe.sga.service.IAuditoriaService;
 import pe.sga.service.IConductorService;
 
 import java.util.List;
@@ -21,6 +23,20 @@ public class ConductorServiceImpl implements IConductorService {
 
     private final ConductorRepository conductorRepository;
     private final UsuarioRepository usuarioRepository;
+
+    private IAuditoriaService auditoriaService;
+
+    @Autowired(required = false)
+    public void setAuditoriaService(IAuditoriaService auditoriaService) {
+        this.auditoriaService = auditoriaService;
+    }
+
+    private void auditar(String accion, Integer idConductor, String detalle) {
+        if (auditoriaService != null) {
+            auditoriaService.registrar("TRANSPORTE", accion, "CONDUCTOR",
+                    idConductor != null ? String.valueOf(idConductor) : null, detalle, "EXITO");
+        }
+    }
 
     @Override
     @Transactional(readOnly = true)
@@ -85,7 +101,11 @@ public class ConductorServiceImpl implements IConductorService {
                 .observaciones(dto.getObservaciones() != null ? dto.getObservaciones().trim() : null)
                 .build();
 
-        return mapToResponse(conductorRepository.save(conductor));
+        Conductor guardado = conductorRepository.save(conductor);
+        auditar("CREAR_CONDUCTOR", guardado.getIdConductor(),
+                "Conductor creado: " + guardado.getNombres() + " " + guardado.getApellidos()
+                        + " (" + guardado.getNumeroLicencia() + ")");
+        return mapToResponse(guardado);
     }
 
     @Override
@@ -125,7 +145,11 @@ public class ConductorServiceImpl implements IConductorService {
         if (dto.getEstadoActivo() != null) conductor.setEstadoActivo(dto.getEstadoActivo());
         if (dto.getObservaciones() != null) conductor.setObservaciones(dto.getObservaciones().trim());
 
-        return mapToResponse(conductorRepository.save(conductor));
+        Conductor guardado = conductorRepository.save(conductor);
+        auditar("ACTUALIZAR_CONDUCTOR", guardado.getIdConductor(),
+                "Conductor actualizado: " + guardado.getNombres() + " " + guardado.getApellidos()
+                        + " (" + guardado.getNumeroLicencia() + ")");
+        return mapToResponse(guardado);
     }
 
     @Override
@@ -136,6 +160,8 @@ public class ConductorServiceImpl implements IConductorService {
         // Borrado lógico estándar
         conductor.setEstadoActivo(false);
         conductorRepository.save(conductor);
+        auditar("DESACTIVAR_CONDUCTOR", conductor.getIdConductor(),
+                "Conductor desactivado: " + conductor.getNombres() + " " + conductor.getApellidos());
     }
 
     @Override
@@ -145,6 +171,8 @@ public class ConductorServiceImpl implements IConductorService {
                 .orElseThrow(() -> new ResourceNotFoundException("Conductor no encontrado con ID: " + idConductor));
         conductor.setEstadoActivo(true);
         conductorRepository.save(conductor);
+        auditar("REACTIVAR_CONDUCTOR", conductor.getIdConductor(),
+                "Conductor reactivado: " + conductor.getNombres() + " " + conductor.getApellidos());
     }
 
     private ConductorResponseDTO mapToResponse(Conductor c) {

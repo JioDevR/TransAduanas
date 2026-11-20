@@ -1,6 +1,7 @@
 package pe.sga.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pe.sga.dto.request.DespachoAsignarRecursosDTO;
@@ -22,6 +23,7 @@ import pe.sga.repository.ExpedienteRepository;
 import pe.sga.repository.IDocumentoAdjuntoRepository;
 import pe.sga.repository.NotificacionClienteRepository;
 import pe.sga.repository.UnidadTransporteRepository;
+import pe.sga.service.IAuditoriaService;
 import pe.sga.service.IDespachoTransporteService;
 
 import java.time.LocalDate;
@@ -38,6 +40,20 @@ public class DespachoTransporteServiceImpl implements IDespachoTransporteService
     private final UnidadTransporteRepository unidadRepository;
     private final IDocumentoAdjuntoRepository documentoRepository;
     private final NotificacionClienteRepository notificacionClienteRepository;
+
+    private IAuditoriaService auditoriaService;
+
+    @Autowired(required = false)
+    public void setAuditoriaService(IAuditoriaService auditoriaService) {
+        this.auditoriaService = auditoriaService;
+    }
+
+    private void auditar(String accion, Integer idDespacho, String detalle) {
+        if (auditoriaService != null) {
+            auditoriaService.registrar("TRANSPORTE", accion, "DESPACHO_TRANSPORTE",
+                    idDespacho != null ? String.valueOf(idDespacho) : null, detalle, "EXITO");
+        }
+    }
 
     @Override
     @Transactional(readOnly = true)
@@ -176,7 +192,10 @@ public class DespachoTransporteServiceImpl implements IDespachoTransporteService
                 .observaciones(dto.getObservaciones())
                 .build();
 
-        return mapToResponse(despachoRepository.save(dt));
+        DespachoTransporte guardado = despachoRepository.save(dt);
+        auditar("PROGRAMAR_DESPACHO", guardado.getIdDespachoTransporte(),
+                "Despacho programado " + guardado.getCodigoTracking() + " (" + guardado.getTipoTraslado() + ")");
+        return mapToResponse(guardado);
     }
 
     @Override
@@ -236,7 +255,12 @@ public class DespachoTransporteServiceImpl implements IDespachoTransporteService
             dt.setEstadoTransporte("PROGRAMADO");
         }
 
-        return mapToResponse(despachoRepository.save(dt));
+        DespachoTransporte guardado = despachoRepository.save(dt);
+        auditar("ASIGNAR_RECURSOS_DESPACHO", guardado.getIdDespachoTransporte(),
+                "Conductor " + conductor.getNombres() + " " + conductor.getApellidos()
+                        + " y unidad " + unidad.getPlacaTracto()
+                        + " asignados a despacho " + guardado.getCodigoTracking());
+        return mapToResponse(guardado);
     }
 
     @Override
@@ -281,7 +305,10 @@ public class DespachoTransporteServiceImpl implements IDespachoTransporteService
             notificacionClienteRepository.save(notif);
         }
 
-        return mapToResponse(despachoRepository.save(dt));
+        DespachoTransporte guardado = despachoRepository.save(dt);
+        auditar("INICIAR_RUTA_DESPACHO", guardado.getIdDespachoTransporte(),
+                "Despacho " + guardado.getCodigoTracking() + " inició ruta");
+        return mapToResponse(guardado);
     }
 
     @Override
@@ -342,7 +369,10 @@ public class DespachoTransporteServiceImpl implements IDespachoTransporteService
             notificacionClienteRepository.save(notif);
         }
 
-        return mapToResponse(despachoRepository.save(dt));
+        DespachoTransporte guardado = despachoRepository.save(dt);
+        auditar("CONFIRMAR_ENTREGA_DESPACHO", guardado.getIdDespachoTransporte(),
+                "Entrega confirmada para despacho " + guardado.getCodigoTracking());
+        return mapToResponse(guardado);
     }
 
     @Override
@@ -354,7 +384,10 @@ public class DespachoTransporteServiceImpl implements IDespachoTransporteService
         String detallePrevio = dt.getDetalleIncidencia() != null ? dt.getDetalleIncidencia() + "\n" : "";
         dt.setDetalleIncidencia(detallePrevio + "[" + LocalDateTime.now() + "] " + incidencia);
 
-        return mapToResponse(despachoRepository.save(dt));
+        DespachoTransporte guardado = despachoRepository.save(dt);
+        auditar("REPORTAR_INCIDENCIA_DESPACHO", guardado.getIdDespachoTransporte(),
+                "Incidencia reportada en despacho " + guardado.getCodigoTracking());
+        return mapToResponse(guardado);
     }
 
     @Override
@@ -377,6 +410,8 @@ public class DespachoTransporteServiceImpl implements IDespachoTransporteService
         }
 
         despachoRepository.save(dt);
+        auditar("ANULAR_DESPACHO", dt.getIdDespachoTransporte(),
+                "Despacho " + dt.getCodigoTracking() + " cancelado/anulado");
     }
 
     private String generarCodigoTracking() {

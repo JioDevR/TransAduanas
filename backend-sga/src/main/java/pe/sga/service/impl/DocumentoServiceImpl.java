@@ -2,6 +2,7 @@ package pe.sga.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -25,6 +26,7 @@ import pe.sga.repository.ExpedienteRepository;
 import pe.sga.repository.IDocumentoAdjuntoRepository;
 import pe.sga.repository.LiquidacionFinancieraRepository;
 import pe.sga.repository.UsuarioRepository;
+import pe.sga.service.IAuditoriaService;
 import pe.sga.service.IDocumentoService;
 import pe.sga.service.IStorageService;
 
@@ -47,6 +49,20 @@ public class DocumentoServiceImpl implements IDocumentoService {
     private final UsuarioRepository usuarioRepository;
     private final CotizacionPagoRepository cotizacionPagoRepository;
     private final LiquidacionFinancieraRepository liquidacionFinancieraRepository;
+
+    private IAuditoriaService auditoriaService;
+
+    @Autowired(required = false)
+    public void setAuditoriaService(IAuditoriaService auditoriaService) {
+        this.auditoriaService = auditoriaService;
+    }
+
+    private void auditar(String accion, Integer idDocumento, String detalle) {
+        if (auditoriaService != null) {
+            auditoriaService.registrar("DOCUMENTOS", accion, "DOCUMENTO_ADJUNTO",
+                    idDocumento != null ? String.valueOf(idDocumento) : null, detalle, "EXITO");
+        }
+    }
 
     @Override
     @Transactional
@@ -130,6 +146,8 @@ public class DocumentoServiceImpl implements IDocumentoService {
 
             DocumentoAdjunto guardado = documentoRepository.save(doc);
             resultados.add(toDTO(guardado));
+            auditar("SUBIR_DOCUMENTO", guardado.getIdDocumento(),
+                    "Documento cargado: " + guardado.getNombreOriginal() + " (" + guardado.getEntidadTipo() + ")");
         }
 
         return resultados;
@@ -180,6 +198,8 @@ public class DocumentoServiceImpl implements IDocumentoService {
         DocumentoAdjunto doc = obtenerEntidad(id);
         doc.setActivo(false);
         documentoRepository.save(doc);
+        auditar("ELIMINAR_DOCUMENTO", doc.getIdDocumento(),
+                "Documento anulado lógicamente: " + doc.getNombreOriginal());
         log.info("Documento anulado lógicamente con ID: {} (archivo físico preservado para trazabilidad aduanera)", id);
     }
 

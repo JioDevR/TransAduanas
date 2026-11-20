@@ -1,6 +1,7 @@
 package pe.sga.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +23,7 @@ import pe.sga.repository.CotizacionRepository;
 import pe.sga.repository.IDocumentoAdjuntoRepository;
 import pe.sga.repository.NotificacionClienteRepository;
 import pe.sga.repository.UsuarioRepository;
+import pe.sga.service.IAuditoriaService;
 import pe.sga.service.ICotizacionPagoService;
 
 import java.math.BigDecimal;
@@ -39,6 +41,19 @@ public class CotizacionPagoServiceImpl implements ICotizacionPagoService {
     private final UsuarioRepository usuarioRepository;
     private final IDocumentoAdjuntoRepository documentoRepository;
     private final NotificacionClienteRepository notificacionClienteRepository;
+    private IAuditoriaService auditoriaService;
+
+    @Autowired(required = false)
+    public void setAuditoriaService(IAuditoriaService auditoriaService) {
+        this.auditoriaService = auditoriaService;
+    }
+
+    private void auditar(String modulo, String accion, Integer idPago, String detalle) {
+        if (auditoriaService != null) {
+            auditoriaService.registrar(modulo, accion, "COTIZACION_PAGO",
+                    idPago != null ? String.valueOf(idPago) : null, detalle, "EXITO");
+        }
+    }
 
     @Override
     @Transactional
@@ -103,6 +118,9 @@ public class CotizacionPagoServiceImpl implements ICotizacionPagoService {
             cotizacion.setEstadoPago("PENDIENTE_REVISION");
             cotizacionRepository.save(cotizacion);
         }
+        auditar("COMERCIAL", "REGISTRAR_PAGO_COTIZACION", guardado.getIdPago(),
+                "Pago " + guardado.getCodigoPago() + " (" + guardado.getMoneda() + " " + guardado.getMontoAbonado()
+                        + ") para cotización " + cotizacion.getCodigoCotizacion());
 
         return mapToResponse(guardado);
     }
@@ -246,6 +264,8 @@ public class CotizacionPagoServiceImpl implements ICotizacionPagoService {
         } else {
             throw new BadRequestException("Acción no válida: " + dto.getAccion() + ". Las opciones son APROBAR, OBSERVAR o RECHAZAR.");
         }
+        auditar("FINANZAS", "VALIDAR_PAGO_" + pago.getEstadoPago().name(), pago.getIdPago(),
+                "Validación pago " + pago.getCodigoPago() + " → " + pago.getEstadoPago().name());
 
         return mapToResponse(pago);
     }

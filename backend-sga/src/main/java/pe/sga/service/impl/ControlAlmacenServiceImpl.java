@@ -1,6 +1,7 @@
 package pe.sga.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pe.sga.dto.request.ControlAlmacenRequestDTO;
@@ -13,6 +14,7 @@ import pe.sga.exception.BadRequestException;
 import pe.sga.exception.ResourceNotFoundException;
 import pe.sga.repository.ControlAlmacenRepository;
 import pe.sga.repository.ExpedienteRepository;
+import pe.sga.service.IAuditoriaService;
 import pe.sga.service.IControlAlmacenService;
 
 import java.math.BigDecimal;
@@ -27,6 +29,19 @@ public class ControlAlmacenServiceImpl implements IControlAlmacenService {
 
     private final ControlAlmacenRepository controlAlmacenRepository;
     private final ExpedienteRepository expedienteRepository;
+    private IAuditoriaService auditoriaService;
+
+    @Autowired(required = false)
+    public void setAuditoriaService(IAuditoriaService auditoriaService) {
+        this.auditoriaService = auditoriaService;
+    }
+
+    private void auditar(String accion, Integer idCtrl, String detalle) {
+        if (auditoriaService != null) {
+            auditoriaService.registrar("ALMACEN", accion, "CONTROL_ALMACEN",
+                    idCtrl != null ? String.valueOf(idCtrl) : null, detalle, "EXITO");
+        }
+    }
 
     @Override
     @Transactional(readOnly = true)
@@ -104,7 +119,10 @@ public class ControlAlmacenServiceImpl implements IControlAlmacenService {
                 .observaciones(dto.getObservaciones())
                 .build();
 
-        return mapToResponse(controlAlmacenRepository.save(ca));
+        ControlAlmacen guardado = controlAlmacenRepository.save(ca);
+        auditar("INGRESO_ALMACEN", guardado.getIdControlAlmacen(),
+                "Ingreso a almacén " + guardado.getDepositoTemporal() + " (exp. " + expediente.getCodigoExpediente() + ")");
+        return mapToResponse(guardado);
     }
 
     @Override
@@ -132,7 +150,10 @@ public class ControlAlmacenServiceImpl implements IControlAlmacenService {
         if (dto.getPrecintoConforme() != null) ca.setPrecintoConforme(dto.getPrecintoConforme());
         if (dto.getObservaciones() != null) ca.setObservaciones(dto.getObservaciones());
 
-        return mapToResponse(controlAlmacenRepository.save(ca));
+        ControlAlmacen guardado = controlAlmacenRepository.save(ca);
+        auditar("ACTUALIZAR_ALMACEN", guardado.getIdControlAlmacen(),
+                "Actualización control almacén #" + guardado.getIdControlAlmacen() + " (" + guardado.getDepositoTemporal() + ")");
+        return mapToResponse(guardado);
     }
 
     @Override
@@ -148,7 +169,10 @@ public class ControlAlmacenServiceImpl implements IControlAlmacenService {
             ca.setObservaciones(dto.getObservaciones());
         }
 
-        return mapToResponse(controlAlmacenRepository.save(ca));
+        ControlAlmacen guardado = controlAlmacenRepository.save(ca);
+        auditar("SALIDA_ALMACEN", guardado.getIdControlAlmacen(),
+                "Salida autorizada en almacén #" + guardado.getIdControlAlmacen());
+        return mapToResponse(guardado);
     }
 
     @Override
@@ -158,6 +182,7 @@ public class ControlAlmacenServiceImpl implements IControlAlmacenService {
                 .orElseThrow(() -> new ResourceNotFoundException("Registro de almacén no encontrado con ID: " + idControlAlmacen));
         ca.setEstadoAlmacen("ANULADO");
         controlAlmacenRepository.save(ca);
+        auditar("ANULAR_ALMACEN", idControlAlmacen, "Control de almacén anulado #" + idControlAlmacen);
     }
 
     private ControlAlmacenResponseDTO mapToResponse(ControlAlmacen ca) {

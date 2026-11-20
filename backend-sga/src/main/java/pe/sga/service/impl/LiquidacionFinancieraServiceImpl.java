@@ -1,6 +1,7 @@
 package pe.sga.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pe.sga.dto.request.LiquidacionFinancieraRequestDTO;
@@ -21,6 +22,7 @@ import pe.sga.repository.ExpedienteRepository;
 import pe.sga.repository.IDocumentoAdjuntoRepository;
 import pe.sga.repository.LiquidacionFinancieraRepository;
 import pe.sga.repository.UsuarioRepository;
+import pe.sga.service.IAuditoriaService;
 import pe.sga.service.ILiquidacionFinancieraService;
 
 import java.math.BigDecimal;
@@ -38,6 +40,19 @@ public class LiquidacionFinancieraServiceImpl implements ILiquidacionFinancieraS
     private final ControlAlmacenRepository controlAlmacenRepository;
     private final UsuarioRepository usuarioRepository;
     private final IDocumentoAdjuntoRepository documentoRepository;
+    private IAuditoriaService auditoriaService;
+
+    @Autowired(required = false)
+    public void setAuditoriaService(IAuditoriaService auditoriaService) {
+        this.auditoriaService = auditoriaService;
+    }
+
+    private void auditar(String accion, Integer idLiq, String detalle) {
+        if (auditoriaService != null) {
+            auditoriaService.registrar("FINANZAS", accion, "LIQUIDACION",
+                    idLiq != null ? String.valueOf(idLiq) : null, detalle, "EXITO");
+        }
+    }
 
     @Override
     @Transactional(readOnly = true)
@@ -213,7 +228,10 @@ public class LiquidacionFinancieraServiceImpl implements ILiquidacionFinancieraS
                 .observaciones(dto.getObservaciones())
                 .build();
 
-        return mapToResponse(liquidacionRepository.save(lf));
+        LiquidacionFinanciera guardada = liquidacionRepository.save(lf);
+        auditar("EMITIR_LIQUIDACION", guardada.getIdLiquidacion(),
+                "Liquidación " + guardada.getCodigoLiquidacion() + " emitida (S/ " + guardada.getTotalGeneralPen() + ")");
+        return mapToResponse(guardada);
     }
 
     @Override
@@ -264,7 +282,10 @@ public class LiquidacionFinancieraServiceImpl implements ILiquidacionFinancieraS
         lf.setTotalGeneralUsd(totalUsd);
         lf.setMontoDetraccion(montoDet);
 
-        return mapToResponse(liquidacionRepository.save(lf));
+        LiquidacionFinanciera guardada = liquidacionRepository.save(lf);
+        auditar("ACTUALIZAR_LIQUIDACION", guardada.getIdLiquidacion(),
+                "Liquidación " + guardada.getCodigoLiquidacion() + " actualizada (S/ " + guardada.getTotalGeneralPen() + ")");
+        return mapToResponse(guardada);
     }
 
     @Override
@@ -298,7 +319,10 @@ public class LiquidacionFinancieraServiceImpl implements ILiquidacionFinancieraS
             lf.setObservaciones(dto.getObservaciones());
         }
 
-        return mapToResponse(liquidacionRepository.save(lf));
+        LiquidacionFinanciera guardada = liquidacionRepository.save(lf);
+        auditar("PAGAR_LIQUIDACION", guardada.getIdLiquidacion(),
+                "Pago registrado para liquidación " + guardada.getCodigoLiquidacion() + " (op. " + guardada.getNumeroOperacion() + ")");
+        return mapToResponse(guardada);
     }
 
     @Override
@@ -308,6 +332,7 @@ public class LiquidacionFinancieraServiceImpl implements ILiquidacionFinancieraS
                 .orElseThrow(() -> new ResourceNotFoundException("Liquidación no encontrada con ID: " + idLiquidacion));
         lf.setEstadoPago("ANULADO");
         liquidacionRepository.save(lf);
+        auditar("ANULAR_LIQUIDACION", idLiquidacion, "Anulación de liquidación " + lf.getCodigoLiquidacion());
     }
 
     @Override

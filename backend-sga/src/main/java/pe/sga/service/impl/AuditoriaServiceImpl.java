@@ -17,6 +17,7 @@ import pe.sga.dto.response.AdminDashboardResponseDTO;
 import pe.sga.dto.response.AuditoriaEventoDTO;
 import pe.sga.entity.AuditoriaEvento;
 import pe.sga.entity.Usuario;
+import pe.sga.entity.UsuarioCliente;
 import pe.sga.repository.AuditoriaEventoRepository;
 import pe.sga.service.IAuditoriaService;
 
@@ -43,6 +44,9 @@ public class AuditoriaServiceImpl implements IAuditoriaService {
             if (principal instanceof Usuario u) {
                 actor = u.getUsername();
                 rol = u.getRol() != null ? u.getRol().name() : null;
+            } else if (principal instanceof UsuarioCliente uc) {
+                actor = uc.getUsername();
+                rol = "CLIENTE_PORTAL";
             } else if (auth.getName() != null && !"anonymousUser".equals(auth.getName())) {
                 actor = auth.getName();
                 rol = auth.getAuthorities().stream()

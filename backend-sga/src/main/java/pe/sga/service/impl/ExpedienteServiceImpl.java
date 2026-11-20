@@ -1,6 +1,7 @@
 package pe.sga.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pe.sga.dto.request.ExpedienteActualizarDTO;
@@ -34,6 +35,7 @@ import pe.sga.repository.DespachoTransporteRepository;
 import pe.sga.repository.ExpedienteRepository;
 import pe.sga.repository.NotificacionClienteRepository;
 import pe.sga.repository.UsuarioRepository;
+import pe.sga.service.IAuditoriaService;
 import pe.sga.service.IDespachoTransporteService;
 import pe.sga.service.IExpedienteService;
 
@@ -57,6 +59,19 @@ public class ExpedienteServiceImpl implements IExpedienteService {
     private final NotificacionClienteRepository notificacionClienteRepository;
     private final DespachoTransporteRepository despachoRepository;
     private final IDespachoTransporteService despachoTransporteService;
+    private IAuditoriaService auditoriaService;
+
+    @Autowired(required = false)
+    public void setAuditoriaService(IAuditoriaService auditoriaService) {
+        this.auditoriaService = auditoriaService;
+    }
+
+    private void auditar(String accion, Integer idExp, String detalle) {
+        if (auditoriaService != null) {
+            auditoriaService.registrar("ADUANAS", accion, "EXPEDIENTE",
+                    idExp != null ? String.valueOf(idExp) : null, detalle, "EXITO");
+        }
+    }
 
 
     @Override
@@ -202,6 +217,8 @@ public class ExpedienteServiceImpl implements IExpedienteService {
                     .build();
             notificacionClienteRepository.save(notifAgente);
         }
+        auditar("APERTURAR_EXPEDIENTE", guardado.getIdExpediente(),
+                "Apertura expediente " + guardado.getCodigoExpediente() + " (cotización " + cotizacion.getCodigoCotizacion() + ")");
 
         return mapToResponse(guardado);
     }
@@ -227,7 +244,10 @@ public class ExpedienteServiceImpl implements IExpedienteService {
         if (dto.getNaveViaje() != null) expediente.setNaveViaje(dto.getNaveViaje());
         if (dto.getObservaciones() != null) expediente.setObservaciones(dto.getObservaciones());
 
-        return mapToResponse(expedienteRepository.save(expediente));
+        Expediente guardado = expedienteRepository.save(expediente);
+        auditar("ACTUALIZAR_EXPEDIENTE", guardado.getIdExpediente(),
+                "Actualización de expediente " + guardado.getCodigoExpediente());
+        return mapToResponse(guardado);
     }
 
     @Override
@@ -279,6 +299,8 @@ public class ExpedienteServiceImpl implements IExpedienteService {
             notificacionClienteRepository.save(notif);
         }
 
+        auditar("CONFIRMAR_SALIDA_ORIGEN", guardado.getIdExpediente(),
+                "Salida de origen confirmada para expediente " + guardado.getCodigoExpediente());
         return mapToResponse(guardado);
     }
 
@@ -311,7 +333,10 @@ public class ExpedienteServiceImpl implements IExpedienteService {
         String obsPrevias = expediente.getObservaciones() != null ? expediente.getObservaciones() + "\n" : "";
         expediente.setObservaciones(obsPrevias + bitacora);
 
-        return mapToResponse(expedienteRepository.save(expediente));
+        Expediente guardado = expedienteRepository.save(expediente);
+        auditar("ARRIBO_DESTINO_EXPEDIENTE", guardado.getIdExpediente(),
+                "Arribo a destino confirmado para " + guardado.getCodigoExpediente());
+        return mapToResponse(guardado);
     }
 
     @Override
@@ -360,7 +385,10 @@ public class ExpedienteServiceImpl implements IExpedienteService {
             expediente.setObservaciones(obsPrevias + notaVerde);
         }
 
-        return mapToResponse(expedienteRepository.save(expediente));
+        Expediente guardado = expedienteRepository.save(expediente);
+        auditar("ASIGNAR_CANAL_SUNAT", guardado.getIdExpediente(),
+                "DAM " + dam + " · Canal " + dto.getCanalSunat().name() + " en " + guardado.getCodigoExpediente());
+        return mapToResponse(guardado);
     }
 
     @Override
@@ -382,7 +410,10 @@ public class ExpedienteServiceImpl implements IExpedienteService {
         }
         expediente.setEstadoExpediente(EstadoExpediente.LEVANTE_AUTORIZADO);
 
-        return mapToResponse(expedienteRepository.save(expediente));
+        Expediente guardado = expedienteRepository.save(expediente);
+        auditar("AUTORIZAR_LEVANTE", guardado.getIdExpediente(),
+                "Levante autorizado para " + guardado.getCodigoExpediente());
+        return mapToResponse(guardado);
     }
 
     @Override
@@ -426,6 +457,8 @@ public class ExpedienteServiceImpl implements IExpedienteService {
             notificacionClienteRepository.save(notif);
         }
 
+        auditar("SOLICITAR_RECOJO_EXPORTACION", expediente.getIdExpediente(),
+                "Recojo de exportación solicitado para expediente " + expediente.getCodigoExpediente());
         return mapToResponse(expediente);
     }
 
@@ -476,6 +509,8 @@ public class ExpedienteServiceImpl implements IExpedienteService {
             notificacionClienteRepository.save(notif);
         }
 
+        auditar("CONFIRMAR_INGRESO_ORIGEN", guardado.getIdExpediente(),
+                "Ingreso a zona primaria confirmado para expediente " + guardado.getCodigoExpediente());
         return mapToResponse(guardado);
     }
 
@@ -495,7 +530,10 @@ public class ExpedienteServiceImpl implements IExpedienteService {
             String obsActual = expediente.getObservaciones() != null ? expediente.getObservaciones() + "\n" : "";
             expediente.setObservaciones(obsActual + "[DILIGENCIA AGENTE]: " + dto.getObservaciones());
         }
-        return mapToResponse(expedienteRepository.save(expediente));
+        Expediente guardado = expedienteRepository.save(expediente);
+        auditar("REGISTRAR_DILIGENCIA_EXPEDIENTE", guardado.getIdExpediente(),
+                "Diligencia aduanera registrada en expediente " + guardado.getCodigoExpediente());
+        return mapToResponse(guardado);
     }
 
     @Override
@@ -545,6 +583,8 @@ public class ExpedienteServiceImpl implements IExpedienteService {
             notificacionClienteRepository.save(notif);
         }
 
+        auditar("CONFIRMAR_EMBARQUE_ORIGEN", guardado.getIdExpediente(),
+                "Embarque internacional confirmado para expediente " + guardado.getCodigoExpediente());
         return mapToResponse(guardado);
     }
 
@@ -586,6 +626,8 @@ public class ExpedienteServiceImpl implements IExpedienteService {
             notificacionClienteRepository.save(notif);
         }
 
+        auditar("CONFIRMAR_RECEPCION_EXTERIOR", guardado.getIdExpediente(),
+                "Recepción en destino exterior confirmada para expediente " + guardado.getCodigoExpediente());
         return mapToResponse(guardado);
     }
 
@@ -630,6 +672,8 @@ public class ExpedienteServiceImpl implements IExpedienteService {
             notificacionClienteRepository.save(notif);
         }
 
+        auditar("SOLICITAR_TRANSPORTE_EXPEDIENTE", expediente.getIdExpediente(),
+                "Traslado terrestre solicitado para expediente " + expediente.getCodigoExpediente());
         return mapToResponse(expediente);
     }
 
@@ -654,7 +698,10 @@ public class ExpedienteServiceImpl implements IExpedienteService {
         String obsActual = expediente.getObservaciones() != null ? expediente.getObservaciones() + "\n" : "";
         expediente.setObservaciones(obsActual + notaRetiro);
 
-        return mapToResponse(expedienteRepository.save(expediente));
+        Expediente guardado = expedienteRepository.save(expediente);
+        auditar("RETIRO_DIRECTO_EXPEDIENTE", guardado.getIdExpediente(),
+                "Retiro directo registrado en " + guardado.getCodigoExpediente());
+        return mapToResponse(guardado);
     }
 
     @Override
@@ -703,6 +750,8 @@ public class ExpedienteServiceImpl implements IExpedienteService {
                     .build();
             notificacionClienteRepository.save(notif);
         }
+        auditar("CERRAR_EXPEDIENTE", cerrado.getIdExpediente(),
+                "Cierre conforme de expediente " + cerrado.getCodigoExpediente());
 
         return mapToResponse(cerrado);
     }
@@ -716,6 +765,7 @@ public class ExpedienteServiceImpl implements IExpedienteService {
         expediente.setEstadoExpediente(EstadoExpediente.ANULADO);
         expediente.setFechaCierre(LocalDateTime.now());
         expedienteRepository.save(expediente);
+        auditar("ANULAR_EXPEDIENTE", idExpediente, "Anulación de expediente " + expediente.getCodigoExpediente());
     }
 
     private String generarCodigoExpediente() {

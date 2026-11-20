@@ -109,4 +109,32 @@ class AdminTiFeaturesTest extends FullStackTestBase {
         assertEquals(200, call("GET", "/api/v1/admin/sistema/estado", tokenGer, null).statusCode());
         assertEquals(200, call("GET", "/api/v1/admin/sistema/roles-matriz", tokenGer, null).statusCode());
     }
+
+    @Test
+    void TI07_auditoriaRegistraOperacionesDeNegocioPorServicio() throws Exception {
+        var comercial = user(RolUsuario.AGENTE_COMERCIAL);
+        var tokenCom = login(comercial);
+        String doc = unique();
+        int idCliente = create(tokenCom, doc);
+        assertTrue(idCliente > 0);
+
+        var admin = user(RolUsuario.ADMINISTRADOR_TI);
+        var tokenAdmin = login(admin);
+        var aud = call("GET", "/api/v1/admin/auditoria?modulo=COMERCIAL&size=20", tokenAdmin, null);
+        assertEquals(200, aud.statusCode(), aud.body());
+        var items = tree(aud).path("data").path("items");
+        assertTrue(items.isArray());
+
+        boolean encontroCrearCliente = false;
+        for (var item : items) {
+            if ("CREAR_CLIENTE".equals(item.path("accion").asText())
+                    && "CLIENTE".equals(item.path("entidad").asText())
+                    && item.path("idEntidad").asInt() == idCliente
+                    && "EXITO".equals(item.path("resultado").asText())) {
+                encontroCrearCliente = true;
+                break;
+            }
+        }
+        assertTrue(encontroCrearCliente, "Debe registrarse CREAR_CLIENTE en Auditoría TI bajo módulo COMERCIAL");
+    }
 }

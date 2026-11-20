@@ -27,7 +27,14 @@ export function useAdminDashboard() {
   const moduloOptions = [
     { label: 'Todos los módulos', value: 'TODOS' },
     { label: 'Seguridad TI', value: 'SEGURIDAD_TI' },
+    { label: 'Comercial', value: 'COMERCIAL' },
+    { label: 'Aduanas', value: 'ADUANAS' },
+    { label: 'Finanzas', value: 'FINANZAS' },
+    { label: 'Almacén', value: 'ALMACEN' },
+    { label: 'Transporte', value: 'TRANSPORTE' },
     { label: 'Portal B2B', value: 'PORTAL_B2B' },
+    { label: 'Documentos', value: 'DOCUMENTOS' },
+    { label: 'Maestros', value: 'MAESTROS' },
     { label: 'Logs TI', value: 'LOGS_TI' }
   ]
 

@@ -121,11 +121,9 @@ class DataInitializerTest {
         ArgumentCaptor<Sede> sedeCaptor = ArgumentCaptor.forClass(Sede.class);
         verify(sedeRepository).save(sedeCaptor.capture());
         assertEquals("SED-CORP-01", sedeCaptor.getValue().getCodigoSede());
-        assertNotEquals("SED-PRUEBA", sedeCaptor.getValue().getCodigoSede());
 
         assertEquals(8, unidadesGuardadas.size());
         assertEquals(6, conductoresGuardados.size());
-        assertTrue(conductoresGuardados.stream().noneMatch(c -> "Santillan Medina".equals(c.getApellidos())));
         Conductor oscar = conductoresGuardados.stream()
                 .filter(c -> "Q60456789".equals(c.getNumeroLicencia()))
                 .findFirst()

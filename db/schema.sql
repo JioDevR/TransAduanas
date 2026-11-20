@@ -640,5 +640,29 @@ CREATE INDEX idx_doc_activo ON documento_adjunto (activo);
 CREATE INDEX idx_notifcli_cliente ON notificacion_cliente (id_cliente);
 CREATE INDEX idx_notifcli_leido ON notificacion_cliente (id_cliente, leido);
 
+-- =============================================================================
+-- 9. AUDITORÍA DE EVENTOS TI Y SEGURIDAD
+-- =============================================================================
+
+CREATE TABLE auditoria_evento (
+    id_evento BIGINT NOT NULL AUTO_INCREMENT,
+    fecha DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    usuario_actor VARCHAR(80) NOT NULL,
+    rol_actor VARCHAR(50) NULL,
+    modulo VARCHAR(50) NOT NULL,
+    accion VARCHAR(60) NOT NULL,
+    entidad VARCHAR(60) NULL,
+    id_entidad VARCHAR(50) NULL,
+    detalle VARCHAR(500) NULL,
+    ip_origen VARCHAR(64) NULL,
+    resultado VARCHAR(20) NOT NULL DEFAULT 'EXITO',
+    PRIMARY KEY (id_evento)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+
+CREATE INDEX idx_auditoria_fecha ON auditoria_evento (fecha);
+CREATE INDEX idx_auditoria_actor ON auditoria_evento (usuario_actor);
+CREATE INDEX idx_auditoria_modulo ON auditoria_evento (modulo);
+CREATE INDEX idx_auditoria_resultado ON auditoria_evento (resultado);
+
 -- Rehabilitación de validación de claves foráneas
 SET FOREIGN_KEY_CHECKS = 1;

@@ -1,6 +1,7 @@
 package pe.sga.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -10,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import pe.sga.config.SecurityRoles;
 import pe.sga.dto.response.ApiResponseDTO;
 import pe.sga.service.IAdminLogsService;
+import pe.sga.service.IAuditoriaService;
 
 import java.util.Map;
 
@@ -20,6 +22,12 @@ import java.util.Map;
 public class AdminLogsController {
 
     private final IAdminLogsService adminLogsService;
+    private IAuditoriaService auditoriaService;
+
+    @Autowired(required = false)
+    public void setAuditoriaService(IAuditoriaService auditoriaService) {
+        this.auditoriaService = auditoriaService;
+    }
 
     @GetMapping
     public ResponseEntity<ApiResponseDTO<Map<String, Object>>> getLogs(
@@ -48,6 +56,10 @@ public class AdminLogsController {
             @RequestParam(value = "tipo", required = false, defaultValue = "all") String tipo
     ) {
         adminLogsService.clearLogFile(tipo);
+        if (auditoriaService != null) {
+            auditoriaService.registrar("LOGS_TI", "VACIAR_LOG", "LOG_ARCHIVO", tipo,
+                    "Archivo de bitácora vaciado (" + tipo + ")", "EXITO");
+        }
         return ResponseEntity.ok(ApiResponseDTO.ok("Archivo de log vaciado exitosamente", null));
     }
 }

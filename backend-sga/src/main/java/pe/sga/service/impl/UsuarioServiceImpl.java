@@ -1,6 +1,7 @@
 package pe.sga.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -17,6 +18,7 @@ import pe.sga.exception.BadRequestException;
 import pe.sga.exception.ResourceNotFoundException;
 import pe.sga.repository.SedeRepository;
 import pe.sga.repository.UsuarioRepository;
+import pe.sga.service.IAuditoriaService;
 import pe.sga.service.IUsuarioService;
 
 import java.time.LocalDateTime;
@@ -31,19 +33,47 @@ public class UsuarioServiceImpl implements IUsuarioService {
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider tokenProvider;
 
+    private IAuditoriaService auditoriaService;
+
+    @Autowired(required = false)
+    public void setAuditoriaService(IAuditoriaService auditoriaService) {
+        this.auditoriaService = auditoriaService;
+    }
+
+    private void auditar(String actor, String rol, String accion, String idEntidad, String detalle, String resultado) {
+        if (auditoriaService != null) {
+            if (actor != null) {
+                auditoriaService.registrarConActor(actor, rol, "SEGURIDAD_TI", accion, "USUARIO", idEntidad, detalle, resultado);
+            } else {
+                auditoriaService.registrar("SEGURIDAD_TI", accion, "USUARIO", idEntidad, detalle, resultado);
+            }
+        }
+    }
+
     @Override
     @Transactional
     public AuthResponseDTO autenticar(LoginRequestDTO loginRequest) {
         String identifier = loginRequest.getUsername() != null ? loginRequest.getUsername().trim() : "";
         Usuario usuario = usuarioRepository.findByUsername(identifier)
                 .or(() -> usuarioRepository.findByCorreoInstitucional(identifier))
-                .orElseThrow(() -> new BadCredentialsException("Credenciales incorrectas"));
+                .orElse(null);
+
+        if (usuario == null) {
+            auditar(identifier, null, "LOGIN_FALLIDO", null, "Usuario no encontrado en intento de acceso", "FALLO");
+            throw new BadCredentialsException("Credenciales incorrectas");
+        }
 
         if (!Boolean.TRUE.equals(usuario.getEstadoActivo())) {
+            auditar(usuario.getUsername(), usuario.getRol() != null ? usuario.getRol().name() : null,
+                    "LOGIN_FALLIDO", String.valueOf(usuario.getIdUsuario()),
+                    "Intento de acceso con cuenta inactiva", "FALLO");
             throw new BadCredentialsException("El usuario se encuentra inactivo en el sistema");
         }
 
         if (!passwordEncoder.matches(loginRequest.getPassword(), usuario.getPasswordHash())) {
+            auditar(usuario.getUsername(), usuario.getRol() != null ? usuario.getRol().name() : null,
+                    "LOGIN_FALLIDO", String.valueOf(usuario.getIdUsuario()),
+                    "Contraseña incorrecta", "FALLO");
             throw new BadCredentialsException("Credenciales incorrectas");
         }
 
@@ -51,6 +81,9 @@ public class UsuarioServiceImpl implements IUsuarioService {
         usuarioRepository.save(usuario);
 
         String token = tokenProvider.generateToken(usuario);
+        auditar(usuario.getUsername(), usuario.getRol() != null ? usuario.getRol().name() : null,
+                "LOGIN_EXITOSO", String.valueOf(usuario.getIdUsuario()),
+                "Inicio de sesión interno exitoso", "EXITO");
 
         return AuthResponseDTO.builder()
                 .token(token)
@@ -131,7 +164,10 @@ public class UsuarioServiceImpl implements IUsuarioService {
                 .estadoActivo(true)
                 .build();
 
-        return mapToResponse(usuarioRepository.save(usuario));
+        Usuario guardado = usuarioRepository.save(usuario);
+        auditar(null, null, "CREAR_USUARIO", String.valueOf(guardado.getIdUsuario()),
+                "Alta de usuario interno @" + guardado.getUsername() + " (" + guardado.getRol() + ")", "EXITO");
+        return mapToResponse(guardado);
     }
 
     @Override
@@ -170,7 +206,10 @@ public class UsuarioServiceImpl implements IUsuarioService {
         if (dto.getCodigoSunat() != null) usuario.setCodigoSunat(dto.getCodigoSunat());
         if (dto.getEstadoActivo() != null) usuario.setEstadoActivo(dto.getEstadoActivo());
 
-        return mapToResponse(usuarioRepository.save(usuario));
+        Usuario actualizado = usuarioRepository.save(usuario);
+        auditar(null, null, "ACTUALIZAR_USUARIO", String.valueOf(actualizado.getIdUsuario()),
+                "Actualización de usuario interno @" + actualizado.getUsername() + " (" + actualizado.getRol() + ")", "EXITO");
+        return mapToResponse(actualizado);
     }
 
     @Override
@@ -180,6 +219,8 @@ public class UsuarioServiceImpl implements IUsuarioService {
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con ID: " + idUsuario));
         usuario.setEstadoActivo(false);
         usuarioRepository.save(usuario);
+        auditar(null, null, "DESACTIVAR_USUARIO", String.valueOf(usuario.getIdUsuario()),
+                "Desactivación lógica de usuario interno @" + usuario.getUsername(), "EXITO");
     }
 
     @Override
@@ -189,6 +230,22 @@ public class UsuarioServiceImpl implements IUsuarioService {
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con ID: " + idUsuario));
         usuario.setEstadoActivo(true);
         usuarioRepository.save(usuario);
+        auditar(null, null, "REACTIVAR_USUARIO", String.valueOf(usuario.getIdUsuario()),
+                "Reactivación de usuario interno @" + usuario.getUsername(), "EXITO");
+    }
+
+    @Override
+    @Transactional
+    public void resetearPassword(Integer idUsuario, String nuevaPassword) {
+        if (nuevaPassword == null || nuevaPassword.trim().length() < 6) {
+            throw new BadRequestException("La contraseña debe tener al menos 6 caracteres");
+        }
+        Usuario usuario = usuarioRepository.findById(idUsuario)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con ID: " + idUsuario));
+        usuario.setPasswordHash(passwordEncoder.encode(nuevaPassword));
+        usuarioRepository.save(usuario);
+        auditar(null, null, "RESET_PASSWORD_INTERNO", String.valueOf(usuario.getIdUsuario()),
+                "Restablecimiento administrativo de contraseña para @" + usuario.getUsername(), "EXITO");
     }
 
     private UsuarioResponseDTO mapToResponse(Usuario u) {

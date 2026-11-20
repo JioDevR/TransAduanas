@@ -27,4 +27,6 @@ public interface IUsuarioService {
     void eliminarPorEstado(Integer idUsuario);
 
     void reactivar(Integer idUsuario);
+
+    void resetearPassword(Integer idUsuario, String nuevaPassword);
 }

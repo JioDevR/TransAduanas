@@ -11,6 +11,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import pe.sga.config.SecurityRoles;
 import pe.sga.dto.request.UsuarioCreateDTO;
+import pe.sga.dto.request.UsuarioResetPasswordDTO;
 import pe.sga.dto.request.UsuarioUpdateDTO;
 import pe.sga.dto.response.ApiResponseDTO;
 import pe.sga.dto.response.UsuarioResponseDTO;
@@ -80,6 +81,15 @@ public class UsuarioController {
     public ResponseEntity<ApiResponseDTO<Void>> reactivar(@PathVariable Integer id) {
         usuarioService.reactivar(id);
         return ResponseEntity.ok(ApiResponseDTO.ok("Usuario reactivado exitosamente", null));
+    }
+
+    @PatchMapping("/{id}/reset-password")
+    @PreAuthorize(SecurityRoles.ACCESS_USUARIOS_WRITE)
+    public ResponseEntity<ApiResponseDTO<Void>> resetearPassword(
+            @PathVariable Integer id,
+            @Valid @RequestBody UsuarioResetPasswordDTO dto) {
+        usuarioService.resetearPassword(id, dto.getNuevaPassword());
+        return ResponseEntity.ok(ApiResponseDTO.ok("Contraseña del usuario restablecida exitosamente", null));
     }
 
     @GetMapping("/exportar-pdf")

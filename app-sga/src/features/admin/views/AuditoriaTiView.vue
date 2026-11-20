@@ -1,25 +1,6 @@
 <template>
   <div class="auditoria-ti-view fade-in">
-    <!-- 1. Barra de Estado y Acciones sgaUI (Título único en Topbar) -->
-    <header class="sga-dash-header">
-      <div class="sga-dash-meta">
-        <Tag :value="`${totalElements} eventos registrados`" severity="secondary" />
-      </div>
-
-      <div class="sga-dash-actions">
-        <Button
-          label="Actualizar"
-          icon="pi pi-sync"
-          severity="secondary"
-          outlined
-          size="small"
-          :loading="loading"
-          @click="fetchEventos(0)"
-        />
-      </div>
-    </header>
-
-    <!-- 2. Filtros sgaUI -->
+    <!-- 1. Filtros sgaUI -->
     <section class="sga-card-surface sga-filters-card">
       <div class="sga-filters-grid">
         <div class="sga-filter-field">
@@ -101,15 +82,33 @@
       </div>
     </section>
 
-    <!-- 3. Listado Dual sgaUI (SgaListShell) -->
-    <SgaListShell v-model:viewMode="viewMode" title="Bitácora Estructurada">
-      <template #filters>
-        <span class="sga-status-note sga-text-muted">
-          Trazabilidad persistente en base de datos (accesos, cuentas, contraseñas y logs).
-        </span>
-      </template>
+    <!-- 2. Listado sgaUI (Solo Tabla) -->
+    <section class="sga-list-panel">
+      <div class="sga-panel-header">
+        <div class="sga-panel-title-group">
+          <h2 class="sga-panel-title">Eventos</h2>
+        </div>
 
-      <div v-if="viewMode === 'table'">
+        <Button
+          label="Actualizar"
+          icon="pi pi-sync"
+          severity="secondary"
+          outlined
+          size="small"
+          :loading="loading"
+          @click="fetchEventos(0)"
+        />
+      </div>
+
+      <div class="sga-card-surface sga-table-card">
+        <div class="sga-table-toolbar">
+          <div class="sga-toolbar-filters">
+            <span class="sga-status-note sga-text-muted">
+              Trazabilidad persistente en base de datos (accesos, cuentas, operaciones y logs).
+            </span>
+          </div>
+        </div>
+
         <DataTable
           :value="items"
           :loading="loading"
@@ -185,52 +184,21 @@
             </template>
           </Column>
         </DataTable>
-      </div>
 
-      <div v-else class="sga-canvas-grid">
-        <article v-for="ev in items" :key="ev.idEvento" class="sga-canvas-card">
-          <div class="sga-card-top">
-            <span class="sga-card-code sga-mono">#{{ ev.idEvento }} · {{ ev.accion }}</span>
-            <Tag
-              :value="ev.resultado"
-              :severity="ev.resultado === 'EXITO' ? 'success' : 'danger'"
-              rounded
-            />
-          </div>
-          <div class="sga-card-meta-grid">
-            <div class="sga-meta-item">
-              <span class="sga-meta-label">ACTOR</span>
-              <span class="sga-meta-val sga-mono">@{{ ev.usuarioActor }}</span>
-            </div>
-            <div class="sga-meta-item">
-              <span class="sga-meta-label">MÓDULO</span>
-              <span class="sga-meta-val">{{ ev.modulo }}</span>
-            </div>
-            <div class="sga-meta-item full-span">
-              <span class="sga-meta-label">DETALLE</span>
-              <span class="sga-meta-val">{{ ev.detalle || '—' }}</span>
-            </div>
-          </div>
-          <div class="sga-card-footer">
-            <small class="sga-mono sga-text-muted">{{ formatFecha(ev.fecha) }}</small>
-            <Button label="Detalle" size="small" outlined severity="secondary" @click="openDetail(ev)" />
-          </div>
-        </article>
+        <BasePagination
+          v-if="totalElements > 0"
+          :current-page="page + 1"
+          :total-pages="Math.max(1, totalPages)"
+          :total-items="totalElements"
+          :start-index="page * pageSize + 1"
+          :end-index="Math.min((page + 1) * pageSize, totalElements)"
+          item-label="eventos"
+          :disabled="loading"
+          @prev="fetchEventos(page - 1)"
+          @next="fetchEventos(page + 1)"
+        />
       </div>
-
-      <BasePagination
-        v-if="totalElements > 0"
-        :current-page="page + 1"
-        :total-pages="Math.max(1, totalPages)"
-        :total-items="totalElements"
-        :start-index="page * pageSize + 1"
-        :end-index="Math.min((page + 1) * pageSize, totalElements)"
-        item-label="eventos"
-        :disabled="loading"
-        @prev="fetchEventos(page - 1)"
-        @next="fetchEventos(page + 1)"
-      />
-    </SgaListShell>
+    </section>
 
     <!-- Modal Detalle Evento (sga-forms.css) -->
     <Dialog
@@ -294,14 +262,12 @@ import Dialog from 'primevue/dialog'
 import InputText from 'primevue/inputtext'
 import Select from 'primevue/select'
 import Tag from 'primevue/tag'
-import SgaListShell from '@/shared/components/SgaListShell.vue'
 import BasePagination from '@/shared/components/BasePagination.vue'
 import { useNotification } from '@/shared/composables/useNotification'
 import { auditoriaService } from '../services/auditoriaService'
 
 const { showError } = useNotification()
 
-const viewMode = ref('table')
 const loading = ref(false)
 const items = ref([])
 const totalElements = ref(0)

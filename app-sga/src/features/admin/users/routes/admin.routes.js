@@ -43,7 +43,7 @@ export const adminRoutes = [
     meta: {
       requiresAuth: true,
       roles: [ROLES.ADMINISTRADOR_TI],
-      title: 'Auditoría de Eventos TI - SGA'
+      title: 'Registro de Eventos y Seguridad - SGA'
     }
   },
   {

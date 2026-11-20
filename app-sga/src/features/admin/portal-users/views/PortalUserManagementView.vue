@@ -7,49 +7,17 @@
       @saved="handleUserSaved"
     />
 
-    <template v-else>
-      <header class="sga-dash-header">
-        <div class="sga-dash-meta">
-          <Tag :value="`${users.length} cuentas B2B`" severity="secondary" />
-        </div>
-
-        <div class="sga-dash-actions">
-          <Button
-            label="Actualizar"
-            icon="pi pi-sync"
-            severity="secondary"
-            outlined
-            size="small"
-            :loading="loading"
-            @click="loadData"
-          />
-          <Button
-            label="Reporte PDF"
-            icon="pi pi-file-pdf"
-            severity="secondary"
-            outlined
-            size="small"
-            :loading="exportingPdf"
-            @click="handleExportPdf"
-          />
-          <Button
-            label="Nuevo Usuario Portal"
-            icon="pi pi-plus"
-            size="small"
-            @click="openCreateView"
-          />
-        </div>
-      </header>
-
-      <PortalUserTable
-        :users="users"
-        :loading="loading"
-        @edit="openEdit"
-        @audit="openAudit"
-        @reset-password="openResetPassword"
-        @toggle-status="handleToggleStatus"
-      />
-    </template>
+    <PortalUserTable
+      v-else
+      :users="users"
+      :loading="loading"
+      @edit="openEdit"
+      @audit="openAudit"
+      @reset-password="openResetPassword"
+      @toggle-status="handleToggleStatus"
+      @refresh="loadData"
+      @create="openCreateView"
+    />
 
     <PortalUserAuditModal v-model:visible="showAuditModal" :user="userToAudit" />
 
@@ -63,13 +31,10 @@
 
 <script setup>
 import { ref, onMounted, watch } from 'vue'
-import Button from 'primevue/button'
-import Tag from 'primevue/tag'
 import { portalUserService } from '../services/portalUserService'
 import { useNavigationStore } from '@/core/stores/navigationStore'
 import { useNotification } from '@/shared/composables/useNotification'
 import { useConfirmation } from '@/shared/composables/useConfirmation'
-import { openBlobInNewTab } from '@/shared/utils/download'
 import PortalUserTable from '../components/PortalUserTable.vue'
 import PortalUserForm from '../components/PortalUserForm.vue'
 import PortalUserAuditModal from '../components/PortalUserAuditModal.vue'
@@ -81,7 +46,6 @@ const { confirmAction } = useConfirmation()
 
 const users = ref([])
 const loading = ref(false)
-const exportingPdf = ref(false)
 const isEditing = ref(false)
 const selectedUser = ref(null)
 
@@ -171,19 +135,6 @@ const handleToggleStatus = async (user) => {
     await loadData()
   } catch (err) {
     showError(err.response?.data?.message || 'Error al modificar el estado del usuario')
-  }
-}
-
-const handleExportPdf = async () => {
-  if (exportingPdf.value) return
-  exportingPdf.value = true
-  try {
-    const blobData = await portalUserService.downloadPdf(true)
-    openBlobInNewTab(blobData, 'reporte-usuarios-portal-activos.pdf')
-  } catch (err) {
-    showError('No se pudo generar el reporte PDF del portal B2B.')
-  } finally {
-    exportingPdf.value = false
   }
 }
 </script>

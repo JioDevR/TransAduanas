@@ -19,13 +19,22 @@
           @click="navigateTo('create-user')"
         />
         <Button
-          label="Reporte PDF"
+          label="PDF Personal"
           icon="pi pi-file-pdf"
           severity="secondary"
           outlined
           size="small"
           :loading="exportingPdf"
           @click="handleExportPdf"
+        />
+        <Button
+          label="PDF Portal"
+          icon="pi pi-file-pdf"
+          severity="secondary"
+          outlined
+          size="small"
+          :loading="exportingPortalPdf"
+          @click="handleExportPortalPdf"
         />
         <Button
           v-if="authStore.isAdministradorTI"
@@ -432,6 +441,7 @@ import { useTheme } from '@/shared/composables/useTheme'
 import { useNotification } from '@/shared/composables/useNotification'
 import { openBlobInNewTab } from '@/shared/utils/download'
 import { userService } from '../../users/services/userService'
+import { portalUserService } from '../../portal-users/services/portalUserService'
 import { useAdminDashboard, formatBytes, formatUptime } from '../../composables/useAdminDashboard'
 
 const router = useRouter()
@@ -440,6 +450,7 @@ const navigationStore = useNavigationStore()
 const { isDark } = useTheme()
 const { showError } = useNotification()
 const exportingPdf = ref(false)
+const exportingPortalPdf = ref(false)
 
 const handleExportPdf = async () => {
   if (exportingPdf.value) return
@@ -451,6 +462,19 @@ const handleExportPdf = async () => {
     showError('No se pudo generar el reporte PDF de usuarios internos.')
   } finally {
     exportingPdf.value = false
+  }
+}
+
+const handleExportPortalPdf = async () => {
+  if (exportingPortalPdf.value) return
+  exportingPortalPdf.value = true
+  try {
+    const blobData = await portalUserService.downloadPdf(true)
+    openBlobInNewTab(blobData, 'reporte-usuarios-portal-activos.pdf')
+  } catch {
+    showError('No se pudo generar el reporte PDF del portal B2B.')
+  } finally {
+    exportingPortalPdf.value = false
   }
 }
 

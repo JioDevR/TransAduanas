@@ -1,12 +1,12 @@
-[CmdletBinding()]
-param([string]$Proyecto = "$env:USERPROFILE\Music\TransAduanas")
+﻿[CmdletBinding()]
+param([string]$Proyecto = ([IO.Path]::GetFullPath((Join-Path $PSScriptRoot "../../../.."))))
 $ErrorActionPreference = 'Stop'
 # Solo ejecutar durante la prueba formal, despues de configurar Nexus.
 if ([string]::IsNullOrWhiteSpace($env:NEXUS_USERNAME) -or
     [string]::IsNullOrWhiteSpace($env:NEXUS_PASSWORD)) {
     throw 'Configurar NEXUS_USERNAME y NEXUS_PASSWORD en esta terminal sin compartirlas.'
 }
-$backend = Join-Path $Proyecto 'backend'
+$backend = Join-Path $Proyecto 'backend-sga'
 $settings = Join-Path $Proyecto 'docs\pruebas\despliegue\settings-nexus.xml.example'
 Get-Item -LiteralPath $settings -ErrorAction Stop | Out-Null
 Push-Location -LiteralPath $backend

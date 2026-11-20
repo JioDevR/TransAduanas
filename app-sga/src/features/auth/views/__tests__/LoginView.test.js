@@ -1,14 +1,10 @@
 import { describe, it, expect } from 'vitest'
-import LoginView from '../LoginView.vue'
+import LoginView, { resolvePostLoginRoute } from '../LoginView.vue'
 import { getHomeRouteForRole, ROLES } from '@/core/auth/roles'
 
 describe('LoginView - Sanitización de Redirección y Redirección Segura', () => {
   function computeTargetRedirect(redirectQuery, userRole) {
-    const redirectParam = typeof redirectQuery === 'string' && redirectQuery.startsWith('/') && !redirectQuery.startsWith('//')
-      ? redirectQuery
-      : null
-    const defaultHome = getHomeRouteForRole(userRole)
-    return redirectParam && redirectParam !== '/login' ? redirectParam : defaultHome
+    return resolvePostLoginRoute(redirectQuery, getHomeRouteForRole(userRole))
   }
 
   it('exporta un componente Vue válido', () => {

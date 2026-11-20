@@ -1,10 +1,10 @@
 # Preparación de integración continua de TransAduanas
 
-Estado: archivo preparado; pendiente incorporar al proyecto y ejecutar en GitHub. No constituye evidencia de una ejecución exitosa.
+Estado: workflow incorporado en esta rama y adaptado a main; pendiente ejecutar en GitHub. No constituye evidencia de una ejecución exitosa.
 
 ## Archivo y ubicación futura
 
-Copiar `.github/workflows/preparar-artefactos.yml` de esta entrega a la misma ruta relativa dentro de `C:\Users\asus\Music\TransAduanas`. No reemplaza el código de la aplicación.
+El archivo `.github/workflows/preparar-artefactos.yml` ya forma parte de esta rama. Usa `backend-sga`, `app-sga`, `app-b2b` y `app-landing`.
 
 El workflow solo tiene `workflow_dispatch`: se solicitará manualmente más adelante. Para que GitHub muestre la ejecución manual, el archivo debe estar en la rama predeterminada del repositorio. No se configura ejecución por push o pull request durante esta preparación.
 

@@ -1,145 +1,136 @@
 <template>
-  <aside class="form-sidebar-column">
-    <!-- Tarjeta de Proforma Comercial en Vivo -->
-    <div class="preview-proforma-card">
-      <div class="card-ribbon">
-        <i class="pi pi-file-edit"></i>
-        <span>PROFORMA COMERCIAL OFICIAL</span>
+  <aside class="sga-proforma-aside">
+    <div class="sga-proforma-card">
+      <div class="sga-proforma-header">
+        <span class="sga-proforma-code">{{ form.codigoCotizacion || 'COT - 2026 - BORRADOR' }}</span>
+        <div class="sga-proforma-client">
+          <span class="sga-micro-label">CLIENTE DESTINATARIO:</span>
+          <p v-if="selectedClientObject" class="sga-client-name">
+            {{ selectedClientObject.razonSocial }}
+            <span class="sga-client-doc">({{ selectedClientObject.tipoDocumento }}: {{ selectedClientObject.numeroDocumento }})</span>
+          </p>
+        </div>
       </div>
 
-      <div class="proforma-code-row">
-        <span class="doc-code-lg">{{ form.codigoCotizacion || 'COT-2026-BORRADOR' }}</span>
+      <div class="sga-proforma-divider"></div>
+
+      <div class="sga-proforma-section">
+        <div class="sga-proforma-row">
+          <span class="sga-row-label">Régimen Aduanero:</span>
+          <span class="sga-row-val">{{ regimenDisplay }}</span>
+        </div>
+
+        <div class="sga-proforma-row">
+          <span class="sga-row-label">Modalidad de Transporte:</span>
+          <span class="sga-row-val">{{ modalidadDisplay }}</span>
+        </div>
+
+        <div class="sga-proforma-row">
+          <span class="sga-row-label">País de Origen:</span>
+          <span class="sga-row-val">{{ paisOrigen || '-' }}</span>
+        </div>
+
+        <div class="sga-proforma-row">
+          <span class="sga-row-label">País de Destino:</span>
+          <span class="sga-row-val">{{ paisDestino || '-' }}</span>
+        </div>
+
+        <div v-if="selectedPuertoEnvio || selectedPuertoDestino" class="sga-proforma-row">
+          <span class="sga-row-label">Ruta Aduanera:</span>
+          <span class="sga-row-val font-mono">{{ selectedPuertoEnvio?.codigoPuerto || '-' }} → {{ selectedPuertoDestino?.codigoPuerto || '-' }}</span>
+        </div>
+
+        <div class="sga-proforma-row">
+          <span class="sga-row-label">Tipo de Carga:</span>
+          <span class="sga-row-val">{{ tipoCargaDisplay }}</span>
+        </div>
+
+        <div class="sga-proforma-row">
+          <span class="sga-row-label">Mercancía:</span>
+          <span class="sga-row-val">{{ mercanciaDisplay }}</span>
+        </div>
+
+        <div class="sga-proforma-row">
+          <span class="sga-row-label">Transporte SGA:</span>
+          <span class="sga-row-val">{{ transporteDisplay }}</span>
+        </div>
+
+        <div class="sga-proforma-row">
+          <span class="sga-row-label">Vigencia:</span>
+          <span class="sga-row-val">{{ form.validezDias ? `${form.validezDias} Días` : '-' }}</span>
+        </div>
+
+        <div v-if="docsCount > 0" class="sga-proforma-row">
+          <span class="sga-row-label">Documentos:</span>
+          <span class="sga-row-val">{{ docsCount }} adjunto(s)</span>
+        </div>
       </div>
 
-      <div class="proforma-client-snippet">
-        <span class="proforma-sub-label">CLIENTE DESTINATARIO:</span>
-        <h4 class="proforma-client-name">
-          {{ selectedClientObject ? selectedClientObject.razonSocial : 'Seleccione un cliente en Paso 1' }}
-        </h4>
-        <span v-if="selectedClientObject" class="proforma-client-doc">
-          {{ selectedClientObject.tipoDocumento }}: {{ selectedClientObject.numeroDocumento }}
-        </span>
+      <div class="sga-proforma-divider"></div>
+
+      <div class="sga-proforma-section">
+        <span class="sga-section-kicker">VALORACIÓN ADUANERA</span>
+
+        <div class="sga-proforma-row">
+          <span class="sga-row-label">Valor FOB (Mercancía):</span>
+          <span class="sga-row-num">${{ formatVal(form.valorFob) }}</span>
+        </div>
+
+        <div v-if="form.regimenAduanero !== 'EXPORTACION_DEFINITIVA'" class="sga-proforma-row">
+          <span class="sga-row-label">Seguro Estimado:</span>
+          <span class="sga-row-num">${{ formatVal(form.montoSeguroEstimado) }}</span>
+        </div>
+
+        <div v-if="form.regimenAduanero !== 'EXPORTACION_DEFINITIVA'" class="sga-proforma-row">
+          <span class="sga-row-label">Valor CIF Base:</span>
+          <span class="sga-row-num is-strong">${{ formatVal(valorCifBase) }}</span>
+        </div>
       </div>
 
-      <div class="proforma-details-list">
-        <div class="proforma-row">
-          <span class="p-label">Régimen Aduanero:</span>
-          <span class="p-val">{{ getRegimenLabel ? getRegimenLabel(form.regimenAduanero) : form.regimenAduanero }}</span>
+      <div class="sga-proforma-divider"></div>
+
+      <div class="sga-proforma-section">
+        <span class="sga-section-kicker">CONCEPTOS A LIQUIDAR (SGA)</span>
+
+        <div class="sga-proforma-row">
+          <span class="sga-row-label">Flete Internacional:</span>
+          <span class="sga-row-num">${{ formatVal(form.montoFleteEstimado) }}</span>
         </div>
 
-        <div v-if="selectedPuertoEnvio || selectedPuertoDestino" class="proforma-row">
-          <span class="p-label">Ruta Aduanera:</span>
-          <span class="p-val">{{ selectedPuertoEnvio?.codigoPuerto || 'Origen' }} ➔ {{ selectedPuertoDestino?.codigoPuerto || 'Destino' }}</span>
+        <div class="sga-proforma-row">
+          <span class="sga-row-label">Gastos Op. &amp; Agencia:</span>
+          <span class="sga-row-num">${{ formatVal(form.montoHonorariosEstimado) }}</span>
         </div>
 
-        <div v-if="selectedTipoCarga" class="proforma-row">
-          <span class="p-label">Tipo de Carga:</span>
-          <span class="p-val">{{ selectedTipoCarga.codigo }}</span>
-        </div>
-
-        <div v-if="selectedMercancia" class="proforma-row">
-          <span class="p-label">Mercancía:</span>
-          <div class="p-val-col">
-            <span class="merc-code-text">{{ selectedMercancia.codigo }}</span>
-            <span v-if="selectedMercancia.requierePermiso" class="badge-restringida-mini">
-              Req: {{ selectedMercancia.entidadReguladora }}
-            </span>
-            <span v-else class="badge-libre-mini">Libre</span>
-          </div>
-        </div>
-
-        <div class="proforma-row">
-          <span class="p-label">Transporte SGA:</span>
-          <span :class="['p-val', form.servicioTransporte ? 'text-accent font-semibold' : '']">
-            {{ form.servicioTransporte ? (form.origenProvincia && form.destinoProvincia ? `✓ ${form.origenProvincia} → ${form.destinoProvincia}` : '✓ Interno SGA') : 'Externo' }}
+        <div class="sga-proforma-row">
+          <span class="sga-row-label">Tributos SUNAT:</span>
+          <span class="sga-row-num">
+            {{ form.regimenAduanero === 'EXPORTACION_DEFINITIVA' ? 'Inafecto ($0.00)' : `$${formatVal(form.montoTributosEstimado)}` }}
           </span>
         </div>
 
-        <div class="proforma-row">
-          <span class="p-label">Vigencia:</span>
-          <span class="p-val">{{ form.validezDias }} Días Calendario</span>
-        </div>
-
-        <div class="proforma-divider"></div>
-
-        <!-- 1. Base Imponible / Valoración (No entra al total de liquidación SGA) -->
-        <div class="proforma-section-header">
-          <span class="section-micro-title">VALORACIÓN ADUANERA (BASE)</span>
-        </div>
-
-        <div class="proforma-row">
-          <span class="p-label">Valor FOB (Mercancía):</span>
-          <span class="p-val font-semibold">${{ formatVal(form.valorFob) }}</span>
-        </div>
-
-        <div v-if="form.regimenAduanero !== 'EXPORTACION_DEFINITIVA'" class="proforma-row">
-          <span class="p-label">Seguro Estimado:</span>
-          <span class="p-val">${{ formatVal(form.montoSeguroEstimado) }}</span>
-        </div>
-
-        <div v-if="form.regimenAduanero !== 'EXPORTACION_DEFINITIVA'" class="proforma-row cif-row">
-          <span class="p-label">Valor CIF Base:</span>
-          <span class="p-val text-accent font-bold">${{ formatVal((Number(form.valorFob) || 0) + (Number(form.montoFleteEstimado) || 0) + (Number(form.montoSeguroEstimado) || 0)) }}</span>
-        </div>
-
-        <div class="proforma-divider"></div>
-
-        <!-- 2. Conceptos a Liquidar por Despacho y Logística SGA -->
-        <div class="proforma-section-header">
-          <span class="section-micro-title">CONCEPTOS A LIQUIDAR (SGA)</span>
-        </div>
-
-        <div class="proforma-row">
-          <span class="p-label">Flete Internacional:</span>
-          <span class="p-val">${{ formatVal(form.montoFleteEstimado) }}</span>
-        </div>
-
-        <div class="proforma-row">
-          <span class="p-label">Gastos Op. & Agencia:</span>
-          <span class="p-val">${{ formatVal(form.montoHonorariosEstimado) }}</span>
-        </div>
-
-        <div class="proforma-row">
-          <span class="p-label">Tributos SUNAT:</span>
-          <span :class="['p-val', form.regimenAduanero === 'EXPORTACION_DEFINITIVA' ? 'text-success' : '']">
-            {{ form.regimenAduanero === 'EXPORTACION_DEFINITIVA' ? 'Inafecto ($0.00)' : '$' + formatVal(form.montoTributosEstimado) }}
-          </span>
-        </div>
-
-        <div v-if="form.servicioTransporte && Number(form.costoTransporteInterno) > 0" class="proforma-row">
-          <span class="p-label">Flete Transporte Local:</span>
-          <span class="p-val text-accent font-semibold">${{ formatVal(form.costoTransporteInterno) }}</span>
-        </div>
-
-        <div v-if="docsCount > 0" class="proforma-row">
-          <span class="p-label">Documentos:</span>
-          <span class="p-val text-info"><i class="pi pi-paperclip"></i> {{ docsCount }} adjunto(s)</span>
-        </div>
-
-        <div class="proforma-divider"></div>
-
-        <!-- Total Liquidado (Excluye FOB de mercancía) -->
-        <div class="proforma-total-container">
-          <div class="proforma-row total-row">
-            <span class="p-label-total">TOTAL ESTIMADO:</span>
-            <span class="p-val-total">${{ formatVal(form.totalCotizado) }} USD</span>
-          </div>
-          <span class="total-fob-excluded-hint">
-            <i class="pi pi-info-circle"></i>
-            {{ form.regimenAduanero === 'EXPORTACION_DEFINITIVA' ? 'Flete + Gastos Op. (Excluye valor FOB)' : 'Flete + Gastos Op. + Tributos (Excluye valor FOB)' }}
-          </span>
+        <div v-if="form.servicioTransporte && Number(form.costoTransporteInterno) > 0" class="sga-proforma-row">
+          <span class="sga-row-label">Flete Transporte Local:</span>
+          <span class="sga-row-num">${{ formatVal(form.costoTransporteInterno) }}</span>
         </div>
       </div>
 
-      <div class="card-footer-stamp">
-        <i class="pi pi-check-circle"></i>
-        <span>SISTEMA DE GESTIÓN ADUANERA • MÓDULO COMERCIAL</span>
+      <div class="sga-proforma-divider"></div>
+
+      <div class="sga-proforma-total">
+        <span class="sga-total-label">TOTAL ESTIMADO:</span>
+        <div class="sga-total-value">
+          <span class="sga-total-amount">${{ formatVal(form.totalCotizado) }}</span>
+          <span class="sga-total-currency">USD</span>
+        </div>
       </div>
     </div>
   </aside>
 </template>
 
 <script setup>
+import { computed } from 'vue'
+
 const props = defineProps({
   form: {
     type: Object,
@@ -148,6 +139,18 @@ const props = defineProps({
   selectedClientObject: {
     type: Object,
     default: null
+  },
+  modalidadTransporte: {
+    type: String,
+    default: ''
+  },
+  paisOrigen: {
+    type: String,
+    default: ''
+  },
+  paisDestino: {
+    type: String,
+    default: ''
   },
   selectedPuertoEnvio: {
     type: Object,
@@ -165,18 +168,6 @@ const props = defineProps({
     type: Object,
     default: null
   },
-  isEditMode: {
-    type: Boolean,
-    default: false
-  },
-  submitting: {
-    type: Boolean,
-    default: false
-  },
-  isFormReady: {
-    type: Boolean,
-    default: false
-  },
   getRegimenLabel: {
     type: Function,
     default: null
@@ -191,225 +182,195 @@ const props = defineProps({
   }
 })
 
-defineEmits(['submit', 'cancel'])
-
 const formatVal = (val) => {
   if (props.formatNumber) return props.formatNumber(val)
   return Number(val || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
+
+const valorCifBase = computed(() => {
+  return (
+    (Number(props.form.valorFob) || 0) +
+    (Number(props.form.montoFleteEstimado) || 0) +
+    (Number(props.form.montoSeguroEstimado) || 0)
+  )
+})
+
+const regimenDisplay = computed(() => {
+  if (!props.form.regimenAduanero) return '-'
+  return props.getRegimenLabel ? props.getRegimenLabel(props.form.regimenAduanero) : props.form.regimenAduanero
+})
+
+const modalidadDisplay = computed(() => {
+  if (!props.form.regimenAduanero && !props.selectedPuertoEnvio && !props.selectedPuertoDestino) {
+    return '-'
+  }
+  if (props.modalidadTransporte === 'AEREO') return 'Carga Aérea'
+  if (props.modalidadTransporte === 'MARITIMO') return 'Carga Marítima'
+  return '-'
+})
+
+const tipoCargaDisplay = computed(() => {
+  if (!props.selectedTipoCarga) return '-'
+  return `${props.selectedTipoCarga.codigo} — ${props.selectedTipoCarga.nombre}`
+})
+
+const mercanciaDisplay = computed(() => {
+  if (!props.selectedMercancia) return '-'
+  return `${props.selectedMercancia.codigo} — ${props.selectedMercancia.nombre}`
+})
+
+const transporteDisplay = computed(() => {
+  if (props.form.servicioTransporte) {
+    if (props.form.origenProvincia && props.form.destinoProvincia) {
+      return `${props.form.origenProvincia} → ${props.form.destinoProvincia}`
+    }
+    return 'Interno SGA'
+  }
+  return '-'
+})
 </script>
 
 <style scoped>
-.form-sidebar-column {
+.sga-proforma-aside {
   position: sticky;
   top: 1.5rem;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-5, 1.25rem);
 }
 
-.preview-proforma-card {
+.sga-proforma-card {
   background: var(--color-bg-surface);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-xl, 1rem);
-  padding: var(--space-6, 1.5rem);
-  box-shadow: var(--shadow-subtle);
+  border-radius: var(--sga-card-radius, 14px);
+  padding: var(--sga-card-padding-y, 1.75rem) var(--sga-card-padding-x, 2rem);
   display: flex;
   flex-direction: column;
-  position: relative;
-  overflow: hidden;
+  gap: 1rem;
 }
 
-.card-ribbon {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  font-size: var(--font-size-2xs, 0.65rem);
-  font-weight: 800;
-  letter-spacing: 0.1em;
-  color: var(--color-primary);
-  background: var(--color-bg-subtle);
-  padding: 0.25rem 0.65rem;
-  border-radius: var(--radius-full, 9999px);
-  margin-bottom: var(--space-3, 0.75rem);
-  align-self: flex-start;
+.sga-proforma-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
-.proforma-code-row {
-  margin-bottom: var(--space-3, 0.75rem);
-}
-
-.doc-code-lg {
+.sga-proforma-code {
   font-family: var(--font-mono);
-  font-size: var(--font-size-md, 1rem);
-  font-weight: 800;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--color-text-main);
+}
+
+.sga-proforma-client {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.sga-micro-label {
+  font-size: 0.6875rem;
+  font-weight: 700;
   letter-spacing: 0.05em;
-  color: var(--color-text-main);
-  background: var(--color-bg-subtle);
-  border: 1px solid var(--color-border);
-  padding: 0.3rem 0.75rem;
-  border-radius: var(--radius-md, 0.5rem);
-  display: inline-block;
+  color: var(--color-text-subtle);
 }
 
-.proforma-client-snippet {
-  display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
-  margin-bottom: var(--space-4, 1rem);
-  padding-bottom: var(--space-3, 0.75rem);
-  border-bottom: 1px solid var(--color-border-subtle);
-}
-
-.proforma-sub-label {
-  font-size: var(--font-size-2xs, 0.65rem);
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  color: var(--color-text-muted);
-}
-
-.proforma-client-name {
-  font-family: var(--font-sans);
-  font-size: var(--font-size-sm, 0.875rem);
-  font-weight: 700;
-  color: var(--color-text-main);
+.sga-client-name {
   margin: 0;
-  line-height: 1.3;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-text-main);
 }
 
-.proforma-client-doc {
+.sga-client-doc {
+  font-weight: 400;
+  color: var(--color-text-muted);
   font-family: var(--font-mono);
-  font-size: var(--font-size-2xs, 0.65rem);
-  color: var(--color-primary);
-  font-weight: 700;
+  font-size: 0.75rem;
 }
 
-.proforma-details-list {
+.sga-proforma-divider {
+  height: 1px;
+  background: var(--color-border);
+}
+
+.sga-proforma-section {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2, 0.5rem);
-  margin-bottom: var(--space-5, 1.25rem);
+  gap: 0.55rem;
 }
 
-.proforma-row {
+.sga-section-kicker {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--color-text-subtle);
+  margin-bottom: 0.15rem;
+}
+
+.sga-proforma-row {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  font-size: var(--font-size-xs, 0.75rem);
-  gap: var(--space-2, 0.5rem);
+  align-items: baseline;
+  gap: 0.75rem;
+  font-size: 0.8125rem;
 }
 
-.p-label {
+.sga-row-label {
   color: var(--color-text-muted);
-  font-weight: 600;
 }
 
-.p-val {
+.sga-row-val {
   color: var(--color-text-main);
-  font-weight: 700;
+  text-align: right;
+  font-weight: 500;
+}
+
+.sga-row-num {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-muted);
   text-align: right;
 }
 
-.p-val-col {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 0.15rem;
+.sga-row-num.is-strong {
+  color: var(--color-text-main);
+  font-weight: 700;
 }
 
-.merc-code-text {
+.sga-proforma-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding-top: 0.25rem;
+}
+
+.sga-total-label {
+  font-size: 0.75rem;
   font-weight: 700;
-  font-size: var(--font-size-xs, 0.75rem);
+  letter-spacing: 0.04em;
   color: var(--color-text-main);
 }
 
-.badge-restringida-mini {
-  font-size: var(--font-size-2xs, 0.65rem);
-  background: var(--color-warning-bg);
-  color: var(--color-warning-text);
-  border: 1px solid var(--color-warning-border);
-  padding: 0.1rem 0.35rem;
-  border-radius: var(--radius-sm, 0.25rem);
-  font-weight: 700;
-}
-
-.badge-libre-mini {
-  font-size: var(--font-size-2xs, 0.65rem);
-  background: var(--color-success-bg);
-  color: var(--color-success-text);
-  border: 1px solid var(--color-success-border);
-  padding: 0.1rem 0.35rem;
-  border-radius: var(--radius-sm, 0.25rem);
-  font-weight: 700;
-}
-
-.text-accent {
-  color: var(--color-primary) !important;
-  font-weight: 700;
-}
-
-.proforma-divider {
-  height: 1px;
-  background: var(--color-border-subtle);
-  margin: 0.35rem 0;
-}
-
-.proforma-section-header {
-  padding: 0.2rem 0;
-}
-
-.section-micro-title {
-  font-size: var(--font-size-2xs, 0.6rem);
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  color: var(--color-text-muted);
-  text-transform: uppercase;
-}
-
-.proforma-total-container {
+.sga-total-value {
   display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.total-row {
-  padding-top: var(--space-1, 0.25rem);
-}
-
-.total-fob-excluded-hint {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  font-size: var(--font-size-2xs, 0.65rem);
-  color: var(--color-primary);
-  font-weight: 600;
-  background: var(--color-bg-subtle);
-  padding: 0.25rem 0.5rem;
-  border-radius: var(--radius-sm, 0.25rem);
-  border: 1px dashed var(--color-border);
-}
-
-.p-label-total {
-  font-size: var(--font-size-xs, 0.75rem);
-  font-weight: 800;
-  letter-spacing: 0.05em;
-  color: var(--color-text-main);
-}
-
-.p-val-total {
-  font-family: var(--font-mono);
-  font-size: var(--font-size-md, 1.15rem);
-  font-weight: 800;
-  color: var(--color-primary);
-}
-
-.card-footer-stamp {
-  display: flex;
-  align-items: center;
+  align-items: baseline;
   gap: 0.35rem;
-  font-size: var(--font-size-2xs, 0.65rem);
-  color: var(--color-text-muted);
-  letter-spacing: 0.05em;
+}
+
+.sga-total-amount {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 1.125rem;
   font-weight: 700;
+  color: var(--color-text-main);
+}
+
+.sga-total-currency {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--color-text-subtle);
+}
+
+.font-mono {
+  font-family: var(--font-mono);
 }
 </style>

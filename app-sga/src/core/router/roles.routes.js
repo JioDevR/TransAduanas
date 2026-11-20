@@ -22,13 +22,13 @@ export const rolesRoutes = [
     }
   },
   {
-    path: '/gestion-aduanera/liquidacion',
-    name: 'LiquidacionAduaneraModule',
-    component: () => import('@/features/liquidacion/views/LiquidacionAduaneraView.vue'),
+    path: '/gestion-aduanera/apertura/:idCotizacion',
+    name: 'AperturaExpedienteFormView',
+    component: () => import('@/features/aduanas/views/AperturaExpedienteFormView.vue'),
     meta: {
       requiresAuth: true,
-      roles: [ROLES.ADMINISTRADOR_TI, ROLES.GERENTE_GENERAL, ROLES.SUPERVISOR_ADUANERO],
-      title: 'Liquidación Aduanera - SGA'
+      roles: [ROLES.ADMINISTRADOR_TI, ROLES.GERENTE_GENERAL, ROLES.SUPERVISOR_ADUANERO, ROLES.AGENTE_ADUANERO],
+      title: 'Apertura de Expediente Aduanero - SGA'
     }
   },
   {

@@ -26,37 +26,45 @@
 
       <div class="field-item">
         <label for="diligencia-detalle">Acta y Detalle de la Diligencia Aduanera *</label>
-        <textarea
+        <Textarea
           id="diligencia-detalle"
           v-model.trim="form.detalleInspeccion"
           rows="4"
+          autoResize
           placeholder="Ej. Reconocimiento físico concluido a satisfacción con Especialista SUNAT. Precinto PE-SUNAT intacto, bultos cotejados sin discrepancias..."
-          class="textarea-input"
           required
-        ></textarea>
+          fluid
+        />
         <span class="field-hint">Ingrese los hallazgos técnicos, número de acta de aforo o dictamen del especialista SUNAT</span>
       </div>
 
       <div class="field-item">
         <label for="diligencia-obs">Observaciones Adicionales / Incidencias</label>
-        <textarea
+        <Textarea
           id="diligencia-obs"
           v-model.trim="form.observaciones"
           rows="2"
+          autoResize
           placeholder="Sin incidencias aduaneras / Cumple con regulaciones vigentes..."
-          class="textarea-input"
-        ></textarea>
+          fluid
+        />
       </div>
 
       <div class="modal-actions">
-        <button type="button" class="btn-modal-cancel" @click="handleClose" :disabled="loading">
-          Cancelar
-        </button>
-        <button type="submit" class="btn-modal-save" :disabled="loading">
-          <i v-if="loading" class="pi pi-spin pi-spinner"></i>
-          <i v-else class="pi pi-check"></i>
-          <span>Registrar Diligencia Superada</span>
-        </button>
+        <Button
+          type="button"
+          label="Cancelar"
+          severity="secondary"
+          outlined
+          @click="handleClose"
+          :disabled="loading"
+        />
+        <Button
+          type="submit"
+          label="Registrar Diligencia Superada"
+          icon="pi pi-check"
+          :loading="loading"
+        />
       </div>
     </form>
   </BaseModal>
@@ -64,6 +72,8 @@
 
 <script setup>
 import { ref, watch } from 'vue'
+import Button from 'primevue/button'
+import Textarea from 'primevue/textarea'
 import BaseModal from '@/shared/components/BaseModal.vue'
 import { expedienteService } from '../services/expedienteService'
 

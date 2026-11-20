@@ -14,7 +14,7 @@ jobs:
     defaults:
       run:
         shell: pwsh
-        working-directory: backend
+        working-directory: backend-sga
     steps:
       - uses: actions/checkout@v7
         with:
@@ -24,7 +24,7 @@ jobs:
           distribution: temurin
           java-version: '21'
           cache: maven
-          cache-dependency-path: backend/pom.xml
+          cache-dependency-path: backend-sga/pom.xml
       - name: Registrar versiones
         run: |
           java -version
@@ -42,7 +42,9 @@ jobs:
           if ([int]$suite.tests -ne 15 -or [int]$suite.failures -ne 0 -or [int]$suite.errors -ne 0 -or [int]$suite.skipped -ne 0) {
             throw 'Se requieren exactamente 15 pruebas, sin fallos, errores ni omisiones.'
           }
-          Get-FileHash -LiteralPath 'target/sga-backend-0.5.1.jar' -Algorithm SHA256 |
+          [xml]$pom = Get-Content './pom.xml' -Raw
+          $jar = "target/sga-backend-$($pom.project.version).jar"
+          Get-FileHash -LiteralPath $jar -Algorithm SHA256 |
             Format-List | Out-File 'target/hash-jar.txt' -Encoding utf8
           "Commit: $env:GITHUB_SHA" | Out-File 'target/commit.txt' -Encoding utf8
       - name: Conservar reportes incluso si fallan las pruebas
@@ -50,7 +52,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: reportes-backend-${{ github.run_id }}
-          path: backend/target/surefire-reports/
+          path: backend-sga/target/surefire-reports/
           if-no-files-found: warn
           retention-days: 14
       - name: Conservar JAR verificado
@@ -58,9 +60,9 @@ jobs:
         with:
           name: backend-${{ github.sha }}
           path: |
-            backend/target/sga-backend-0.5.1.jar
-            backend/target/hash-jar.txt
-            backend/target/commit.txt
+            backend-sga/target/*.jar
+            backend-sga/target/hash-jar.txt
+            backend-sga/target/commit.txt
           if-no-files-found: error
           retention-days: 14
 
@@ -70,7 +72,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        app: [app-sga, app-portal-cliente, landing]
+        app: [app-sga, app-b2b, app-landing]
     defaults:
       run:
         shell: pwsh

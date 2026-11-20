@@ -1,0 +1,554 @@
+package pe.sga.service.impl;
+
+import com.openhtmltopdf.pdfboxout.PdfRendererBuilder;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.thymeleaf.context.Context;
+import org.thymeleaf.spring6.SpringTemplateEngine;
+import pe.sga.dto.reporte.UsuarioPortalReporteItemDTO;
+import pe.sga.dto.reporte.UsuarioReporteItemDTO;
+import pe.sga.dto.response.CotizacionResponseDTO;
+import pe.sga.entity.CatalogoMercancia;
+import pe.sga.entity.CatalogoPuerto;
+import pe.sga.entity.CatalogoTipoCarga;
+import pe.sga.entity.Cliente;
+import pe.sga.entity.Sede;
+import pe.sga.entity.Usuario;
+import pe.sga.entity.UsuarioCliente;
+import pe.sga.entity.enums.EstadoCotizacion;
+import pe.sga.repository.CatalogoMercanciaRepository;
+import pe.sga.repository.CatalogoPuertoRepository;
+import pe.sga.repository.CatalogoTipoCargaRepository;
+import pe.sga.repository.ClienteRepository;
+import pe.sga.repository.SedeRepository;
+import pe.sga.repository.UsuarioClienteRepository;
+import pe.sga.repository.UsuarioRepository;
+import pe.sga.service.ICotizacionService;
+import pe.sga.service.IReporteJasperService;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.text.NumberFormat;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Objects;
+
+@Service
+@RequiredArgsConstructor
+@Slf4j
+public class ReporteJasperServiceImpl implements IReporteJasperService {
+
+    private static final DateTimeFormatter REPORT_DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+
+    private final UsuarioRepository usuarioRepository;
+    private final UsuarioClienteRepository usuarioClienteRepository;
+    private final SedeRepository sedeRepository;
+    private final CatalogoPuertoRepository puertoRepository;
+    private final CatalogoTipoCargaRepository tipoCargaRepository;
+    private final CatalogoMercanciaRepository mercanciaRepository;
+    private final ClienteRepository clienteRepository;
+    private final ICotizacionService cotizacionService;
+    private final SpringTemplateEngine templateEngine;
+
+    // =========================================================================
+    // 01. USUARIOS INTERNOS - ADMINISTRACIÓN TI (HTML / OPENHTMLTOPDF)
+    // =========================================================================
+    @Override
+    @Transactional(readOnly = true)
+    public ByteArrayInputStream exportarUsuariosPdf() {
+        return exportarUsuariosPdf(true);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ByteArrayInputStream exportarUsuariosPdf(boolean soloActivos) {
+        List<Usuario> usuarios = (soloActivos
+                ? usuarioRepository.findByEstadoActivoTrue()
+                : usuarioRepository.findAll())
+                .stream()
+                .sorted(Comparator.comparing(
+                        Usuario::getUsername,
+                        Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER)))
+                .toList();
+
+        List<UsuarioReporteItemDTO> items = usuarios.stream()
+                .map(this::mapUsuarioToReporteItem)
+                .toList();
+
+        long totalSedes = items.stream()
+                .map(UsuarioReporteItemDTO::getSede)
+                .filter(s -> !"Sin sede".equals(s))
+                .distinct()
+                .count();
+
+        Map<String, Object> variables = buildTiReportVariables(
+                soloActivos ? "Listado de Usuarios Internos Activos" : "Listado General de Usuarios Internos",
+                "ADMINISTRACIÓN TI // PERSONAL INTERNO",
+                soloActivos ? "Listado de Usuarios Internos Activos" : "Listado General de Usuarios Internos",
+                soloActivos ? "Solo cuentas activas" : "Todas las cuentas registradas",
+                soloActivos ? "Usuarios Activos" : "Usuarios en Listado",
+                items.size(),
+                usuarioRepository.count()
+        );
+        variables.put("items", items);
+        variables.put("totalSedes", totalSedes);
+
+        return renderHtmlToPdf("reports/reporte-usuarios", variables);
+    }
+
+    // =========================================================================
+    // 01B. USUARIOS PORTAL B2B - ADMINISTRACIÓN TI (HTML / OPENHTMLTOPDF)
+    // =========================================================================
+    @Override
+    @Transactional(readOnly = true)
+    public ByteArrayInputStream exportarUsuariosPortalPdf() {
+        return exportarUsuariosPortalPdf(true);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ByteArrayInputStream exportarUsuariosPortalPdf(boolean soloActivos) {
+        List<UsuarioCliente> usuariosPortal = (soloActivos
+                ? usuarioClienteRepository.findByEstadoActivoTrueWithCliente()
+                : usuarioClienteRepository.findAllWithCliente())
+                .stream()
+                .sorted(Comparator.comparing(
+                        UsuarioCliente::getUsername,
+                        Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER)))
+                .toList();
+
+        List<UsuarioPortalReporteItemDTO> items = usuariosPortal.stream()
+                .map(this::mapUsuarioPortalToReporteItem)
+                .toList();
+
+        long totalEmpresas = items.stream()
+                .map(UsuarioPortalReporteItemDTO::getEmpresa)
+                .filter(e -> !"—".equals(e))
+                .distinct()
+                .count();
+
+        Map<String, Object> variables = buildTiReportVariables(
+                soloActivos ? "Listado de Usuarios Activos - Portal B2B" : "Listado General de Usuarios - Portal B2B",
+                "ADMINISTRACIÓN TI // PORTAL CLIENTES B2B",
+                soloActivos ? "Listado de Usuarios Activos del Portal B2B" : "Listado General de Usuarios del Portal B2B",
+                soloActivos ? "Solo cuentas activas" : "Todas las cuentas registradas",
+                soloActivos ? "Cuentas Activas" : "Cuentas en Listado",
+                items.size(),
+                usuarioClienteRepository.count()
+        );
+        variables.put("items", items);
+        variables.put("totalEmpresas", totalEmpresas);
+
+        return renderHtmlToPdf("reports/reporte-usuarios-portal", variables);
+    }
+
+    // =========================================================================
+    // 02. SEDES Y AGENCIAS TERRITORIALES (CORPORATE HTML / OPENHTMLTOPDF)
+    // =========================================================================
+    @Override
+    @Transactional(readOnly = true)
+    public ByteArrayInputStream exportarSedesPdf() {
+        List<Sede> sedes = sedeRepository.findAll();
+
+        long operativas = sedes.stream()
+                .filter(s -> "ACTIVO".equalsIgnoreCase(s.getEstado()) || "OPERATIVO".equalsIgnoreCase(s.getEstado()))
+                .count();
+        long inactivas = sedes.size() - operativas;
+        long totalDistritos = sedes.stream()
+                .map(Sede::getDistrito)
+                .filter(Objects::nonNull)
+                .distinct()
+                .count();
+
+        Map<String, Object> variables = new HashMap<>();
+        variables.put("items", sedes);
+        variables.put("totalSedes", sedes.size());
+        variables.put("totalOperativas", operativas);
+        variables.put("totalInactivas", inactivas);
+        variables.put("totalDistritos", totalDistritos > 0 ? totalDistritos : 1);
+        variables.put("fechaGeneracion", LocalDateTime.now().format(REPORT_DATE_FORMATTER));
+
+        return renderHtmlToPdf("reports/reporte-sedes", variables);
+    }
+
+    // =========================================================================
+    // 03. PUERTOS Y TERMINALES ADUANEROS (CORPORATE HTML / OPENHTMLTOPDF)
+    // =========================================================================
+    @Override
+    @Transactional(readOnly = true)
+    public ByteArrayInputStream exportarPuertosPdf() {
+        List<CatalogoPuerto> puertos = puertoRepository.findAll();
+
+        long maritimos = puertos.stream()
+                .filter(p -> p.getTipo() != null && p.getTipo().toUpperCase().contains("MARIT"))
+                .count();
+        long activos = puertos.stream()
+                .filter(p -> "ACTIVO".equalsIgnoreCase(p.getEstado()))
+                .count();
+        long otros = puertos.size() - maritimos;
+
+        Map<String, Object> variables = new HashMap<>();
+        variables.put("items", puertos);
+        variables.put("totalPuertos", puertos.size());
+        variables.put("totalMaritimos", maritimos);
+        variables.put("totalOtros", otros);
+        variables.put("totalActivos", activos);
+        variables.put("fechaGeneracion", LocalDateTime.now().format(REPORT_DATE_FORMATTER));
+
+        return renderHtmlToPdf("reports/reporte-puertos", variables);
+    }
+
+    // =========================================================================
+    // 04. TIPOS DE CARGA & CONTENEDOR (CORPORATE HTML / OPENHTMLTOPDF)
+    // =========================================================================
+    @Override
+    @Transactional(readOnly = true)
+    public ByteArrayInputStream exportarTiposCargaPdf() {
+        List<CatalogoTipoCarga> tipos = tipoCargaRepository.findAll();
+
+        long activos = tipos.stream()
+                .filter(t -> "ACTIVO".equalsIgnoreCase(t.getEstado()))
+                .count();
+        long fcl = tipos.stream()
+                .filter(t -> (t.getCodigo() != null && t.getCodigo().toUpperCase().contains("CONT"))
+                        || (t.getNombre() != null && t.getNombre().toUpperCase().contains("CONTENEDOR")))
+                .count();
+        long lcl = tipos.size() - fcl;
+
+        Map<String, Object> variables = new HashMap<>();
+        variables.put("items", tipos);
+        variables.put("totalTipos", tipos.size());
+        variables.put("totalActivos", activos);
+        variables.put("totalFcl", fcl);
+        variables.put("totalLcl", lcl);
+        variables.put("fechaGeneracion", LocalDateTime.now().format(REPORT_DATE_FORMATTER));
+
+        return renderHtmlToPdf("reports/reporte-tipos-carga", variables);
+    }
+
+    // =========================================================================
+    // 05. MERCANCÍAS & SUBPARTIDAS ARANCELARIAS (CORPORATE HTML / OPENHTMLTOPDF)
+    // =========================================================================
+    @Override
+    @Transactional(readOnly = true)
+    public ByteArrayInputStream exportarMercanciasPdf() {
+        List<CatalogoMercancia> mercancias = mercanciaRepository.findAll();
+
+        long vuce = mercancias.stream()
+                .filter(m -> Boolean.TRUE.equals(m.getRequierePermiso()))
+                .count();
+        long libre = mercancias.size() - vuce;
+        long activos = mercancias.stream()
+                .filter(m -> "ACTIVO".equalsIgnoreCase(m.getEstado()))
+                .count();
+
+        Map<String, Object> variables = new HashMap<>();
+        variables.put("items", mercancias);
+        variables.put("totalMercancias", mercancias.size());
+        variables.put("totalVuce", vuce);
+        variables.put("totalLibre", libre);
+        variables.put("totalActivos", activos);
+        variables.put("fechaGeneracion", LocalDateTime.now().format(REPORT_DATE_FORMATTER));
+
+        return renderHtmlToPdf("reports/reporte-mercancias", variables);
+    }
+
+    // =========================================================================
+    // 06. GESTIÓN COMERCIAL - REPORTE EJECUTIVO DE MÉTRICAS (HTML / OPENHTMLTOPDF)
+    // =========================================================================
+    @Override
+    @Transactional(readOnly = true)
+    public ByteArrayInputStream exportarReporteComercialPdf(
+            LocalDate desde,
+            LocalDate hasta,
+            Integer idUsuarioComercial,
+            String regimen,
+            Usuario usuarioActual) {
+
+        List<CotizacionResponseDTO> base = cotizacionService.listar(false, null, null, idUsuarioComercial, usuarioActual);
+        List<CotizacionResponseDTO> filtradas = base.stream()
+                .filter(c -> desde == null || (c.getFechaEmision() != null && !c.getFechaEmision().isBefore(desde)))
+                .filter(c -> hasta == null || (c.getFechaEmision() != null && !c.getFechaEmision().isAfter(hasta)))
+                .filter(c -> regimen == null || regimen.isBlank() || "ALL".equalsIgnoreCase(regimen)
+                        || regimen.equalsIgnoreCase(c.getRegimenAduanero()))
+                .toList();
+
+        int totalCotizaciones = filtradas.size();
+        BigDecimal totalMonto = filtradas.stream()
+                .map(c -> safeDecimal(c.getTotalCotizado()))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal totalAbonado = filtradas.stream()
+                .map(c -> safeDecimal(c.getTotalAbonado()))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal totalSaldoPendiente = filtradas.stream()
+                .map(c -> safeDecimal(c.getSaldoPendiente()))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        long aprobadasCount = filtradas.stream()
+                .filter(c -> c.getEstado() == EstadoCotizacion.APROBADA)
+                .count();
+        double conversionRate = totalCotizaciones > 0
+                ? (aprobadasCount * 100.0) / totalCotizaciones
+                : 0.0;
+        BigDecimal ticketPromedio = totalCotizaciones > 0
+                ? totalMonto.divide(BigDecimal.valueOf(totalCotizaciones), 2, RoundingMode.HALF_UP)
+                : BigDecimal.ZERO;
+
+        List<Cliente> clientes = clienteRepository.findAll();
+        long clientesEfectivos = clientes.stream().filter(cl -> !Boolean.TRUE.equals(cl.getEsProspecto())).count();
+        long prospectos = clientes.size() - clientesEfectivos;
+        int sinAsignarCount = cotizacionService.listarSinAsignar().size();
+
+        // Desglose por estado
+        List<Map<String, Object>> estadosBreakdown = new ArrayList<>();
+        for (EstadoCotizacion estado : EstadoCotizacion.values()) {
+            List<CotizacionResponseDTO> delEstado = filtradas.stream()
+                    .filter(c -> c.getEstado() == estado)
+                    .toList();
+            BigDecimal montoEstado = delEstado.stream()
+                    .map(c -> safeDecimal(c.getTotalCotizado()))
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            double pct = totalCotizaciones > 0 ? (delEstado.size() * 100.0) / totalCotizaciones : 0.0;
+
+            Map<String, Object> row = new HashMap<>();
+            row.put("label", estado.name().replace('_', ' '));
+            row.put("count", delEstado.size());
+            row.put("porcentajeFmt", String.format(Locale.US, "%.1f%%", pct));
+            row.put("montoFmt", formatUsd(montoEstado));
+            estadosBreakdown.add(row);
+        }
+
+        // Desglose por régimen
+        Map<String, List<CotizacionResponseDTO>> porRegimen = new LinkedHashMap<>();
+        for (CotizacionResponseDTO c : filtradas) {
+            String key = defaultIfBlank(c.getRegimenAduanero(), "OTROS");
+            porRegimen.computeIfAbsent(key, k -> new ArrayList<>()).add(c);
+        }
+        List<Map<String, Object>> regimenesBreakdown = porRegimen.entrySet().stream()
+                .map(entry -> {
+                    BigDecimal montoReg = entry.getValue().stream()
+                            .map(c -> safeDecimal(c.getTotalCotizado()))
+                            .reduce(BigDecimal.ZERO, BigDecimal::add);
+                    Map<String, Object> row = new HashMap<>();
+                    row.put("label", entry.getKey().replace('_', ' '));
+                    row.put("count", entry.getValue().size());
+                    row.put("monto", montoReg);
+                    row.put("montoFmt", formatUsd(montoReg));
+                    return row;
+                })
+                .sorted((a, b) -> ((BigDecimal) b.get("monto")).compareTo((BigDecimal) a.get("monto")))
+                .toList();
+
+        // Top Clientes (máx 8)
+        Map<String, List<CotizacionResponseDTO>> porCliente = new LinkedHashMap<>();
+        for (CotizacionResponseDTO c : filtradas) {
+            String key = defaultIfBlank(c.getClienteNumeroDocumento(), "S/D") + "|" + defaultIfBlank(c.getClienteRazonSocial(), "Cliente N/A");
+            porCliente.computeIfAbsent(key, k -> new ArrayList<>()).add(c);
+        }
+        List<Map<String, Object>> topClientes = porCliente.values().stream()
+                .map(lista -> {
+                    CotizacionResponseDTO sample = lista.get(0);
+                    BigDecimal montoCl = lista.stream()
+                            .map(c -> safeDecimal(c.getTotalCotizado()))
+                            .reduce(BigDecimal.ZERO, BigDecimal::add);
+                    long aprobCl = lista.stream()
+                            .filter(c -> c.getEstado() == EstadoCotizacion.APROBADA)
+                            .count();
+                    Map<String, Object> row = new HashMap<>();
+                    row.put("razonSocial", defaultIfBlank(sample.getClienteRazonSocial(), "Cliente N/A"));
+                    row.put("documento", defaultIfBlank(sample.getClienteNumeroDocumento(), "—"));
+                    row.put("count", lista.size());
+                    row.put("aprobadas", aprobCl);
+                    row.put("monto", montoCl);
+                    row.put("montoFmt", formatUsd(montoCl));
+                    return row;
+                })
+                .sorted((a, b) -> ((BigDecimal) b.get("monto")).compareTo((BigDecimal) a.get("monto")))
+                .limit(8)
+                .toList();
+
+        // Detalle de cotizaciones recientes (máx 40)
+        DateTimeFormatter isoDate = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        List<Map<String, Object>> cotizacionesDetalle = filtradas.stream()
+                .sorted(Comparator.comparing(
+                        CotizacionResponseDTO::getIdCotizacion,
+                        Comparator.nullsLast(Comparator.reverseOrder())))
+                .limit(40)
+                .map(c -> {
+                    Map<String, Object> row = new HashMap<>();
+                    row.put("codigo", defaultIfBlank(c.getCodigoCotizacion(), "—"));
+                    row.put("fecha", c.getFechaEmision() != null ? c.getFechaEmision().format(isoDate) : "—");
+                    row.put("cliente", defaultIfBlank(c.getClienteRazonSocial(), "Cliente N/A"));
+                    row.put("asesor", defaultIfBlank(c.getUsuarioComercialNombre(), "Sin asignar"));
+                    row.put("regimen", defaultIfBlank(c.getRegimenAduanero(), "OTROS").replace('_', ' '));
+                    String est = c.getEstado() != null ? c.getEstado().name() : "PENDIENTE";
+                    row.put("estado", est.replace('_', ' '));
+                    row.put("badgeClass", resolveEstadoBadgeClass(c.getEstado()));
+                    row.put("totalFmt", formatUsd(safeDecimal(c.getTotalCotizado())));
+                    return row;
+                })
+                .toList();
+
+        String periodoTexto = buildPeriodoTexto(desde, hasta, isoDate);
+        String alcanceTexto = resolveAlcanceTexto(idUsuarioComercial, usuarioActual);
+        String regimenTexto = (regimen != null && !regimen.isBlank() && !"ALL".equalsIgnoreCase(regimen))
+                ? regimen.replace('_', ' ')
+                : "Todos los regímenes";
+        String usuarioEmisor = usuarioActual != null
+                ? defaultIfBlank(usuarioActual.getNombreCompleto(), usuarioActual.getUsername())
+                : "Sistema SGA";
+
+        Map<String, Object> variables = new HashMap<>();
+        variables.put("periodoTexto", periodoTexto);
+        variables.put("alcanceTexto", alcanceTexto);
+        variables.put("regimenTexto", regimenTexto);
+        variables.put("usuarioEmisor", usuarioEmisor);
+        variables.put("fechaGeneracion", LocalDateTime.now().format(REPORT_DATE_FORMATTER));
+        variables.put("totalCotizaciones", totalCotizaciones);
+        variables.put("totalMontoCotizadoFmt", formatUsd(totalMonto));
+        variables.put("aprobadasCount", aprobadasCount);
+        variables.put("conversionRateFmt", String.format(Locale.US, "%.1f%%", conversionRate));
+        variables.put("ticketPromedioFmt", formatUsd(ticketPromedio));
+        variables.put("totalAbonadoFmt", formatUsd(totalAbonado));
+        variables.put("totalSaldoPendienteFmt", formatUsd(totalSaldoPendiente));
+        variables.put("totalClientes", clientes.size());
+        variables.put("clientesEfectivos", clientesEfectivos);
+        variables.put("prospectos", prospectos);
+        variables.put("sinAsignarCount", sinAsignarCount);
+        variables.put("estadosBreakdown", estadosBreakdown);
+        variables.put("regimenesBreakdown", regimenesBreakdown);
+        variables.put("topClientes", topClientes);
+        variables.put("cotizacionesDetalle", cotizacionesDetalle);
+
+        return renderHtmlToPdf("reports/reporte-comercial", variables);
+    }
+
+    private BigDecimal safeDecimal(BigDecimal value) {
+        return value != null ? value : BigDecimal.ZERO;
+    }
+
+    private String formatUsd(BigDecimal amount) {
+        NumberFormat nf = NumberFormat.getNumberInstance(Locale.US);
+        nf.setMinimumFractionDigits(2);
+        nf.setMaximumFractionDigits(2);
+        return "$" + nf.format(safeDecimal(amount));
+    }
+
+    private String resolveEstadoBadgeClass(EstadoCotizacion estado) {
+        if (estado == null) return "badge-neutral";
+        return switch (estado) {
+            case APROBADA -> "badge-ok";
+            case PENDIENTE, EN_REVISION -> "badge-warn";
+            case OBSERVADA, RECHAZADA, ANULADA -> "badge-danger";
+        };
+    }
+
+    private String buildPeriodoTexto(LocalDate desde, LocalDate hasta, DateTimeFormatter fmt) {
+        if (desde != null && hasta != null) {
+            return desde.format(fmt) + " al " + hasta.format(fmt);
+        }
+        if (desde != null) {
+            return "Desde " + desde.format(fmt);
+        }
+        if (hasta != null) {
+            return "Hasta " + hasta.format(fmt);
+        }
+        return "Histórico completo";
+    }
+
+    private String resolveAlcanceTexto(Integer idUsuarioComercial, Usuario usuarioActual) {
+        if (usuarioActual != null && usuarioActual.getRol() != null
+                && "AGENTE_COMERCIAL".equalsIgnoreCase(usuarioActual.getRol().name())) {
+            return "Cartera de " + defaultIfBlank(usuarioActual.getNombreCompleto(), usuarioActual.getUsername());
+        }
+        if (idUsuarioComercial != null) {
+            return usuarioRepository.findById(idUsuarioComercial)
+                    .map(u -> "Asesor: " + defaultIfBlank(u.getNombreCompleto(), u.getUsername()))
+                    .orElse("Asesor #" + idUsuarioComercial);
+        }
+        return "Consolidado General";
+    }
+
+    // =========================================================================
+    // HELPERS DE MAPEO Y METADATOS TI
+    // =========================================================================
+    private UsuarioReporteItemDTO mapUsuarioToReporteItem(Usuario usuario) {
+        String cargoFallback = usuario.getRol() != null ? usuario.getRol().getEtiqueta() : "—";
+        return UsuarioReporteItemDTO.builder()
+                .username(defaultIfBlank(usuario.getUsername(), "—"))
+                .correo(defaultIfBlank(usuario.getCorreoInstitucional(), "—"))
+                .numero(defaultIfBlank(usuario.getTelefono(), "—"))
+                .cargo(defaultIfBlank(usuario.getCargoTitulo(), cargoFallback))
+                .sede(usuario.getSede() != null ? defaultIfBlank(usuario.getSede().getNombre(), "Sin sede") : "Sin sede")
+                .build();
+    }
+
+    private UsuarioPortalReporteItemDTO mapUsuarioPortalToReporteItem(UsuarioCliente uc) {
+        Cliente cliente = uc.getCliente();
+        return UsuarioPortalReporteItemDTO.builder()
+                .username(defaultIfBlank(uc.getUsername(), "—"))
+                .empresa(cliente != null ? defaultIfBlank(cliente.getRazonSocial(), "—") : "—")
+                .representante(cliente != null ? defaultIfBlank(cliente.getContactoRepresentante(), "—") : "—")
+                .correo(cliente != null ? defaultIfBlank(cliente.getCorreoContacto(), "—") : "—")
+                .build();
+    }
+
+    private Map<String, Object> buildTiReportVariables(
+            String tituloDocumento,
+            String kickerTexto,
+            String tituloReporte,
+            String alcanceTexto,
+            String tituloMetrica1,
+            int totalListado,
+            long totalRegistrados) {
+        Map<String, Object> variables = new HashMap<>();
+        variables.put("tituloDocumento", tituloDocumento);
+        variables.put("kickerTexto", kickerTexto);
+        variables.put("tituloReporte", tituloReporte);
+        variables.put("alcanceTexto", alcanceTexto);
+        variables.put("tituloMetrica1", tituloMetrica1);
+        variables.put("totalListado", totalListado);
+        variables.put("totalRegistrados", totalRegistrados);
+        variables.put("fechaGeneracion", LocalDateTime.now().format(REPORT_DATE_FORMATTER));
+        return variables;
+    }
+
+    private String defaultIfBlank(String value, String fallback) {
+        return value != null && !value.isBlank() ? value.trim() : fallback;
+    }
+
+    // =========================================================================
+    // MOTOR DE RENDERIZADO HTML CORPORATIVO A PDF
+    // =========================================================================
+    private ByteArrayInputStream renderHtmlToPdf(String templateName, Map<String, Object> variables) {
+        try {
+            Context context = new Context();
+            context.setVariables(variables);
+            String html = templateEngine.process(templateName, context);
+
+            ByteArrayOutputStream os = new ByteArrayOutputStream();
+            PdfRendererBuilder builder = new PdfRendererBuilder();
+            builder.useFastMode();
+            builder.withHtmlContent(html, null);
+            builder.toStream(os);
+            builder.run();
+
+            return new ByteArrayInputStream(os.toByteArray());
+        } catch (Exception e) {
+            log.error("Error al renderizar PDF corporativo HTML con plantilla {}: {}", templateName, e.getMessage(), e);
+            throw new RuntimeException("Error al generar PDF corporativo (" + templateName + "): " + e.getMessage(), e);
+        }
+    }
+}

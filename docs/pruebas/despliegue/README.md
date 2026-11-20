@@ -17,11 +17,11 @@ El manual contiene comandos PowerShell, requisitos previos, resultados esperados
 
 ## Antes de ejecutar
 
-Esta entrega corresponde a la estructura con `backend`, `app-sga`, `app-portal-cliente` y `landing` usada en el laboratorio. La rama principal incorporó posteriormente nombres como `backend-sga`, `app-b2b` y `app-landing`: revisar y adaptar rutas antes de integrar esta rama con esa estructura. No se cambian las carpetas locales ni se fusiona automáticamente con `main`.
+Esta rama integra `main` y utiliza `backend-sga`, `app-sga`, `app-b2b` y `app-landing`. Los scripts locales resuelven la raíz del proyecto desde su propia ubicación. El manual usa la carpeta `Music\TransAduanas`: ajustar esa única ruta si el checkout está en otro lugar.
 
 Requisitos del laboratorio: Java 21, Node/npm para compilar interfaces, MySQL para los datos originales, Nginx para las interfaces y Nexus para publicación/descarga. WinSW y su XML privado se preparan por separado. No se distribuyen ejecutables de herramientas ni archivos privados.
 
-Las rutas predeterminadas parten de `$env:USERPROFILE\Music\TransAduanas`. Los scripts aceptan parámetros como `-Proyecto` o `-Raiz` para otras ubicaciones. Definir las variables de ruta en cada terminal nueva: una terminal normal y otra como administrador no comparten las variables definidas con `$env:` o `$nombre`.
+Las rutas predeterminadas parten de `$env:USERPROFILE\Music\TransAduanas`. El publicador Nexus y la automatización detectan el checkout sin depender del directorio actual. Los scripts aceptan parámetros como `-Proyecto` o `-Raiz` para otras ubicaciones. Definir las variables de ruta en cada terminal nueva: una terminal normal y otra como administrador no comparten las variables definidas con `$env:` o `$nombre`.
 
 ## Automatización local (prueba 11)
 
@@ -80,3 +80,21 @@ La versión release 0.5.1 del laboratorio ya se publicó: no repetir `deploy` so
 Las pruebas funcionales automatizadas usan H2 temporal. Las consultas de negocio del despliegue usan MySQL. El material documenta el laboratorio local; todavía no constituye evidencia de instalación y funcionamiento en un segundo equipo ni de publicación en Internet.
 
 No subir el XML privado de WinSW, credenciales, `application-local.properties`, respaldos de base de datos, JAR, carpetas `dist`, `target` o `node_modules` en este cambio.
+
+
+## Nginx después del cambio de carpetas
+
+La configuración antigua de Nginx continúa apuntando a `landing/dist` y `app-portal-cliente/dist`; cambiar nombres en Git no modifica ese archivo externo. Después de compilar las tres interfaces, generar la configuración con las rutas actuales:
+
+```powershell
+$nginx = "$env:USERPROFILE\Downloads\nginx-1.31.8\nginx-1.31.8"
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\docs\pruebas\despliegue\Preparar-Nginx.ps1 -Nginx $nginx
+```
+
+El script valida los `dist`, conserva una copia de `nginx.conf` y ejecuta `nginx -t`. No inicia ni recarga Nginx. Si ya está ejecutándose, aplicar el cambio con `nginx.exe -s reload` desde su carpeta; si está detenido, iniciarlo. Usar la configuración del checkout que realmente se desea publicar, no la de una copia temporal de validación.
+
+## Validación de integración
+
+Los comandos nuevos requieren descargar esta rama integrada o fusionarla antes. No se renombra automáticamente la carpeta original del laboratorio ni se modifica el servicio Windows existente. Los JAR históricos 0.5.0 y 0.5.1 conservan sus hashes; una nueva compilación 0.5.1 puede tener otro hash y no debe sobrescribir la release existente en Nexus. El manual distingue la demostración histórica con el JAR descargado de la compilación del código actualizado.
+
+Ver [VALIDACION-MAIN.md](VALIDACION-MAIN.md) para los comandos ejecutados, resultados y limites de la comprobacion con main.

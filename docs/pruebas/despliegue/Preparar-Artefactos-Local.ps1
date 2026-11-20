@@ -1,6 +1,6 @@
-[CmdletBinding()]
+﻿[CmdletBinding()]
 param(
-    [string]$Proyecto = "$env:USERPROFILE\Music\TransAduanas",
+    [string]$Proyecto = ([IO.Path]::GetFullPath((Join-Path $PSScriptRoot "../../.."))),
     [string]$Salida = "$env:USERPROFILE\Music\TransAduanas-evidencias"
 )
 $ErrorActionPreference = 'Stop'
@@ -12,8 +12,8 @@ if (Get-NetTCPConnection -LocalPort 8086 -State Listen -ErrorAction SilentlyCont
 if (Get-Process java,javaw -ErrorAction SilentlyContinue) {
     Write-Warning 'Hay otros procesos Java activos. No se detendran automaticamente.'
 }
-Get-Item -LiteralPath "$Proyecto\backend\mvnw.cmd" -ErrorAction Stop | Out-Null
-foreach ($app in @('app-sga','app-portal-cliente','landing')) {
+Get-Item -LiteralPath "$Proyecto\backend-sga\mvnw.cmd" -ErrorAction Stop | Out-Null
+foreach ($app in @('app-sga','app-b2b','app-landing')) {
     Get-Item -LiteralPath "$Proyecto\$app\package-lock.json" -ErrorAction Stop | Out-Null
 }
 $destino = Join-Path $Salida ("pipeline-local-" + (Get-Date -Format 'yyyyMMdd-HHmmss-fff'))
@@ -40,7 +40,7 @@ try {
     node --version
     if ($LASTEXITCODE -ne 0) { throw 'Node no esta disponible.' }
     npm.cmd --version
-    Push-Location -LiteralPath "$Proyecto\backend"
+    Push-Location -LiteralPath "$Proyecto\backend-sga"
     try {
         & .\mvnw.cmd -v
         if ($LASTEXITCODE -ne 0) { throw 'No se pudo iniciar Maven.' }
@@ -66,7 +66,7 @@ try {
     $env:VITE_API_URL = '/api/v1'
     $env:VITE_SGA_APP_URL = 'http://localhost:5180'
     $env:VITE_PORTAL_CLIENTE_URL = 'http://localhost:5174'
-    foreach ($app in @('app-sga','app-portal-cliente','landing')) {
+    foreach ($app in @('app-sga','app-b2b','app-landing')) {
         Push-Location -LiteralPath "$Proyecto\$app"
         try {
             npm.cmd ci
@@ -79,7 +79,7 @@ try {
     }
     # Materializar la lista antes de crear el manifiesto para evitar incluirlo.
     $archivos = @(Get-ChildItem -LiteralPath "$destino\backend" -File -Recurse)
-    foreach ($app in @('app-sga','app-portal-cliente','landing')) {
+    foreach ($app in @('app-sga','app-b2b','app-landing')) {
         $archivos += @(Get-ChildItem -LiteralPath "$destino\$app" -File -Recurse)
     }
     $hashes = @($archivos | Get-FileHash -Algorithm SHA256 -ErrorAction Stop)

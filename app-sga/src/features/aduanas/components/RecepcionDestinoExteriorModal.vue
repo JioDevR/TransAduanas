@@ -24,25 +24,23 @@
       <div class="recepcion-fields-grid">
         <div class="field-item full-width">
           <label for="recep-consignatario">Nombre de Consignatario o Agente Receptor en Destino *</label>
-          <input
+          <InputText
             id="recep-consignatario"
             v-model.trim="form.consignatarioExterior"
-            type="text"
-            class="text-input"
             required
             placeholder="Ej. Global Logistics Corp. / Hans Müller GmbH"
+            fluid
           />
         </div>
 
         <div class="field-item">
           <label for="recep-doc">Documento de Entrega / BL Retirado *</label>
-          <input
+          <InputText
             id="recep-doc"
             v-model.trim="form.documentoRecepcion"
-            type="text"
-            class="text-input"
             required
             placeholder="Ej. BL-END-99824 / POD-RECEIPT"
+            fluid
           />
         </div>
 
@@ -59,25 +57,32 @@
 
         <div class="field-item full-width">
           <label for="recep-obs">Observaciones de Conformidad del Destinatario</label>
-          <textarea
+          <Textarea
             id="recep-obs"
             v-model.trim="form.observaciones"
             rows="2"
+            autoResize
             placeholder="Mercadería recibida en bodega de destino sin novedades ni faltantes, precinto cortado en presencia del importador..."
-            class="textarea-input"
-          ></textarea>
+            fluid
+          />
         </div>
       </div>
 
       <div class="modal-actions">
-        <button type="button" class="btn-modal-cancel" @click="handleClose" :disabled="loading">
-          Cancelar
-        </button>
-        <button type="submit" class="btn-modal-save" :disabled="loading">
-          <i v-if="loading" class="pi pi-spin pi-spinner"></i>
-          <i v-else class="pi pi-check"></i>
-          <span>Registrar Conformidad de Recepción</span>
-        </button>
+        <Button
+          type="button"
+          label="Cancelar"
+          severity="secondary"
+          outlined
+          @click="handleClose"
+          :disabled="loading"
+        />
+        <Button
+          type="submit"
+          label="Registrar Conformidad de Recepción"
+          icon="pi pi-check"
+          :loading="loading"
+        />
       </div>
     </form>
   </BaseModal>
@@ -85,6 +90,9 @@
 
 <script setup>
 import { ref, watch } from 'vue'
+import Button from 'primevue/button'
+import InputText from 'primevue/inputtext'
+import Textarea from 'primevue/textarea'
 import BaseModal from '@/shared/components/BaseModal.vue'
 import { expedienteService } from '../services/expedienteService'
 import { getNowDateTimeInput } from '@/shared/utils/dateUtils'

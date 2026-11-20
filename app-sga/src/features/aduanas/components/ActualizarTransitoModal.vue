@@ -53,41 +53,41 @@
         <div class="form-grid">
           <div class="field-item">
             <label for="trans-nave">{{ labelNaveViaje }} <span class="req">*</span></label>
-            <input
+            <InputText
               id="trans-nave"
               v-model.trim="form.naveViaje"
-              type="text"
               :placeholder="placeholderNaveViaje"
-              class="text-input uppercase font-mono"
+              class="uppercase font-mono"
               required
               maxlength="100"
+              fluid
             />
           </div>
 
           <div class="field-item">
             <label for="trans-cont">{{ labelUnidadCarga }} <span class="req">*</span></label>
-            <input
+            <InputText
               id="trans-cont"
               v-model="form.numeroContenedor"
-              type="text"
               :placeholder="placeholderUnidadCarga"
-              class="text-input uppercase font-mono"
+              class="uppercase font-mono"
               required
               maxlength="30"
+              fluid
               @input="form.numeroContenedor = form.numeroContenedor.toUpperCase()"
             />
           </div>
 
           <div class="field-item">
             <label for="trans-precinto">{{ labelPrecinto }} <span class="req">*</span></label>
-            <input
+            <InputText
               id="trans-precinto"
               v-model="form.precintoAduanero"
-              type="text"
               :placeholder="placeholderPrecinto"
-              class="text-input uppercase font-mono"
+              class="uppercase font-mono"
               required
               maxlength="50"
+              fluid
               @input="form.precintoAduanero = form.precintoAduanero.toUpperCase()"
             />
           </div>
@@ -123,26 +123,33 @@
 
           <div class="field-item full-width">
             <label for="trans-obs">Bitácora & Observaciones de Navegación</label>
-            <textarea
+            <Textarea
               id="trans-obs"
               v-model.trim="form.observaciones"
               rows="2"
+              autoResize
               placeholder="Novedades en ruta, escalas intermedias, aviso de recalada o reprogramación..."
-              class="textarea-input"
-            ></textarea>
+              fluid
+            />
           </div>
         </div>
       </div>
 
       <div class="modal-actions-footer">
-        <button type="button" class="btn-modal-cancel" @click="handleClose" :disabled="loading">
-          Cancelar
-        </button>
-        <button type="submit" class="btn-modal-submit" :disabled="loading">
-          <i v-if="loading" class="pi pi-spin pi-spinner"></i>
-          <i v-else class="pi pi-save"></i>
-          <span>Guardar Cambios</span>
-        </button>
+        <Button
+          type="button"
+          label="Cancelar"
+          severity="secondary"
+          outlined
+          @click="handleClose"
+          :disabled="loading"
+        />
+        <Button
+          type="submit"
+          label="Guardar Cambios"
+          icon="pi pi-save"
+          :loading="loading"
+        />
       </div>
     </form>
   </BaseModal>
@@ -150,6 +157,9 @@
 
 <script setup>
 import { ref, watch, computed } from 'vue'
+import Button from 'primevue/button'
+import InputText from 'primevue/inputtext'
+import Textarea from 'primevue/textarea'
 import BaseModal from '@/shared/components/BaseModal.vue'
 import { expedienteService } from '../services/expedienteService'
 import { formatHumanDate } from '@/shared/utils/dateUtils'

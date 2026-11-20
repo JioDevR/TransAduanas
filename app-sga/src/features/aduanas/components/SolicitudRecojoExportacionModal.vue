@@ -24,49 +24,45 @@
       <div class="transporte-fields-grid">
         <div class="field-item full-width">
           <label for="recojo-dir-planta">Dirección de Planta / Almacén de Recojo *</label>
-          <input
+          <InputText
             id="recojo-dir-planta"
             v-model.trim="form.direccionRecojoPlanta"
-            type="text"
-            class="text-input"
             required
             placeholder="Ej. Carretera Central Km 18.5, Planta Industrial Ate"
+            fluid
           />
         </div>
 
         <div class="field-item">
           <label for="recojo-distrito">Distrito / Localidad *</label>
-          <input
+          <InputText
             id="recojo-distrito"
             v-model.trim="form.distritoRecojo"
-            type="text"
-            class="text-input"
             required
             placeholder="Ej. Ate / Lurín / Huachipa"
+            fluid
           />
         </div>
 
         <div class="field-item">
           <label for="recojo-almacen-dest">Almacén / Depósito Temporal Destino *</label>
-          <input
+          <InputText
             id="recojo-almacen-dest"
             v-model.trim="form.almacenDestinoTerminal"
-            type="text"
-            class="text-input"
             required
             placeholder="Ej. DP World Callao / APM Terminals / Depósito Ransa"
+            fluid
           />
         </div>
 
         <div class="field-item">
           <label for="recojo-contacto">Contacto en Planta (Despachador) *</label>
-          <input
+          <InputText
             id="recojo-contacto"
             v-model.trim="form.contactoPlanta"
-            type="text"
-            class="text-input"
             required
             placeholder="Ej. Carlos Mendoza (Jefe Despacho - 987654321)"
+            fluid
           />
         </div>
 
@@ -83,25 +79,32 @@
 
         <div class="field-item full-width">
           <label for="recojo-obs">Instrucciones Especiales / Embalaje</label>
-          <textarea
+          <Textarea
             id="recojo-obs"
             v-model.trim="form.observaciones"
             rows="2"
+            autoResize
             placeholder="Pales filmados, contenedor precintado o bultos sueltos; verificar peso de balanza antes de salida..."
-            class="textarea-input"
-          ></textarea>
+            fluid
+          />
         </div>
       </div>
 
       <div class="modal-actions">
-        <button type="button" class="btn-modal-cancel" @click="handleClose" :disabled="loading">
-          Cancelar
-        </button>
-        <button type="submit" class="btn-modal-save" :disabled="loading">
-          <i v-if="loading" class="pi pi-spin pi-spinner"></i>
-          <i v-else class="pi pi-send"></i>
-          <span>Programar Recojo en Planta</span>
-        </button>
+        <Button
+          type="button"
+          label="Cancelar"
+          severity="secondary"
+          outlined
+          @click="handleClose"
+          :disabled="loading"
+        />
+        <Button
+          type="submit"
+          label="Programar Recojo en Planta"
+          icon="pi pi-send"
+          :loading="loading"
+        />
       </div>
     </form>
   </BaseModal>
@@ -109,6 +112,9 @@
 
 <script setup>
 import { ref, watch } from 'vue'
+import Button from 'primevue/button'
+import InputText from 'primevue/inputtext'
+import Textarea from 'primevue/textarea'
 import BaseModal from '@/shared/components/BaseModal.vue'
 import { expedienteService } from '../services/expedienteService'
 import { getNowDateTimeInput } from '@/shared/utils/dateUtils'

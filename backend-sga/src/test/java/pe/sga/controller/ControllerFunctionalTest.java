@@ -1,5 +1,6 @@
 package pe.sga.controller;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Tag;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import pe.sga.service.*;
@@ -8,6 +9,7 @@ import pe.sga.dto.response.*;
 import org.springframework.security.access.AccessDeniedException;
 import java.util.List;
 import pe.sga.entity.Usuario;
+@Tag("unitaria")
 class ControllerFunctionalTest {
 @Test void CP01_health(){var r=new HealthController().checkHealth(); assertEquals(200,r.getStatusCode().value()); assertEquals("UP",r.getBody().getData().get("status")); assertTrue(r.getBody().isSuccess());}
 @Test void CP02_login(){var s=mock(IUsuarioService.class); var d=new LoginRequestDTO(); var o=new AuthResponseDTO(); when(s.autenticar(d)).thenReturn(o);var r=new AuthController(s).login(d);assertSame(o,r.getBody().getData());verify(s).autenticar(d);}

@@ -1,6 +1,7 @@
 package pe.sga.repository;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Tag;
 import pe.sga.entity.Conductor;
 import pe.sga.entity.UnidadTransporte;
 
@@ -9,6 +10,7 @@ import java.time.LocalDate;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@Tag("unitaria")
 public class TransporteEntidadesTest {
 
     @Test

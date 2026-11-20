@@ -1,18 +1,24 @@
 package pe.sga.functional;
 import org.junit.jupiter.api.Test;
+import pe.sga.support.PruebaDocente;
+import org.junit.jupiter.api.Tag;
 import pe.sga.entity.*;
 import pe.sga.entity.enums.*;
 import java.net.URI;
 import java.net.http.*;
 import java.util.*;
 import static org.junit.jupiter.api.Assertions.*;
+@Tag("aceptacion")
 class AcceptanceBusinessTest extends FullStackTestBase {
  UsuarioCliente cuenta(Cliente c){return usuariosPortal.saveAndFlush(UsuarioCliente.builder().cliente(c).username("portal"+unique()).passwordHash(encoder.encode("QA_Portal123!")).estadoActivo(true).build());}
  String portalLogin(UsuarioCliente uc)throws Exception{var r=call("POST","/api/v1/portal/auth/login",null,Map.of("username",uc.getUsername(),"password","QA_Portal123!"));assertEquals(200,r.statusCode(),r.body());return tree(r).path("data").path("token").asText();}
- @Test void AC01_dadoProspectoCuandoFormalizaEntoncesEsCliente()throws Exception{var token=login(user(RolUsuario.AGENTE_COMERCIAL));int id=create(token,unique());var before=call("GET","/api/v1/clientes/"+id,token,null);assertTrue(tree(before).path("data").path("esProspecto").asBoolean());assertEquals(200,call("PATCH","/api/v1/clientes/"+id+"/convertir-cliente",token,null).statusCode());var after=call("GET","/api/v1/clientes/"+id,token,null);assertEquals("CLIENTE",tree(after).path("data").path("estadoCliente").asText());assertFalse(tree(after).path("data").path("esProspecto").asBoolean());assertEquals("CLIENTE",clientes.findById(id).orElseThrow().getEstadoCliente());}
+ @Test @PruebaDocente(codigo="PA01", tipo="Aceptacion automatizada", herramientas="JUnit Jupiter 6 + Java HttpClient + Spring Boot Test + H2; Maven Surefire", objetivo="Dado un prospecto, cuando un comercial lo formaliza por HTTP, entonces deja de ser prospecto y queda CLIENTE en respuesta y base.")
+ void AC01_dadoProspectoCuandoFormalizaEntoncesEsCliente()throws Exception{var token=login(user(RolUsuario.AGENTE_COMERCIAL));int id=create(token,unique());var before=call("GET","/api/v1/clientes/"+id,token,null);assertTrue(tree(before).path("data").path("esProspecto").asBoolean());assertEquals(200,call("PATCH","/api/v1/clientes/"+id+"/convertir-cliente",token,null).statusCode());var after=call("GET","/api/v1/clientes/"+id,token,null);assertEquals("CLIENTE",tree(after).path("data").path("estadoCliente").asText());assertFalse(tree(after).path("data").path("esProspecto").asBoolean());assertEquals("CLIENTE",clientes.findById(id).orElseThrow().getEstadoCliente());}
  @Test void AC02_dadoClienteInactivoCuandoReactivaEntoncesVisible()throws Exception{var token=login(user(RolUsuario.AGENTE_COMERCIAL));int id=create(token,unique());assertEquals(200,call("DELETE","/api/v1/clientes/"+id,token,null).statusCode());assertFalse(clientes.findById(id).orElseThrow().getEstadoActivo());assertEquals(200,call("PATCH","/api/v1/clientes/"+id+"/reactivar",token,null).statusCode());var r=call("GET","/api/v1/clientes?soloActivos=true",token,null);assertEquals(200,r.statusCode());boolean found=false;for(var n:tree(r).path("data"))if(n.path("idCliente").asInt()==id)found=true;assertTrue(found);assertTrue(clientes.findById(id).orElseThrow().getEstadoActivo());}
- @Test void AC03_dadoPortalCuandoConsultaEntoncesPerfilPropio()throws Exception{var c=empresa();var uc=cuenta(c);String token=portalLogin(uc);var r=call("GET","/api/v1/portal/perfil",token,null);assertEquals(200,r.statusCode(),r.body());assertEquals(c.getIdCliente().intValue(),tree(r).path("data").path("idCliente").asInt());assertEquals(c.getNumeroDocumento(),tree(r).path("data").path("ruc").asText());assertEquals(403,call("GET","/api/v1/usuarios",token,null).statusCode());}
- @Test void AC04_dadoDocumentoCuandoOtroClienteDescargaEntoncesDenegado()throws Exception{
+ @Test @PruebaDocente(codigo="PA02", tipo="Aceptacion automatizada", herramientas="JUnit Jupiter 6 + Java HttpClient + Spring Boot Test + H2; Maven Surefire", objetivo="Dado un cliente autenticado, obtiene su perfil con su ID y documento; el acceso a usuarios internos devuelve 403.")
+ void AC03_dadoPortalCuandoConsultaEntoncesPerfilPropio()throws Exception{var c=empresa();var uc=cuenta(c);String token=portalLogin(uc);var r=call("GET","/api/v1/portal/perfil",token,null);assertEquals(200,r.statusCode(),r.body());assertEquals(c.getIdCliente().intValue(),tree(r).path("data").path("idCliente").asInt());assertEquals(c.getNumeroDocumento(),tree(r).path("data").path("ruc").asText());assertEquals(403,call("GET","/api/v1/usuarios",token,null).statusCode());}
+ @Test @PruebaDocente(codigo="PA03", tipo="Aceptacion automatizada", herramientas="JUnit Jupiter 6 + Java HttpClient + Spring Boot Test + H2; Maven Surefire", objetivo="El propietario carga y descarga su archivo; otro cliente recibe 403 y no obtiene el contenido.")
+ void AC04_dadoDocumentoCuandoOtroClienteDescargaEntoncesDenegado()throws Exception{
   var c=empresa();String owner=portalLogin(cuenta(c));String other=portalLogin(cuenta(empresa()));String boundary="QA_BOUNDARY_2026";
   String body="--"+boundary+"\r\nContent-Disposition: form-data; name=\"files\"; filename=\"qa-evidencia.txt\"\r\nContent-Type: text/plain\r\n\r\nEVIDENCIA_QA_2026\r\n--"+boundary+"--\r\n";
   var request=HttpRequest.newBuilder(URI.create("http://127.0.0.1:"+port+"/api/v1/documentos/upload?categoria=GENERAL&entidadTipo=CLIENTE&idEntidad="+c.getIdCliente())).header("Authorization","Bearer "+owner).header("Content-Type","multipart/form-data; boundary="+boundary).POST(HttpRequest.BodyPublishers.ofString(body)).build();

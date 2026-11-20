@@ -1,0 +1,152 @@
+[
+  {
+    "numero": 1,
+    "codigo": "PU01",
+    "tipo": "Unitaria",
+    "nombre": "Normalización y alta de cliente",
+    "clase": "pe.sga.service.ClienteServiceImplTest",
+    "metodo": "crear_datosValidosConOpcionalesNulos_aplicaDefaultsYGuarda",
+    "herramientas": "JUnit Jupiter 6 + Mockito (MockitoExtension, @Mock, @InjectMocks); Maven Surefire",
+    "objetivo": "Entrada con espacios y campos opcionales nulos: devuelve documento y razon social normalizados, tipo RUC y estado PROSPECTO; el guardado es simulado."
+  },
+  {
+    "numero": 2,
+    "codigo": "PU02",
+    "tipo": "Unitaria",
+    "nombre": "Rechazo de documento duplicado",
+    "clase": "pe.sga.service.ClienteServiceImplTest",
+    "metodo": "crear_documentoDuplicado_lanzaBadRequest",
+    "herramientas": "JUnit Jupiter 6 + Mockito (MockitoExtension, @Mock, @InjectMocks); Maven Surefire",
+    "objetivo": "Mockito simula que existe el documento; el servicio lanza BadRequestException y nunca llama a save."
+  },
+  {
+    "numero": 3,
+    "codigo": "PU03",
+    "tipo": "Unitaria",
+    "nombre": "Compuerta financiera sin pago aprobado",
+    "clase": "pe.sga.service.ExpedienteServiceImplTest",
+    "metodo": "crear_sinPagoAprobado_lanzaBadRequest",
+    "herramientas": "JUnit Jupiter 6 + Mockito (MockitoExtension, @Mock, @InjectMocks); Maven Surefire",
+    "objetivo": "Cotizacion aprobada sin pago aprobado: rechaza la apertura y nunca guarda un expediente en el repositorio simulado."
+  },
+  {
+    "numero": 4,
+    "codigo": "PU04",
+    "tipo": "Unitaria",
+    "nombre": "Aprobación de sobrepago",
+    "clase": "pe.sga.service.CotizacionPagoServiceImplTest",
+    "metodo": "validarPago_aprobarConSobrepago_recalculaACeroYNotifica",
+    "herramientas": "JUnit Jupiter 6 + Mockito (MockitoExtension, @Mock, @InjectMocks); Maven Surefire",
+    "objetivo": "Pago USD 600 sobre cotizacion USD 500: APROBADO, saldo cero, PAGADO_TOTAL y notificacion con destinatario y mensaje verificados; repositorios simulados."
+  },
+  {
+    "numero": 5,
+    "codigo": "PI01",
+    "tipo": "Integracion",
+    "nombre": "Formalización persistida de prospecto",
+    "clase": "pe.sga.functional.BusinessFunctionalCasesTest",
+    "metodo": "CP01_formalizacionProspectoACliente",
+    "herramientas": "JUnit Jupiter 6 + Spring Boot Test + Spring Data JPA + H2; Maven Surefire",
+    "objetivo": "El servicio convierte PROSPECTO a CLIENTE; esProspecto=false y el nuevo estado se consulta en H2."
+  },
+  {
+    "numero": 6,
+    "codigo": "PI02",
+    "tipo": "Integracion",
+    "nombre": "Registro real y rechazo de duplicado",
+    "clase": "pe.sga.functional.BusinessFunctionalCasesTest",
+    "metodo": "CP02_registroClienteYDuplicado",
+    "herramientas": "JUnit Jupiter 6 + Spring Boot Test + Spring Data JPA + H2; Maven Surefire",
+    "objetivo": "Documento y correo se leen de H2; un duplicado genera rechazo y el conteo permanece sin otra fila."
+  },
+  {
+    "numero": 7,
+    "codigo": "PI03",
+    "tipo": "Integracion",
+    "nombre": "Apertura persistida de expediente",
+    "clase": "pe.sga.functional.BusinessFunctionalCasesTest",
+    "metodo": "CP07_aperturaExigePagoYPersiste",
+    "herramientas": "JUnit Jupiter 6 + Spring Boot Test + Spring Data JPA + H2; Maven Surefire",
+    "objetivo": "Sin pago no crea expediente; con adelanto aprobado lo persiste y vincula; una segunda apertura se rechaza."
+  },
+  {
+    "numero": 8,
+    "codigo": "PI04",
+    "tipo": "Integracion",
+    "nombre": "Cálculo y persistencia de liquidación",
+    "clase": "pe.sga.functional.BusinessFunctionalCasesTest",
+    "metodo": "CP13_liquidacionEmitePersisteYConsulta",
+    "herramientas": "JUnit Jupiter 6 + Spring Boot Test + Spring Data JPA + H2; Maven Surefire",
+    "objetivo": "Verifica subtotal PEN 550, IGV 99, total PEN 1649, USD 439.73 y recupera por expediente la liquidacion guardada en H2."
+  },
+  {
+    "numero": 9,
+    "codigo": "PS01",
+    "tipo": "Sistema del backend",
+    "nombre": "Consulta HTTP de puertos",
+    "clase": "pe.sga.functional.BusinessFunctionalCasesTest",
+    "metodo": "CP03_puertosListaDetalleReal",
+    "herramientas": "JUnit Jupiter 6 + Java HttpClient + Spring Boot Test + H2; Maven Surefire",
+    "objetivo": "HTTP 200 en listado y detalle coincidente; identificador inexistente devuelve 404."
+  },
+  {
+    "numero": 10,
+    "codigo": "PS02",
+    "tipo": "Sistema del backend",
+    "nombre": "Solicitud HTTP de cotización",
+    "clase": "pe.sga.functional.BusinessFunctionalCasesTest",
+    "metodo": "CP11_solicitudPortalCreaRegistroYRechazaInvalido",
+    "herramientas": "JUnit Jupiter 6 + Java HttpClient + Spring Boot Test + H2; Maven Surefire",
+    "objetivo": "Solicitud FOB 1000 devuelve 201 y persiste; FOB negativo devuelve 400 sin agregar filas."
+  },
+  {
+    "numero": 11,
+    "codigo": "PS03",
+    "tipo": "Sistema del backend",
+    "nombre": "Carga y descarga HTTP de archivo",
+    "clase": "pe.sga.functional.BusinessFunctionalCasesTest",
+    "metodo": "CP14_cargaYDescargaConservaContenido",
+    "herramientas": "JUnit Jupiter 6 + Java HttpClient + Spring Boot Test + H2; Maven Surefire",
+    "objetivo": "Carga multipart 201, registro persistido y descarga 200 con nombre y contenido exactos."
+  },
+  {
+    "numero": 12,
+    "codigo": "PS04",
+    "tipo": "Sistema del backend",
+    "nombre": "Autenticación HTTP y perfil JWT",
+    "clase": "pe.sga.functional.SystemApiTest",
+    "metodo": "SY02_loginYPerfilJWT",
+    "herramientas": "JUnit Jupiter 6 + Java HttpClient + Spring Boot Test + H2; Maven Surefire",
+    "objetivo": "Login devuelve token no vacio; GET /auth/me con ese token devuelve 200 y el username del usuario autenticado."
+  },
+  {
+    "numero": 13,
+    "codigo": "PA01",
+    "tipo": "Aceptacion automatizada",
+    "nombre": "Escenario de formalización comercial",
+    "clase": "pe.sga.functional.AcceptanceBusinessTest",
+    "metodo": "AC01_dadoProspectoCuandoFormalizaEntoncesEsCliente",
+    "herramientas": "JUnit Jupiter 6 + Java HttpClient + Spring Boot Test + H2; Maven Surefire",
+    "objetivo": "Dado un prospecto, cuando un comercial lo formaliza por HTTP, entonces deja de ser prospecto y queda CLIENTE en respuesta y base."
+  },
+  {
+    "numero": 14,
+    "codigo": "PA02",
+    "tipo": "Aceptacion automatizada",
+    "nombre": "Escenario de perfil y permisos del portal",
+    "clase": "pe.sga.functional.AcceptanceBusinessTest",
+    "metodo": "AC03_dadoPortalCuandoConsultaEntoncesPerfilPropio",
+    "herramientas": "JUnit Jupiter 6 + Java HttpClient + Spring Boot Test + H2; Maven Surefire",
+    "objetivo": "Dado un cliente autenticado, obtiene su perfil con su ID y documento; el acceso a usuarios internos devuelve 403."
+  },
+  {
+    "numero": 15,
+    "codigo": "PA03",
+    "tipo": "Aceptacion automatizada",
+    "nombre": "Escenario de aislamiento documental",
+    "clase": "pe.sga.functional.AcceptanceBusinessTest",
+    "metodo": "AC04_dadoDocumentoCuandoOtroClienteDescargaEntoncesDenegado",
+    "herramientas": "JUnit Jupiter 6 + Java HttpClient + Spring Boot Test + H2; Maven Surefire",
+    "objetivo": "El propietario carga y descarga su archivo; otro cliente recibe 403 y no obtiene el contenido."
+  }
+]

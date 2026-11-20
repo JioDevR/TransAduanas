@@ -2,6 +2,7 @@ package pe.sga.config;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -43,6 +44,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         "jwt.secret=test_secret_key_for_sga_security_config_verification_2026",
         "jwt.expiration-ms=3600000"
 })
+@Tag("integracion")
 public class SecurityConfigTest {
 
     @Configuration

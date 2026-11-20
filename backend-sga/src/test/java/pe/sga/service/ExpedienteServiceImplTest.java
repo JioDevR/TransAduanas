@@ -2,6 +2,8 @@ package pe.sga.service;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import pe.sga.support.PruebaDocente;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -40,6 +42,7 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Pruebas Unitarias - ExpedienteServiceImpl")
+@Tag("unitaria")
 class ExpedienteServiceImplTest {
 
     @Mock
@@ -107,6 +110,7 @@ class ExpedienteServiceImplTest {
 
     @Test
     @DisplayName("Excepción: compuerta financiera bloquea apertura si la cotización no tiene pago aprobado")
+    @PruebaDocente(codigo="PU03", tipo="Unitaria", herramientas="JUnit Jupiter 6 + Mockito (MockitoExtension, @Mock, @InjectMocks); Maven Surefire", objetivo="Cotizacion aprobada sin pago aprobado: rechaza la apertura y nunca guarda un expediente en el repositorio simulado.")
     void crear_sinPagoAprobado_lanzaBadRequest() {
         Cotizacion cot = Cotizacion.builder()
                 .idCotizacion(2)

@@ -1,11 +1,15 @@
 package pe.sga.functional;
 import org.junit.jupiter.api.Test;
+import pe.sga.support.PruebaDocente;
+import org.junit.jupiter.api.Tag;
 import pe.sga.entity.enums.RolUsuario;
 import java.util.*;
 import static org.junit.jupiter.api.Assertions.*;
+@Tag("sistema")
 class SystemApiTest extends FullStackTestBase {
  @Test void SY01_saludPublica()throws Exception{var r=call("GET","/api/v1/health",null,null);assertEquals(200,r.statusCode());assertEquals("UP",tree(r).path("data").path("status").asText());}
- @Test void SY02_loginYPerfilJWT()throws Exception{var u=user(RolUsuario.ADMINISTRADOR_TI);var token=login(u);assertFalse(token.isBlank());var r=call("GET","/api/v1/auth/me",token,null);assertEquals(200,r.statusCode(),r.body());assertEquals(u.getUsername(),tree(r).path("data").path("username").asText());}
+ @Test @PruebaDocente(codigo="PS04", tipo="Sistema del backend", herramientas="JUnit Jupiter 6 + Java HttpClient + Spring Boot Test + H2; Maven Surefire", objetivo="Login devuelve token no vacio; GET /auth/me con ese token devuelve 200 y el username del usuario autenticado.")
+ void SY02_loginYPerfilJWT()throws Exception{var u=user(RolUsuario.ADMINISTRADOR_TI);var token=login(u);assertFalse(token.isBlank());var r=call("GET","/api/v1/auth/me",token,null);assertEquals(200,r.statusCode(),r.body());assertEquals(u.getUsername(),tree(r).path("data").path("username").asText());}
  @Test void SY03_credencialesIncorrectas()throws Exception{var u=user(RolUsuario.ADMINISTRADOR_TI);var r=call("POST","/api/v1/auth/login",null,Map.of("username",u.getUsername(),"password","INCORRECTA"));assertEquals(401,r.statusCode(),r.body());assertFalse(tree(r).path("success").asBoolean());assertFalse(r.body().contains("stackTrace"));}
  @Test void SY04_rechazoSinToken()throws Exception{var r=call("GET","/api/v1/clientes",null,null);java.nio.file.Files.createDirectories(java.nio.file.Path.of("target/qa-evidence"));java.nio.file.Files.writeString(java.nio.file.Path.of("target/qa-evidence/SY04-response.txt"),"status="+r.statusCode()+"\nheaders="+r.headers().map()+"\nbody="+r.body());assertEquals(401,r.statusCode());assertTrue(r.headers().firstValue("Content-Type").orElse("").contains("application/json"),"Se esperaba application/json; recibido "+r.headers().firstValue("Content-Type").orElse("sin tipo"));assertFalse(tree(r).path("success").asBoolean());}
  @Test void SY05_tokenInvalido()throws Exception{var r=call("GET","/api/v1/clientes","token-invalido",null);assertEquals(401,r.statusCode(),r.body());}

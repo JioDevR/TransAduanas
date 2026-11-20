@@ -1,5 +1,6 @@
 package pe.sga.controller;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Tag;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import pe.sga.service.*;
@@ -15,6 +16,7 @@ import org.springframework.core.io.*;
 import org.springframework.web.multipart.MultipartFile;
 import java.util.*;
 import java.io.*;
+@Tag("unitaria")
 class AllControllersFunctionalTest {
 private Usuario interno(){var u=new Usuario();u.setIdUsuario(7);return u;}
 private UsuarioCliente externo(){var c=new Cliente();c.setIdCliente(11);var u=new UsuarioCliente();u.setCliente(c);u.setIdUsuarioCliente(13);return u;}

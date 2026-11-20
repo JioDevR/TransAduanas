@@ -61,7 +61,7 @@
           outlined
           size="small"
           :loading="loading"
-          @click="loadDashboard"
+          @click="handleLoadDashboard"
         />
       </div>
     </header>
@@ -78,7 +78,7 @@
             optionValue="value"
             size="small"
             fluid
-            @change="loadDashboard"
+            @change="handleLoadDashboard"
           />
         </div>
 
@@ -91,7 +91,7 @@
             optionValue="value"
             size="small"
             fluid
-            @change="loadDashboard"
+            @change="handleLoadDashboard"
           />
         </div>
 
@@ -113,7 +113,7 @@
       <article
         class="sga-kpi-card"
         :class="isBackendHealthy ? 'is-success' : 'is-danger'"
-        @click="loadDashboard"
+        @click="handleLoadDashboard"
       >
         <div class="sga-kpi-head">
           <span class="sga-kpi-index">01</span>
@@ -581,7 +581,7 @@ import { useNotification } from '@/shared/composables/useNotification'
 import { openBlobInNewTab } from '@/shared/utils/download'
 import { userService } from '../../users/services/userService'
 import { portalUserService } from '../../portal-users/services/portalUserService'
-import { useAdminDashboard, formatBytes, formatUptime } from '../../composables/useAdminDashboard'
+import { useAdminDashboard, formatBytes, formatMb, formatUptime } from '../../composables/useAdminDashboard'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -645,17 +645,17 @@ const integrityAlertsCount = computed(
 )
 const hasIntegrityAlerts = computed(() => integrityAlertsCount.value > 0)
 
-const formatMb = (mb) => {
-  const val = Number(mb || 0)
-  if (val >= 1024) {
-    return `${(val / 1024).toFixed(1)} GB`
+const handleLoadDashboard = async () => {
+  try {
+    await loadDashboard()
+  } catch (err) {
+    showError(err.response?.data?.message || 'Error al cargar métricas del Dashboard TI.')
   }
-  return `${val} MB`
 }
 
 const handleResetFilters = () => {
   resetFilters()
-  loadDashboard()
+  handleLoadDashboard()
 }
 
 const navigateTo = (subOption) => {
@@ -774,7 +774,7 @@ const barOptions = computed(() => ({
 }))
 
 onMounted(() => {
-  loadDashboard()
+  handleLoadDashboard()
 })
 </script>
 

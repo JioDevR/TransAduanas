@@ -34,7 +34,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Stream;
 
 @Service
@@ -80,33 +79,11 @@ public class AdminSistemaServiceImpl implements IAdminSistemaService {
         long usedMemMb = (rt.totalMemory() - rt.freeMemory()) / (1024 * 1024);
         int memPct = maxMemMb > 0 ? (int) Math.min(100, Math.round((usedMemMb * 100.0) / maxMemMb)) : 0;
 
-        Path storagePath = Paths.get(uploadDir != null && !uploadDir.isBlank() ? uploadDir : "./uploads/documentos")
-                .toAbsolutePath().normalize();
+        Path storagePath = resolverRutaStorage();
         boolean storageDisponible = Files.exists(storagePath) && Files.isDirectory(storagePath);
-        AtomicLong archivosDisco = new AtomicLong(0);
-        AtomicLong tamanoBytes = new AtomicLong(0);
-        long discoLibreMb = 0;
-        long discoTotalMb = 0;
-
-        if (storageDisponible) {
-            try (Stream<Path> walk = Files.walk(storagePath)) {
-                walk.filter(Files::isRegularFile).forEach(p -> {
-                    archivosDisco.incrementAndGet();
-                    try {
-                        tamanoBytes.addAndGet(Files.size(p));
-                    } catch (IOException ignored) {
-                    }
-                });
-            } catch (IOException ex) {
-                log.warn("No se pudo recorrer directorio {}: {}", storagePath, ex.getMessage());
-            }
-            try {
-                FileStore store = Files.getFileStore(storagePath);
-                discoLibreMb = store.getUsableSpace() / (1024 * 1024);
-                discoTotalMb = store.getTotalSpace() / (1024 * 1024);
-            } catch (IOException ignored) {
-            }
-        }
+        Map<String, Path> archivosDiscoPorRuta = mapearArchivosEnDisco(storagePath, storageDisponible);
+        long tamanoBytes = calcularTamanoTotalBytes(archivosDiscoPorRuta.values());
+        EspacioDisco espacio = obtenerEspacioDisco(storagePath, storageDisponible);
 
         long docsBd = 0;
         try {
@@ -135,11 +112,11 @@ public class AdminSistemaServiceImpl implements IAdminSistemaService {
                 .jvmHeapPorcentaje(memPct)
                 .storageDirectorio(storagePath.toString())
                 .storageDisponible(storageDisponible)
-                .storageArchivosDisco(archivosDisco.get())
-                .storageTamanoBytes(tamanoBytes.get())
+                .storageArchivosDisco(archivosDiscoPorRuta.size())
+                .storageTamanoBytes(tamanoBytes)
                 .storageDocumentosRegistradosBd(docsBd)
-                .discoEspacioLibreMb(discoLibreMb)
-                .discoEspacioTotalMb(discoTotalMb)
+                .discoEspacioLibreMb(espacio.libreMb())
+                .discoEspacioTotalMb(espacio.totalMb())
                 .build();
     }
 
@@ -287,41 +264,76 @@ public class AdminSistemaServiceImpl implements IAdminSistemaService {
         Path storagePath = resolverRutaStorage();
         boolean disponible = Files.exists(storagePath) && Files.isDirectory(storagePath);
 
-        long discoLibreMb = 0;
-        long discoTotalMb = 0;
-        if (disponible) {
-            try {
-                FileStore store = Files.getFileStore(storagePath);
-                discoLibreMb = store.getUsableSpace() / (1024 * 1024);
-                discoTotalMb = store.getTotalSpace() / (1024 * 1024);
-            } catch (IOException ignored) {
-            }
-        }
-        long discoUsadoMb = Math.max(0L, discoTotalMb - discoLibreMb);
-        int discoPct = discoTotalMb > 0 ? (int) Math.min(100, Math.round((discoUsadoMb * 100.0) / discoTotalMb)) : 0;
-
+        EspacioDisco espacio = obtenerEspacioDisco(storagePath, disponible);
         Map<String, Path> archivosDiscoPorRuta = mapearArchivosEnDisco(storagePath, disponible);
-        long storageTamanoBytes = 0;
-        for (Path p : archivosDiscoPorRuta.values()) {
-            try {
-                storageTamanoBytes += Files.size(p);
-            } catch (IOException ignored) {
-            }
-        }
+        long storageTamanoBytes = calcularTamanoTotalBytes(archivosDiscoPorRuta.values());
 
         List<DocumentoAdjunto> documentosBd = documentoRepository.findAll();
-        Set<String> rutasEnBd = new HashSet<>();
-        List<AdminAlmacenamientoDTO.ArchivoStorageDTO> inventarioCompleto = new ArrayList<>();
+        List<AdminAlmacenamientoDTO.ArchivoStorageDTO> inventario = new ArrayList<>();
+        Map<String, long[]> aggEntidad = new LinkedHashMap<>();
+        Map<String, long[]> aggCategoria = new LinkedHashMap<>();
+        Map<String, long[]> aggExtension = new LinkedHashMap<>();
 
+        ConciliacionBd conc = conciliarDocumentosBd(
+                documentosBd, archivosDiscoPorRuta, inventario, aggEntidad, aggCategoria, aggExtension);
+        long[] huerfanos = recopilarArchivosHuerfanos(
+                archivosDiscoPorRuta, conc.rutasEnBd(), inventario, aggExtension);
+
+        inventario.sort(Comparator.comparing(
+                AdminAlmacenamientoDTO.ArchivoStorageDTO::getFechaCreacion,
+                Comparator.nullsLast(Comparator.reverseOrder())));
+
+        List<AdminAlmacenamientoDTO.ArchivoStorageDTO> filtrados =
+                filtrarInventario(inventario, buscar, entidad, categoria, integridad);
+
+        int safePage = Math.max(0, page);
+        int safeSize = Math.min(Math.max(1, size), 100);
+        int totalElements = filtrados.size();
+        int totalPages = totalElements == 0 ? 0 : (int) Math.ceil((double) totalElements / safeSize);
+        int fromIdx = Math.min(safePage * safeSize, totalElements);
+        int toIdx = Math.min(fromIdx + safeSize, totalElements);
+
+        return AdminAlmacenamientoDTO.builder()
+                .directorioRaiz(storagePath.toString())
+                .disponible(disponible)
+                .discoTotalMb(espacio.totalMb())
+                .discoLibreMb(espacio.libreMb())
+                .discoUsadoMb(espacio.usadoMb())
+                .discoOcupacionPct(espacio.ocupacionPct())
+                .storageTamanoBytes(storageTamanoBytes)
+                .archivosEnDisco(archivosDiscoPorRuta.size())
+                .registrosBdTotales(documentosBd.size())
+                .registrosBdActivos(conc.bdActivos())
+                .registrosBdInactivos(conc.bdInactivos())
+                .bytesRegistradosBdActivos(conc.bytesBdActivos())
+                .archivosSincronizados(conc.sincronizados())
+                .archivosFaltantesEnDisco(conc.faltantesDisco())
+                .archivosHuerfanosEnDisco(huerfanos[0])
+                .bytesHuerfanosEnDisco(huerfanos[1])
+                .porEntidad(ordenarGrupos(aggEntidad))
+                .porCategoria(ordenarGrupos(aggCategoria))
+                .porExtension(ordenarGrupos(aggExtension))
+                .items(filtrados.subList(fromIdx, toIdx))
+                .totalElements(totalElements)
+                .totalPages(totalPages)
+                .page(safePage)
+                .size(safeSize)
+                .build();
+    }
+
+    private ConciliacionBd conciliarDocumentosBd(
+            List<DocumentoAdjunto> documentosBd,
+            Map<String, Path> archivosDiscoPorRuta,
+            List<AdminAlmacenamientoDTO.ArchivoStorageDTO> inventario,
+            Map<String, long[]> aggEntidad,
+            Map<String, long[]> aggCategoria,
+            Map<String, long[]> aggExtension) {
+        Set<String> rutasEnBd = new HashSet<>();
         long bdActivos = 0;
         long bdInactivos = 0;
         long bytesBdActivos = 0;
         long sincronizados = 0;
         long faltantesDisco = 0;
-
-        Map<String, long[]> aggEntidad = new LinkedHashMap<>();
-        Map<String, long[]> aggCategoria = new LinkedHashMap<>();
-        Map<String, long[]> aggExtension = new LinkedHashMap<>();
 
         for (DocumentoAdjunto doc : documentosBd) {
             boolean activo = Boolean.TRUE.equals(doc.getActivo());
@@ -341,18 +353,13 @@ public class AdminSistemaServiceImpl implements IAdminSistemaService {
             Path archivoDisco = archivosDiscoPorRuta.get(relPath);
             boolean existeEnDisco = archivoDisco != null && Files.isRegularFile(archivoDisco);
             if (existeEnDisco) {
-                try {
-                    tamano = Files.size(archivoDisco);
-                } catch (IOException ignored) {
-                }
+                tamano = obtenerTamanoArchivo(archivoDisco, tamano);
             }
 
             String estadoInt;
             if (!existeEnDisco) {
                 estadoInt = "FALTANTE_DISCO";
-                if (activo) {
-                    faltantesDisco++;
-                }
+                if (activo) faltantesDisco++;
             } else if (!activo) {
                 estadoInt = "BAJA_LOGICA";
             } else {
@@ -372,7 +379,7 @@ public class AdminSistemaServiceImpl implements IAdminSistemaService {
                 acumularGrupo(aggExtension, extKey, tamano);
             }
 
-            inventarioCompleto.add(AdminAlmacenamientoDTO.ArchivoStorageDTO.builder()
+            inventario.add(AdminAlmacenamientoDTO.ArchivoStorageDTO.builder()
                     .idDocumento(doc.getIdDocumento())
                     .nombreOriginal(doc.getNombreOriginal())
                     .rutaRelativa(relPath)
@@ -388,17 +395,25 @@ public class AdminSistemaServiceImpl implements IAdminSistemaService {
                     .build());
         }
 
+        return new ConciliacionBd(rutasEnBd, bdActivos, bdInactivos, bytesBdActivos, sincronizados, faltantesDisco);
+    }
+
+    private long[] recopilarArchivosHuerfanos(
+            Map<String, Path> archivosDiscoPorRuta,
+            Set<String> rutasEnBd,
+            List<AdminAlmacenamientoDTO.ArchivoStorageDTO> inventario,
+            Map<String, long[]> aggExtension) {
         long huerfanosCount = 0;
         long bytesHuerfanos = 0;
+
         for (Map.Entry<String, Path> entry : archivosDiscoPorRuta.entrySet()) {
             if (rutasEnBd.contains(entry.getKey())) {
                 continue;
             }
             Path p = entry.getValue();
-            long tamano = 0;
+            long tamano = obtenerTamanoArchivo(p, 0L);
             LocalDateTime modTime = LocalDateTime.now();
             try {
-                tamano = Files.size(p);
                 modTime = LocalDateTime.ofInstant(
                         Instant.ofEpochMilli(Files.getLastModifiedTime(p).toMillis()),
                         ZoneId.systemDefault());
@@ -411,7 +426,7 @@ public class AdminSistemaServiceImpl implements IAdminSistemaService {
             String ext = extraerExtension(nombre);
             acumularGrupo(aggExtension, ext, tamano);
 
-            inventarioCompleto.add(AdminAlmacenamientoDTO.ArchivoStorageDTO.builder()
+            inventario.add(AdminAlmacenamientoDTO.ArchivoStorageDTO.builder()
                     .idDocumento(null)
                     .nombreOriginal(nombre)
                     .rutaRelativa(entry.getKey())
@@ -426,17 +441,18 @@ public class AdminSistemaServiceImpl implements IAdminSistemaService {
                     .fechaCreacion(modTime)
                     .build());
         }
+        return new long[]{huerfanosCount, bytesHuerfanos};
+    }
 
-        inventarioCompleto.sort(Comparator.comparing(
-                AdminAlmacenamientoDTO.ArchivoStorageDTO::getFechaCreacion,
-                Comparator.nullsLast(Comparator.reverseOrder())));
-
+    private List<AdminAlmacenamientoDTO.ArchivoStorageDTO> filtrarInventario(
+            List<AdminAlmacenamientoDTO.ArchivoStorageDTO> inventario,
+            String buscar, String entidad, String categoria, String integridad) {
         String buscaNorm = buscar != null ? buscar.trim().toLowerCase() : "";
         String entNorm = entidad != null ? entidad.trim() : "";
         String catNorm = categoria != null ? categoria.trim() : "";
         String intNorm = integridad != null ? integridad.trim() : "";
 
-        List<AdminAlmacenamientoDTO.ArchivoStorageDTO> filtrados = inventarioCompleto.stream()
+        return inventario.stream()
                 .filter(a -> buscaNorm.isEmpty()
                         || (a.getNombreOriginal() != null && a.getNombreOriginal().toLowerCase().contains(buscaNorm))
                         || (a.getRutaRelativa() != null && a.getRutaRelativa().toLowerCase().contains(buscaNorm))
@@ -448,41 +464,49 @@ public class AdminSistemaServiceImpl implements IAdminSistemaService {
                 .filter(a -> intNorm.isEmpty() || "ALL".equalsIgnoreCase(intNorm)
                         || intNorm.equalsIgnoreCase(a.getEstadoIntegridad()))
                 .toList();
-
-        int safePage = Math.max(0, page);
-        int safeSize = Math.min(Math.max(1, size), 100);
-        int totalElements = filtrados.size();
-        int totalPages = totalElements == 0 ? 0 : (int) Math.ceil((double) totalElements / safeSize);
-        int fromIdx = Math.min(safePage * safeSize, totalElements);
-        int toIdx = Math.min(fromIdx + safeSize, totalElements);
-
-        return AdminAlmacenamientoDTO.builder()
-                .directorioRaiz(storagePath.toString())
-                .disponible(disponible)
-                .discoTotalMb(discoTotalMb)
-                .discoLibreMb(discoLibreMb)
-                .discoUsadoMb(discoUsadoMb)
-                .discoOcupacionPct(discoPct)
-                .storageTamanoBytes(storageTamanoBytes)
-                .archivosEnDisco(archivosDiscoPorRuta.size())
-                .registrosBdTotales(documentosBd.size())
-                .registrosBdActivos(bdActivos)
-                .registrosBdInactivos(bdInactivos)
-                .bytesRegistradosBdActivos(bytesBdActivos)
-                .archivosSincronizados(sincronizados)
-                .archivosFaltantesEnDisco(faltantesDisco)
-                .archivosHuerfanosEnDisco(huerfanosCount)
-                .bytesHuerfanosEnDisco(bytesHuerfanos)
-                .porEntidad(ordenarGrupos(aggEntidad))
-                .porCategoria(ordenarGrupos(aggCategoria))
-                .porExtension(ordenarGrupos(aggExtension))
-                .items(filtrados.subList(fromIdx, toIdx))
-                .totalElements(totalElements)
-                .totalPages(totalPages)
-                .page(safePage)
-                .size(safeSize)
-                .build();
     }
+
+    private EspacioDisco obtenerEspacioDisco(Path storagePath, boolean disponible) {
+        long libreMb = 0;
+        long totalMb = 0;
+        if (disponible) {
+            try {
+                FileStore store = Files.getFileStore(storagePath);
+                libreMb = store.getUsableSpace() / (1024 * 1024);
+                totalMb = store.getTotalSpace() / (1024 * 1024);
+            } catch (IOException ignored) {
+            }
+        }
+        long usadoMb = Math.max(0L, totalMb - libreMb);
+        int ocupacionPct = totalMb > 0 ? (int) Math.min(100, Math.round((usadoMb * 100.0) / totalMb)) : 0;
+        return new EspacioDisco(libreMb, totalMb, usadoMb, ocupacionPct);
+    }
+
+    private long calcularTamanoTotalBytes(Collection<Path> paths) {
+        long total = 0;
+        for (Path p : paths) {
+            total += obtenerTamanoArchivo(p, 0L);
+        }
+        return total;
+    }
+
+    private long obtenerTamanoArchivo(Path p, long fallback) {
+        try {
+            return Files.size(p);
+        } catch (IOException ignored) {
+            return fallback;
+        }
+    }
+
+    private record EspacioDisco(long libreMb, long totalMb, long usadoMb, int ocupacionPct) {}
+
+    private record ConciliacionBd(
+            Set<String> rutasEnBd,
+            long bdActivos,
+            long bdInactivos,
+            long bytesBdActivos,
+            long sincronizados,
+            long faltantesDisco) {}
 
     @Override
     @Transactional

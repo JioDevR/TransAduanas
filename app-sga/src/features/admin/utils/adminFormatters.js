@@ -10,6 +10,12 @@ export function formatBytes(bytes = 0) {
   return `${(val / (1024 * 1024 * 1024)).toFixed(2)} GB`
 }
 
+export function formatMb(mb = 0) {
+  const val = Number(mb || 0)
+  if (val >= 1024) return `${(val / 1024).toFixed(1)} GB`
+  return `${val} MB`
+}
+
 export function formatUptime(seconds = 0) {
   const s = Math.max(0, Number(seconds || 0))
   const d = Math.floor(s / 86400)

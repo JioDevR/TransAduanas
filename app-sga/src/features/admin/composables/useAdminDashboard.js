@@ -3,9 +3,9 @@ import { useAuthStore } from '@/features/auth/stores/authStore'
 import { ROLE_LABELS } from '@/core/auth/roles'
 import { sistemaService } from '../services/sistemaService'
 import { userService } from '../users/services/userService'
-import { formatBytes, formatUptime } from '../utils/adminFormatters'
+import { formatBytes, formatMb, formatUptime } from '../utils/adminFormatters'
 
-export { formatBytes, formatUptime }
+export { formatBytes, formatMb, formatUptime }
 
 export function useAdminDashboard() {
   const authStore = useAuthStore()

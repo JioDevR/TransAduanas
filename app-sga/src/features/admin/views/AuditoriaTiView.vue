@@ -1,13 +1,12 @@
 <template>
   <div class="auditoria-ti-view fade-in">
-    <!-- 1. Cabecera Directa sgaUI -->
+    <!-- 1. Barra de Estado y Acciones sgaUI (Título único en Topbar) -->
     <header class="sga-dash-header">
-      <div>
-        <h2 class="section-title">Auditoría de Seguridad y Eventos TI</h2>
+      <div class="sga-dash-meta">
+        <Tag :value="`${totalElements} eventos registrados`" severity="secondary" />
       </div>
 
       <div class="sga-dash-actions">
-        <Tag :value="`${totalElements} eventos`" severity="secondary" />
         <Button
           label="Actualizar"
           icon="pi pi-sync"

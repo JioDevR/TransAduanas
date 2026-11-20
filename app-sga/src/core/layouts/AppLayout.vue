@@ -124,12 +124,14 @@ const MODULE_TITLES = {
     default: 'Administración TI',
     sub: {
       dashboard: 'Centro de Control y Monitoreo del Sistema TI',
-      users: 'Gestor y Directorio de Usuarios TI',
+      users: 'Personal Interno y Acreditaciones',
       'create-user': 'Ficha de Registro de Operador',
-      'portal-users': 'Gestión de Usuarios del Portal B2B',
-      'create-portal-user': 'Alta de Usuario del Portal B2B',
+      'portal-users': 'Usuarios del Portal Clientes B2B',
+      'create-portal-user': 'Gestión de Usuario Portal B2B',
+      auditoria: 'Auditoría de Seguridad y Eventos TI',
+      'roles-accesos': 'Matriz de Roles, Permisos y Almacenamiento',
       logs: 'Bitácora y Consola de Logs TI',
-      about: 'Acerca del Sistema SGA'
+      about: 'Ficha Técnica del Sistema SGA'
     },
     getSub: () => navigationStore.administracionTiSubOption
   },

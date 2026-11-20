@@ -1,7 +1,7 @@
 <template>
   <div class="portal-user-form-sga fade-in">
     <header class="sga-form-header">
-      <div class="ptl-header-left">
+      <div class="sga-dash-meta">
         <Button
           label="Volver a Usuarios Portal"
           icon="pi pi-arrow-left"
@@ -11,9 +11,11 @@
           :disabled="submitting"
           @click="$emit('cancel')"
         />
-        <h2 class="sga-form-title">
-          {{ isEditMode ? `Editar Cuenta B2B: @${form.username}` : 'Aprovisionar Usuario Portal B2B' }}
-        </h2>
+        <Tag
+          :value="isEditMode ? `Editando @${form.username}` : 'Nueva Cuenta B2B'"
+          :severity="isEditMode ? 'warn' : 'info'"
+          rounded
+        />
       </div>
 
       <div class="sga-form-actions">

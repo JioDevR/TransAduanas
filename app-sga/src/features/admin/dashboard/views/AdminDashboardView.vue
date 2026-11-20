@@ -1,17 +1,17 @@
 <template>
   <div class="admin-dashboard-view fade-in">
-    <!-- 1. Cabecera Directa sgaUI -->
+    <!-- 1. Barra de Estado y Acciones sgaUI (Título único en Topbar) -->
     <header class="sga-dash-header">
-      <div>
-        <h2 class="section-title">Control Técnico e Infraestructura</h2>
-      </div>
-
-      <div class="sga-dash-actions">
+      <div class="sga-dash-meta">
         <Tag
           :value="isBackendHealthy ? `API ONLINE · ${pingLatency}ms` : 'API DEGRADADA'"
           :severity="isBackendHealthy ? 'success' : 'danger'"
           rounded
         />
+        <span class="sga-kpi-pill sga-mono">Sync {{ lastCheckedTime }}</span>
+      </div>
+
+      <div class="sga-dash-actions">
         <Button
           label="Nuevo Usuario"
           icon="pi pi-user-plus"

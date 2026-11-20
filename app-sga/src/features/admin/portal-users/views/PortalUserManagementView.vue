@@ -9,12 +9,11 @@
 
     <template v-else>
       <header class="sga-dash-header">
-        <div>
-          <h2 class="section-title">Usuarios Portal Clientes B2B</h2>
+        <div class="sga-dash-meta">
+          <Tag :value="`${users.length} cuentas B2B`" severity="secondary" />
         </div>
 
         <div class="sga-dash-actions">
-          <Tag :value="`${users.length} cuentas`" severity="secondary" />
           <Button
             label="Actualizar"
             icon="pi pi-sync"

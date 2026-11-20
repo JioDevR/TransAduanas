@@ -1,9 +1,10 @@
 <template>
   <div class="system-logs-view fade-in">
-    <!-- 1. Cabecera Directa sgaUI -->
+    <!-- 1. Barra de Estado y Acciones sgaUI (Título único en Topbar) -->
     <header class="sga-dash-header">
-      <div>
-        <h2 class="section-title">Consola y Bitácora de Logs</h2>
+      <div class="sga-dash-meta">
+        <Tag :value="logData.fileName || 'sga-backend.log'" severity="secondary" />
+        <span class="sga-kpi-pill sga-mono">Sync {{ lastSyncTime }}</span>
       </div>
 
       <div class="sga-dash-actions">
@@ -195,6 +196,7 @@ import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import Button from 'primevue/button'
 import InputText from 'primevue/inputtext'
 import Select from 'primevue/select'
+import Tag from 'primevue/tag'
 import { logsService } from '../services/logsService'
 import { useNotification } from '@/shared/composables/useNotification'
 import { useConfirmation } from '@/shared/composables/useConfirmation'

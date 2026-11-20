@@ -1,13 +1,12 @@
 <template>
   <div class="roles-storage-view fade-in">
-    <!-- 1. Cabecera Directa sgaUI -->
+    <!-- 1. Barra de Estado y Acciones sgaUI (Título único en Topbar) -->
     <header class="sga-dash-header">
-      <div>
-        <h2 class="section-title">Matriz de Roles, Permisos y Almacenamiento</h2>
+      <div class="sga-dash-meta">
+        <Tag :value="`${rolesMatriz.length} roles institucionales`" severity="secondary" />
       </div>
 
       <div class="sga-dash-actions">
-        <Tag :value="`${rolesMatriz.length} roles institucionales`" severity="secondary" />
         <Button
           label="Actualizar"
           icon="pi pi-sync"

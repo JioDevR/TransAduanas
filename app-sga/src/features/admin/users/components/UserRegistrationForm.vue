@@ -1,8 +1,8 @@
 <template>
   <div class="user-registration-sga fade-in">
-    <!-- 1. Cabecera directa sgaUI (sga-forms.css) -->
+    <!-- 1. Barra de acciones sgaUI (Título único en Topbar) -->
     <header class="sga-form-header">
-      <div class="usr-header-left">
+      <div class="sga-dash-meta">
         <Button
           label="Volver al directorio"
           icon="pi pi-arrow-left"
@@ -12,9 +12,11 @@
           :disabled="submitting"
           @click="$emit('cancel')"
         />
-        <h2 class="sga-form-title">
-          {{ isEditMode ? `Editar Operador: @${form.username}` : 'Registrar Operador Interno' }}
-        </h2>
+        <Tag
+          :value="isEditMode ? `Editando @${form.username}` : 'Nuevo Registro'"
+          :severity="isEditMode ? 'warn' : 'info'"
+          rounded
+        />
       </div>
 
       <div class="sga-form-actions">

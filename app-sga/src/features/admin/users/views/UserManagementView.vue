@@ -10,14 +10,13 @@
     />
 
     <template v-else>
-      <!-- Cabecera Directa sgaUI -->
+      <!-- Barra de Estado y Acciones sgaUI (Título único en Topbar) -->
       <header class="sga-dash-header">
-        <div>
-          <h2 class="section-title">Personal Interno y Acreditaciones</h2>
+        <div class="sga-dash-meta">
+          <Tag :value="`${users.length} operadores registrados`" severity="secondary" />
         </div>
 
         <div class="sga-dash-actions">
-          <Tag :value="`${users.length} registrados`" severity="secondary" />
           <Button
             label="Actualizar"
             icon="pi pi-sync"

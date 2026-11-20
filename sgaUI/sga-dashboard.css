@@ -11,6 +11,17 @@
   gap: 0.85rem;
 }
 
+.sga-dash-header.is-actions-only {
+  justify-content: flex-end;
+}
+
+.sga-dash-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .sga-dash-actions {
   display: flex;
   flex-wrap: wrap;

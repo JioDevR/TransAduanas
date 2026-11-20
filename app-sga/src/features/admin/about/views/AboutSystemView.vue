@@ -1,12 +1,11 @@
 <template>
   <div class="about-system-view fade-in">
     <header class="sga-dash-header">
-      <div>
-        <h2 class="section-title">Ficha Técnica del Sistema (SGA)</h2>
+      <div class="sga-dash-meta">
+        <Tag :value="`v${estado.appVersion || '0.5.1'} · ${estado.perfilActivo || 'default'}`" severity="info" rounded />
       </div>
 
       <div class="sga-dash-actions">
-        <Tag :value="`v${estado.appVersion || '0.5.1'} · ${estado.perfilActivo || 'default'}`" severity="info" rounded />
         <Button
           label="Sincronizar"
           icon="pi pi-sync"

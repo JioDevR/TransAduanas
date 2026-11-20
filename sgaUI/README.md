@@ -80,7 +80,8 @@ La identidad **Warm Editorial Pro** separa el **color estructural** (arena, latt
   * Tablas (`DataTable` celdas y cabeceras): `0.65rem 0.9rem` (densidad operativa para visualizar más registros sin saturar).
 * **Cascarón Principal (`sga-shell.css`):**
   * Sidebar: ancho `256px` (colapsado `72px`), padding `1rem 0.75rem`, ítems en píldora (`border-radius: 9999px`) con punto indicador y tarjeta `GESTOR DE MÓDULOS` anclada al pie (`margin-top: auto`).
-  * Topbar: altura mínima `64px` en una sola línea (`padding: 0.75rem 2rem`), título limpio a la izquierda y pill `SEDE` + perfil a la derecha.
+  * Topbar: altura mínima `64px` en una sola línea (`padding: 0.75rem 2rem`), **título único de vista (`<h1 class="sga-topbar-title">`)** a la izquierda y pill `SEDE` + perfil a la derecha.
+  * **Regla de Título Único:** El título principal de la pantalla vive exclusivamente en `.sga-topbar`. Las vistas internas no deben duplicar un título `<h1>`/`<h2>` debajo de la topbar; su barra superior (`.sga-dash-header` / `.sga-form-header`) debe mostrar únicamente estado/metadatos contextuales (`.sga-dash-meta`) y acciones (`<Button size="small">`).
   * Contenido principal: `padding: 1.5rem 2rem` (en móvil `<= 900px` pasa a `1rem`).
 * **Elevación:** En lugar de sombras pesadas, se combinan `1px solid var(--p-surface-200)` (claro) / `var(--p-surface-800)` (oscuro) con sombra mínima.
 
@@ -126,7 +127,7 @@ Referencia aplicada en el wizard de cotización comercial (`app-sga/src/features
 
 Referencia compartida por **Comercial** (`ComercialDashboardPanel.vue`) y **Gestión Aduanera** (`DashboardAduaneroPanel.vue`), centralizada en [`sga-dashboard.css`](./sga-dashboard.css):
 
-* **Cabecera y barra de filtros:** `.sga-dash-header`, `.sga-dash-actions`, `.sga-filters-card`, `.sga-filters-grid`, `.sga-filter-field`, `.sga-filter-reset`.
+* **Cabecera y barra de filtros:** `.sga-dash-header` (con `.sga-dash-meta` para estado/píldoras y `.sga-dash-actions` para botones, sin duplicar el título de la topbar), `.sga-filters-card`, `.sga-filters-grid`, `.sga-filter-field`, `.sga-filter-reset`.
 * **Tarjetas KPI:** `.sga-kpis-grid` y `.sga-kpi-card` con variantes `.is-success`, `.is-warn`, `.is-danger` y píldora de porcentaje/estado `.sga-kpi-pill`.
 * **Gráficos Chart.js:** `.sga-charts-grid`, `.sga-chart-card`, `.sga-chart-head`, `.sga-chart-box` (`height: 240px`), y centro de dona `.sga-doughnut-wrap` / `.sga-doughnut-center`.
 

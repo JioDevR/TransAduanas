@@ -3,7 +3,7 @@
     <!-- Barra superior sgaUI: conteo a la izquierda, acciones a la derecha -->
     <div class="sga-dash-header">
       <div class="sga-dash-meta">
-        <Tag :value="`${filteredUsers.length} de ${users.length} operadores`" severity="secondary" />
+        <Tag :value="`${activeUsersCount} cuentas activas`" severity="secondary" />
       </div>
 
       <div class="sga-dash-actions">
@@ -218,6 +218,8 @@ const selectedRoleFilter = ref('ALL')
 const selectedSedeFilter = ref('ALL')
 const statusFilter = ref('ALL')
 const sortBy = ref('RECENTS')
+
+const activeUsersCount = computed(() => props.users.filter((u) => u.estadoActivo).length)
 
 const roleOptions = computed(() => [
   { label: 'Todos los Roles', value: 'ALL' },

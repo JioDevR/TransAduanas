@@ -3,7 +3,7 @@
     <!-- Barra superior sgaUI: conteo a la izquierda, acciones a la derecha -->
     <div class="sga-dash-header">
       <div class="sga-dash-meta">
-        <Tag :value="`${filteredUsers.length} de ${users.length} cuentas B2B`" severity="secondary" />
+        <Tag :value="`${activeUsersCount} cuentas activas`" severity="secondary" />
       </div>
 
       <div class="sga-dash-actions">
@@ -216,6 +216,8 @@ const selectedClienteFilter = ref('ALL')
 const statusFilter = ref('ALL')
 const securityFilter = ref('ALL')
 const sortBy = ref('RECENTS')
+
+const activeUsersCount = computed(() => props.users.filter((u) => u.estadoActivo).length)
 
 const clienteOptions = computed(() => {
   const map = new Map()

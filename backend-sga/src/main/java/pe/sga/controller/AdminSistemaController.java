@@ -5,6 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import pe.sga.config.SecurityRoles;
+import pe.sga.dto.response.AdminAlmacenamientoDTO;
 import pe.sga.dto.response.AdminDashboardResponseDTO;
 import pe.sga.dto.response.AdminSistemaEstadoDTO;
 import pe.sga.dto.response.ApiResponseDTO;
@@ -12,6 +13,7 @@ import pe.sga.dto.response.RolMatrizDTO;
 import pe.sga.service.IAdminSistemaService;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/admin/sistema")
@@ -46,6 +48,30 @@ public class AdminSistemaController {
         return ResponseEntity.ok(ApiResponseDTO.ok(
                 "Matriz de roles y accesos recuperada exitosamente",
                 adminSistemaService.obtenerMatrizRoles()
+        ));
+    }
+
+    @GetMapping("/almacenamiento")
+    public ResponseEntity<ApiResponseDTO<AdminAlmacenamientoDTO>> obtenerAlmacenamiento(
+            @RequestParam(required = false) String buscar,
+            @RequestParam(required = false) String entidad,
+            @RequestParam(required = false) String categoria,
+            @RequestParam(required = false) String integridad,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size
+    ) {
+        return ResponseEntity.ok(ApiResponseDTO.ok(
+                "Diagnóstico de almacenamiento recuperado exitosamente",
+                adminSistemaService.obtenerDiagnosticoAlmacenamiento(buscar, entidad, categoria, integridad, page, size)
+        ));
+    }
+
+    @PostMapping("/almacenamiento/depurar-huerfanos")
+    @PreAuthorize(SecurityRoles.ACCESS_LOGS_READ)
+    public ResponseEntity<ApiResponseDTO<Map<String, Object>>> depurarHuerfanos() {
+        return ResponseEntity.ok(ApiResponseDTO.ok(
+                "Depuración de archivos huérfanos ejecutada exitosamente",
+                adminSistemaService.depurarArchivosHuerfanos()
         ));
     }
 }

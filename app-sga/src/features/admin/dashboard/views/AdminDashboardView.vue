@@ -191,7 +191,7 @@
         </p>
       </article>
 
-      <article class="sga-kpi-card" @click="navigateTo('roles-accesos')">
+      <article class="sga-kpi-card" @click="navigateTo('almacenamiento')">
         <div class="sga-kpi-head">
           <span class="sga-kpi-index">05</span>
           <span class="sga-kpi-label">JVM &amp; Almacenamiento</span>
@@ -243,12 +243,12 @@
             <h3 class="sga-chart-title">Operadores por Rol Institucional</h3>
           </div>
           <Button
-            label="Matriz Roles"
-            icon="pi pi-sitemap"
+            label="Ver Usuarios"
+            icon="pi pi-users"
             severity="secondary"
             text
             size="small"
-            @click="navigateTo('roles-accesos')"
+            @click="navigateTo('users')"
           />
         </div>
         <div class="sga-chart-box sga-doughnut-wrap">
@@ -514,7 +514,7 @@ const navigateTo = (subOption) => {
     users: '/administracion-ti/usuarios',
     'portal-users': '/administracion-ti/usuarios-portal',
     auditoria: '/administracion-ti/auditoria',
-    'roles-accesos': '/administracion-ti/roles-accesos',
+    almacenamiento: '/administracion-ti/almacenamiento',
     logs: '/administracion-ti/logs',
     about: '/administracion-ti/acerca-de'
   }

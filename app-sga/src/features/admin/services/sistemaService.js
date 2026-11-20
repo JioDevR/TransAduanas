@@ -24,6 +24,26 @@ export const sistemaService = {
   async getRolesMatriz() {
     const response = await apiClient.get('/admin/sistema/roles-matriz')
     return response.data.data
+  },
+
+  /**
+   * Obtiene diagnóstico detallado de almacenamiento y cruce BD vs disco
+   * @param {Object} params { buscar, entidad, categoria, integridad, page, size }
+   */
+  async getAlmacenamiento(params = {}) {
+    const cleanParams = Object.fromEntries(
+      Object.entries(params).filter(([, v]) => v !== '' && v !== null && v !== undefined)
+    )
+    const response = await apiClient.get('/admin/sistema/almacenamiento', { params: cleanParams })
+    return response.data.data
+  },
+
+  /**
+   * Depura archivos físicos huérfanos en el directorio local de almacenamiento
+   */
+  async depurarHuerfanos() {
+    const response = await apiClient.post('/admin/sistema/almacenamiento/depurar-huerfanos')
+    return response.data.data
   }
 }
 

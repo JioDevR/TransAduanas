@@ -4,7 +4,8 @@ import apiClient from '@/core/api/apiClient'
 
 vi.mock('@/core/api/apiClient', () => ({
   default: {
-    get: vi.fn()
+    get: vi.fn(),
+    post: vi.fn()
   }
 }))
 
@@ -43,5 +44,33 @@ describe('sistemaService', () => {
 
     expect(apiClient.get).toHaveBeenCalledWith('/admin/sistema/roles-matriz')
     expect(res).toEqual(matriz)
+  })
+
+  it('getAlmacenamiento limpia parámetros vacíos y consulta /admin/sistema/almacenamiento', async () => {
+    const storage = { disponible: true, items: [] }
+    apiClient.get.mockResolvedValueOnce({ data: { data: storage } })
+
+    const res = await sistemaService.getAlmacenamiento({
+      buscar: 'factura',
+      entidad: '',
+      integridad: 'SINCRONIZADO',
+      page: 0,
+      size: 20
+    })
+
+    expect(apiClient.get).toHaveBeenCalledWith('/admin/sistema/almacenamiento', {
+      params: { buscar: 'factura', integridad: 'SINCRONIZADO', page: 0, size: 20 }
+    })
+    expect(res).toEqual(storage)
+  })
+
+  it('depurarHuerfanos invoca POST /admin/sistema/almacenamiento/depurar-huerfanos', async () => {
+    const payload = { archivosEliminados: 2, bytesLiberados: 2048 }
+    apiClient.post.mockResolvedValueOnce({ data: { data: payload } })
+
+    const res = await sistemaService.depurarHuerfanos()
+
+    expect(apiClient.post).toHaveBeenCalledWith('/admin/sistema/almacenamiento/depurar-huerfanos')
+    expect(res).toEqual(payload)
   })
 })

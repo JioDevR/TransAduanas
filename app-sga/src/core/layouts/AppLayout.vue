@@ -129,7 +129,8 @@ const MODULE_TITLES = {
       'portal-users': 'Cuentas Corporativas B2B',
       'create-portal-user': 'Gestión de Usuario Portal B2B',
       auditoria: 'Registro de Eventos y Seguridad',
-      'roles-accesos': 'Matriz de Roles, Permisos y Almacenamiento',
+      almacenamiento: 'Almacenamiento y Repositorio Documental',
+      'roles-accesos': 'Almacenamiento y Repositorio Documental',
       logs: 'Bitácora y Consola de Logs TI',
       about: 'Ficha Técnica del Sistema SGA'
     },

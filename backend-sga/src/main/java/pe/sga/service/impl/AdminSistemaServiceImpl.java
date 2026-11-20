@@ -6,9 +6,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import pe.sga.dto.response.AdminAlmacenamientoDTO;
 import pe.sga.dto.response.AdminDashboardResponseDTO;
 import pe.sga.dto.response.AdminSistemaEstadoDTO;
 import pe.sga.dto.response.RolMatrizDTO;
+import pe.sga.entity.DocumentoAdjunto;
 import pe.sga.entity.Usuario;
 import pe.sga.entity.UsuarioCliente;
 import pe.sga.entity.enums.RolUsuario;
@@ -27,8 +29,10 @@ import java.nio.file.*;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.Statement;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Stream;
@@ -273,5 +277,336 @@ public class AdminSistemaServiceImpl implements IAdminSistemaService {
             case CONTADOR -> List.of("Validación Pagos", "CRUD Liquidaciones Financieras", "Conciliación");
             case ASESOR_LEGAL -> List.of("Auditoría Expedientes", "Lectura Almacén y Liquidaciones", "Documentos");
         };
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public AdminAlmacenamientoDTO obtenerDiagnosticoAlmacenamiento(
+            String buscar, String entidad, String categoria, String integridad, int page, int size) {
+
+        Path storagePath = resolverRutaStorage();
+        boolean disponible = Files.exists(storagePath) && Files.isDirectory(storagePath);
+
+        long discoLibreMb = 0;
+        long discoTotalMb = 0;
+        if (disponible) {
+            try {
+                FileStore store = Files.getFileStore(storagePath);
+                discoLibreMb = store.getUsableSpace() / (1024 * 1024);
+                discoTotalMb = store.getTotalSpace() / (1024 * 1024);
+            } catch (IOException ignored) {
+            }
+        }
+        long discoUsadoMb = Math.max(0L, discoTotalMb - discoLibreMb);
+        int discoPct = discoTotalMb > 0 ? (int) Math.min(100, Math.round((discoUsadoMb * 100.0) / discoTotalMb)) : 0;
+
+        Map<String, Path> archivosDiscoPorRuta = mapearArchivosEnDisco(storagePath, disponible);
+        long storageTamanoBytes = 0;
+        for (Path p : archivosDiscoPorRuta.values()) {
+            try {
+                storageTamanoBytes += Files.size(p);
+            } catch (IOException ignored) {
+            }
+        }
+
+        List<DocumentoAdjunto> documentosBd = documentoRepository.findAll();
+        Set<String> rutasEnBd = new HashSet<>();
+        List<AdminAlmacenamientoDTO.ArchivoStorageDTO> inventarioCompleto = new ArrayList<>();
+
+        long bdActivos = 0;
+        long bdInactivos = 0;
+        long bytesBdActivos = 0;
+        long sincronizados = 0;
+        long faltantesDisco = 0;
+
+        Map<String, long[]> aggEntidad = new LinkedHashMap<>();
+        Map<String, long[]> aggCategoria = new LinkedHashMap<>();
+        Map<String, long[]> aggExtension = new LinkedHashMap<>();
+
+        for (DocumentoAdjunto doc : documentosBd) {
+            boolean activo = Boolean.TRUE.equals(doc.getActivo());
+            long tamano = doc.getTamanoBytes() != null ? doc.getTamanoBytes() : 0L;
+            if (activo) {
+                bdActivos++;
+                bytesBdActivos += tamano;
+            } else {
+                bdInactivos++;
+            }
+
+            String relPath = normalizarRutaRelativa(doc.getRutaAlmacenamiento());
+            if (!relPath.isBlank()) {
+                rutasEnBd.add(relPath);
+            }
+
+            Path archivoDisco = archivosDiscoPorRuta.get(relPath);
+            boolean existeEnDisco = archivoDisco != null && Files.isRegularFile(archivoDisco);
+            if (existeEnDisco) {
+                try {
+                    tamano = Files.size(archivoDisco);
+                } catch (IOException ignored) {
+                }
+            }
+
+            String estadoInt;
+            if (!existeEnDisco) {
+                estadoInt = "FALTANTE_DISCO";
+                if (activo) {
+                    faltantesDisco++;
+                }
+            } else if (!activo) {
+                estadoInt = "BAJA_LOGICA";
+            } else {
+                estadoInt = "SINCRONIZADO";
+                sincronizados++;
+            }
+
+            String entKey = doc.getEntidadTipo() != null ? doc.getEntidadTipo().name() : "GENERAL";
+            String catKey = doc.getCategoria() != null ? doc.getCategoria().name() : "GENERAL";
+            String extKey = (doc.getExtension() != null && !doc.getExtension().isBlank())
+                    ? doc.getExtension().trim().toUpperCase()
+                    : extraerExtension(doc.getNombreOriginal());
+
+            if (activo) {
+                acumularGrupo(aggEntidad, entKey, tamano);
+                acumularGrupo(aggCategoria, catKey, tamano);
+                acumularGrupo(aggExtension, extKey, tamano);
+            }
+
+            inventarioCompleto.add(AdminAlmacenamientoDTO.ArchivoStorageDTO.builder()
+                    .idDocumento(doc.getIdDocumento())
+                    .nombreOriginal(doc.getNombreOriginal())
+                    .rutaRelativa(relPath)
+                    .extension(extKey)
+                    .formatoMime(doc.getFormatoMime())
+                    .entidadTipo(entKey)
+                    .categoria(catKey)
+                    .tamanoBytes(tamano)
+                    .activoBd(activo)
+                    .estadoIntegridad(estadoInt)
+                    .usuarioCreador(doc.getUsuarioCreador() != null ? doc.getUsuarioCreador().getUsername() : "SISTEMA")
+                    .fechaCreacion(doc.getFechaCreacion())
+                    .build());
+        }
+
+        long huerfanosCount = 0;
+        long bytesHuerfanos = 0;
+        for (Map.Entry<String, Path> entry : archivosDiscoPorRuta.entrySet()) {
+            if (rutasEnBd.contains(entry.getKey())) {
+                continue;
+            }
+            Path p = entry.getValue();
+            long tamano = 0;
+            LocalDateTime modTime = LocalDateTime.now();
+            try {
+                tamano = Files.size(p);
+                modTime = LocalDateTime.ofInstant(
+                        Instant.ofEpochMilli(Files.getLastModifiedTime(p).toMillis()),
+                        ZoneId.systemDefault());
+            } catch (IOException ignored) {
+            }
+            huerfanosCount++;
+            bytesHuerfanos += tamano;
+
+            String nombre = p.getFileName() != null ? p.getFileName().toString() : entry.getKey();
+            String ext = extraerExtension(nombre);
+            acumularGrupo(aggExtension, ext, tamano);
+
+            inventarioCompleto.add(AdminAlmacenamientoDTO.ArchivoStorageDTO.builder()
+                    .idDocumento(null)
+                    .nombreOriginal(nombre)
+                    .rutaRelativa(entry.getKey())
+                    .extension(ext)
+                    .formatoMime("application/octet-stream")
+                    .entidadTipo("SIN_REGISTRO")
+                    .categoria("HUERFANO")
+                    .tamanoBytes(tamano)
+                    .activoBd(false)
+                    .estadoIntegridad("HUERFANO")
+                    .usuarioCreador("DISCO_LOCAL")
+                    .fechaCreacion(modTime)
+                    .build());
+        }
+
+        inventarioCompleto.sort(Comparator.comparing(
+                AdminAlmacenamientoDTO.ArchivoStorageDTO::getFechaCreacion,
+                Comparator.nullsLast(Comparator.reverseOrder())));
+
+        String buscaNorm = buscar != null ? buscar.trim().toLowerCase() : "";
+        String entNorm = entidad != null ? entidad.trim() : "";
+        String catNorm = categoria != null ? categoria.trim() : "";
+        String intNorm = integridad != null ? integridad.trim() : "";
+
+        List<AdminAlmacenamientoDTO.ArchivoStorageDTO> filtrados = inventarioCompleto.stream()
+                .filter(a -> buscaNorm.isEmpty()
+                        || (a.getNombreOriginal() != null && a.getNombreOriginal().toLowerCase().contains(buscaNorm))
+                        || (a.getRutaRelativa() != null && a.getRutaRelativa().toLowerCase().contains(buscaNorm))
+                        || (a.getUsuarioCreador() != null && a.getUsuarioCreador().toLowerCase().contains(buscaNorm)))
+                .filter(a -> entNorm.isEmpty() || "ALL".equalsIgnoreCase(entNorm)
+                        || entNorm.equalsIgnoreCase(a.getEntidadTipo()))
+                .filter(a -> catNorm.isEmpty() || "ALL".equalsIgnoreCase(catNorm)
+                        || catNorm.equalsIgnoreCase(a.getCategoria()))
+                .filter(a -> intNorm.isEmpty() || "ALL".equalsIgnoreCase(intNorm)
+                        || intNorm.equalsIgnoreCase(a.getEstadoIntegridad()))
+                .toList();
+
+        int safePage = Math.max(0, page);
+        int safeSize = Math.min(Math.max(1, size), 100);
+        int totalElements = filtrados.size();
+        int totalPages = totalElements == 0 ? 0 : (int) Math.ceil((double) totalElements / safeSize);
+        int fromIdx = Math.min(safePage * safeSize, totalElements);
+        int toIdx = Math.min(fromIdx + safeSize, totalElements);
+
+        return AdminAlmacenamientoDTO.builder()
+                .directorioRaiz(storagePath.toString())
+                .disponible(disponible)
+                .discoTotalMb(discoTotalMb)
+                .discoLibreMb(discoLibreMb)
+                .discoUsadoMb(discoUsadoMb)
+                .discoOcupacionPct(discoPct)
+                .storageTamanoBytes(storageTamanoBytes)
+                .archivosEnDisco(archivosDiscoPorRuta.size())
+                .registrosBdTotales(documentosBd.size())
+                .registrosBdActivos(bdActivos)
+                .registrosBdInactivos(bdInactivos)
+                .bytesRegistradosBdActivos(bytesBdActivos)
+                .archivosSincronizados(sincronizados)
+                .archivosFaltantesEnDisco(faltantesDisco)
+                .archivosHuerfanosEnDisco(huerfanosCount)
+                .bytesHuerfanosEnDisco(bytesHuerfanos)
+                .porEntidad(ordenarGrupos(aggEntidad))
+                .porCategoria(ordenarGrupos(aggCategoria))
+                .porExtension(ordenarGrupos(aggExtension))
+                .items(filtrados.subList(fromIdx, toIdx))
+                .totalElements(totalElements)
+                .totalPages(totalPages)
+                .page(safePage)
+                .size(safeSize)
+                .build();
+    }
+
+    @Override
+    @Transactional
+    public Map<String, Object> depurarArchivosHuerfanos() {
+        Path storagePath = resolverRutaStorage();
+        boolean disponible = Files.exists(storagePath) && Files.isDirectory(storagePath);
+
+        long eliminados = 0;
+        long bytesLiberados = 0;
+
+        if (disponible) {
+            Set<String> rutasEnBd = new HashSet<>();
+            for (DocumentoAdjunto doc : documentoRepository.findAll()) {
+                String rel = normalizarRutaRelativa(doc.getRutaAlmacenamiento());
+                if (!rel.isBlank()) {
+                    rutasEnBd.add(rel);
+                }
+            }
+
+            Map<String, Path> archivosDiscoPorRuta = mapearArchivosEnDisco(storagePath, true);
+            for (Map.Entry<String, Path> entry : archivosDiscoPorRuta.entrySet()) {
+                if (rutasEnBd.contains(entry.getKey())) {
+                    continue;
+                }
+                Path archivo = entry.getValue().normalize();
+                if (!archivo.startsWith(storagePath)) {
+                    continue;
+                }
+                try {
+                    long tam = Files.size(archivo);
+                    if (Files.deleteIfExists(archivo)) {
+                        eliminados++;
+                        bytesLiberados += tam;
+                    }
+                } catch (IOException ex) {
+                    log.warn("No se pudo eliminar archivo huérfano {}: {}", archivo, ex.getMessage());
+                }
+            }
+
+            limpiarDirectoriosVacios(storagePath);
+        }
+
+        auditoriaService.registrar("DOCUMENTOS", "DEPURAR_ARCHIVOS_HUERFANOS", "ALMACENAMIENTO",
+                null, "Depuración de almacenamiento local: " + eliminados + " archivos huérfanos eliminados ("
+                        + bytesLiberados + " bytes liberados)", "EXITO");
+
+        Map<String, Object> res = new LinkedHashMap<>();
+        res.put("archivosEliminados", eliminados);
+        res.put("bytesLiberados", bytesLiberados);
+        res.put("timestamp", LocalDateTime.now());
+        return res;
+    }
+
+    private Path resolverRutaStorage() {
+        String raw = uploadDir != null && !uploadDir.isBlank() ? uploadDir : "./uploads/documentos";
+        return Paths.get(raw).toAbsolutePath().normalize();
+    }
+
+    private Map<String, Path> mapearArchivosEnDisco(Path storagePath, boolean disponible) {
+        Map<String, Path> map = new LinkedHashMap<>();
+        if (!disponible) {
+            return map;
+        }
+        try (Stream<Path> walk = Files.walk(storagePath)) {
+            walk.filter(Files::isRegularFile).forEach(p -> {
+                String rel = storagePath.relativize(p.toAbsolutePath().normalize())
+                        .toString()
+                        .replace('\\', '/');
+                map.put(rel, p);
+            });
+        } catch (IOException ex) {
+            log.warn("Error recorriendo almacenamiento en {}: {}", storagePath, ex.getMessage());
+        }
+        return map;
+    }
+
+    private void limpiarDirectoriosVacios(Path root) {
+        try (Stream<Path> walk = Files.walk(root)) {
+            walk.sorted(Comparator.reverseOrder())
+                    .filter(Files::isDirectory)
+                    .filter(dir -> !dir.equals(root))
+                    .forEach(dir -> {
+                        try (Stream<Path> children = Files.list(dir)) {
+                            if (children.findAny().isEmpty()) {
+                                Files.deleteIfExists(dir);
+                            }
+                        } catch (IOException ignored) {
+                        }
+                    });
+        } catch (IOException ignored) {
+        }
+    }
+
+    private String normalizarRutaRelativa(String raw) {
+        if (raw == null) return "";
+        String norm = raw.trim().replace('\\', '/');
+        while (norm.startsWith("/")) {
+            norm = norm.substring(1);
+        }
+        return norm;
+    }
+
+    private String extraerExtension(String filename) {
+        if (filename == null) return "SIN_EXT";
+        int idx = filename.lastIndexOf('.');
+        if (idx < 0 || idx == filename.length() - 1) return "SIN_EXT";
+        return filename.substring(idx + 1).trim().toUpperCase();
+    }
+
+    private void acumularGrupo(Map<String, long[]> map, String clave, long bytes) {
+        long[] stats = map.computeIfAbsent(clave, k -> new long[2]);
+        stats[0] += 1L;
+        stats[1] += bytes;
+    }
+
+    private List<AdminAlmacenamientoDTO.GrupoStorageDTO> ordenarGrupos(Map<String, long[]> map) {
+        return map.entrySet().stream()
+                .sorted((a, b) -> Long.compare(b.getValue()[1], a.getValue()[1]))
+                .map(e -> AdminAlmacenamientoDTO.GrupoStorageDTO.builder()
+                        .clave(e.getKey())
+                        .etiqueta(e.getKey().replace('_', ' '))
+                        .cantidad(e.getValue()[0])
+                        .tamanoBytes(e.getValue()[1])
+                        .build())
+                .toList();
     }
 }

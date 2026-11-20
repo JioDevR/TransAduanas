@@ -48,12 +48,16 @@ export const adminRoutes = [
   },
   {
     path: '/administracion-ti/roles-accesos',
-    name: 'AdminRolesAccesos',
-    component: () => import('@/features/admin/views/RolesAlmacenamientoView.vue'),
+    redirect: '/administracion-ti/almacenamiento'
+  },
+  {
+    path: '/administracion-ti/almacenamiento',
+    name: 'AdminAlmacenamiento',
+    component: () => import('@/features/admin/views/AlmacenamientoView.vue'),
     meta: {
       requiresAuth: true,
       roles: [ROLES.ADMINISTRADOR_TI, ROLES.GERENTE_GENERAL],
-      title: 'Matriz de Roles y Almacenamiento - SGA'
+      title: 'Almacenamiento y Repositorio Documental - SGA'
     }
   },
   {

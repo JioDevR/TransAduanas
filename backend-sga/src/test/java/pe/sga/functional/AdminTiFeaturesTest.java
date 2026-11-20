@@ -137,4 +137,30 @@ class AdminTiFeaturesTest extends FullStackTestBase {
         }
         assertTrue(encontroCrearCliente, "Debe registrarse CREAR_CLIENTE en Auditoría TI bajo módulo COMERCIAL");
     }
+
+    @Test
+    void TI08_diagnosticoAlmacenamientoYDepuracion() throws Exception {
+        var comercial = user(RolUsuario.AGENTE_COMERCIAL);
+        var tokenCom = login(comercial);
+        assertEquals(403, call("GET", "/api/v1/admin/sistema/almacenamiento", tokenCom, null).statusCode());
+
+        var gerente = user(RolUsuario.GERENTE_GENERAL);
+        var tokenGer = login(gerente);
+        assertEquals(200, call("GET", "/api/v1/admin/sistema/almacenamiento", tokenGer, null).statusCode());
+        assertEquals(403, call("POST", "/api/v1/admin/sistema/almacenamiento/depurar-huerfanos", tokenGer, null).statusCode());
+
+        var admin = user(RolUsuario.ADMINISTRADOR_TI);
+        var tokenAdmin = login(admin);
+        var diag = call("GET", "/api/v1/admin/sistema/almacenamiento?page=0&size=10", tokenAdmin, null);
+        assertEquals(200, diag.statusCode(), diag.body());
+        var data = tree(diag).path("data");
+        assertTrue(data.has("directorioRaiz"));
+        assertTrue(data.path("porEntidad").isArray());
+        assertTrue(data.path("porExtension").isArray());
+        assertTrue(data.path("items").isArray());
+
+        var purge = call("POST", "/api/v1/admin/sistema/almacenamiento/depurar-huerfanos", tokenAdmin, null);
+        assertEquals(200, purge.statusCode(), purge.body());
+        assertTrue(tree(purge).path("data").has("archivosEliminados"));
+    }
 }

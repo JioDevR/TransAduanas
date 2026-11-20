@@ -6,6 +6,7 @@ import io.jsonwebtoken.MalformedJwtException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Tag;
 import org.springframework.test.util.ReflectionTestUtils;
 import pe.sga.entity.Cliente;
 import pe.sga.entity.Usuario;
@@ -15,6 +16,7 @@ import pe.sga.entity.enums.RolUsuario;
 import static org.junit.jupiter.api.Assertions.*;
 
 @DisplayName("Pruebas Unitarias - JwtTokenProvider")
+@Tag("unitaria")
 class JwtTokenProviderTest {
 
     private JwtTokenProvider jwtTokenProvider;

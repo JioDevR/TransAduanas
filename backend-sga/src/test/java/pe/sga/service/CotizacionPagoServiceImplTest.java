@@ -2,6 +2,8 @@ package pe.sga.service;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import pe.sga.support.PruebaDocente;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
@@ -40,6 +42,7 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Pruebas Unitarias - CotizacionPagoServiceImpl")
+@Tag("unitaria")
 class CotizacionPagoServiceImplTest {
 
     @Mock
@@ -181,6 +184,7 @@ class CotizacionPagoServiceImplTest {
 
     @Test
     @DisplayName("Normal / Límite: validarPago APROBAR con sobrepago deja saldoPendiente en 0, estado PAGADO_TOTAL y notifica al cliente")
+    @PruebaDocente(codigo="PU04", tipo="Unitaria", herramientas="JUnit Jupiter 6 + Mockito (MockitoExtension, @Mock, @InjectMocks); Maven Surefire", objetivo="Pago USD 600 sobre cotizacion USD 500: APROBADO, saldo cero, PAGADO_TOTAL y notificacion con destinatario y mensaje verificados; repositorios simulados.")
     void validarPago_aprobarConSobrepago_recalculaACeroYNotifica() {
         Cliente cliente = Cliente.builder().idCliente(12).razonSocial("Andes SAC").build();
         Cotizacion cot = Cotizacion.builder()

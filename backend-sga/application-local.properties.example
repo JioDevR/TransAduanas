@@ -18,3 +18,7 @@ spring.datasource.password=tu_contraseña_aqui
 # Parámetros opcionales de desarrollo / depuración
 # spring.jpa.show-sql=true
 # spring.jpa.properties.hibernate.format_sql=true
+
+# Obligatorio desde 0.5.2. Definir JWT_SECRET en el entorno antes de iniciar.
+# Generar un valor aleatorio privado de al menos 32 bytes; no usar una frase corta.
+jwt.secret=${JWT_SECRET}

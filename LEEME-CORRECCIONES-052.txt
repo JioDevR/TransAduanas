@@ -1,0 +1,72 @@
+TRANSADUANAS 0.5.2 — CORRECCIONES PREVIAS AL MONITOREO
+20 de noviembre de 2026
+
+Cambios:
+- follow-redirects actualizado a 1.16.3 en los lockfiles del SGA y B2B.
+- Se rechazan claves JWT cortas y vacias al iniciar; se elimina el secreto
+  predeterminado. JWT_SECRET debe configurarse externamente, con al menos
+  32 bytes aleatorios. Las configuraciones locales anteriores deben incluirlo.
+- POST a un recurso de solo lectura devuelve 405, Allow y JSON de error;
+  la prueba ya no acepta un error 500 como resultado correcto.
+- Version Maven 0.5.2 para conservar los paquetes historicos.
+
+Resultados definitivos:
+- Backend: 346 pruebas, cero fallos/errores/omisiones.
+- SGA: 130 pruebas aprobadas. Portal B2B: 63 aprobadas.
+- SGA y B2B recompilados en staging; landing compilada previamente sin cambios.
+- npm audit SGA/B2B: cero vulnerabilidades reportadas tras la actualizacion.
+  Landing: cero en la revision inicial, sin cambios posteriores.
+- JAR 0.5.2 instalado en Maven local; ambos SHA256 coinciden:
+  E11719C5DBF56D3B98F5720ECA8660F33F9180D4FBB478CE558553DCC3696496
+- JAR 0.5.2 iniciado temporalmente con MySQL real, perfil staging,
+  ddl-auto=validate e inicializador desactivado. Health UP, login y clientes
+  HTTP 200. Camposol id 1 coincide entre API y SELECT SQL.
+- El proceso temporal termino; no reemplazo el servicio instalado.
+
+Despliegue pendiente de autorizacion explicita:
+La revision automatica rechazo inicialmente la ejecucion al asociarla con
+los cambios de servicio preparados (despliegue, rollback y reinicio).
+La validacion separada, de solo lectura, fue autorizada y finalizo bien.
+El servicio original y la configuracion activa de Nginx no se modificaron.
+
+Procedimiento preparado: evidencias-revision/Actualizar-Servicio-052.ps1
+Requiere PowerShell como administrador. Despliega 0.5.2, comprueba Camposol,
+revierte a 0.5.0 y vuelve a desplegar 0.5.2; reinicia el servicio, revisa GC,
+configura Nginx (con respaldo) e inicia/recarga las tres interfaces.
+Comprueba proxy, HTTP 200 de las paginas y fallback SPA. Deja 0.5.2 activa.
+Habra interrupciones breves durante las comprobaciones del servicio.
+No ejecuta schema.sql, seed.sql, migraciones ni restauraciones de datos.
+El gestor incluido intenta recuperar el JAR anterior si falla el despliegue.
+Este procedimiento todavia no se ejecuto: no se declaran aprobados sus pasos.
+
+No se publico 0.5.2 en Nexus: faltan credenciales de publicacion en el entorno.
+Nexus no es necesario para iniciar las pruebas locales de monitoreo.
+Tampoco se ejecuto GitHub Actions ni una auditoria de dependencias Java.
+El endpoint health actual declara UP sin comprobar dependencias; su version
+de respuesta es constante. No usarlo como unica prueba de salud o version.
+
+Evidencias actualizadas: evidencias-revision/backend-corregido.log,
+app-*-test-corregido.log, app-*-build-corregido.log,
+app-*-audit-corregido.json, mysql-validacion.txt y mysql-arranque.log.
+INFORME-REVISION.txt describe la revision anterior a estas correcciones.
+
+El ZIP incluye fuentes, JAR 0.5.2, interfaces compiladas y evidencias nuevas.
+No incluye node_modules, herramientas, claves privadas ni XML del servicio.
+No extraer sobre los binarios activos: revisar el procedimiento preparado.
+
+ACTUALIZACION DE MANUALES
+Empieza por docs/pruebas/README.md. Se actualizaron las guias funcional,
+seguridad y despliegue para 0.5.2, las rutas de instalacion/compilacion y la
+plantilla de configuracion JWT. El pipeline ahora admite una copia sin .git.
+Se verificaron 66 bloques PowerShell y los enlaces de las guias principales;
+los cinco scripts del kit pasan el analizador de PowerShell.
+Se repitieron docente15 (15 aprobadas), JWT/permisos (13 aprobadas) y el
+caso individual PU01 del ejecutor (APROBADO). No se modificaron servicios,
+Nginx ni MySQL durante esta actualizacion de documentacion. No se ejecuto
+el pipeline completo ni el despliegue/rollback por editar los manuales.
+
+ACTIVACION COMPLETADA
+0.5.2 activa con hash verificado; Nginx y tres interfaces responden.
+Login y Camposol correctos. Anterior: 0.5.0; historico 0.5.1 conservado.
+No se ejecuto rollback ni publicacion Nexus en esta activacion.
+No mover esta copia mientras Nginx publique sus dist.

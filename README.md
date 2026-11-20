@@ -1,5 +1,8 @@
 # Sistema de Gestión Aduanera - Transaduanas
 
+> **Entrega corregida 0.5.2.** Consulta el [índice de manuales de pruebas](docs/pruebas/README.md): funcionales, seguridad y despliegue. El código conserva los casos originales; las correcciones y sus resultados se explican en [LEEME-CORRECCIONES-052.txt](LEEME-CORRECCIONES-052.txt). La versión instalada del servicio debe comprobarse por separado.
+
+
 ---
 
 ## Índice General
@@ -36,7 +39,7 @@ El repositorio cuenta con especificaciones técnicas completas y guías especial
 | :--------------------------------------- | :------------------------------------------------------------------------------------------------------------ | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Guía de Instalación (Local & Docker)** | [`docs/instalacion.md`](docs/instalacion.md)              | **1. Instalación Local (Entorno de Desarrollo):** carga de `schema.sql` y `seed.sql` en MySQL local, configuración de `application-local.properties`, arranque de Backend/Frontends y credenciales de prueba. **2. Instalación con Docker:** _(en implementación)_.                                                        |
 | **Documentación Técnica del Backend**    | [`docs/backend.md`](docs/backend.md) y [`docs/backend/`](docs/backend) | **Documento Maestro y 6 Capítulos Especializados:** Arquitectura N-Tier, inventario de dependencias `pom.xml`, seguridad RBAC con JWT, catálogo de 21 controladores REST, compuerta financiera, deuda heredada, motor de reportes PDF (Thymeleaf + OpenHTMLtoPDF) y logging rotativo. |
-| **Documentación Técnica del Frontend**   | [`docs/frontend.md`](docs/frontend.md), [`docs/app-sga/`](docs/app-sga) y [`docs/app-portal-clientes/`](docs/app-portal-clientes) | **Documento Maestro y Capítulos Separados:** Frontend Interno SGA (`app-sga/`, 6 capítulos) y Portal del Cliente B2B (`app-portal-cliente/`, 5 capítulos), arquitectura Feature-Based, Pinia stores, Navigation Guards, tokens Warm Editorial y catálogo de módulos. |
+| **Documentación Técnica del Frontend**   | [`docs/frontend.md`](docs/frontend.md), [`docs/app-sga/`](docs/app-sga) y [`docs/app-portal-clientes/`](docs/app-portal-clientes) | **Documento Maestro y Capítulos Separados:** Frontend Interno SGA (`app-sga/`, 6 capítulos) y Portal del Cliente B2B (`app-b2b/`, 5 capítulos), arquitectura Feature-Based, Pinia stores, Navigation Guards, tokens Warm Editorial y catálogo de módulos. |
 | **Especificación de Lenguaje de Diseño** | [`docs/lenguaje_diseño.md`](docs/lenguaje_dise%C3%B1o.md) | Sistema de diseño **Warm Editorial**, tokens CSS de color (arena, latte, espresso), tipografía dual (Inter y JetBrains Mono), rejilla de 4px, preset de PrimeVue Aura y guía de implementación de Modo Claro / Modo Oscuro.                                                                                                |
 
 ---
@@ -64,7 +67,7 @@ El sistema adopta una arquitectura desacoplada y moderna, utilizando componentes
 
 ### 4.1 Backend: Java 21 & Spring Boot 4.1.2
 
-Gestionado a través de **Apache Maven** ([`backend/pom.xml`](backend/pom.xml)):
+Gestionado a través de **Apache Maven** ([`backend-sga/pom.xml`](backend-sga/pom.xml)):
 
 | Grupo / Artefacto                                         | Versión | Propósito Técnico y Justificación                                                                                                  |
 | :-------------------------------------------------------- | :-----: | :--------------------------------------------------------------------------------------------------------------------------------- |
@@ -82,7 +85,7 @@ Gestionado a través de **Apache Maven** ([`backend/pom.xml`](backend/pom.xml)):
 
 ### 4.2 Frontends del Ecosistema (Interno, Portal B2B y Landing): Vue 3 & Vite
 
-Gestionados a través de **Node.js / npm** como proyectos completamente independientes en [`app-sga/`](app-sga/), [`app-portal-cliente/`](app-portal-cliente/) y [`landing/`](landing/):
+Gestionados a través de **Node.js / npm** como proyectos completamente independientes en [`app-sga/`](app-sga/), [`app-b2b/`](app-b2b/) y [`app-landing/`](app-landing/):
 
 | Dependencia                     | Versión (`app-sga` / `app-portal-cliente`) | Propósito Técnico y Justificación                                                                         |
 | :------------------------------ | :-------------------------------------: | :-------------------------------------------------------------------------------------------------------- |
@@ -229,7 +232,7 @@ app-sga/src/
 
 ```
 TransAduanas/
-├── backend/                                   # API Backend (Spring Boot 4.1.2 / Java 21)
+├── backend-sga/                                   # API Backend (Spring Boot 4.1.2 / Java 21)
 │   ├── pom.xml                                # Dependencias y configuración Maven
 │   ├── application-local.properties.example   # Plantilla para variables y credenciales locales
 │   └── src/main/                              # Código fuente Java (21 controllers, 17 entities) y recursos
@@ -239,12 +242,12 @@ TransAduanas/
 │   ├── vite.config.js                         # Servidor dev (5180) y proxy inverso hacia :8085
 │   └── src/                                   # Módulos de los 8 roles institucionales
 │
-├── app-portal-cliente/                        # Portal del Cliente B2B (Vue 3 / Vite 6 / Puerto 5174)
+├── app-b2b/                        # Portal del Cliente B2B (Vue 3 / Vite 6 / Puerto 5174)
 │   ├── package.json                           # SPA corporativa para clientes importadores/exportadores
 │   ├── vite.config.js                         # Servidor dev (5174) y proxy inverso hacia :8085
 │   └── src/                                   # Vistas de tracking, cotizaciones, pagos y notificaciones B2B
 │
-├── landing/                                   # Landing Page Pública Independiente (Vue 3 / Vite 6 / Puerto 5173)
+├── app-landing/                                   # Landing Page Pública Independiente (Vue 3 / Vite 6 / Puerto 5173)
 │   ├── package.json                           # SPA independiente para difusión comercial y accesos al ecosistema
 │   ├── vite.config.js                         # Servidor dev en puerto 5173
 │   └── src/                                   # Vista de inicio, tokens editoriales y enlaces desacoplados
@@ -257,7 +260,7 @@ TransAduanas/
 ├── docs/                                      # Documentación Técnica Especializada
 │   ├── instalacion.md                         # Guía paso a paso de instalación (Local y Docker)
 │   ├── backend.md                             # Documento maestro de arquitectura del Backend
-│   ├── backend/                               # Capítulos especializados del Backend (6 módulos)
+│   ├── backend-sga/                               # Capítulos especializados del Backend (6 módulos)
 │   ├── frontend.md                            # Documento maestro de arquitectura Frontend
 │   ├── app-sga/                               # Capítulos especializados del Frontend Interno SGA (6 módulos)
 │   ├── app-portal-clientes/                   # Capítulos especializados del Portal B2B (5 módulos)
@@ -284,8 +287,8 @@ TransAduanas/
 | Servicio                       | Directorio                                                                              | Tecnología                  | Puerto Local | Comando de Arranque Rápido                                           |
 | :----------------------------- | :-------------------------------------------------------------------------------------- | :-------------------------- | :----------: | :------------------------------------------------------------------- |
 | **1. Base de Datos (`SGAdb`)** | [`db/`](db)                         | MySQL 8.4 InnoDB            |    `3306`    | `mysql -u root -p < db/schema.sql && mysql -u root -p < db/seed.sql` |
-| **2. Backend API REST**        | [`backend/`](backend)               | Spring Boot 4.1.2 / Java 21 |    `8085`    | `cd backend && mvn spring-boot:run`                                  |
+| **2. Backend API REST**        | [`backend/`](backend)               | Spring Boot 4.1.2 / Java 21 |    `8085`    | `cd backend-sga && mvn spring-boot:run`                                  |
 | **3. Frontend Interno (SGA)**  | [`app-sga/`](app-sga)             | Vue 3 + Vite 8              |    `5180`    | `cd app-sga && npm install && npm run dev`                          |
-| **4. Portal del Cliente B2B**  | [`app-portal-cliente/`](app-portal-cliente) | Vue 3 + Vite 6              |    `5174`    | `cd app-portal-cliente && npm install && npm run dev`                    |
+| **4. Portal del Cliente B2B**  | [`app-b2b/`](app-portal-cliente) | Vue 3 + Vite 6              |    `5174`    | `cd app-b2b && npm install && npm run dev`                    |
 
 Para configurar `application-local.properties`, revisar los requisitos previos o consultar las credenciales de los **8 roles institucionales** y cuentas RUC del **Portal B2B**, dirígete a [`docs/instalacion.md`](docs/instalacion.md).

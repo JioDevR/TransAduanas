@@ -1,5 +1,8 @@
 # Inventario general del backend: las 346 pruebas
 
+> **Versión corregida 0.5.2.** El inventario conserva 346 métodos. El 20 de noviembre de 2026 pasaron los 346 tras corregir JWT y HTTP 405. Consulta el [índice actualizado](../docs/pruebas/README.md), el [manual de seguridad](../docs/pruebas/seguridad/README.md) y el [manual de despliegue](../docs/pruebas/despliegue/README.md). La sección de verificación del 19 de noviembre es un antecedente histórico.
+
+
 **Referencia general, no la lista de 15 para exponer.** Si vas a sustentar ante el docente, empieza por el [manual principal de las 15 seleccionadas](../docs/pruebas/funcionales/README.md).
 
 Este inventario organiza **las 346 pruebas ejecutables del backend** por su alcance real. La clasificación usa etiquetas JUnit `@Tag`; los nombres de archivos o carpetas no determinan el tipo. Los grupos son excluyentes para ejecutar y contar: cada prueba pertenece a un solo grupo principal.

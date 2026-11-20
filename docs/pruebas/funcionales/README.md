@@ -472,13 +472,23 @@ La ejecución conjunta genera archivos `*-docente15.xml` en `backend-sga/target/
 El [inventario general](../../../test/README.md) contiene las 346 pruebas y comandos para todos los grupos. Los [CP complementarios](CASOS-CP-COMPLEMENTARIOS.md) mantienen los antiguos 15 casos y su ejecutor `ejecutar-caso-funcional.ps1`; ese ejecutor anterior **no es el que selecciona estos nuevos 15 casos de cuatro tipos**.
 
 
-## Verificación de la selección actual
+## Verificación de la versión corregida 0.5.2
 
-El 19 de noviembre de 2026, sobre la rama compatible con main `0e43733`, se verificó:
+El 20 de noviembre de 2026 pasaron las 346 pruebas del backend, incluidas las de esta selección. Las correcciones cambian el rechazo de métodos HTTP a 405 y exigen un secreto JWT externo de al menos 32 bytes al iniciar la aplicación real. Las pruebas Spring declaran su clave ficticia y su H2: no copies claves del servicio para ejecutar estos casos.
 
-- Selección `docente15`: **15 métodos, 0 fallos, 0 errores y 0 omitidas**; 4 unitarias, 4 integración, 4 sistema del backend y 3 aceptación automatizada.
-- Los **15 comandos individuales** de `ejecutar-prueba-docente.ps1` terminaron APROBADOS en Windows PowerShell 5.1. Se comprobaron el método y clase esperados, el XML nuevo y los mensajes de tipo, herramientas y resultado de cada caso.
-- Suite completa tras añadir los metadatos: **346 pruebas, 0 fallos, 0 errores y 0 omitidas**. No se quitaron aserciones ni se añadieron copias artificiales de los tests.
-- No se modifica código productivo, pom.xml, base de datos ni frontends. Los datos H2 y reportes generados permanecen en target.
+Al actualizar este manual se repitió la selección docente15: 15 aprobadas, cero fallos/errores/omisiones. También se ejecutó el caso 1 del ejecutor: PU01 APROBADO. Los logs están en evidencias-revision/manual-docente15.log y manual-ejecutor.log. No se repitieron los otros 14 comandos individuales en esta actualización. Conserva los XML de cada ejecución; las cifras anteriores no sustituyen tus resultados nuevos.
 
-Las aserciones originales siguen siendo la comprobación: los metadatos y mensajes no sustituyen el resultado de JUnit. Hay que repetir las pruebas si cambia el código o main.
+## Pruebas de interfaces y relación con seguridad
+
+Desde la raíz del proyecto, con Node 24 y npm:
+
+```powershell
+npm.cmd --prefix .\app-sga ci
+npm.cmd --prefix .\app-b2b ci
+npm.cmd --prefix .\app-sga test
+npm.cmd --prefix .\app-b2b test
+```
+
+Resultados observados: SGA, 130 pruebas; B2B, 63. La landing no tiene script de pruebas automatizadas y se verifica mediante su compilación y publicación. Las 539 pruebas corresponden a 346 backend + 130 SGA + 63 B2B. Seguridad ya está incluida en el backend y no vuelve a sumarse.
+
+Continúa con el [manual de seguridad](../seguridad/README.md) y el [manual de despliegue](../despliegue/README.md). Las pruebas de monitoreo se prepararán después con el material teórico y las indicaciones de evaluación.

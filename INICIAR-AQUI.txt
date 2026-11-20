@@ -1,0 +1,38 @@
+TRANSADUANAS 0.5.2 — CARPETA DE TRABAJO PARA PRUEBAS
+
+Proyecto completo y corregido:
+C:\Users\asus\Music\TransAduanas-0.5.2
+
+Abre PowerShell en esta carpeta. Consulta docs/pruebas/README.md para los
+manuales funcionales, de seguridad y de despliegue actualizados.
+
+El servicio Windows ya usa la version 0.5.2 desde la carpeta estable:
+C:\Users\asus\Music\TransAduanas-desplegado\current\app.jar
+Nginx publica las interfaces de esta carpeta TransAduanas-0.5.2.
+No necesitas iniciar otro backend para usar las paginas del laboratorio.
+
+SGA: http://localhost:5180
+Portal B2B: http://localhost:5174
+Landing: http://localhost:5173
+Backend: http://localhost:8086/api/v1/health
+
+Para comprobar las 15 funcionales seleccionadas:
+Set-Location 'C:\Users\asus\Music\TransAduanas-0.5.2\backend-sga'
+.\mvnw.cmd test "-Dgroups=docente15"
+
+Las pruebas automatizadas backend usan H2 o simulaciones; no cambian la
+base MySQL original. No ejecutes schema.sql ni seed.sql para repetirlas.
+No uses clean mientras un JAR manual se ejecute desde target.
+
+El ZIP de entrega no incluye node_modules ni claves privadas. En una nueva
+extraccion instala dependencias con npm ci en cada interfaz. Se requiere
+Java 21, Node 24 y red o caches para descargar las dependencias.
+El XML privado del servicio, las herramientas y documentos cargados se
+conservan en sus carpetas existentes de Music; no se duplican en el ZIP.
+
+Los logs anteriores conservan sus rutas originales como evidencia historica;
+los comandos actuales se ejecutan desde esta nueva carpeta. Una ruta de un
+log anterior no significa que Nginx siga usando esa ubicacion.
+
+El plan de 15 pruebas de monitoreo aun requiere el material teorico y las
+indicaciones del docente; esta es la base de software preparada para ello.

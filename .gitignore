@@ -109,3 +109,8 @@ backup*.sql
 **/superpowers/
 .superpowers/
 .$Diagrama de procesos.drawio.bkp
+# Evidencias y paquetes locales de las pruebas
+/evidencias-revision/
+/evidencias-pipeline/
+*.zip
+*.zip.sha256.txt

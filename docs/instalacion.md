@@ -1,5 +1,19 @@
 # Guía de Instalación y Despliegue — Sistema de Gestión Aduanera - Transaduanas
 
+> **Actualización 0.5.2 — 20 de noviembre de 2026.** Para repetir las pruebas en la base existente, empieza por el [índice de pruebas](pruebas/README.md). No vuelvas a ejecutar schema.sql ni seed.sql. Los pasos de creación de base de esta guía corresponden solo a una instalación nueva. El laboratorio de despliegue usa staging/8086; desarrollo usa 8085. JWT_SECRET es obligatorio desde 0.5.2, incluso en desarrollo.
+
+En la terminal que iniciará el backend, genera una clave privada para esa sesión:
+
+```powershell
+$bytes = New-Object byte[] 48
+$rng = [Security.Cryptography.RandomNumberGenerator]::Create()
+try { $rng.GetBytes($bytes) } finally { $rng.Dispose() }
+$env:JWT_SECRET = [Convert]::ToBase64String($bytes)
+```
+
+No imprimas la clave. Al cambiarla, los tokens anteriores dejan de ser válidos. Para un servicio estable, usa el valor privado ya configurado en su entorno; no generes uno nuevo en cada arranque. Las pruebas automatizadas declaran sus claves ficticias y no necesitan este bloque.
+
+
 **Sistema de Gestión Aduanera - Transaduanas**
 
 > [!IMPORTANT]
@@ -68,8 +82,8 @@ Antes de comenzar, verifica que tengas instaladas las siguientes herramientas en
 | :--- | :---: | :--- | :--- |
 | **Java JDK** | **21 LTS** | `java -version` | Compilación y ejecución del backend Spring Boot 4.1.2. |
 | **Apache Maven** | **3.9+** | `mvn -version` | Gestión de dependencias Java, compilación de Lombok y arranque del servidor. |
-| **Node.js** | **18.x / 20.x LTS+** | `node -v` | Entorno de ejecución para los servidores de desarrollo Vite. |
-| **npm** | **9.x+** | `npm -v` | Gestor de paquetes para `app-sga/` y `app-portal-cliente/`. |
+| **Node.js** | **24.x (entorno verificado)** | `node -v` | Entorno de ejecución para los servidores de desarrollo Vite. |
+| **npm** | **9.x+** | `npm -v` | Gestor de paquetes para `app-sga/` y `app-b2b/`. |
 | **MySQL Server** | **8.0 / 8.4 LTS** | `mysql --version` | Motor de base de datos relacional InnoDB activo en el puerto `3306`. |
 
 ---
@@ -100,16 +114,16 @@ mysql -u root -p < db/seed.sql
 
 #### A. Configurar Credenciales Locales (`application-local.properties`)
 
-Para no exponer tu usuario y contraseña de MySQL en Git, el archivo [`backend/src/main/resources/application.properties`](../backend/src/main/resources/application.properties) importa automáticamente el archivo `backend/application-local.properties` (ignorado en `.gitignore`).
+Para no exponer tu usuario y contraseña de MySQL en Git, el archivo [`backend-sga/src/main/resources/application.properties`](../backend-sga/src/main/resources/application.properties) importa automáticamente el archivo `backend-sga/application-local.properties` (ignorado en `.gitignore`).
 
-1. Ingresa al directorio `backend/` y crea tu archivo local a partir de la plantilla [`backend/application-local.properties.example`](../backend/application-local.properties.example):
+1. Ingresa al directorio `backend-sga/` y crea tu archivo local a partir de la plantilla [`backend-sga/application-local.properties.example`](../backend-sga/application-local.properties.example):
 
    ```bash
-   cd backend
+   cd backend-sga
    cp application-local.properties.example application-local.properties
    ```
 
-2. Abre `backend/application-local.properties` y coloca el usuario y contraseña de tu servidor MySQL local:
+2. Abre `backend-sga/application-local.properties` y coloca el usuario y contraseña de tu servidor MySQL local:
 
    ```properties
    # Credenciales de conexión a MySQL Local
@@ -138,7 +152,7 @@ Si prefieres usar variables de entorno en lugar de editar el archivo de propieda
 
 #### C. Compilar e Iniciar el Backend
 
-Desde la carpeta `backend/`, ejecuta:
+Desde la carpeta `backend-sga/`, ejecuta:
 
 ```bash
 # 1. Compilar el proyecto y descargar dependencias Maven
@@ -176,13 +190,13 @@ npm run dev
 
 ### 1.6 Paso 4: Instalación y Ejecución del Portal del Cliente B2B
 
-El **Portal del Cliente B2B** ([`app-portal-cliente/`](../app-portal-cliente)) es la plataforma externa donde los clientes corporativos (importadores y exportadores) consultan el tracking de sus expedientes, revisan cotizaciones, registran pagos y descargan su documentación. Corre en el puerto `5174`.
+El **Portal del Cliente B2B** ([`app-b2b/`](../app-b2b)) es la plataforma externa donde los clientes corporativos (importadores y exportadores) consultan el tracking de sus expedientes, revisan cotizaciones, registran pagos y descargan su documentación. Corre en el puerto `5174`.
 
 Abre una **tercera terminal** desde la raíz del proyecto y ejecuta:
 
 ```bash
 # 1. Ingresar al directorio del portal de clientes
-cd app-portal-cliente
+cd app-b2b
 
 # 2. Instalar dependencias de Node.js
 npm install
@@ -202,9 +216,9 @@ Una vez completados los 4 pasos anteriores, tendrás todo el ecosistema activo e
 | Servicio | Carpeta | Tecnología | Puerto | URL Local |
 | :--- | :--- | :--- | :---: | :--- |
 | **1. Base de Datos (`SGAdb`)** | [`db/`](../db) | MySQL 8.4 InnoDB | `3306` | `jdbc:mysql://localhost:3306/SGAdb` |
-| **2. Backend API REST** | [`backend/`](../backend) | Spring Boot 4.1.2 / Java 21 | `8085` | `http://localhost:8085/api/v1/health` |
+| **2. Backend API REST** | [`backend-sga/`](../backend) | Spring Boot 4.1.2 / Java 21 | `8085` | `http://localhost:8085/api/v1/health` |
 | **3. Frontend Interno (SGA)** | [`app-sga/`](../app-sga) | Vue 3 + Vite 8 + PrimeVue | `5180` | `http://localhost:5180` |
-| **4. Portal del Cliente B2B** | [`app-portal-cliente/`](../app-portal-cliente) | Vue 3 + Vite 6 + PrimeVue | `5174` | `http://localhost:5174` |
+| **4. Portal del Cliente B2B** | [`app-b2b/`](../app-b2b) | Vue 3 + Vite 6 + PrimeVue | `5174` | `http://localhost:5174` |
 
 ---
 
@@ -251,7 +265,7 @@ npm run test
 npm run build
 
 # Pruebas unitarias y build del Portal del Cliente B2B
-cd ../app-portal-cliente
+cd ../app-b2b
 npm run test
 npm run build
 ```
@@ -261,7 +275,7 @@ npm run build
 ### 1.10 Solución de Problemas Frecuentes (Troubleshooting)
 
 1. **Error `Access denied for user 'root'@'localhost'` al iniciar el Backend:**
-   - Verifica que hayas creado `backend/application-local.properties` y que `spring.datasource.password` tenga la contraseña correcta de tu servidor MySQL local.
+   - Verifica que hayas creado `backend-sga/application-local.properties` y que `spring.datasource.password` tenga la contraseña correcta de tu servidor MySQL local.
 2. **Error `Unknown database 'SGAdb'`:**
    - Asegúrate de haber ejecutado primero `mysql -u root -p < db/schema.sql` y luego `mysql -u root -p < db/seed.sql` (Paso 1).
 3. **Errores de red (`Network Error` o `502`) al iniciar sesión en Frontend o Portal B2B:**

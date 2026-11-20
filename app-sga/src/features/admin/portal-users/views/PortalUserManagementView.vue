@@ -41,60 +41,6 @@
         </div>
       </header>
 
-      <section class="sga-kpis-grid">
-        <article class="sga-kpi-card" @click="loadData">
-          <div class="sga-kpi-head">
-            <span class="sga-kpi-index">01</span>
-            <span class="sga-kpi-label">Cuentas Portal B2B</span>
-            <i class="pi pi-id-card sga-kpi-icon"></i>
-          </div>
-          <div class="sga-kpi-stat">
-            <span class="sga-kpi-value">{{ users.length }}</span>
-            <span class="sga-kpi-pill">{{ uniqueEmpresasCount }} empresas</span>
-          </div>
-          <p class="sga-kpi-foot">Accesos corporativos vinculados</p>
-        </article>
-
-        <article class="sga-kpi-card is-success">
-          <div class="sga-kpi-head">
-            <span class="sga-kpi-index">02</span>
-            <span class="sga-kpi-label">Cuentas Activas</span>
-            <i class="pi pi-check-circle sga-kpi-icon"></i>
-          </div>
-          <div class="sga-kpi-stat">
-            <span class="sga-kpi-value">{{ activeUsersCount }}</span>
-            <span class="sga-kpi-pill is-success">Habilitadas</span>
-          </div>
-          <p class="sga-kpi-foot">Acceso vigente al portal cliente</p>
-        </article>
-
-        <article class="sga-kpi-card" :class="inactiveUsersCount > 0 ? 'is-danger' : ''">
-          <div class="sga-kpi-head">
-            <span class="sga-kpi-index">03</span>
-            <span class="sga-kpi-label">Cuentas Suspendidas</span>
-            <i class="pi pi-user-minus sga-kpi-icon"></i>
-          </div>
-          <div class="sga-kpi-stat">
-            <span class="sga-kpi-value">{{ inactiveUsersCount }}</span>
-            <span class="sga-kpi-pill" :class="inactiveUsersCount > 0 ? 'is-danger' : ''">Baja Lógica</span>
-          </div>
-          <p class="sga-kpi-foot">Acceso temporalmente bloqueado</p>
-        </article>
-
-        <article class="sga-kpi-card" :class="pendingPasswordResetCount > 0 ? 'is-warn' : ''">
-          <div class="sga-kpi-head">
-            <span class="sga-kpi-index">04</span>
-            <span class="sga-kpi-label">Cambio Pendiente</span>
-            <i class="pi pi-key sga-kpi-icon"></i>
-          </div>
-          <div class="sga-kpi-stat">
-            <span class="sga-kpi-value">{{ pendingPasswordResetCount }}</span>
-            <span class="sga-kpi-pill" :class="pendingPasswordResetCount > 0 ? 'is-warn' : ''">Primer ingreso</span>
-          </div>
-          <p class="sga-kpi-foot">Deben actualizar contraseña</p>
-        </article>
-      </section>
-
       <PortalUserTable
         :users="users"
         :loading="loading"
@@ -116,7 +62,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import Button from 'primevue/button'
 import Tag from 'primevue/tag'
 import { portalUserService } from '../services/portalUserService'
@@ -169,17 +115,6 @@ const loadData = async () => {
     loading.value = false
   }
 }
-
-const activeUsersCount = computed(() => users.value.filter((u) => u.estadoActivo).length)
-const inactiveUsersCount = computed(() => users.value.filter((u) => !u.estadoActivo).length)
-const pendingPasswordResetCount = computed(() => users.value.filter((u) => u.debeCambiarPassword).length)
-const uniqueEmpresasCount = computed(() => {
-  const set = new Set()
-  users.value.forEach((u) => {
-    if (u.idCliente) set.add(u.idCliente)
-  })
-  return set.size
-})
 
 const openCreateView = () => {
   selectedUser.value = null

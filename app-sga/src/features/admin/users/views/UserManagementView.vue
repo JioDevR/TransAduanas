@@ -44,61 +44,6 @@
         </div>
       </header>
 
-      <!-- KPIs sgaUI -->
-      <section class="sga-kpis-grid">
-        <article class="sga-kpi-card" @click="loadData">
-          <div class="sga-kpi-head">
-            <span class="sga-kpi-index">01</span>
-            <span class="sga-kpi-label">Personal Registrado</span>
-            <i class="pi pi-users sga-kpi-icon"></i>
-          </div>
-          <div class="sga-kpi-stat">
-            <span class="sga-kpi-value">{{ users.length }}</span>
-            <span class="sga-kpi-pill">{{ roles.length }} roles</span>
-          </div>
-          <p class="sga-kpi-foot">Cuentas de operadores internos</p>
-        </article>
-
-        <article class="sga-kpi-card is-success">
-          <div class="sga-kpi-head">
-            <span class="sga-kpi-index">02</span>
-            <span class="sga-kpi-label">Operadores Activos</span>
-            <i class="pi pi-check-circle sga-kpi-icon"></i>
-          </div>
-          <div class="sga-kpi-stat">
-            <span class="sga-kpi-value">{{ activeUsersCount }}</span>
-            <span class="sga-kpi-pill is-success">Acceso Vigente</span>
-          </div>
-          <p class="sga-kpi-foot">Credenciales habilitadas</p>
-        </article>
-
-        <article class="sga-kpi-card" :class="inactiveUsersCount > 0 ? 'is-danger' : ''">
-          <div class="sga-kpi-head">
-            <span class="sga-kpi-index">03</span>
-            <span class="sga-kpi-label">Cuentas Suspendidas</span>
-            <i class="pi pi-user-minus sga-kpi-icon"></i>
-          </div>
-          <div class="sga-kpi-stat">
-            <span class="sga-kpi-value">{{ inactiveUsersCount }}</span>
-            <span class="sga-kpi-pill" :class="inactiveUsersCount > 0 ? 'is-danger' : ''">Baja Lógica</span>
-          </div>
-          <p class="sga-kpi-foot">Acceso revocado temporalmente</p>
-        </article>
-
-        <article class="sga-kpi-card">
-          <div class="sga-kpi-head">
-            <span class="sga-kpi-index">04</span>
-            <span class="sga-kpi-label">Administradores TI</span>
-            <i class="pi pi-shield sga-kpi-icon"></i>
-          </div>
-          <div class="sga-kpi-stat">
-            <span class="sga-kpi-value">{{ adminCount }}</span>
-            <span class="sga-kpi-pill">Control Total</span>
-          </div>
-          <p class="sga-kpi-foot">Soporte, configuración y auditoría</p>
-        </article>
-      </section>
-
       <!-- Tabla Dual SgaListShell -->
       <UserTable
         :users="users"
@@ -119,11 +64,10 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import Button from 'primevue/button'
 import Tag from 'primevue/tag'
 import { userService } from '../services/userService'
-import { ROLES } from '@/core/auth/roles'
 import { useNavigationStore } from '@/core/stores/navigationStore'
 import { useNotification } from '@/shared/composables/useNotification'
 import { useConfirmation } from '@/shared/composables/useConfirmation'
@@ -145,10 +89,6 @@ const exportingPdf = ref(false)
 const selectedUser = ref(null)
 const showResetModal = ref(false)
 const userToReset = ref(null)
-
-const activeUsersCount = computed(() => users.value.filter((u) => u.estadoActivo).length)
-const inactiveUsersCount = computed(() => users.value.filter((u) => !u.estadoActivo).length)
-const adminCount = computed(() => users.value.filter((u) => u.nombreRol === ROLES.ADMINISTRADOR_TI).length)
 
 const loadData = async () => {
   loading.value = true

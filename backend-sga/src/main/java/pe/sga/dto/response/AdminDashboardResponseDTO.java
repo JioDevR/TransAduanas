@@ -22,6 +22,8 @@ public class AdminDashboardResponseDTO {
     // Usuarios Portal B2B
     private long portalUsuariosTotal;
     private long portalUsuariosActivos;
+    private long portalUsuariosInactivos;
+    private long portalCambioPendiente;
     private long portalEmpresasVinculadas;
 
     // Logs

@@ -126,7 +126,8 @@
           <span class="sga-kpi-pill is-success">{{ dashboardData?.usuariosActivos ?? 0 }} activos</span>
         </div>
         <p class="sga-kpi-foot">
-          Suspendidos: <strong class="sga-mono">{{ dashboardData?.usuariosInactivos ?? 0 }}</strong> operadores
+          Baja: <strong class="sga-mono">{{ dashboardData?.usuariosInactivos ?? 0 }}</strong> ·
+          Admin TI: <strong class="sga-mono">{{ dashboardData?.distribucionRoles?.ADMINISTRADOR_TI ?? 0 }}</strong>
         </p>
       </article>
 
@@ -141,7 +142,9 @@
           <span class="sga-kpi-pill">{{ dashboardData?.portalEmpresasVinculadas ?? 0 }} empresas</span>
         </div>
         <p class="sga-kpi-foot">
-          Activas en portal: <strong class="sga-mono">{{ dashboardData?.portalUsuariosActivos ?? 0 }}</strong>
+          Activas: <strong class="sga-mono">{{ dashboardData?.portalUsuariosActivos ?? 0 }}</strong> ·
+          Baja: <strong class="sga-mono">{{ dashboardData?.portalUsuariosInactivos ?? 0 }}</strong> ·
+          Cambio clave: <strong class="sga-mono">{{ dashboardData?.portalCambioPendiente ?? 0 }}</strong>
         </p>
       </article>
 

@@ -157,6 +157,8 @@ public class AdminSistemaServiceImpl implements IAdminSistemaService {
 
         List<UsuarioCliente> portalUsers = usuarioClienteRepository.findAllWithCliente();
         long portalActivos = portalUsers.stream().filter(uc -> Boolean.TRUE.equals(uc.getEstadoActivo())).count();
+        long portalInactivos = portalUsers.size() - portalActivos;
+        long portalCambioPendiente = portalUsers.stream().filter(uc -> Boolean.TRUE.equals(uc.getDebeCambiarPassword())).count();
         long empresasVinculadas = portalUsers.stream()
                 .map(uc -> uc.getCliente() != null ? uc.getCliente().getIdCliente() : null)
                 .filter(Objects::nonNull)
@@ -189,6 +191,8 @@ public class AdminSistemaServiceImpl implements IAdminSistemaService {
                 .distribucionRoles(distRoles)
                 .portalUsuariosTotal(portalUsers.size())
                 .portalUsuariosActivos(portalActivos)
+                .portalUsuariosInactivos(portalInactivos)
+                .portalCambioPendiente(portalCambioPendiente)
                 .portalEmpresasVinculadas(empresasVinculadas)
                 .logArchivoNombre(String.valueOf(logAll.getOrDefault("fileName", "sga-backend.log")))
                 .logSizeBytes(((Number) logAll.getOrDefault("sizeBytes", 0L)).longValue())

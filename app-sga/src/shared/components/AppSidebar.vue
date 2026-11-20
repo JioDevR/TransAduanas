@@ -143,8 +143,8 @@ const currentNavItems = computed(() => {
     const go = (sub, path) => () => selectSub('administracion-ti', navigationStore.setAdministracionTiSubOption, sub, path)
     return [
       { key: 'dashboard', label: 'Dashboard TI', match: ['dashboard'], onClick: go('dashboard', '/administracion-ti/dashboard') },
-      { key: 'users', label: 'Personal Interno', match: ['users', 'create-user'], onClick: go('users', '/administracion-ti/usuarios') },
-      { key: 'portal-users', label: 'Usuarios Portal', match: ['portal-users', 'create-portal-user'], onClick: go('portal-users', '/administracion-ti/usuarios-portal') },
+      { key: 'users', label: 'Usuarios', match: ['users', 'create-user'], onClick: go('users', '/administracion-ti/usuarios') },
+      { key: 'portal-users', label: 'Cuentas B2B', match: ['portal-users', 'create-portal-user'], onClick: go('portal-users', '/administracion-ti/usuarios-portal') },
       { key: 'auditoria', label: 'Auditoría TI', match: ['auditoria'], onClick: go('auditoria', '/administracion-ti/auditoria') },
       { key: 'roles-accesos', label: 'Roles y Storage', match: ['roles-accesos'], onClick: go('roles-accesos', '/administracion-ti/roles-accesos') },
       { key: 'logs', label: 'Logs TI', match: ['logs'], onClick: go('logs', '/administracion-ti/logs') },

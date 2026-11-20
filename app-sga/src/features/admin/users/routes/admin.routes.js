@@ -22,7 +22,7 @@ export const adminRoutes = [
     meta: {
       requiresAuth: true,
       roles: [ROLES.ADMINISTRADOR_TI, ROLES.GERENTE_GENERAL],
-      title: 'Administración TI - Personal Interno - SGA'
+      title: 'Usuarios Internos - SGA'
     }
   },
   {
@@ -32,7 +32,7 @@ export const adminRoutes = [
     meta: {
       requiresAuth: true,
       roles: [ROLES.ADMINISTRADOR_TI, ROLES.GERENTE_GENERAL],
-      title: 'Administración TI - Usuarios Portal Clientes B2B - SGA'
+      title: 'Cuentas Corporativas B2B - SGA'
     }
   },
 

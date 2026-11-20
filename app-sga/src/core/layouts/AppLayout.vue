@@ -124,9 +124,9 @@ const MODULE_TITLES = {
     default: 'Administración TI',
     sub: {
       dashboard: 'Centro de Control y Monitoreo del Sistema TI',
-      users: 'Personal Interno y Acreditaciones',
+      users: 'Usuarios Internos',
       'create-user': 'Ficha de Registro de Operador',
-      'portal-users': 'Usuarios del Portal Clientes B2B',
+      'portal-users': 'Cuentas Corporativas B2B',
       'create-portal-user': 'Gestión de Usuario Portal B2B',
       auditoria: 'Auditoría de Seguridad y Eventos TI',
       'roles-accesos': 'Matriz de Roles, Permisos y Almacenamiento',

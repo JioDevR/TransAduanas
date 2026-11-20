@@ -4,7 +4,7 @@
     <header class="sga-form-header">
       <div class="sga-dash-meta">
         <Button
-          label="Volver al directorio"
+          label="Volver a Usuarios"
           icon="pi pi-arrow-left"
           severity="secondary"
           text

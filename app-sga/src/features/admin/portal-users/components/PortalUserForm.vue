@@ -3,7 +3,7 @@
     <header class="sga-form-header">
       <div class="sga-dash-meta">
         <Button
-          label="Volver a Cuentas B2B"
+          label="Volver a Usuarios B2B"
           icon="pi pi-arrow-left"
           severity="secondary"
           text

@@ -1,9 +1,9 @@
 <template>
   <section class="sga-list-panel">
-    <!-- Barra superior sgaUI: conteo a la izquierda, acciones a la derecha (sin título duplicado) -->
+    <!-- Barra superior sgaUI: conteo a la izquierda, acciones a la derecha -->
     <div class="sga-dash-header">
       <div class="sga-dash-meta">
-        <Tag :value="`${filteredUsers.length} cuentas B2B`" severity="secondary" />
+        <Tag :value="`${filteredUsers.length} de ${users.length} cuentas B2B`" severity="secondary" />
       </div>
 
       <div class="sga-dash-actions">
@@ -29,22 +29,24 @@
     <div class="sga-card-surface sga-table-card">
       <div class="sga-table-toolbar">
         <div class="sga-toolbar-filters">
-          <div class="sga-filter-search">
+          <IconField class="sga-filter-search">
+            <InputIcon class="pi pi-search" />
             <InputText
-              v-model="searchQuery"
+              v-model.trim="searchQuery"
               placeholder="Buscar por usuario, representante, correo, RUC o empresa..."
               size="small"
               fluid
             />
-          </div>
+          </IconField>
 
           <Select
             v-model="selectedClienteFilter"
             :options="clienteOptions"
             optionLabel="label"
             optionValue="value"
+            filter
             size="small"
-            style="min-width: 220px"
+            class="sga-filter-select"
           />
 
           <Select
@@ -53,7 +55,36 @@
             optionLabel="label"
             optionValue="value"
             size="small"
-            style="min-width: 170px"
+            class="sga-filter-select"
+          />
+
+          <Select
+            v-model="securityFilter"
+            :options="securityOptions"
+            optionLabel="label"
+            optionValue="value"
+            size="small"
+            class="sga-filter-select"
+          />
+
+          <Select
+            v-model="sortBy"
+            :options="sortOptions"
+            optionLabel="label"
+            optionValue="value"
+            size="small"
+            class="sga-filter-select sga-sort-select"
+          />
+
+          <Button
+            v-if="hasActiveFilters"
+            type="button"
+            icon="pi pi-filter-slash"
+            severity="secondary"
+            outlined
+            size="small"
+            title="Limpiar filtros"
+            @click="resetFilters"
           />
         </div>
       </div>
@@ -65,7 +96,7 @@
 
       <div v-else-if="paginatedUsers.length === 0" class="sga-empty-state">
         <i class="pi pi-users sga-empty-icon"></i>
-        <p class="sga-empty-title">No se encontraron usuarios del portal</p>
+        <p class="sga-empty-title">No se encontraron usuarios B2B</p>
         <p class="sga-empty-desc">Prueba ajustando los filtros o aprovisionando un nuevo usuario B2B.</p>
       </div>
 
@@ -160,6 +191,8 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 import Button from 'primevue/button'
+import IconField from 'primevue/iconfield'
+import InputIcon from 'primevue/inputicon'
 import InputText from 'primevue/inputtext'
 import Select from 'primevue/select'
 import Tag from 'primevue/tag'
@@ -176,6 +209,8 @@ defineEmits(['edit', 'audit', 'reset-password', 'toggle-status', 'refresh', 'cre
 const searchQuery = ref('')
 const selectedClienteFilter = ref('')
 const statusFilter = ref('ALL')
+const securityFilter = ref('ALL')
+const sortBy = ref('RECENTS')
 
 const clienteOptions = computed(() => {
   const map = new Map()
@@ -199,11 +234,48 @@ const statusOptions = [
   { label: 'Solo Suspendidos', value: 'INACTIVE' }
 ]
 
-const filteredUsers = computed(() =>
-  props.users.filter((user) => {
+const securityOptions = [
+  { label: 'Acceso: Todos', value: 'ALL' },
+  { label: 'Clave pendiente de cambio', value: 'PASS_PENDING' },
+  { label: 'Sin accesos aún', value: 'NO_ACCESS' },
+  { label: 'Con acceso registrado', value: 'WITH_ACCESS' }
+]
+
+const sortOptions = [
+  { label: 'Orden: Más recientes', value: 'RECENTS' },
+  { label: 'Orden: Empresa A–Z', value: 'EMPRESA_ASC' },
+  { label: 'Orden: Usuario A–Z', value: 'USER_ASC' },
+  { label: 'Orden: Último acceso', value: 'ACCESS_DESC' }
+]
+
+const hasActiveFilters = computed(() =>
+  Boolean(
+    searchQuery.value ||
+      selectedClienteFilter.value ||
+      statusFilter.value !== 'ALL' ||
+      securityFilter.value !== 'ALL' ||
+      sortBy.value !== 'RECENTS'
+  )
+)
+
+const resetFilters = () => {
+  searchQuery.value = ''
+  selectedClienteFilter.value = ''
+  statusFilter.value = 'ALL'
+  securityFilter.value = 'ALL'
+  sortBy.value = 'RECENTS'
+}
+
+const filteredUsers = computed(() => {
+  const list = props.users.filter((user) => {
     if (statusFilter.value === 'ACTIVE' && !user.estadoActivo) return false
     if (statusFilter.value === 'INACTIVE' && user.estadoActivo) return false
     if (selectedClienteFilter.value && user.idCliente !== Number(selectedClienteFilter.value)) return false
+
+    if (securityFilter.value === 'PASS_PENDING' && !user.debeCambiarPassword) return false
+    if (securityFilter.value === 'NO_ACCESS' && user.ultimoAcceso) return false
+    if (securityFilter.value === 'WITH_ACCESS' && !user.ultimoAcceso) return false
+
     if (searchQuery.value.trim()) {
       const q = searchQuery.value.toLowerCase().trim()
       return (
@@ -216,7 +288,22 @@ const filteredUsers = computed(() =>
     }
     return true
   })
-)
+
+  return [...list].sort((a, b) => {
+    if (sortBy.value === 'EMPRESA_ASC') {
+      return (a.razonSocialCliente || '').localeCompare(b.razonSocialCliente || '', 'es')
+    }
+    if (sortBy.value === 'USER_ASC') {
+      return (a.username || '').localeCompare(b.username || '', 'es')
+    }
+    if (sortBy.value === 'ACCESS_DESC') {
+      const ta = a.ultimoAcceso ? new Date(a.ultimoAcceso).getTime() : 0
+      const tb = b.ultimoAcceso ? new Date(b.ultimoAcceso).getTime() : 0
+      return tb - ta
+    }
+    return (b.idUsuarioCliente || 0) - (a.idUsuarioCliente || 0)
+  })
+})
 
 const {
   currentPage,
@@ -231,7 +318,7 @@ const {
   resetPage
 } = usePagination(filteredUsers, 12)
 
-watch([searchQuery, selectedClienteFilter, statusFilter], () => {
+watch([searchQuery, selectedClienteFilter, statusFilter, securityFilter, sortBy], () => {
   resetPage()
 })
 

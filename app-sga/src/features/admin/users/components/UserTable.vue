@@ -1,9 +1,9 @@
 <template>
   <section class="sga-list-panel">
-    <!-- Barra superior sgaUI: conteo a la izquierda, acciones a la derecha (sin título duplicado) -->
+    <!-- Barra superior sgaUI: conteo a la izquierda, acciones a la derecha -->
     <div class="sga-dash-header">
       <div class="sga-dash-meta">
-        <Tag :value="`${filteredUsers.length} operadores`" severity="secondary" />
+        <Tag :value="`${filteredUsers.length} de ${users.length} operadores`" severity="secondary" />
       </div>
 
       <div class="sga-dash-actions">
@@ -29,14 +29,15 @@
     <div class="sga-card-surface sga-table-card">
       <div class="sga-table-toolbar">
         <div class="sga-toolbar-filters">
-          <div class="sga-filter-search">
+          <IconField class="sga-filter-search">
+            <InputIcon class="pi pi-search" />
             <InputText
-              v-model="searchQuery"
+              v-model.trim="searchQuery"
               placeholder="Buscar por usuario, nombre, DNI, SUNAT o cargo..."
               size="small"
               fluid
             />
-          </div>
+          </IconField>
 
           <Select
             v-model="selectedRoleFilter"
@@ -44,7 +45,16 @@
             optionLabel="label"
             optionValue="value"
             size="small"
-            style="min-width: 190px"
+            class="sga-filter-select"
+          />
+
+          <Select
+            v-model="selectedSedeFilter"
+            :options="sedeOptions"
+            optionLabel="label"
+            optionValue="value"
+            size="small"
+            class="sga-filter-select"
           />
 
           <Select
@@ -53,7 +63,27 @@
             optionLabel="label"
             optionValue="value"
             size="small"
-            style="min-width: 160px"
+            class="sga-filter-select"
+          />
+
+          <Select
+            v-model="sortBy"
+            :options="sortOptions"
+            optionLabel="label"
+            optionValue="value"
+            size="small"
+            class="sga-filter-select sga-sort-select"
+          />
+
+          <Button
+            v-if="hasActiveFilters"
+            type="button"
+            icon="pi pi-filter-slash"
+            severity="secondary"
+            outlined
+            size="small"
+            title="Limpiar filtros"
+            @click="resetFilters"
           />
         </div>
       </div>
@@ -160,6 +190,8 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 import Button from 'primevue/button'
+import IconField from 'primevue/iconfield'
+import InputIcon from 'primevue/inputicon'
 import InputText from 'primevue/inputtext'
 import Select from 'primevue/select'
 import Tag from 'primevue/tag'
@@ -178,7 +210,9 @@ defineEmits(['edit', 'toggle-status', 'reset-password', 'refresh', 'create'])
 
 const searchQuery = ref('')
 const selectedRoleFilter = ref('')
+const selectedSedeFilter = ref('')
 const statusFilter = ref('ALL')
+const sortBy = ref('NOMBRE_ASC')
 
 const roleOptions = computed(() => [
   { label: 'Todos los Roles', value: '' },
@@ -188,14 +222,55 @@ const roleOptions = computed(() => [
   }))
 ])
 
+const sedeOptions = computed(() => {
+  const map = new Map()
+  props.users.forEach((u) => {
+    if (u.codigoSede && !map.has(u.codigoSede)) {
+      map.set(u.codigoSede, {
+        label: `${u.codigoSede} — ${u.nombreSede || 'Sede'}`,
+        value: u.codigoSede
+      })
+    }
+  })
+  return [
+    { label: 'Todas las Sedes', value: '' },
+    ...Array.from(map.values()).sort((a, b) => a.label.localeCompare(b.label))
+  ]
+})
+
 const statusOptions = [
   { label: 'Todos los Estados', value: 'ALL' },
   { label: 'Solo Activos', value: 'ACTIVE' },
   { label: 'Solo Inactivos', value: 'INACTIVE' }
 ]
 
-const filteredUsers = computed(() =>
-  props.users.filter((user) => {
+const sortOptions = [
+  { label: 'Orden: Nombre A–Z', value: 'NOMBRE_ASC' },
+  { label: 'Orden: Nombre Z–A', value: 'NOMBRE_DESC' },
+  { label: 'Orden: Usuario A–Z', value: 'USER_ASC' },
+  { label: 'Orden: Más recientes', value: 'RECENTS' }
+]
+
+const hasActiveFilters = computed(() =>
+  Boolean(
+    searchQuery.value ||
+      selectedRoleFilter.value ||
+      selectedSedeFilter.value ||
+      statusFilter.value !== 'ALL' ||
+      sortBy.value !== 'NOMBRE_ASC'
+  )
+)
+
+const resetFilters = () => {
+  searchQuery.value = ''
+  selectedRoleFilter.value = ''
+  selectedSedeFilter.value = ''
+  statusFilter.value = 'ALL'
+  sortBy.value = 'NOMBRE_ASC'
+}
+
+const filteredUsers = computed(() => {
+  const list = props.users.filter((user) => {
     const q = searchQuery.value.toLowerCase().trim()
     const matchesSearch =
       !q ||
@@ -208,14 +283,24 @@ const filteredUsers = computed(() =>
       (user.codigoSunat && user.codigoSunat.toLowerCase().includes(q))
 
     const matchesRole = !selectedRoleFilter.value || user.nombreRol === selectedRoleFilter.value
+    const matchesSede = !selectedSedeFilter.value || user.codigoSede === selectedSedeFilter.value
     const matchesStatus =
       statusFilter.value === 'ALL' ||
       (statusFilter.value === 'ACTIVE' && user.estadoActivo === true) ||
       (statusFilter.value === 'INACTIVE' && user.estadoActivo === false)
 
-    return matchesSearch && matchesRole && matchesStatus
+    return matchesSearch && matchesRole && matchesSede && matchesStatus
   })
-)
+
+  return [...list].sort((a, b) => {
+    const nameA = `${a.nombres || ''} ${a.apellidos || ''}`.trim()
+    const nameB = `${b.nombres || ''} ${b.apellidos || ''}`.trim()
+    if (sortBy.value === 'NOMBRE_DESC') return nameB.localeCompare(nameA, 'es')
+    if (sortBy.value === 'USER_ASC') return (a.username || '').localeCompare(b.username || '', 'es')
+    if (sortBy.value === 'RECENTS') return (b.idUsuario || 0) - (a.idUsuario || 0)
+    return nameA.localeCompare(nameB, 'es')
+  })
+})
 
 const {
   currentPage,
@@ -230,7 +315,7 @@ const {
   resetPage
 } = usePagination(filteredUsers, 12)
 
-watch([searchQuery, selectedRoleFilter, statusFilter], () => {
+watch([searchQuery, selectedRoleFilter, selectedSedeFilter, statusFilter, sortBy], () => {
   resetPage()
 })
 

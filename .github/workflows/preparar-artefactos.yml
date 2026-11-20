@@ -1,0 +1,114 @@
+name: Preparar artefactos TransAduanas
+
+# Preparado para ejecución manual futura; no se activa por push ni pull request.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    runs-on: windows-latest
+    timeout-minutes: 25
+    defaults:
+      run:
+        shell: pwsh
+        working-directory: backend-sga
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+          cache-dependency-path: backend-sga/pom.xml
+      - name: Registrar versiones
+        run: |
+          java -version
+          .\mvnw.cmd -v
+          if ($LASTEXITCODE -ne 0) { throw 'No se pudo iniciar Maven.' }
+      - name: Verificar y empaquetar backend
+        run: |
+          .\mvnw.cmd -B -ntp clean verify "-Dtest=BusinessFunctionalCasesTest"
+          if ($LASTEXITCODE -ne 0) { throw 'Falló la verificación Maven.' }
+      - name: Comprobar las 15 pruebas y registrar hash
+        run: |
+          $reporte = 'target/surefire-reports/TEST-pe.sga.functional.BusinessFunctionalCasesTest.xml'
+          [xml]$xml = Get-Content -LiteralPath $reporte -Raw -ErrorAction Stop
+          $suite = $xml.testsuite
+          if ([int]$suite.tests -ne 15 -or [int]$suite.failures -ne 0 -or [int]$suite.errors -ne 0 -or [int]$suite.skipped -ne 0) {
+            throw 'Se requieren exactamente 15 pruebas, sin fallos, errores ni omisiones.'
+          }
+          [xml]$pom = Get-Content './pom.xml' -Raw
+          $jar = "target/sga-backend-$($pom.project.version).jar"
+          Get-FileHash -LiteralPath $jar -Algorithm SHA256 |
+            Format-List | Out-File 'target/hash-jar.txt' -Encoding utf8
+          "Commit: $env:GITHUB_SHA" | Out-File 'target/commit.txt' -Encoding utf8
+      - name: Conservar reportes incluso si fallan las pruebas
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: reportes-backend-${{ github.run_id }}
+          path: backend-sga/target/surefire-reports/
+          if-no-files-found: warn
+          retention-days: 14
+      - name: Conservar JAR verificado
+        uses: actions/upload-artifact@v7
+        with:
+          name: backend-${{ github.sha }}
+          path: |
+            backend-sga/target/*.jar
+            backend-sga/target/hash-jar.txt
+            backend-sga/target/commit.txt
+          if-no-files-found: error
+          retention-days: 14
+
+  frontends:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        app: [app-sga, app-b2b, app-landing]
+    defaults:
+      run:
+        shell: pwsh
+        working-directory: ${{ matrix.app }}
+    env:
+      VITE_API_URL: /api/v1
+      VITE_SGA_APP_URL: http://localhost:5180
+      VITE_PORTAL_CLIENTE_URL: http://localhost:5174
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: ${{ matrix.app }}/package-lock.json
+      - name: Registrar versiones
+        run: |
+          node --version
+          npm.cmd --version
+      - name: Instalar dependencias del lockfile
+        run: |
+          npm.cmd ci
+          if ($LASTEXITCODE -ne 0) { throw 'Falló npm ci.' }
+      - name: Compilar para staging local
+        run: |
+          npm.cmd run build -- --mode staging
+          if ($LASTEXITCODE -ne 0) { throw 'Falló la compilación del frontend.' }
+          if (-not (Test-Path -LiteralPath 'dist/index.html' -PathType Leaf)) {
+            throw 'No se generó dist/index.html.'
+          }
+      - name: Conservar frontend compilado
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ matrix.app }}-${{ github.sha }}
+          path: ${{ matrix.app }}/dist/
+          if-no-files-found: error
+          retention-days: 14

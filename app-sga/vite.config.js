@@ -11,23 +11,7 @@ export default defineConfig({
       '@primevue/themes': fileURLToPath(new URL('./node_modules/@primevue/themes', import.meta.url))
     }
   },
-  build: {
-    rollupOptions: {
-      output: {
-        manualChunks(id) {
-          if (id.includes('node_modules/vue') || id.includes('node_modules/vue-router') || id.includes('node_modules/pinia')) {
-            return 'vendor-vue'
-          }
-          if (id.includes('node_modules/primevue') || id.includes('node_modules/@primevue')) {
-            return 'vendor-primevue'
-          }
-          if (id.includes('node_modules/axios')) {
-            return 'vendor-http'
-          }
-        }
-      }
-    }
-  },
+  // Vite organiza los paquetes automáticamente para evitar ciclos entre archivos generados.
   server: {
     port: 5180,
     proxy: {

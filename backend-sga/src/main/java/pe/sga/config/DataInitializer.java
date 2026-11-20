@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import pe.sga.entity.CatalogoPuerto;
 import pe.sga.entity.CatalogoTipoCarga;
 import pe.sga.entity.Cliente;
@@ -43,6 +44,12 @@ import java.util.List;
 
 @Component
 @Slf4j
+@ConditionalOnProperty(
+    name = "app.data-initializer.enabled",
+    havingValue = "true",
+    matchIfMissing = true
+)
+
 public class DataInitializer implements CommandLineRunner {
 
     private static final BigDecimal TIPO_CAMBIO_SEMILLA = new BigDecimal("3.7500");

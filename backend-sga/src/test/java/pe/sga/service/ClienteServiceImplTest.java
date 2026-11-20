@@ -2,6 +2,8 @@ package pe.sga.service;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import pe.sga.support.PruebaDocente;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -23,6 +25,7 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Pruebas Unitarias - ClienteServiceImpl")
+@Tag("unitaria")
 class ClienteServiceImplTest {
 
     @Mock
@@ -33,6 +36,7 @@ class ClienteServiceImplTest {
 
     @Test
     @DisplayName("Normal: crear cliente normaliza espacios, tipoDocumento por defecto y estado PROSPECTO")
+    @PruebaDocente(codigo="PU01", tipo="Unitaria", herramientas="JUnit Jupiter 6 + Mockito (MockitoExtension, @Mock, @InjectMocks); Maven Surefire", objetivo="Entrada con espacios y campos opcionales nulos: devuelve documento y razon social normalizados, tipo RUC y estado PROSPECTO; el guardado es simulado.")
     void crear_datosValidosConOpcionalesNulos_aplicaDefaultsYGuarda() {
         ClienteRequestDTO dto = ClienteRequestDTO.builder()
                 .numeroDocumento(" 20609998881 ")
@@ -60,6 +64,7 @@ class ClienteServiceImplTest {
 
     @Test
     @DisplayName("Excepción: crear cliente con número de documento duplicado lanza BadRequestException")
+    @PruebaDocente(codigo="PU02", tipo="Unitaria", herramientas="JUnit Jupiter 6 + Mockito (MockitoExtension, @Mock, @InjectMocks); Maven Surefire", objetivo="Mockito simula que existe el documento; el servicio lanza BadRequestException y nunca llama a save.")
     void crear_documentoDuplicado_lanzaBadRequest() {
         ClienteRequestDTO dto = ClienteRequestDTO.builder()
                 .numeroDocumento("20100000001")

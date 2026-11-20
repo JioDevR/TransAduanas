@@ -1,11 +1,13 @@
 package pe.sga.functional;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 import pe.sga.service.IClienteService;
 import pe.sga.exception.*;
 import static org.junit.jupiter.api.Assertions.*;
+@Tag("integracion")
 class IntegrationPersistenceTest extends FullStackTestBase {
  @Autowired IClienteService service;
  @Autowired PlatformTransactionManager txManager;

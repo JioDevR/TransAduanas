@@ -9,51 +9,18 @@
       @saved="handleUserSaved"
     />
 
-    <template v-else>
-      <!-- Barra de Estado y Acciones sgaUI (Título único en Topbar) -->
-      <header class="sga-dash-header">
-        <div class="sga-dash-meta">
-          <Tag :value="`${users.length} operadores registrados`" severity="secondary" />
-        </div>
-
-        <div class="sga-dash-actions">
-          <Button
-            label="Actualizar"
-            icon="pi pi-sync"
-            severity="secondary"
-            outlined
-            size="small"
-            :loading="loading"
-            @click="loadData"
-          />
-          <Button
-            label="Reporte PDF"
-            icon="pi pi-file-pdf"
-            severity="secondary"
-            outlined
-            size="small"
-            :loading="exportingPdf"
-            @click="handleExportPdf"
-          />
-          <Button
-            label="Nuevo Usuario"
-            icon="pi pi-plus"
-            size="small"
-            @click="openCreateDialog"
-          />
-        </div>
-      </header>
-
-      <!-- Tabla Dual SgaListShell -->
-      <UserTable
-        :users="users"
-        :roles="roles"
-        :loading="loading"
-        @edit="openEditDialog"
-        @toggle-status="handleToggleStatus"
-        @reset-password="openResetPassword"
-      />
-    </template>
+    <!-- Tabla Dual SgaListShell -->
+    <UserTable
+      v-else
+      :users="users"
+      :roles="roles"
+      :loading="loading"
+      @edit="openEditDialog"
+      @toggle-status="handleToggleStatus"
+      @reset-password="openResetPassword"
+      @refresh="loadData"
+      @create="openCreateDialog"
+    />
 
     <UserResetPasswordModal
       v-model:visible="showResetModal"
@@ -64,14 +31,11 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue'
-import Button from 'primevue/button'
-import Tag from 'primevue/tag'
+import { ref, onMounted } from 'vue'
 import { userService } from '../services/userService'
 import { useNavigationStore } from '@/core/stores/navigationStore'
 import { useNotification } from '@/shared/composables/useNotification'
 import { useConfirmation } from '@/shared/composables/useConfirmation'
-import { openBlobInNewTab } from '@/shared/utils/download'
 import UserTable from '../components/UserTable.vue'
 import UserRegistrationForm from '../components/UserRegistrationForm.vue'
 import UserResetPasswordModal from '../components/UserResetPasswordModal.vue'
@@ -84,7 +48,6 @@ const users = ref([])
 const roles = ref([])
 const sedes = ref([])
 const loading = ref(false)
-const exportingPdf = ref(false)
 
 const selectedUser = ref(null)
 const showResetModal = ref(false)
@@ -141,13 +104,6 @@ const handleUserSaved = async ({ isEdit, userId, payload, done }) => {
   }
 }
 
-watch(
-  () => navigationStore.administracionTiActionTrigger,
-  (action) => {
-    if (action === 'export-pdf') handleExportPdf()
-  }
-)
-
 const handleToggleStatus = async (user) => {
   const isActivo = user.estadoActivo
   const confirmed = await confirmAction({
@@ -172,19 +128,6 @@ const handleToggleStatus = async (user) => {
     await loadData()
   } catch (err) {
     showError(err.response?.data?.message || 'Error al modificar el estado del usuario.')
-  }
-}
-
-const handleExportPdf = async () => {
-  if (exportingPdf.value) return
-  exportingPdf.value = true
-  try {
-    const blobData = await userService.downloadPdf(true)
-    openBlobInNewTab(blobData, 'reporte-usuarios-activos.pdf')
-  } catch (err) {
-    showError('No se pudo generar el reporte PDF de usuarios internos.')
-  } finally {
-    exportingPdf.value = false
   }
 }
 

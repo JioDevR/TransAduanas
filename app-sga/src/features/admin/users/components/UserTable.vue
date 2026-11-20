@@ -1,5 +1,25 @@
 <template>
   <SgaListShell v-model:viewMode="viewMode" title="Directorio de Operadores">
+    <template #header-right>
+      <div class="sga-dash-actions">
+        <Button
+          label="Actualizar"
+          icon="pi pi-sync"
+          severity="secondary"
+          outlined
+          size="small"
+          :loading="loading"
+          @click="$emit('refresh')"
+        />
+        <Button
+          label="Nuevo Usuario"
+          icon="pi pi-plus"
+          size="small"
+          @click="$emit('create')"
+        />
+      </div>
+    </template>
+
     <template #filters>
       <div class="sga-filter-search">
         <InputText
@@ -234,7 +254,7 @@ const props = defineProps({
   loading: { type: Boolean, default: false }
 })
 
-defineEmits(['edit', 'toggle-status', 'reset-password'])
+defineEmits(['edit', 'toggle-status', 'reset-password', 'refresh', 'create'])
 
 const viewMode = ref('table')
 const searchQuery = ref('')

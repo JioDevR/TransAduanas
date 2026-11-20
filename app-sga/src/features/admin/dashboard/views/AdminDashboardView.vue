@@ -19,6 +19,15 @@
           @click="navigateTo('create-user')"
         />
         <Button
+          label="Reporte PDF"
+          icon="pi pi-file-pdf"
+          severity="secondary"
+          outlined
+          size="small"
+          :loading="exportingPdf"
+          @click="handleExportPdf"
+        />
+        <Button
           v-if="authStore.isAdministradorTI"
           label="Auditoría"
           icon="pi pi-shield"
@@ -409,7 +418,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import Button from 'primevue/button'
 import Chart from 'primevue/chart'
@@ -420,12 +429,30 @@ import Tag from 'primevue/tag'
 import { useAuthStore } from '@/features/auth/stores/authStore'
 import { useNavigationStore } from '@/core/stores/navigationStore'
 import { useTheme } from '@/shared/composables/useTheme'
+import { useNotification } from '@/shared/composables/useNotification'
+import { openBlobInNewTab } from '@/shared/utils/download'
+import { userService } from '../../users/services/userService'
 import { useAdminDashboard, formatBytes, formatUptime } from '../../composables/useAdminDashboard'
 
 const router = useRouter()
 const authStore = useAuthStore()
 const navigationStore = useNavigationStore()
 const { isDark } = useTheme()
+const { showError } = useNotification()
+const exportingPdf = ref(false)
+
+const handleExportPdf = async () => {
+  if (exportingPdf.value) return
+  exportingPdf.value = true
+  try {
+    const blobData = await userService.downloadPdf(true)
+    openBlobInNewTab(blobData, 'reporte-usuarios-activos.pdf')
+  } catch {
+    showError('No se pudo generar el reporte PDF de usuarios internos.')
+  } finally {
+    exportingPdf.value = false
+  }
+}
 
 const {
   loading,

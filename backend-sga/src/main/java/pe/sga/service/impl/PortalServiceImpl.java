@@ -970,8 +970,10 @@ public class PortalServiceImpl implements IPortalService {
         validarCliente(idCliente);
         NotificacionCliente notif = notificacionClienteRepository.findByCliente_IdClienteAndIdNotificacion(idCliente, idNotificacion)
                 .orElseThrow(() -> new ResourceNotFoundException("Notificación no encontrada"));
-        notif.setLeido(true);
-        notificacionClienteRepository.save(notif);
+        if (!Boolean.TRUE.equals(notif.getLeido())) {
+            notif.setLeido(true);
+            notificacionClienteRepository.save(notif);
+        }
     }
 
     @Override

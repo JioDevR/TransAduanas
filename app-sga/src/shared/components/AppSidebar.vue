@@ -147,7 +147,6 @@ const currentNavItems = computed(() => {
       { key: 'portal-users', label: 'Usuarios B2B', match: ['portal-users', 'create-portal-user'], onClick: go('portal-users', '/administracion-ti/usuarios-portal') },
       { key: 'auditoria', label: 'Registro TI', match: ['auditoria'], onClick: go('auditoria', '/administracion-ti/auditoria') },
       { key: 'almacenamiento', label: 'Almacenamiento', match: ['almacenamiento', 'roles-accesos'], onClick: go('almacenamiento', '/administracion-ti/almacenamiento') },
-      { key: 'logs', label: 'Logs TI', match: ['logs'], onClick: go('logs', '/administracion-ti/logs') },
       { key: 'about', label: 'Acerca de', match: ['about'], onClick: go('about', '/administracion-ti/acerca-de') }
     ]
   }

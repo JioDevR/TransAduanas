@@ -11,7 +11,7 @@
         <i class="pi pi-key"></i>
         <div>
           <strong>{{ user.nombres }} {{ user.apellidos }}</strong>
-          <div class="sga-mono">@{{ user.username }} · {{ user.nombreRol }}</div>
+          <div>@{{ user.username }} · {{ user.nombreRol }}</div>
         </div>
       </div>
 
@@ -25,7 +25,6 @@
           placeholder="Mínimo 6 caracteres..."
           autocomplete="new-password"
           :disabled="submitting"
-          inputClass="sga-mono"
           size="small"
           fluid
         />

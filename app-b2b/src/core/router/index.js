@@ -22,7 +22,13 @@ const routes = [
     children: [
       {
         path: '',
-        redirect: '/cotizaciones'
+        redirect: '/dashboard'
+      },
+      {
+        path: 'dashboard',
+        name: 'Dashboard',
+        component: () => import('@/features/dashboard/views/PortalDashboardView.vue'),
+        meta: { title: 'Resumen General — Portal TransAduanas' }
       },
       {
         path: 'cotizaciones',
@@ -59,12 +65,6 @@ const routes = [
         name: 'SubsanarPago',
         component: () => import('@/features/pagos/views/SubsanarPagoView.vue'),
         meta: { title: 'Subsanar Abono Bancario — Portal TransAduanas' }
-      },
-      {
-        path: 'notificaciones',
-        name: 'Notificaciones',
-        component: () => import('@/features/notificaciones/views/PortalNotificacionesView.vue'),
-        meta: { title: 'Notificaciones & Avisos — Portal TransAduanas' }
       }
     ]
   },
@@ -106,7 +106,7 @@ router.beforeEach((to, from, next) => {
 
     // Si ya cambió la contraseña e intenta ir a pantalla de cambio obligatorio o login
     if (!debeCambiar && (to.path === '/cambiar-password-obligatorio' || to.path === '/login')) {
-      return next('/cotizaciones')
+      return next('/dashboard')
     }
   }
 

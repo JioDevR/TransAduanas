@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{reports/ti-listado-base :: tiHead(${tituloDocumento})}"></head>
+<body>
+
+    <table th:replace="~{reports/ti-listado-base :: tiHeader(${kickerTexto}, ${tituloReporte}, ${alcanceTexto}, ${fechaGeneracion}, ${totalListado}, 'secciones')}"></table>
+
+    <table th:replace="~{reports/ti-listado-base :: tiSummary('Estado BD y API', ${estadoBdTexto}, 'Cuentas Activas', ${cuentasActivasTexto}, 'Uso de Disco', ${usoDiscoTexto})}"></table>
+
+    <p class="ti-section-heading">1. Infraestructura y Runtime del Servidor</p>
+    <table class="ti-list-table">
+        <thead>
+            <tr>
+                <th style="width: 28%;">COMPONENTE</th>
+                <th style="width: 47%;">DETALLE TÉCNICO</th>
+                <th style="width: 25%;">ESTADO / MÉTRICA</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Base de Datos</strong></td>
+                <td th:text="${bdDetalle}">MySQL 8.0</td>
+                <td><span th:class="${bdConectada} ? 'ti-badge-ok' : 'ti-badge-err'" th:text="${estadoBdTexto}">UP · 2 ms</span></td>
+            </tr>
+            <tr>
+                <td><strong>Memoria JVM Heap</strong></td>
+                <td th:text="${jvmDetalle}">120 MB / 512 MB</td>
+                <td th:text="${jvmPorcentaje + '%'}">23%</td>
+            </tr>
+            <tr>
+                <td><strong>Runtime y Aplicación</strong></td>
+                <td th:text="${runtimeDetalle}">Java 21 · Linux</td>
+                <td th:text="${appVersionTexto}">v0.5.1 (default)</td>
+            </tr>
+            <tr>
+                <td><strong>Volumen de Disco</strong></td>
+                <td th:text="${discoDetalle}">Usado / Total</td>
+                <td th:text="${usoDiscoTexto}">35%</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <p class="ti-section-heading">2. Cuentas, Accesos y Seguridad del Período</p>
+    <table class="ti-list-table">
+        <thead>
+            <tr>
+                <th style="width: 34%;">INDICADOR</th>
+                <th style="width: 22%;">ACTIVOS / ÉXITOS</th>
+                <th style="width: 22%;">BAJA / ALERTAS</th>
+                <th style="width: 22%;">TOTAL</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Personal Interno SGA</strong></td>
+                <td th:text="${dash.usuariosActivos}">0</td>
+                <td th:text="${dash.usuariosInactivos}">0</td>
+                <td th:text="${dash.usuariosTotal}">0</td>
+            </tr>
+            <tr>
+                <td><strong>Cuentas Portal B2B</strong></td>
+                <td th:text="${dash.portalUsuariosActivos}">0</td>
+                <td th:text="${dash.portalUsuariosInactivos}">0</td>
+                <td th:text="${dash.portalUsuariosTotal}">0</td>
+            </tr>
+            <tr>
+                <td><strong>Eventos de Auditoría</strong></td>
+                <td th:text="${dash.auditoriaExitosPeriodo}">0</td>
+                <td th:text="${dash.auditoriaFallosPeriodo + ' (' + dash.loginsFallidosPeriodo + ' logins)'}">0</td>
+                <td th:text="${dash.auditoriaTotalPeriodo}">0</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <p class="ti-section-heading">3. Repositorio Documental e Integridad Disco vs BD</p>
+    <table class="ti-list-table">
+        <thead>
+            <tr>
+                <th style="width: 28%;">MÉTRICA</th>
+                <th style="width: 18%;">CANTIDAD</th>
+                <th style="width: 54%;">DETALLE</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Archivos Sincronizados</strong></td>
+                <td th:text="${storage.archivosSincronizados}">0</td>
+                <td th:text="${'En disco: ' + storage.archivosEnDisco + ' · Activos en BD: ' + storage.registrosBdActivos}">En disco</td>
+            </tr>
+            <tr>
+                <td><strong>Archivos Faltantes en Disco</strong></td>
+                <td th:text="${storage.archivosFaltantesEnDisco}">0</td>
+                <td>Registros activos en BD sin respaldo físico en disco</td>
+            </tr>
+            <tr>
+                <td><strong>Archivos Huérfanos en Disco</strong></td>
+                <td th:text="${storage.archivosHuerfanosEnDisco}">0</td>
+                <td th:text="${'Consumo total del repositorio: ' + storageTamanoTexto}">Consumo total</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div th:if="${!#lists.isEmpty(entidadesStorage)}">
+        <p class="ti-section-heading">4. Distribución Documental por Módulo</p>
+        <table class="ti-list-table">
+            <thead>
+                <tr>
+                    <th style="width: 50%;">ENTIDAD / MÓDULO</th>
+                    <th style="width: 25%;">ARCHIVOS ACTIVOS</th>
+                    <th style="width: 25%;">CONSUMO EN DISCO</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="ent : ${entidadesStorage}">
+                    <td><strong th:text="${ent.etiqueta}">Expedientes</strong></td>
+                    <td th:text="${ent.cantidad}">0</td>
+                    <td th:text="${ent.tamanoTexto}">0 KB</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+</body>
+</html>

@@ -14,6 +14,20 @@ export const auditoriaService = {
     })
     const response = await apiClient.get('/admin/auditoria', { params: cleanParams })
     return response.data.data
+  },
+
+  /**
+   * Descarga el reporte PDF de auditoría TI con los filtros aplicados
+   */
+  async downloadPdf(params = {}) {
+    const cleanParams = Object.fromEntries(
+      Object.entries(params).filter(([, v]) => v !== '' && v !== null && v !== undefined)
+    )
+    const response = await apiClient.get('/admin/auditoria/exportar-pdf', {
+      params: cleanParams,
+      responseType: 'blob'
+    })
+    return response.data
   }
 }
 

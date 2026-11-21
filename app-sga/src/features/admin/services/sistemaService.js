@@ -44,6 +44,18 @@ export const sistemaService = {
   async depurarHuerfanos() {
     const response = await apiClient.post('/admin/sistema/almacenamiento/depurar-huerfanos')
     return response.data.data
+  },
+
+  /**
+   * Descarga el informe técnico PDF de estado del sistema y almacenamiento
+   * @param {number} dias
+   */
+  async downloadPdf(dias = 7) {
+    const response = await apiClient.get('/admin/sistema/exportar-pdf', {
+      params: { dias },
+      responseType: 'blob'
+    })
+    return response.data
   }
 }
 

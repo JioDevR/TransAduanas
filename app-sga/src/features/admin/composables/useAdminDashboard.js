@@ -35,8 +35,7 @@ export function useAdminDashboard() {
     { label: 'Transporte', value: 'TRANSPORTE' },
     { label: 'Portal B2B', value: 'PORTAL_B2B' },
     { label: 'Documentos', value: 'DOCUMENTOS' },
-    { label: 'Maestros', value: 'MAESTROS' },
-    { label: 'Logs TI', value: 'LOGS_TI' }
+    { label: 'Maestros', value: 'MAESTROS' }
   ]
 
   const loadDashboard = async () => {
@@ -79,10 +78,6 @@ export function useAdminDashboard() {
           portalUsuariosTotal: 0,
           portalUsuariosActivos: 0,
           portalEmpresasVinculadas: 0,
-          logArchivoNombre: 'sga-backend.log',
-          logSizeBytes: 0,
-          logTotalLineas: 0,
-          logErroresLineas: 0,
           diasPeriodo: filterDias.value,
           auditoriaTotalPeriodo: 0,
           auditoriaExitosPeriodo: 0,

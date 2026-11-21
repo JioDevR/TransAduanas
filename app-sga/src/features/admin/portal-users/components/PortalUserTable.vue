@@ -111,7 +111,7 @@
               <div class="ptl-avatar" :style="getWarmAvatarStyle(user.username)">
                 {{ getInitials(user.nombres, user.apellidos, 'UC') }}
               </div>
-              <span class="sga-card-code sga-mono">@{{ user.username }}</span>
+              <span class="sga-card-code">@{{ user.username }}</span>
             </div>
             <Tag
               :value="user.estadoActivo ? 'Activo' : 'Suspendido'"
@@ -122,7 +122,7 @@
 
           <div class="sga-card-client">
             <h4 class="sga-client-title">{{ user.razonSocialCliente || '—' }}</h4>
-            <span class="sga-client-doc sga-mono">{{ user.tipoDocumentoCliente || 'RUC' }}: {{ user.rucCliente }}</span>
+            <span class="sga-client-doc">{{ user.tipoDocumentoCliente || 'RUC' }}: {{ user.rucCliente }}</span>
           </div>
 
           <div class="sga-card-meta-grid">
@@ -132,13 +132,13 @@
             </div>
             <div class="sga-meta-item">
               <span class="sga-meta-label">ÚLTIMO ACCESO</span>
-              <span class="sga-meta-val sga-mono">
+              <span class="sga-meta-val">
                 {{ user.ultimoAcceso ? formatAccessDate(user.ultimoAcceso) : 'Sin accesos' }}
               </span>
             </div>
             <div class="sga-meta-item">
               <span class="sga-meta-label">TELÉFONO</span>
-              <span class="sga-meta-val sga-mono">{{ user.telefonoContacto || '—' }}</span>
+              <span class="sga-meta-val">{{ user.telefonoContacto || '—' }}</span>
             </div>
             <div class="sga-meta-item">
               <span class="sga-meta-label">CLAVE</span>
@@ -146,7 +146,7 @@
             </div>
             <div class="sga-meta-item full-span">
               <span class="sga-meta-label">CORREO</span>
-              <span class="sga-meta-val sga-mono">{{ user.correoElectronico }}</span>
+              <span class="sga-meta-val">{{ user.correoElectronico }}</span>
             </div>
           </div>
 

@@ -18,7 +18,6 @@ import pe.sga.repository.AuditoriaEventoRepository;
 import pe.sga.repository.IDocumentoAdjuntoRepository;
 import pe.sga.repository.UsuarioClienteRepository;
 import pe.sga.repository.UsuarioRepository;
-import pe.sga.service.IAdminLogsService;
 import pe.sga.service.IAdminSistemaService;
 import pe.sga.service.IAuditoriaService;
 
@@ -47,7 +46,6 @@ public class AdminSistemaServiceImpl implements IAdminSistemaService {
     private final UsuarioClienteRepository usuarioClienteRepository;
     private final IDocumentoAdjuntoRepository documentoRepository;
     private final AuditoriaEventoRepository auditoriaRepository;
-    private final IAdminLogsService adminLogsService;
     private final IAuditoriaService auditoriaService;
 
     @Value("${app.storage.upload-dir:./uploads/documentos}")
@@ -146,9 +144,6 @@ public class AdminSistemaServiceImpl implements IAdminSistemaService {
                 .distinct()
                 .count();
 
-        Map<String, Object> logAll = adminLogsService.getLogs("all", 50);
-        Map<String, Object> logErr = adminLogsService.getLogs("error", 50);
-
         LocalDateTime desde = LocalDate.now().minusDays(safeDias - 1L).atStartOfDay();
         var eventosPeriodo = auditoriaRepository.findByFechaGreaterThanEqualOrderByFechaDescIdEventoDesc(desde)
                 .stream()
@@ -175,10 +170,6 @@ public class AdminSistemaServiceImpl implements IAdminSistemaService {
                 .portalUsuariosInactivos(portalInactivos)
                 .portalCambioPendiente(portalCambioPendiente)
                 .portalEmpresasVinculadas(empresasVinculadas)
-                .logArchivoNombre(String.valueOf(logAll.getOrDefault("fileName", "sga-backend.log")))
-                .logSizeBytes(((Number) logAll.getOrDefault("sizeBytes", 0L)).longValue())
-                .logTotalLineas(((Number) logAll.getOrDefault("totalLines", 0L)).longValue())
-                .logErroresLineas(((Number) logErr.getOrDefault("totalLines", 0L)).longValue())
                 .diasPeriodo(safeDias)
                 .auditoriaTotalPeriodo(eventosPeriodo.size())
                 .auditoriaExitosPeriodo(exitos)

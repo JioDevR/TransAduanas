@@ -17,7 +17,7 @@ public interface NotificacionClienteRepository extends JpaRepository<Notificacio
 
     Optional<NotificacionCliente> findByCliente_IdClienteAndIdNotificacion(Integer idCliente, Integer idNotificacion);
 
-    @Modifying
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("UPDATE NotificacionCliente n SET n.leido = true WHERE n.cliente.idCliente = :idCliente AND n.leido = false")
     int marcarTodasLeidasPorCliente(@Param("idCliente") Integer idCliente);
 }

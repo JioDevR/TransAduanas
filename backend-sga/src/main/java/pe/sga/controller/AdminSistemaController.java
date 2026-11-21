@@ -1,6 +1,9 @@
 package pe.sga.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -11,7 +14,9 @@ import pe.sga.dto.response.AdminSistemaEstadoDTO;
 import pe.sga.dto.response.ApiResponseDTO;
 import pe.sga.dto.response.RolMatrizDTO;
 import pe.sga.service.IAdminSistemaService;
+import pe.sga.service.IReporteJasperService;
 
+import java.io.ByteArrayInputStream;
 import java.util.List;
 import java.util.Map;
 
@@ -22,6 +27,7 @@ import java.util.Map;
 public class AdminSistemaController {
 
     private final IAdminSistemaService adminSistemaService;
+    private final IReporteJasperService reporteJasperService;
 
     @GetMapping("/dashboard")
     @PreAuthorize(SecurityRoles.ACCESS_LOGS_READ)
@@ -73,5 +79,21 @@ public class AdminSistemaController {
                 "Depuración de archivos huérfanos ejecutada exitosamente",
                 adminSistemaService.depurarArchivosHuerfanos()
         ));
+    }
+
+    @GetMapping("/exportar-pdf")
+    @PreAuthorize(SecurityRoles.ACCESS_LOGS_READ)
+    public ResponseEntity<InputStreamResource> exportarSistemaPdf(
+            @RequestParam(defaultValue = "7") int dias
+    ) {
+        ByteArrayInputStream pdfStream = reporteJasperService.exportarSistemaTiPdf(dias);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=reporte-estado-sistema-ti.pdf");
+
+        return ResponseEntity.ok()
+                .headers(headers)
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(new InputStreamResource(pdfStream));
     }
 }

@@ -14,6 +14,7 @@ import pe.sga.dto.portal.PortalRegistroVoucherDTO;
 import pe.sga.entity.Cliente;
 import pe.sga.entity.Cotizacion;
 import pe.sga.entity.CotizacionPago;
+import pe.sga.entity.NotificacionCliente;
 import pe.sga.entity.Usuario;
 import pe.sga.entity.enums.EstadoCotizacion;
 import pe.sga.entity.enums.RolUsuario;
@@ -120,5 +121,24 @@ public class PortalServiceImplTest {
         verify(usuarioRepository, times(1)).findFirstByOrderByIdUsuarioAsc();
         verify(usuarioRepository, never()).findAll();
         assertEquals("PENDIENTE_REVISION", cotizacion.getEstadoPago());
+    }
+
+    @Test
+    void marcarNotificacionLeida_omiteGuardadoSiYaEstabaLeida() {
+        NotificacionCliente leida = NotificacionCliente.builder()
+                .idNotificacion(7)
+                .cliente(cliente)
+                .titulo("Aviso")
+                .mensaje("Detalle")
+                .leido(true)
+                .build();
+
+        when(clienteRepository.existsById(10)).thenReturn(true);
+        when(notificacionClienteRepository.findByCliente_IdClienteAndIdNotificacion(10, 7))
+                .thenReturn(Optional.of(leida));
+
+        portalService.marcarNotificacionLeida(10, 7);
+
+        verify(notificacionClienteRepository, never()).save(any());
     }
 }

@@ -104,7 +104,7 @@
         <div class="sga-table-toolbar">
           <div class="sga-toolbar-filters">
             <span class="sga-status-note sga-text-muted">
-              Trazabilidad persistente en base de datos (accesos, cuentas, operaciones y logs).
+              Trazabilidad persistente en base de datos (accesos, cuentas y operaciones).
             </span>
           </div>
         </div>
@@ -127,14 +127,14 @@
 
           <Column header="Fecha y Hora" style="width: 155px">
             <template #body="{ data }">
-              <span class="sga-mono">{{ formatFecha(data.fecha) }}</span>
+              <span>{{ formatFecha(data.fecha) }}</span>
             </template>
           </Column>
 
           <Column header="Actor / Rol">
             <template #body="{ data }">
               <div class="aud-cell-stack">
-                <strong class="sga-mono">@{{ data.usuarioActor }}</strong>
+                <strong>@{{ data.usuarioActor }}</strong>
                 <small class="sga-text-muted">{{ data.rolActor || 'SIN ROL' }}</small>
               </div>
             </template>
@@ -143,7 +143,7 @@
           <Column header="Módulo / Acción">
             <template #body="{ data }">
               <div class="aud-cell-stack">
-                <span class="sga-mono">{{ data.accion }}</span>
+                <span>{{ data.accion }}</span>
                 <small class="sga-text-muted">{{ data.modulo }} · {{ data.entidad || '—' }}</small>
               </div>
             </template>
@@ -157,7 +157,7 @@
 
           <Column header="IP" style="width: 120px">
             <template #body="{ data }">
-              <span class="sga-mono sga-text-muted">{{ data.ipOrigen || '—' }}</span>
+              <span class="sga-text-muted">{{ data.ipOrigen || '—' }}</span>
             </template>
           </Column>
 
@@ -211,7 +211,7 @@
         <div class="sga-banner" :class="selectedEvent.resultado === 'EXITO' ? 'is-success' : 'is-danger'">
           <i :class="selectedEvent.resultado === 'EXITO' ? 'pi pi-check-circle' : 'pi pi-exclamation-triangle'"></i>
           <div>
-            <strong class="sga-mono">{{ selectedEvent.accion }}</strong>
+            <strong>{{ selectedEvent.accion }}</strong>
             <div>{{ selectedEvent.detalle || 'Sin descripción adicional' }}</div>
           </div>
         </div>
@@ -219,15 +219,15 @@
         <div class="sga-card-meta-grid">
           <div class="sga-meta-item">
             <span class="sga-meta-label">ID EVENTO</span>
-            <span class="sga-meta-val sga-mono">#{{ selectedEvent.idEvento }}</span>
+            <span class="sga-meta-val">#{{ selectedEvent.idEvento }}</span>
           </div>
           <div class="sga-meta-item">
             <span class="sga-meta-label">FECHA</span>
-            <span class="sga-meta-val sga-mono">{{ formatFecha(selectedEvent.fecha) }}</span>
+            <span class="sga-meta-val">{{ formatFecha(selectedEvent.fecha) }}</span>
           </div>
           <div class="sga-meta-item">
             <span class="sga-meta-label">USUARIO ACTOR</span>
-            <span class="sga-meta-val sga-mono">@{{ selectedEvent.usuarioActor }}</span>
+            <span class="sga-meta-val">@{{ selectedEvent.usuarioActor }}</span>
           </div>
           <div class="sga-meta-item">
             <span class="sga-meta-label">ROL ACTOR</span>
@@ -235,11 +235,11 @@
           </div>
           <div class="sga-meta-item">
             <span class="sga-meta-label">ENTIDAD / ID</span>
-            <span class="sga-meta-val sga-mono">{{ selectedEvent.entidad || '—' }} #{{ selectedEvent.idEntidad || '—' }}</span>
+            <span class="sga-meta-val">{{ selectedEvent.entidad || '—' }} #{{ selectedEvent.idEntidad || '—' }}</span>
           </div>
           <div class="sga-meta-item">
             <span class="sga-meta-label">IP ORIGEN</span>
-            <span class="sga-meta-val sga-mono">{{ selectedEvent.ipOrigen || '—' }}</span>
+            <span class="sga-meta-val">{{ selectedEvent.ipOrigen || '—' }}</span>
           </div>
         </div>
       </div>
@@ -296,8 +296,7 @@ const moduloOptions = [
   { label: 'Transporte', value: 'TRANSPORTE' },
   { label: 'Portal B2B', value: 'PORTAL_B2B' },
   { label: 'Documentos', value: 'DOCUMENTOS' },
-  { label: 'Maestros', value: 'MAESTROS' },
-  { label: 'Logs TI', value: 'LOGS_TI' }
+  { label: 'Maestros', value: 'MAESTROS' }
 ]
 
 const resultadoOptions = [

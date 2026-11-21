@@ -72,6 +72,7 @@ const toggleCollapse = () => {
 }
 
 const NAV_ITEMS = [
+  { to: '/dashboard', label: 'Resumen General' },
   { to: '/cotizaciones', label: 'Mis Cotizaciones' },
   { to: '/expedientes', label: 'Expedientes & Tracking' },
   { to: '/pagos', label: 'Cobros y Pagos' }

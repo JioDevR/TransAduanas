@@ -74,7 +74,6 @@
                 id="ptl-username"
                 v-model.trim="form.username"
                 placeholder="ej. 20370146994"
-                class="sga-mono"
                 size="small"
                 fluid
                 :disabled="submitting"
@@ -147,7 +146,6 @@
                 v-model.trim="form.correoElectronico"
                 type="email"
                 placeholder="operaciones@empresa.com"
-                class="sga-mono"
                 size="small"
                 fluid
                 :disabled="submitting"
@@ -160,7 +158,6 @@
                 id="ptl-tel"
                 v-model.trim="form.telefonoContacto"
                 placeholder="+51 987 654 321"
-                class="sga-mono"
                 size="small"
                 fluid
                 :disabled="submitting"
@@ -185,7 +182,7 @@
             <div class="ptl-preview-avatar">{{ previewInitials }}</div>
             <div>
               <strong>{{ form.contactoRepresentante || 'Representante Legal' }}</strong>
-              <div class="sga-mono sga-text-muted">@{{ form.username || 'usuario' }}</div>
+              <div class="sga-text-muted">@{{ form.username || 'usuario' }}</div>
             </div>
           </div>
 
@@ -196,11 +193,11 @@
             </div>
             <div class="sga-meta-item full-span">
               <span class="sga-meta-label">CORREO</span>
-              <span class="sga-meta-val sga-mono">{{ form.correoElectronico || '—' }}</span>
+              <span class="sga-meta-val">{{ form.correoElectronico || '—' }}</span>
             </div>
             <div class="sga-meta-item">
               <span class="sga-meta-label">TELÉFONO</span>
-              <span class="sga-meta-val sga-mono">{{ form.telefonoContacto || '—' }}</span>
+              <span class="sga-meta-val">{{ form.telefonoContacto || '—' }}</span>
             </div>
             <div class="sga-meta-item">
               <span class="sga-meta-label">PRIMER LOGIN</span>

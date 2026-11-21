@@ -10,7 +10,7 @@
       <div class="sga-banner is-info">
         <i class="pi pi-key"></i>
         <div>
-          <strong class="sga-mono">@{{ user.username }}</strong>
+          <strong>@{{ user.username }}</strong>
           <div>{{ user.contactoRepresentante || user.nombres }} · {{ user.razonSocialCliente }}</div>
         </div>
       </div>
@@ -25,7 +25,6 @@
           placeholder="Ingrese mínimo 6 caracteres..."
           autocomplete="new-password"
           :disabled="submitting"
-          inputClass="sga-mono"
           size="small"
           fluid
         />

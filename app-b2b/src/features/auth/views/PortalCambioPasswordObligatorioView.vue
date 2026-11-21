@@ -204,7 +204,7 @@ const handleSubmit = async () => {
   try {
     const result = await authStore.cambiarPassword(form.passwordActual.trim(), form.nuevaPassword.trim())
     if (result.success) {
-      router.push('/cotizaciones')
+      router.push('/dashboard')
     } else {
       errorMessage.value = result.message || 'Error al actualizar la contraseña'
     }

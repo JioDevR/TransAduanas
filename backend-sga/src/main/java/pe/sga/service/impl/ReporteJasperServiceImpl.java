@@ -3,13 +3,19 @@ package pe.sga.service.impl;
 import com.openhtmltopdf.pdfboxout.PdfRendererBuilder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.thymeleaf.context.Context;
 import org.thymeleaf.spring6.SpringTemplateEngine;
 import pe.sga.dto.reporte.UsuarioPortalReporteItemDTO;
 import pe.sga.dto.reporte.UsuarioReporteItemDTO;
+import pe.sga.dto.response.AdminAlmacenamientoDTO;
+import pe.sga.dto.response.AdminDashboardResponseDTO;
+import pe.sga.dto.response.AdminSistemaEstadoDTO;
 import pe.sga.dto.response.CotizacionResponseDTO;
+import pe.sga.entity.AuditoriaEvento;
 import pe.sga.entity.CatalogoMercancia;
 import pe.sga.entity.CatalogoPuerto;
 import pe.sga.entity.CatalogoTipoCarga;
@@ -18,6 +24,7 @@ import pe.sga.entity.Sede;
 import pe.sga.entity.Usuario;
 import pe.sga.entity.UsuarioCliente;
 import pe.sga.entity.enums.EstadoCotizacion;
+import pe.sga.repository.AuditoriaEventoRepository;
 import pe.sga.repository.CatalogoMercanciaRepository;
 import pe.sga.repository.CatalogoPuertoRepository;
 import pe.sga.repository.CatalogoTipoCargaRepository;
@@ -25,6 +32,7 @@ import pe.sga.repository.ClienteRepository;
 import pe.sga.repository.SedeRepository;
 import pe.sga.repository.UsuarioClienteRepository;
 import pe.sga.repository.UsuarioRepository;
+import pe.sga.service.IAdminSistemaService;
 import pe.sga.service.ICotizacionService;
 import pe.sga.service.IReporteJasperService;
 
@@ -61,6 +69,19 @@ public class ReporteJasperServiceImpl implements IReporteJasperService {
     private final ClienteRepository clienteRepository;
     private final ICotizacionService cotizacionService;
     private final SpringTemplateEngine templateEngine;
+
+    private AuditoriaEventoRepository auditoriaRepository;
+    private IAdminSistemaService adminSistemaService;
+
+    @Autowired(required = false)
+    public void setAuditoriaRepository(AuditoriaEventoRepository auditoriaRepository) {
+        this.auditoriaRepository = auditoriaRepository;
+    }
+
+    @Autowired(required = false)
+    public void setAdminSistemaService(IAdminSistemaService adminSistemaService) {
+        this.adminSistemaService = adminSistemaService;
+    }
 
     // =========================================================================
     // 01. USUARIOS INTERNOS - ADMINISTRACIÓN TI (HTML / OPENHTMLTOPDF)
@@ -152,6 +173,150 @@ public class ReporteJasperServiceImpl implements IReporteJasperService {
         variables.put("totalEmpresas", totalEmpresas);
 
         return renderHtmlToPdf("reports/reporte-usuarios-portal", variables);
+    }
+
+    // =========================================================================
+    // 01C. AUDITORÍA TI Y ESTADO DEL SISTEMA TI (HTML / OPENHTMLTOPDF)
+    // =========================================================================
+    @Override
+    @Transactional(readOnly = true)
+    public ByteArrayInputStream exportarAuditoriaTiPdf(
+            String buscar,
+            String modulo,
+            String resultado,
+            LocalDateTime desde,
+            LocalDateTime hasta) {
+        List<AuditoriaEvento> eventos = auditoriaRepository == null
+                ? List.of()
+                : auditoriaRepository.buscarConFiltros(
+                        buscar != null ? buscar.trim() : null,
+                        modulo != null ? modulo.trim() : null,
+                        resultado != null ? resultado.trim() : null,
+                        desde,
+                        hasta,
+                        PageRequest.of(0, 500)
+                ).getContent();
+
+        long totalExitos = eventos.stream()
+                .filter(e -> !"FALLO".equalsIgnoreCase(e.getResultado()) && !"ERROR".equalsIgnoreCase(e.getResultado()))
+                .count();
+        long totalFallos = eventos.size() - totalExitos;
+
+        List<Map<String, String>> items = eventos.stream().map(ev -> {
+            Map<String, String> row = new HashMap<>();
+            row.put("fechaTexto", ev.getFecha() != null ? ev.getFecha().format(REPORT_DATE_FORMATTER) : "—");
+            row.put("usuarioActor", defaultIfBlank(ev.getUsuarioActor(), "SISTEMA"));
+            row.put("rolActor", defaultIfBlank(ev.getRolActor(), "SIN ROL"));
+            row.put("accion", defaultIfBlank(ev.getAccion(), "—"));
+            row.put("moduloEntidad", defaultIfBlank(ev.getModulo(), "SISTEMA")
+                    + (ev.getEntidad() != null && !ev.getEntidad().isBlank() ? " · " + ev.getEntidad() : ""));
+            row.put("detalle", defaultIfBlank(ev.getDetalle(), "—"));
+            row.put("ipOrigen", defaultIfBlank(ev.getIpOrigen(), "—"));
+            row.put("resultado", defaultIfBlank(ev.getResultado(), "EXITO"));
+            return row;
+        }).toList();
+
+        String alcance = buildAuditoriaAlcance(modulo, resultado, desde, hasta);
+        Map<String, Object> variables = buildTiReportVariables(
+                "Bitácora de Auditoría y Seguridad TI",
+                "ADMINISTRACIÓN TI // SEGURIDAD Y TRAZABILIDAD",
+                "Bitácora de Auditoría TI",
+                alcance,
+                "Eventos en Informe",
+                items.size(),
+                totalExitos
+        );
+        variables.put("items", items);
+        variables.put("totalExitos", totalExitos);
+        variables.put("totalFallos", totalFallos);
+
+        return renderHtmlToPdf("reports/reporte-auditoria-ti", variables);
+    }
+
+    private String buildAuditoriaAlcance(String modulo, String resultado, LocalDateTime desde, LocalDateTime hasta) {
+        List<String> partes = new ArrayList<>();
+        DateTimeFormatter dayFmt = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        if (desde != null && hasta != null) {
+            partes.add("Del " + desde.format(dayFmt) + " al " + hasta.format(dayFmt));
+        } else if (desde != null) {
+            partes.add("Desde " + desde.format(dayFmt));
+        } else if (hasta != null) {
+            partes.add("Hasta " + hasta.format(dayFmt));
+        } else {
+            partes.add("Histórico completo");
+        }
+        partes.add((modulo != null && !modulo.isBlank()) ? "Módulo: " + modulo : "Todos los módulos");
+        if (resultado != null && !resultado.isBlank()) {
+            partes.add("Estado: " + resultado);
+        }
+        return String.join(" · ", partes);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ByteArrayInputStream exportarSistemaTiPdf(int dias) {
+        int safeDias = Math.min(Math.max(1, dias), 90);
+        AdminDashboardResponseDTO dash = adminSistemaService != null
+                ? adminSistemaService.obtenerDashboard(safeDias, "TODOS")
+                : AdminDashboardResponseDTO.builder().diasPeriodo(safeDias).build();
+        AdminSistemaEstadoDTO sistema = dash.getSistema() != null
+                ? dash.getSistema()
+                : AdminSistemaEstadoDTO.builder().build();
+        AdminAlmacenamientoDTO storage = adminSistemaService != null
+                ? adminSistemaService.obtenerDiagnosticoAlmacenamiento(null, null, null, null, 0, 1)
+                : AdminAlmacenamientoDTO.builder().build();
+
+        String estadoBd = sistema.isBdConectada()
+                ? "UP · " + sistema.getBdLatenciaMs() + " ms"
+                : "DOWN";
+        long totalActivas = dash.getUsuariosActivos() + dash.getPortalUsuariosActivos();
+        String cuentasActivas = totalActivas + " activas";
+        String usoDisco = storage.getDiscoOcupacionPct() + "%";
+        List<Map<String, Object>> entidadesStorage = storage.getPorEntidad() == null
+                ? List.of()
+                : storage.getPorEntidad().stream().map(g -> {
+                    Map<String, Object> m = new HashMap<>();
+                    m.put("etiqueta", defaultIfBlank(g.getEtiqueta(), g.getClave()));
+                    m.put("cantidad", g.getCantidad());
+                    m.put("tamanoTexto", formatBytesSimple(g.getTamanoBytes()));
+                    return m;
+                }).toList();
+        int totalSecciones = entidadesStorage.isEmpty() ? 3 : 4;
+
+        Map<String, Object> variables = buildTiReportVariables(
+                "Informe Técnico de Sistema y Almacenamiento TI",
+                "ADMINISTRACIÓN TI // INFRAESTRUCTURA",
+                "Informe Técnico de Estado del Sistema",
+                "Ventana operativa de " + safeDias + " días",
+                "Secciones Evaluadas",
+                totalSecciones,
+                totalSecciones
+        );
+        variables.put("dash", dash);
+        variables.put("storage", storage);
+        variables.put("entidadesStorage", entidadesStorage);
+        variables.put("estadoBdTexto", estadoBd);
+        variables.put("bdConectada", sistema.isBdConectada());
+        variables.put("cuentasActivasTexto", cuentasActivas);
+        variables.put("usoDiscoTexto", usoDisco);
+        variables.put("bdDetalle", defaultIfBlank(sistema.getBdMotor(), "MySQL") + " " + defaultIfBlank(sistema.getBdVersion(), ""));
+        variables.put("jvmDetalle", sistema.getJvmHeapUsadoMb() + " MB / " + sistema.getJvmHeapMaximoMb() + " MB");
+        variables.put("jvmPorcentaje", sistema.getJvmHeapPorcentaje());
+        variables.put("runtimeDetalle", "Java " + defaultIfBlank(sistema.getJavaVersion(), "21") + " · " + defaultIfBlank(sistema.getOsNombre(), "Linux"));
+        variables.put("appVersionTexto", "v" + defaultIfBlank(sistema.getAppVersion(), "0.5.1") + " (" + defaultIfBlank(sistema.getPerfilActivo(), "default") + ")");
+        variables.put("discoDetalle", storage.getDiscoUsadoMb() + " MB usados de " + storage.getDiscoTotalMb() + " MB (" + storage.getDiscoLibreMb() + " MB libres)");
+        variables.put("storageTamanoTexto", formatBytesSimple(storage.getStorageTamanoBytes()));
+
+        return renderHtmlToPdf("reports/reporte-sistema-ti", variables);
+    }
+
+    private String formatBytesSimple(long bytes) {
+        if (bytes < 1024) return bytes + " B";
+        double kb = bytes / 1024.0;
+        if (kb < 1024) return String.format(Locale.US, "%.1f KB", kb);
+        double mb = kb / 1024.0;
+        if (mb < 1024) return String.format(Locale.US, "%.2f MB", mb);
+        return String.format(Locale.US, "%.2f GB", mb / 1024.0);
     }
 
     // =========================================================================
@@ -486,12 +651,15 @@ public class ReporteJasperServiceImpl implements IReporteJasperService {
     // =========================================================================
     private UsuarioReporteItemDTO mapUsuarioToReporteItem(Usuario usuario) {
         String cargoFallback = usuario.getRol() != null ? usuario.getRol().getEtiqueta() : "—";
+        String nombre = defaultIfBlank(usuario.getNombreCompleto(), "—");
         return UsuarioReporteItemDTO.builder()
                 .username(defaultIfBlank(usuario.getUsername(), "—"))
+                .nombreCompleto(nombre)
                 .correo(defaultIfBlank(usuario.getCorreoInstitucional(), "—"))
                 .numero(defaultIfBlank(usuario.getTelefono(), "—"))
                 .cargo(defaultIfBlank(usuario.getCargoTitulo(), cargoFallback))
                 .sede(usuario.getSede() != null ? defaultIfBlank(usuario.getSede().getNombre(), "Sin sede") : "Sin sede")
+                .estado(Boolean.TRUE.equals(usuario.getEstadoActivo()) ? "Activo" : "Inactivo")
                 .build();
     }
 
@@ -500,8 +668,10 @@ public class ReporteJasperServiceImpl implements IReporteJasperService {
         return UsuarioPortalReporteItemDTO.builder()
                 .username(defaultIfBlank(uc.getUsername(), "—"))
                 .empresa(cliente != null ? defaultIfBlank(cliente.getRazonSocial(), "—") : "—")
+                .ruc(cliente != null ? defaultIfBlank(cliente.getNumeroDocumento(), "—") : "—")
                 .representante(cliente != null ? defaultIfBlank(cliente.getContactoRepresentante(), "—") : "—")
                 .correo(cliente != null ? defaultIfBlank(cliente.getCorreoContacto(), "—") : "—")
+                .estado(Boolean.TRUE.equals(uc.getEstadoActivo()) ? "Activo" : "Suspendido")
                 .build();
     }
 

@@ -76,7 +76,6 @@
                 v-model.trim="form.numeroDocumento"
                 :placeholder="docPlaceholder"
                 :maxlength="docMaxLength"
-                class="sga-mono"
                 size="small"
                 fluid
                 :disabled="submitting"
@@ -89,7 +88,6 @@
                 id="f-cod-sunat"
                 v-model.trim="form.codigoSunat"
                 placeholder="Ej. SUNAT-DESP-0104"
-                class="sga-mono"
                 size="small"
                 fluid
                 :disabled="submitting"
@@ -160,7 +158,6 @@
                 id="f-telefono"
                 v-model.trim="form.telefono"
                 placeholder="+51 999 888 777"
-                class="sga-mono"
                 size="small"
                 fluid
                 :disabled="submitting"
@@ -184,7 +181,6 @@
                   id="f-username"
                   v-model.trim="form.username"
                   placeholder="ej. calvarez"
-                  class="sga-mono"
                   size="small"
                   fluid
                   :disabled="isEditMode || submitting"
@@ -222,7 +218,6 @@
                 v-model.trim="form.correoInstitucional"
                 type="email"
                 placeholder="nombre@aduanas-sga.pe"
-                class="sga-mono"
                 size="small"
                 fluid
                 :disabled="submitting"
@@ -309,7 +304,7 @@
             <div class="usr-preview-avatar">{{ previewInitials }}</div>
             <div>
               <strong>{{ form.nombres || form.apellidos ? `${form.nombres} ${form.apellidos}` : 'Nombre del Operador' }}</strong>
-              <div class="sga-mono sga-text-muted">@{{ form.username || 'usuario' }}</div>
+              <div class="sga-text-muted">@{{ form.username || 'usuario' }}</div>
               <small class="sga-text-muted">{{ form.cargoTitulo || 'Sin cargo asignado' }}</small>
             </div>
           </div>
@@ -317,11 +312,11 @@
           <div class="sga-card-meta-grid">
             <div class="sga-meta-item">
               <span class="sga-meta-label">DOCUMENTO</span>
-              <span class="sga-meta-val sga-mono">{{ form.tipoDocumento }}: {{ form.numeroDocumento || '—' }}</span>
+              <span class="sga-meta-val">{{ form.tipoDocumento }}: {{ form.numeroDocumento || '—' }}</span>
             </div>
             <div class="sga-meta-item">
               <span class="sga-meta-label">SUNAT</span>
-              <span class="sga-meta-val sga-mono">{{ form.codigoSunat || 'Sin código' }}</span>
+              <span class="sga-meta-val">{{ form.codigoSunat || 'Sin código' }}</span>
             </div>
             <div class="sga-meta-item">
               <span class="sga-meta-label">ROL</span>
@@ -329,11 +324,11 @@
             </div>
             <div class="sga-meta-item">
               <span class="sga-meta-label">SEDE</span>
-              <span class="sga-meta-val sga-mono">{{ selectedSedeDetails?.codigoSede || '—' }}</span>
+              <span class="sga-meta-val">{{ selectedSedeDetails?.codigoSede || '—' }}</span>
             </div>
             <div class="sga-meta-item full-span">
               <span class="sga-meta-label">CORREO</span>
-              <span class="sga-meta-val sga-mono">{{ form.correoInstitucional || '—' }}</span>
+              <span class="sga-meta-val">{{ form.correoInstitucional || '—' }}</span>
             </div>
           </div>
 

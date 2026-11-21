@@ -4,6 +4,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -216,7 +217,10 @@ public class DespachoTransporteServiceTest {
         assertEquals("EN_RUTA", resp.getEstadoTransporte());
         assertEquals("EN_RUTA", unidad.getEstadoOperativo());
         assertEquals("EN_RUTA", conductor.getEstadoOperativo());
-        verify(notificacionClienteRepo, times(1)).save(any(NotificacionCliente.class));
+        ArgumentCaptor<NotificacionCliente> notifCaptor = ArgumentCaptor.forClass(NotificacionCliente.class);
+        verify(notificacionClienteRepo, times(1)).save(notifCaptor.capture());
+        assertEquals("TRANSPORTE", notifCaptor.getValue().getTipo());
+        assertEquals("/expedientes", notifCaptor.getValue().getEnlace());
     }
 
     @Test
@@ -242,6 +246,9 @@ public class DespachoTransporteServiceTest {
         assertEquals("DISPONIBLE", unidad.getEstadoOperativo());
         assertEquals("DISPONIBLE", conductor.getEstadoOperativo());
         assertEquals(100150, unidad.getKilometrajeActual());
-        verify(notificacionClienteRepo, times(1)).save(any(NotificacionCliente.class));
+        ArgumentCaptor<NotificacionCliente> notifCaptor = ArgumentCaptor.forClass(NotificacionCliente.class);
+        verify(notificacionClienteRepo, times(1)).save(notifCaptor.capture());
+        assertEquals("TRANSPORTE", notifCaptor.getValue().getTipo());
+        assertEquals("/expedientes", notifCaptor.getValue().getEnlace());
     }
 }

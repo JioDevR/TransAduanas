@@ -18,7 +18,7 @@
               rounded
             />
           </div>
-          <span class="sga-mono sga-text-muted">@{{ user.username }} · {{ user.razonSocialCliente }}</span>
+          <span class="sga-text-muted">@{{ user.username }} · {{ user.razonSocialCliente }}</span>
         </div>
       </div>
 
@@ -29,15 +29,15 @@
         </div>
         <div class="sga-meta-item">
           <span class="sga-meta-label">{{ user.tipoDocumentoCliente || 'RUC' }}</span>
-          <span class="sga-meta-val sga-mono">{{ user.rucCliente || '—' }}</span>
+          <span class="sga-meta-val">{{ user.rucCliente || '—' }}</span>
         </div>
         <div class="sga-meta-item">
           <span class="sga-meta-label">CORREO ELECTRÓNICO</span>
-          <span class="sga-meta-val sga-mono">{{ user.correoElectronico || '—' }}</span>
+          <span class="sga-meta-val">{{ user.correoElectronico || '—' }}</span>
         </div>
         <div class="sga-meta-item">
           <span class="sga-meta-label">TELÉFONO</span>
-          <span class="sga-meta-val sga-mono">{{ user.telefonoContacto || 'Sin teléfono' }}</span>
+          <span class="sga-meta-val">{{ user.telefonoContacto || 'Sin teléfono' }}</span>
         </div>
         <div class="sga-meta-item">
           <span class="sga-meta-label">ESTADO CONTRASEÑA</span>
@@ -47,19 +47,19 @@
         </div>
         <div class="sga-meta-item">
           <span class="sga-meta-label">ID TÉCNICO</span>
-          <span class="sga-meta-val sga-mono">#{{ user.idUsuarioCliente }}</span>
+          <span class="sga-meta-val">#{{ user.idUsuarioCliente }}</span>
         </div>
         <div class="sga-meta-item">
           <span class="sga-meta-label">FECHA DE ALTA</span>
-          <span class="sga-meta-val sga-mono">{{ formatDate(user.fechaCreacion) }}</span>
+          <span class="sga-meta-val">{{ formatDate(user.fechaCreacion) }}</span>
         </div>
         <div class="sga-meta-item">
           <span class="sga-meta-label">ÚLTIMA MODIFICACIÓN</span>
-          <span class="sga-meta-val sga-mono">{{ formatDate(user.fechaActualizacion) }}</span>
+          <span class="sga-meta-val">{{ formatDate(user.fechaActualizacion) }}</span>
         </div>
         <div class="sga-meta-item full-span">
           <span class="sga-meta-label">ÚLTIMO ACCESO AL PORTAL</span>
-          <span class="sga-meta-val sga-mono" :class="user.ultimoAcceso ? 'sga-text-success' : 'sga-text-muted'">
+          <span class="sga-meta-val" :class="user.ultimoAcceso ? 'sga-text-success' : 'sga-text-muted'">
             {{ user.ultimoAcceso ? formatDate(user.ultimoAcceso) : 'Nunca ha iniciado sesión' }}
           </span>
         </div>

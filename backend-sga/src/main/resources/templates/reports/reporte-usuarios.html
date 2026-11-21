@@ -10,23 +10,30 @@
     <table class="ti-list-table">
         <thead>
             <tr>
-                <th style="width: 15%;">USUARIO</th>
-                <th style="width: 28%;">CORREO</th>
-                <th style="width: 16%;">NÚMERO</th>
-                <th style="width: 21%;">CARGO</th>
-                <th style="width: 20%;">SEDE</th>
+                <th style="width: 22%;">USUARIO / OPERADOR</th>
+                <th style="width: 24%;">CORREO</th>
+                <th style="width: 13%;">TELÉFONO</th>
+                <th style="width: 17%;">CARGO</th>
+                <th style="width: 15%;">SEDE</th>
+                <th style="width: 9%;">ESTADO</th>
             </tr>
         </thead>
         <tbody>
             <tr th:if="${#lists.isEmpty(items)}">
-                <td colspan="5" class="ti-empty-row">No se encontraron usuarios internos para mostrar en este informe.</td>
+                <td colspan="6" class="ti-empty-row">No se encontraron usuarios internos para mostrar en este informe.</td>
             </tr>
             <tr th:each="u : ${items}">
-                <td><span class="ti-user-chip" th:text="'@' + ${u.username}">@admin</span></td>
+                <td>
+                    <span class="ti-user-chip" th:text="'@' + ${u.username}">@admin</span><br />
+                    <span class="ti-sub-text" th:text="${u.nombreCompleto}">Administrador</span>
+                </td>
                 <td><span class="ti-email-text" th:text="${u.correo}">admin@sga.pe</span></td>
                 <td th:text="${u.numero}">+51 999 999 999</td>
                 <td th:text="${u.cargo}">Administrador TI</td>
                 <td th:text="${u.sede}">Sede Central Corporativa</td>
+                <td>
+                    <span th:class="${u.estado == 'Activo'} ? 'ti-badge-ok' : 'ti-badge-err'" th:text="${u.estado}">Activo</span>
+                </td>
             </tr>
         </tbody>
     </table>

@@ -1103,30 +1103,6 @@ var ctl=new UsuarioController(usuarioService,reporteJasperService);
 byte[] bytes="%PDF-QA".getBytes();when(reporteJasperService.exportarUsuariosPdf(false)).thenReturn(new ByteArrayInputStream(bytes));var r=ctl.exportarUsuariosPdf(false);assertEquals(200,r.getStatusCode().value());assertEquals("application/pdf",r.getHeaders().getContentType().toString());assertTrue(r.getHeaders().getFirst("Content-Disposition").startsWith("inline;"));assertArrayEquals(bytes,r.getBody().getInputStream().readAllBytes());verify(reporteJasperService).exportarUsuariosPdf(false);
 }
 
-@Test void UC149_AdminLogsController_getLogs() throws Exception {
-var adminLogsService=mock(IAdminLogsService.class);
-var ctl=new AdminLogsController(adminLogsService);
-var expected=Map.<String,Object>of("all",List.of("QA"));when(adminLogsService.getLogs("all",20)).thenReturn(expected);var r=ctl.getLogs("all",20);assertEquals(200,r.getStatusCode().value());assertSame(expected,r.getBody().getData());verify(adminLogsService).getLogs("all",20);
-}
-
-@Test void UC150_AdminLogsController_downloadLog_nombre() throws Exception {
-var adminLogsService=mock(IAdminLogsService.class);
-var ctl=new AdminLogsController(adminLogsService);
-var file=mock(Resource.class);when(file.getFilename()).thenReturn("qa.log");when(adminLogsService.getLogFileResource("all")).thenReturn(file);var r=ctl.downloadLog("all");assertEquals(200,r.getStatusCode().value());assertSame(file,r.getBody());assertEquals("text/plain",r.getHeaders().getContentType().toString());assertTrue(r.getHeaders().getFirst("Content-Disposition").contains("qa.log"));verify(adminLogsService).getLogFileResource("all");
-}
-
-@Test void UC151_AdminLogsController_downloadLog_respaldo() throws Exception {
-var adminLogsService=mock(IAdminLogsService.class);
-var ctl=new AdminLogsController(adminLogsService);
-var file=mock(Resource.class);when(file.getFilename()).thenReturn(null);when(adminLogsService.getLogFileResource("all")).thenReturn(file);var r=ctl.downloadLog("all");assertEquals(200,r.getStatusCode().value());assertSame(file,r.getBody());assertEquals("text/plain",r.getHeaders().getContentType().toString());assertTrue(r.getHeaders().getFirst("Content-Disposition").contains("sga-backend.log"));verify(adminLogsService).getLogFileResource("all");
-}
-
-@Test void UC152_AdminLogsController_clearLog() throws Exception {
-var adminLogsService=mock(IAdminLogsService.class);
-var ctl=new AdminLogsController(adminLogsService);
-var r=ctl.clearLog("all");assertEquals(200,r.getStatusCode().value());assertNull(r.getBody().getData());verify(adminLogsService).clearLogFile("all");
-}
-
 @Test void UC153_CotizacionPagoController_registrarPago_usuario() throws Exception {
 var cotizacionPagoService=mock(ICotizacionPagoService.class);
 var ctl=new CotizacionPagoController(cotizacionPagoService);

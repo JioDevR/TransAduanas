@@ -131,7 +131,6 @@ const MODULE_TITLES = {
       auditoria: 'Registro de Eventos y Seguridad',
       almacenamiento: 'Almacenamiento y Repositorio Documental',
       'roles-accesos': 'Almacenamiento y Repositorio Documental',
-      logs: 'Bitácora y Consola de Logs TI',
       about: 'Ficha Técnica del Sistema SGA'
     },
     getSub: () => navigationStore.administracionTiSubOption

@@ -110,7 +110,7 @@
               <div class="usr-avatar" :style="getWarmAvatarStyle(user.username)">
                 {{ getInitials(user.nombres, user.apellidos) }}
               </div>
-              <span class="sga-card-code sga-mono">@{{ user.username }}</span>
+              <span class="sga-card-code">@{{ user.username }}</span>
             </div>
             <Tag
               :value="user.estadoActivo ? 'Activo' : 'Inactivo'"
@@ -130,7 +130,7 @@
           <div class="sga-card-meta-grid">
             <div class="sga-meta-item">
               <span class="sga-meta-label">DOCUMENTO</span>
-              <span class="sga-meta-val sga-mono">
+              <span class="sga-meta-val">
                 {{ user.numeroDocumento ? `${user.tipoDocumento || 'DNI'}: ${user.numeroDocumento}` : '—' }}
               </span>
             </div>
@@ -144,11 +144,11 @@
             </div>
             <div class="sga-meta-item">
               <span class="sga-meta-label">TELÉFONO</span>
-              <span class="sga-meta-val sga-mono">{{ user.telefono || '—' }}</span>
+              <span class="sga-meta-val">{{ user.telefono || '—' }}</span>
             </div>
             <div class="sga-meta-item full-span">
               <span class="sga-meta-label">CORREO INSTITUCIONAL</span>
-              <span class="sga-meta-val sga-mono">{{ user.correoInstitucional }}</span>
+              <span class="sga-meta-val">{{ user.correoInstitucional }}</span>
             </div>
           </div>
 

@@ -26,12 +26,6 @@ public class AdminDashboardResponseDTO {
     private long portalCambioPendiente;
     private long portalEmpresasVinculadas;
 
-    // Logs
-    private String logArchivoNombre;
-    private long logSizeBytes;
-    private long logTotalLineas;
-    private long logErroresLineas;
-
     // Auditoría del período
     private int diasPeriodo;
     private long auditoriaTotalPeriodo;

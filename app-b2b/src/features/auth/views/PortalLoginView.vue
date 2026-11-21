@@ -176,7 +176,7 @@ async function handleSubmit() {
       } else {
         localStorage.removeItem('sga_portal_remember_ruc')
       }
-      router.push('/cotizaciones')
+      router.push('/dashboard')
     } else {
       errorMessage.value = res.message || 'Credenciales incorrectas'
     }

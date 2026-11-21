@@ -20,7 +20,7 @@ export const useNavigationStore = defineStore('navigation', {
   state: () => ({
     // Módulo activo: 'administracion-ti' | 'gerencia-general' | 'comercial' | 'gestion-aduanera' | 'agente-aduanero' | 'transporte-flota' | 'finanzas' | 'legal-auditoria'
     activeModule: 'administracion-ti',
-    // Sub-opciones en Administración TI: 'dashboard' | 'users' | 'sedes' | 'catalogos' | 'logs' | 'about'
+    // Sub-opciones en Administración TI: 'dashboard' | 'users' | 'portal-users' | 'auditoria' | 'almacenamiento' | 'about'
     administracionTiSubOption: 'dashboard',
     // Sub-opciones en Gerencia General: 'dashboard' | 'sedes' | 'puertos' | 'tipos-carga' | 'mercancias' | 'flota' | 'conductores'
     gerenciaGeneralSubOption: 'dashboard',

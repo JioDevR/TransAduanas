@@ -1,371 +1,371 @@
 <template>
-  <div class="cotizacion-detalle-view">
-    <!-- Barra Superior de Navegación y Acciones -->
-    <div class="top-nav-bar">
-      <div class="nav-left">
-        <button type="button" class="btn-back" @click="volver">
-          <i class="pi pi-arrow-left"></i>
-          <span>Volver a Mis Cotizaciones</span>
-        </button>
-        <div class="breadcrumbs">
-          <span class="crumb-link" @click="volver">Mis Cotizaciones</span>
-          <span class="crumb-sep">/</span>
-          <span class="crumb-current font-mono">{{ cotizacion?.codigoCotizacion || 'Cargando...' }}</span>
+  <div class="cotizacion-detalle-view fade-in">
+    <!-- Cabecera directa sgaUI -->
+    <header class="sga-form-header">
+      <div class="header-left">
+        <Button
+          type="button"
+          label="Volver"
+          icon="pi pi-arrow-left"
+          severity="secondary"
+          outlined
+          size="small"
+          @click="volver"
+        />
+        <div v-if="cotizacion" class="breadcrumb-code">
+          <span class="sga-kicker">COTIZACIÓN</span>
+          <span class="sga-mono code-pill">{{ cotizacion.codigoCotizacion }}</span>
         </div>
       </div>
 
-      <div class="nav-actions" v-if="cotizacion">
-        <!-- Botón Autorizar Cotización si está aprobada comercialmente y aún no fue aceptada -->
-        <button
+      <div v-if="cotizacion" class="sga-form-actions">
+        <Button
           v-if="cotizacion.estado === 'APROBADA' && !cotizacion.aceptadaPorCliente"
           type="button"
-          class="btn-action-authorize"
-          :disabled="aceptando"
+          label="Autorizar y Pagar"
+          icon="pi pi-check-circle"
+          severity="success"
+          size="small"
+          :loading="aceptando"
           @click="autorizarCotizacion"
-        >
-          <i :class="aceptando ? 'pi pi-spin pi-spinner' : 'pi pi-check-circle'"></i>
-          <span>Autorizar y Proceder a Pagar</span>
-        </button>
+        />
 
-        <!-- Botón Subsanar si el pago fue observado -->
-        <button
+        <Button
           v-if="cotizacion.estadoPago === 'OBSERVADO' || cotizacion.estadoPago === 'RECHAZADO'"
           type="button"
-          class="btn-action-observe"
+          label="Subsanar Abono"
+          icon="pi pi-pencil"
+          severity="danger"
+          size="small"
           @click="irASubsanar"
-        >
-          <i class="pi pi-pencil"></i>
-          <span>Subsanar Abono Bancario</span>
-        </button>
+        />
 
-        <!-- Botón Abonar si está aprobada y no tiene pago completo -->
-        <button
+        <Button
           v-else-if="cotizacion.estado === 'APROBADA' && cotizacion.estadoPago !== 'PAGADO_TOTAL'"
           type="button"
-          class="btn-action-pay"
+          label="Abonar Anticipo"
+          icon="pi pi-wallet"
+          size="small"
           @click="irAPagar"
-        >
-          <i class="pi pi-wallet"></i>
-          <span>Abonar Anticipo</span>
-        </button>
+        />
 
-        <!-- Botón Imprimir / PDF -->
-        <button type="button" class="btn-action-outline" @click="imprimirCotizacion">
-          <i class="pi pi-print"></i>
-          <span>Imprimir / PDF</span>
-        </button>
+        <Button
+          type="button"
+          label="Imprimir / PDF"
+          icon="pi pi-print"
+          severity="secondary"
+          outlined
+          size="small"
+          @click="imprimirCotizacion"
+        />
       </div>
-    </div>
+    </header>
 
     <!-- Estado de Carga -->
-    <div v-if="loading" class="loading-state-card">
-      <i class="pi pi-spin pi-spinner text-3xl"></i>
+    <div v-if="loading" class="sga-card-surface state-card">
+      <i class="pi pi-spin pi-spinner state-icon"></i>
       <p>Cargando detalle de la cotización comercial...</p>
     </div>
 
-    <!-- Error al Cargar -->
-    <div v-else-if="!cotizacion" class="empty-state-card">
-      <i class="pi pi-exclamation-circle text-4xl text-danger mb-2"></i>
+    <!-- Error / No encontrada -->
+    <div v-else-if="!cotizacion" class="sga-card-surface state-card">
+      <i class="pi pi-exclamation-circle state-icon is-danger"></i>
       <h3>No se pudo cargar la cotización</h3>
       <p>Es posible que el código ingresado no exista o no pertenezca a su cuenta empresarial.</p>
-      <button type="button" class="btn-primary mt-3" @click="volver">Volver al Listado</button>
+      <Button type="button" label="Volver al listado" size="small" @click="volver" />
     </div>
 
-    <!-- Contenido Principal de la Vista Completa -->
-    <div v-else class="detail-content-wrap">
-      <!-- Cabecera de la Cotización con Metadatos Clave -->
-      <div class="quote-header-card">
-        <div class="quote-header-main">
-          <div class="quote-title-box">
-            <span class="quote-kicker">PROPUESTA LOGÍSTICA & ADUANERA OFICIAL</span>
-            <h1 class="quote-code font-mono">{{ cotizacion.codigoCotizacion }}</h1>
-            <p class="quote-subtitle">
-              Emitida para <strong>{{ cotizacion.razonSocialCliente || 'Cliente Importador' }}</strong>
-              (RUC: <span class="font-mono">{{ cotizacion.rucCliente || '-' }}</span>)
-            </p>
-          </div>
-
-          <div class="quote-badges">
-            <div class="badge-item">
-              <span class="badge-label">Estado Técnico:</span>
-              <span class="status-pill" :class="getStatusClass(cotizacion.estado)">
-                {{ cotizacion.estado }}
-              </span>
-            </div>
-            <div class="badge-item">
-              <span class="badge-label">Estado Financiero:</span>
-              <span class="pago-pill" :class="getPagoClass(cotizacion.estadoPago)">
-                {{ formatPago(cotizacion.estadoPago) }}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Banner de Observación Técnica de Aduanas (si aplica) -->
-        <div v-if="cotizacion.estado === 'OBSERVADA'" class="alert-box-full observation mb-3">
-          <i class="pi pi-exclamation-triangle alert-icon"></i>
-          <div class="alert-content">
-            <h4 class="alert-title">Observación Técnica de Aduanas Emitida</h4>
-            <p class="alert-desc">
-              {{ cotizacion.motivoObservacion || 'Se requieren correcciones técnicas o precisiones documentarias en la propuesta comercial.' }}
-            </p>
-            <span class="alert-footnote">
-              Su asesor comercial asignado se encuentra coordinando con usted la subsanación de estos requisitos.
-            </span>
-          </div>
-        </div>
-
-        <!-- Banner de Abono Bancario Observado por Finanzas (si aplica) -->
-        <div v-if="cotizacion.estadoPago === 'OBSERVADO' || cotizacion.estadoPago === 'RECHAZADO'" class="alert-box-full payment-obs mb-3">
-          <i class="pi pi-exclamation-circle alert-icon"></i>
-          <div class="alert-content">
-            <h4 class="alert-title">Abono Bancario Observado por Auditoría Contable</h4>
-            <p class="alert-desc">
-              El área de Finanzas ha observado el comprobante o los datos de transferencia registrados para esta cotización. Por favor subsane la información para autorizar de inmediato la apertura del expediente aduanero.
-            </p>
-            <button type="button" class="btn-subsanar-banner" @click="irASubsanar">
-              <i class="pi pi-pencil"></i>
-              <span>Subsanar Abono Bancario Ahora</span>
-            </button>
-          </div>
+    <!-- Contenido Split-Screen sgaUI -->
+    <template v-else>
+      <!-- Banners de alerta contextuales -->
+      <div v-if="cotizacion.estado === 'OBSERVADA'" class="sga-banner is-warn">
+        <i class="pi pi-exclamation-triangle"></i>
+        <div class="banner-body">
+          <strong>Observación Técnica de Aduanas Emitida</strong>
+          <p>
+            {{ cotizacion.motivoObservacion || 'Se requieren correcciones técnicas o precisiones documentarias en la propuesta comercial.' }}
+          </p>
+          <span class="banner-note">Su asesor comercial asignado coordinará la subsanación de estos requisitos.</span>
         </div>
       </div>
 
-      <!-- Grid Principal a 2 Columnas -->
-      <div class="detail-two-col-grid">
-        <!-- COLUMNA IZQUIERDA (62%): Ficha Técnica y Desglose Financiero -->
-        <div class="col-left">
-          <!-- Tarjeta 1: Ficha de la Operación Logística -->
-          <div class="panel-card">
-            <div class="card-header-row">
-              <div class="header-icon-title">
-                <i class="pi pi-box"></i>
-                <h3 class="card-title">Información de la Mercancía & Operación</h3>
+      <div v-if="cotizacion.estadoPago === 'OBSERVADO' || cotizacion.estadoPago === 'RECHAZADO'" class="sga-banner is-danger">
+        <i class="pi pi-exclamation-circle"></i>
+        <div class="banner-body">
+          <strong>Abono Bancario Observado por Auditoría Contable</strong>
+          <p>
+            El área de Finanzas observó el comprobante o los datos de transferencia. Subsane la información para autorizar la apertura del expediente aduanero.
+          </p>
+        </div>
+        <Button
+          type="button"
+          label="Subsanar Abono"
+          icon="pi pi-pencil"
+          severity="danger"
+          size="small"
+          @click="irASubsanar"
+        />
+      </div>
+
+      <div class="sga-split-layout">
+        <!-- Columna Principal -->
+        <div class="sga-split-main">
+          <!-- Ficha Resumen Superior -->
+          <section class="sga-card-surface summary-card">
+            <div class="summary-top">
+              <div>
+                <span class="sga-kicker">PROPUESTA LOGÍSTICA & ADUANERA OFICIAL</span>
+                <h2 class="quote-code sga-mono">{{ cotizacion.codigoCotizacion }}</h2>
+                <p class="quote-client">
+                  Emitida para <strong>{{ cotizacion.razonSocialCliente || 'Cliente B2B' }}</strong>
+                  (RUC: <span class="sga-mono">{{ cotizacion.rucCliente || '—' }}</span>)
+                </p>
               </div>
-              <span class="header-tag">{{ formatRegimen(cotizacion.regimenAduanero) }}</span>
+
+              <div class="summary-tags">
+                <div class="tag-group">
+                  <span class="sga-micro-label">ESTADO TÉCNICO</span>
+                  <Tag
+                    :value="formatEstadoCotizacion(cotizacion.estado)"
+                    :severity="getEstadoSeverity(cotizacion.estado)"
+                    rounded
+                  />
+                </div>
+                <div class="tag-group">
+                  <span class="sga-micro-label">ESTADO FINANCIERO</span>
+                  <Tag
+                    :value="formatPago(cotizacion.estadoPago)"
+                    :severity="getPagoSeverity(cotizacion.estadoPago)"
+                    rounded
+                  />
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Tarjeta 1: Mercancía & Operación -->
+          <section class="sga-card-surface section-card">
+            <div class="card-head">
+              <div class="card-title-row">
+                <i class="pi pi-box"></i>
+                <h3 class="sga-chart-title">Información de la Mercancía & Operación</h3>
+              </div>
+              <Tag :value="formatRegimen(cotizacion.regimenAduanero)" severity="secondary" class="sga-mini-tag" />
             </div>
 
             <div class="info-grid">
               <div class="info-item">
-                <span class="info-lbl">Mercancía</span>
+                <span class="sga-micro-label">MERCANCÍA</span>
                 <strong class="info-val">{{ cotizacion.nombreMercancia || 'Mercancía General' }}</strong>
-                <span class="info-sub font-mono">Cód: {{ cotizacion.codigoMercancia || 'N/A' }}</span>
+                <span class="info-sub sga-mono">Cód: {{ cotizacion.codigoMercancia || 'N/A' }}</span>
               </div>
 
               <div class="info-item">
-                <span class="info-lbl">Tipo de Carga</span>
+                <span class="sga-micro-label">TIPO DE CARGA</span>
                 <strong class="info-val">{{ cotizacion.nombreTipoCarga || 'Carga General' }}</strong>
               </div>
 
               <div class="info-item">
-                <span class="info-lbl">Ruta Portuaria / Aeroportuaria</span>
+                <span class="sga-micro-label">RUTA PORTUARIA / AEROPORTUARIA</span>
                 <strong class="info-val">
-                  {{ cotizacion.nombrePuertoEnvio || 'Puerto Origen' }} &rarr; {{ cotizacion.nombrePuertoDestino || 'Puerto Destino' }}
+                  {{ cotizacion.nombrePuertoEnvio || 'Origen' }} → {{ cotizacion.nombrePuertoDestino || 'Destino' }}
                 </strong>
               </div>
 
               <div class="info-item">
-                <span class="info-lbl">Asesor Comercial Asignado</span>
+                <span class="sga-micro-label">ASESOR COMERCIAL ASIGNADO</span>
                 <strong class="info-val">{{ cotizacion.usuarioComercialNombre || 'Pendiente de asignación' }}</strong>
               </div>
 
               <div class="info-item">
-                <span class="info-lbl">Servicio de Transporte Terrestre</span>
+                <span class="sga-micro-label">TRANSPORTE TERRESTRE</span>
                 <strong class="info-val">
-                  {{ cotizacion.servicioTransporte ? (cotizacion.costoTransporteInterno ? `$ ${formatCurrency(cotizacion.costoTransporteInterno)} (SGA)` : 'Incluido (Tarifa calculada)') : 'No incluido' }}
+                  {{ cotizacion.servicioTransporte ? (cotizacion.costoTransporteInterno ? `$ ${formatCurrency(cotizacion.costoTransporteInterno)} (SGA)` : 'Incluido') : 'No incluido' }}
                 </strong>
                 <span v-if="cotizacion.servicioTransporte" class="info-sub">
-                  Tramo: {{ cotizacion.origenProvincia || cotizacion.origenDepartamento || 'Origen' }} &rarr; {{ cotizacion.destinoProvincia || cotizacion.destinoDepartamento || 'Destino' }}
+                  {{ cotizacion.origenProvincia || cotizacion.origenDepartamento || 'Origen' }} → {{ cotizacion.destinoProvincia || cotizacion.destinoDepartamento || 'Destino' }}
                 </span>
               </div>
 
               <div class="info-item">
-                <span class="info-lbl">Validez Comercial</span>
-                <strong class="info-val">{{ cotizacion.validezDias || 30 }} días</strong>
-                <span class="info-sub">Fecha de Emisión: {{ cotizacion.fechaEmision || 'En evaluación' }}</span>
+                <span class="sga-micro-label">VALIDEZ COMERCIAL</span>
+                <strong class="info-val sga-mono">{{ cotizacion.validezDias || 30 }} días</strong>
+                <span class="info-sub">Emisión: {{ cotizacion.fechaEmision || 'En evaluación' }}</span>
               </div>
             </div>
-          </div>
+          </section>
 
-          <!-- Tarjeta 2: Desglose Oficial de Costos y Tributos (USD) -->
-          <div class="panel-card">
-            <div class="card-header-row">
-              <div class="header-icon-title">
+          <!-- Tarjeta 2: Desglose Oficial de Costos -->
+          <section class="sga-card-surface section-card">
+            <div class="card-head">
+              <div class="card-title-row">
                 <i class="pi pi-calculator"></i>
-                <h3 class="card-title">Desglose Oficial de Costos y Tributos (USD)</h3>
+                <h3 class="sga-chart-title">Desglose Oficial de Costos y Tributos (USD)</h3>
               </div>
-              <span class="header-tag font-mono">Moneda: Dólares ($ USD)</span>
+              <Tag value="Dólares ($ USD)" severity="secondary" class="sga-mini-tag sga-mono" />
             </div>
 
-            <div class="cost-table-full">
+            <div class="cost-list">
               <div class="cost-row">
                 <div class="cost-concept">
-                  <span class="concept-name">Valor Mercancía (FOB estimado)</span>
-                  <span class="concept-desc">Base imponible preliminar para determinación de aranceles</span>
+                  <strong>Valor Mercancía (FOB estimado)</strong>
+                  <span>Base imponible preliminar para determinación de aranceles</span>
                 </div>
-                <div class="cost-val font-mono">$ {{ formatCurrency(cotizacion.valorFob) }}</div>
+                <span class="cost-val sga-mono">$ {{ formatCurrency(cotizacion.valorFob) }}</span>
               </div>
 
               <div class="cost-row">
                 <div class="cost-concept">
-                  <span class="concept-name">Flete Internacional Estimado</span>
-                  <span class="concept-desc">Flete marítimo / aéreo internacional</span>
+                  <strong>Flete Internacional Estimado</strong>
+                  <span>Flete marítimo / aéreo internacional</span>
                 </div>
-                <div class="cost-val font-mono">
-                  {{ Number(cotizacion.montoFlete) > 0 ? '$ ' + formatCurrency(cotizacion.montoFlete) : (esPendienteLiquidacion(cotizacion) ? 'Pendiente por asesor' : '$ 0.00') }}
-                </div>
+                <span class="cost-val sga-mono">
+                  {{ Number(cotizacion.montoFlete) > 0 ? `$ ${formatCurrency(cotizacion.montoFlete)}` : (esPendienteLiquidacion(cotizacion) ? 'Por asesor' : '$ 0.00') }}
+                </span>
               </div>
 
               <div class="cost-row">
                 <div class="cost-concept">
-                  <span class="concept-name">Seguro de Transporte Estimado</span>
-                  <span class="concept-desc">Póliza o tabla de seguro aduanero SUNAT</span>
+                  <strong>Seguro de Transporte Estimado</strong>
+                  <span>Póliza o tabla de seguro aduanero SUNAT</span>
                 </div>
-                <div class="cost-val font-mono">
-                  {{ esPendienteLiquidacion(cotizacion) && !(Number(cotizacion.montoSeguroEstimado) > 0) ? 'Pendiente por asesor' : '$ ' + formatCurrency(cotizacion.montoSeguroEstimado) }}
-                </div>
+                <span class="cost-val sga-mono">
+                  {{ esPendienteLiquidacion(cotizacion) && !(Number(cotizacion.montoSeguroEstimado) > 0) ? 'Por asesor' : `$ ${formatCurrency(cotizacion.montoSeguroEstimado)}` }}
+                </span>
               </div>
 
               <div class="cost-row">
                 <div class="cost-concept">
-                  <span class="concept-name">Honorarios de Agenciamiento Aduanero</span>
-                  <span class="concept-desc">Servicio integral de despacho y gestión técnica aduanera TransAduanas</span>
+                  <strong>Honorarios de Agenciamiento Aduanero</strong>
+                  <span>Servicio integral de despacho y gestión técnica TransAduanas</span>
                 </div>
-                <div class="cost-val font-mono">
-                  {{ esPendienteLiquidacion(cotizacion) && !(Number(cotizacion.montoHonorarios) > 0) ? 'Pendiente por asesor' : '$ ' + formatCurrency(cotizacion.montoHonorarios) }}
-                </div>
+                <span class="cost-val sga-mono">
+                  {{ esPendienteLiquidacion(cotizacion) && !(Number(cotizacion.montoHonorarios) > 0) ? 'Por asesor' : `$ ${formatCurrency(cotizacion.montoHonorarios)}` }}
+                </span>
               </div>
 
               <div v-if="cotizacion.servicioTransporte" class="cost-row">
                 <div class="cost-concept">
-                  <span class="concept-name">Flete Terrestre Local (Flota SGA)</span>
-                  <span class="concept-desc">Transporte desde terminal portuario hasta almacén de destino nacional</span>
+                  <strong>Flete Terrestre Local (Flota SGA)</strong>
+                  <span>Transporte desde terminal hasta destino nacional</span>
                 </div>
-                <div class="cost-val font-mono">
-                  {{ esPendienteLiquidacion(cotizacion) && !(Number(cotizacion.costoTransporteInterno) > 0) ? 'Pendiente por asesor' : '$ ' + formatCurrency(cotizacion.costoTransporteInterno) }}
-                </div>
+                <span class="cost-val sga-mono">
+                  {{ esPendienteLiquidacion(cotizacion) && !(Number(cotizacion.costoTransporteInterno) > 0) ? 'Por asesor' : `$ ${formatCurrency(cotizacion.costoTransporteInterno)}` }}
+                </span>
               </div>
 
-              <div class="cost-row highlight-tributos">
+              <div class="cost-row">
                 <div class="cost-concept">
-                  <span class="concept-name">Tributos Aduaneros Estimados (Aranceles + IGV + IPM)</span>
-                  <span class="concept-desc">Liquidación preliminar según subpartida nacional SUNAT</span>
+                  <strong>Tributos Aduaneros Estimados (Aranceles + IGV + IPM)</strong>
+                  <span>Liquidación preliminar según subpartida nacional SUNAT</span>
                 </div>
-                <div class="cost-val font-mono font-bold">
-                  {{ cotizacion.regimenAduanero === 'EXPORTACION_DEFINITIVA' ? 'Inafecto ($ 0.00)' : (esPendienteLiquidacion(cotizacion) && !(Number(cotizacion.montoTributos) > 0) ? 'Pendiente por asesor' : '$ ' + formatCurrency(cotizacion.montoTributos)) }}
-                </div>
+                <span class="cost-val sga-mono">
+                  {{ cotizacion.regimenAduanero === 'EXPORTACION_DEFINITIVA' ? 'Inafecto ($ 0.00)' : (esPendienteLiquidacion(cotizacion) && !(Number(cotizacion.montoTributos) > 0) ? 'Por asesor' : `$ ${formatCurrency(cotizacion.montoTributos)}`) }}
+                </span>
               </div>
 
-              <div class="cost-row total-row-full">
+              <div class="cost-row is-total">
                 <div class="cost-concept">
-                  <span class="concept-name font-bold">TOTAL ESTIMADO DEL SERVICIO LOGÍSTICO:</span>
-                  <span class="concept-desc">Total en dólares líquidos sujeto a liquidación final aduanera</span>
+                  <strong>TOTAL ESTIMADO DEL SERVICIO LOGÍSTICO</strong>
+                  <span>Sujeto a liquidación final aduanera</span>
                 </div>
-                <div class="cost-val font-mono total-amount-big">
-                  {{ esPendienteLiquidacion(cotizacion) ? 'En liquidación ($ 0.00)' : '$ ' + formatCurrency(cotizacion.totalCotizado) }}
-                </div>
+                <span class="cost-total-val sga-mono">
+                  {{ esPendienteLiquidacion(cotizacion) ? 'En liquidación ($ 0.00)' : `$ ${formatCurrency(cotizacion.totalCotizado)}` }}
+                </span>
               </div>
             </div>
-          </div>
+          </section>
 
-          <!-- Observaciones Adicionales si existen -->
-          <div v-if="cotizacion.observaciones" class="panel-card">
-            <h4 class="card-subtitle-small">
-              <i class="pi pi-comment mr-2"></i>
-              <span>Observaciones Comerciales y Anotaciones del Servicio</span>
-            </h4>
+          <!-- Observaciones -->
+          <section v-if="cotizacion.observaciones" class="sga-card-surface section-card">
+            <div class="card-title-row">
+              <i class="pi pi-comment"></i>
+              <h3 class="sga-chart-title">Observaciones Comerciales del Servicio</h3>
+            </div>
             <p class="notes-text">{{ cotizacion.observaciones }}</p>
-          </div>
+          </section>
         </div>
 
-        <!-- COLUMNA DERECHA (38%): Control de Anticipos y Gestor Documental Digital -->
-        <div class="col-right">
-          <!-- Tarjeta: Estado Contable & Anticipos -->
-          <div class="panel-card">
-            <div class="card-header-row">
-              <div class="header-icon-title">
-                <i class="pi pi-wallet"></i>
-                <h3 class="card-title">Control Financiero & Anticipo</h3>
+        <!-- Columna Lateral Sticky -->
+        <aside class="sga-split-aside aside-stack">
+          <section class="sga-card-surface section-card">
+            <div class="card-title-row">
+              <i class="pi pi-wallet"></i>
+              <h3 class="sga-chart-title">Control Financiero & Anticipo</h3>
+            </div>
+
+            <div class="finance-list">
+              <div class="fin-row">
+                <span class="sga-micro-label">TOTAL COTIZADO</span>
+                <strong class="sga-mono fin-val">$ {{ formatCurrency(cotizacion.totalCotizado) }}</strong>
+              </div>
+              <div class="fin-row">
+                <span class="sga-micro-label">TOTAL AMORTIZADO</span>
+                <strong class="sga-mono fin-val sga-text-success">$ {{ formatCurrency(cotizacion.totalAbonado) }}</strong>
+              </div>
+              <div class="fin-row is-highlight">
+                <span class="sga-micro-label">SALDO PENDIENTE</span>
+                <strong class="sga-mono fin-val sga-text-warn">$ {{ formatCurrency(cotizacion.saldoPendiente) }}</strong>
               </div>
             </div>
 
-            <div class="finance-kpis">
-              <div class="fin-kpi-item">
-                <span class="fin-kpi-lbl">Total Cotizado</span>
-                <strong class="fin-kpi-val font-mono">$ {{ formatCurrency(cotizacion.totalCotizado) }}</strong>
-              </div>
-
-              <div class="fin-kpi-item">
-                <span class="fin-kpi-lbl">Total Amortizado</span>
-                <strong class="fin-kpi-val font-mono text-success">$ {{ formatCurrency(cotizacion.totalAbonado) }}</strong>
-              </div>
-
-              <div class="fin-kpi-item highlight-saldo">
-                <span class="fin-kpi-lbl">Saldo Pendiente</span>
-                <strong class="fin-kpi-val font-mono text-warning">$ {{ formatCurrency(cotizacion.saldoPendiente) }}</strong>
-              </div>
-            </div>
-
-            <!-- Botones de Acción Financiera Directa -->
-            <div class="finance-actions-box mt-3">
-              <button
+            <div class="aside-actions">
+              <Button
                 v-if="cotizacion.estadoPago === 'OBSERVADO' || cotizacion.estadoPago === 'RECHAZADO'"
                 type="button"
-                class="btn-full-danger"
+                label="Subsanar Abono Observado"
+                icon="pi pi-pencil"
+                severity="danger"
+                size="small"
+                fluid
                 @click="irASubsanar"
-              >
-                <i class="pi pi-pencil"></i>
-                <span>Subsanar Abono Observado</span>
-              </button>
-
-              <button
+              />
+              <Button
                 v-else-if="cotizacion.estado === 'APROBADA' && cotizacion.estadoPago !== 'PAGADO_TOTAL'"
                 type="button"
-                class="btn-full-primary"
+                label="Registrar Comprobante / Anticipo"
+                icon="pi pi-wallet"
+                size="small"
+                fluid
                 @click="irAPagar"
-              >
-                <i class="pi pi-wallet"></i>
-                <span>Registrar Comprobante / Anticipo</span>
-              </button>
-
-              <button
+              />
+              <Button
                 type="button"
-                class="btn-full-outline"
+                label="Ver Historial de Vouchers"
+                icon="pi pi-history"
+                severity="secondary"
+                outlined
+                size="small"
+                fluid
                 @click="irAHistorialPagos"
-              >
-                <i class="pi pi-history"></i>
-                <span>Ver Historial de Vouchers Bancarios</span>
-              </button>
+              />
             </div>
-          </div>
+          </section>
 
-          <!-- Tarjeta: Documentación Técnica y Sustento Digital a Pantalla Completa -->
-          <div class="panel-card doc-panel-card">
-            <div class="card-header-row">
-              <div class="header-icon-title">
-                <i class="pi pi-folder-open"></i>
-                <h3 class="card-title">Expediente Documental Digital</h3>
-              </div>
+          <section class="sga-card-surface section-card">
+            <div class="card-title-row">
+              <i class="pi pi-folder-open"></i>
+              <h3 class="sga-chart-title">Expediente Documental Digital</h3>
             </div>
-
             <p class="panel-desc">
-              Adjunte facturas comerciales, BL/guías aéreas o certificados de origen para sustentar el despacho aduanero.
+              Adjunte facturas comerciales, BL/guías aéreas o certificados de origen para sustentar el despacho.
             </p>
-
             <PortalDocumentosUploadPanel
               mode="live"
               :id-cotizacion="cotizacion.idCotizacion"
             />
-          </div>
-        </div>
+          </section>
+        </aside>
       </div>
-    </div>
+    </template>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import Button from 'primevue/button'
+import Tag from 'primevue/tag'
 import { portalCotizacionService } from '../services/portalCotizacionService'
 import { useNotification } from '@/shared/composables/useNotification'
 import { useConfirmation } from '@/shared/composables/useConfirmation'
@@ -374,9 +374,8 @@ import { esPendienteLiquidacion } from '../utils/portalCotizacionFormUtils'
 import {
   formatCurrency,
   formatRegimen,
-  formatEstadoPago as formatPago,
-  getCotizacionStatusClass as getStatusClass,
-  getPagoStatusClass as getPagoClass
+  formatEstadoCotizacion,
+  formatEstadoPago as formatPago
 } from '@/shared/utils/formatters'
 
 const router = useRouter()
@@ -391,6 +390,37 @@ const aceptando = ref(false)
 onMounted(() => {
   cargarDetalle()
 })
+
+function getEstadoSeverity(estado) {
+  switch (estado) {
+    case 'APROBADA':
+      return 'success'
+    case 'PENDIENTE':
+    case 'EN_REVISION':
+      return 'warn'
+    case 'OBSERVADA':
+    case 'RECHAZADA':
+      return 'danger'
+    default:
+      return 'secondary'
+  }
+}
+
+function getPagoSeverity(estadoPago) {
+  switch (estadoPago) {
+    case 'PAGADO_TOTAL':
+    case 'APROBADO':
+    case 'ADELANTO_APROBADO':
+      return 'success'
+    case 'PENDIENTE_REVISION':
+      return 'info'
+    case 'OBSERVADO':
+    case 'RECHAZADO':
+      return 'danger'
+    default:
+      return 'warn'
+  }
+}
 
 async function cargarDetalle() {
   const id = route.params.id
@@ -490,398 +520,133 @@ function imprimirCotizacion() {
   flex-direction: column;
   gap: 1.25rem;
   width: 100%;
-  animation: fadeIn 0.25s ease-in-out;
+  font-family: var(--font-sans);
 }
 
-/* Barra Superior de Navegación */
-.top-nav-bar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 1rem;
-  padding: 0.75rem 0;
-  border-bottom: 1px solid var(--color-border);
-}
-
-.nav-left {
+.header-left {
   display: flex;
   align-items: center;
-  gap: 1.25rem;
+  gap: 0.85rem;
   flex-wrap: wrap;
 }
 
-.btn-back {
-  display: inline-flex;
+.breadcrumb-code {
+  display: flex;
   align-items: center;
   gap: 0.5rem;
+}
+
+.code-pill {
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 0.2rem 0.6rem;
+  border-radius: var(--radius-pill);
   background: var(--color-bg-surface);
   border: 1px solid var(--color-border);
   color: var(--color-text-main);
-  padding: 0.45rem 0.85rem;
-  border-radius: var(--radius-sm, 6px);
-  font-size: 0.8125rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all var(--transition-fast, 0.15s ease);
 }
 
-.btn-back:hover {
-  background: var(--color-bg-subtle);
-  border-color: var(--color-border-strong);
-}
-
-.breadcrumbs {
+.state-card {
+  padding: 3rem 1.5rem;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 0.5rem;
-  font-size: 0.8125rem;
-}
-
-.crumb-link {
-  color: var(--color-text-muted);
-  cursor: pointer;
-  transition: color 0.15s;
-}
-
-.crumb-link:hover {
-  color: var(--color-primary);
-  text-decoration: underline;
-}
-
-.crumb-sep {
-  color: var(--color-text-subtle);
-}
-
-.crumb-current {
-  color: var(--color-text-main);
-  font-weight: 700;
-}
-
-.nav-actions {
-  display: flex;
-  align-items: center;
+  text-align: center;
   gap: 0.65rem;
-  flex-wrap: wrap;
+  color: var(--color-text-muted);
 }
 
-.btn-action-authorize {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  background: var(--color-success-text);
-  color: var(--color-bg-surface);
-  border: 1px solid var(--color-success-border);
-  padding: 0.5rem 1rem;
-  border-radius: var(--radius-sm, 6px);
-  font-size: 0.8125rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.15s;
+.state-icon {
+  font-size: 2rem;
+  color: var(--color-accent-kicker);
 }
 
-.btn-action-authorize:hover:not(:disabled) {
-  filter: brightness(1.1);
-  transform: translateY(-1px);
-}
-
-.btn-action-pay {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  background: var(--color-primary);
-  color: var(--color-primary-text);
-  border: 1px solid var(--color-primary);
-  padding: 0.5rem 1rem;
-  border-radius: var(--radius-sm, 6px);
-  font-size: 0.8125rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-
-.btn-action-pay:hover {
-  filter: brightness(1.1);
-  transform: translateY(-1px);
-}
-
-.btn-action-observe {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  background: var(--color-danger-bg);
+.state-icon.is-danger {
   color: var(--color-danger-text);
-  border: 1px solid var(--color-danger-border);
-  padding: 0.5rem 1rem;
-  border-radius: var(--radius-sm, 6px);
-  font-size: 0.8125rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.15s;
 }
 
-.btn-action-observe:hover {
-  background: var(--color-danger-text);
-  color: var(--color-bg-surface);
-  border-color: var(--color-danger-text);
+.banner-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
 }
 
-.btn-action-outline {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  background: var(--color-bg-surface);
-  color: var(--color-text-main);
-  border: 1px solid var(--color-border);
-  padding: 0.5rem 0.85rem;
-  border-radius: var(--radius-sm, 6px);
-  font-size: 0.8125rem;
-  font-weight: 600;
-  cursor: pointer;
+.banner-body p {
+  margin: 0;
+  font-size: 0.82rem;
 }
 
-.btn-action-outline:hover {
-  background: var(--color-bg-subtle);
+.banner-note {
+  font-size: 0.76rem;
+  opacity: 0.85;
 }
 
-/* Tarjeta Cabecera */
-.quote-header-card {
-  background: var(--color-bg-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg, 12px);
-  padding: 1.5rem 1.75rem;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+.summary-card,
+.section-card {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
-.quote-header-main {
+.summary-top {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
   flex-wrap: wrap;
-  gap: 1.25rem;
-  margin-bottom: 1rem;
-}
-
-.quote-kicker {
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  color: var(--color-accent-kicker);
-  display: block;
-  margin-bottom: 0.25rem;
+  gap: 1rem;
 }
 
 .quote-code {
-  font-size: 1.85rem;
-  font-weight: 800;
+  margin: 0.25rem 0;
+  font-size: 1.45rem;
+  font-weight: 700;
   color: var(--color-text-main);
+}
+
+.quote-client {
   margin: 0;
-  line-height: 1.2;
-}
-
-.quote-subtitle {
-  font-size: 0.875rem;
+  font-size: 0.86rem;
   color: var(--color-text-muted);
-  margin: 0.35rem 0 0 0;
 }
 
-.quote-badges {
+.summary-tags {
   display: flex;
-  align-items: center;
   gap: 1.25rem;
+  flex-wrap: wrap;
 }
 
-.badge-item {
+.tag-group {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
-}
-
-.badge-label {
-  font-size: 0.72rem;
-  text-transform: uppercase;
-  color: var(--color-text-muted);
-  font-weight: 600;
-}
-
-.status-pill, .pago-pill {
-  display: inline-block;
-  padding: 0.25rem 0.65rem;
-  border-radius: var(--radius-pill, 9999px);
-  font-size: 0.75rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-}
-
-.status-pill.success, .pago-pill.success {
-  background: var(--color-success-bg);
-  color: var(--color-success-text);
-  border: 1px solid var(--color-success-border);
-}
-
-.status-pill.warning, .pago-pill.warning {
-  background: var(--color-warning-bg);
-  color: var(--color-warning-text);
-  border: 1px solid var(--color-warning-border);
-}
-
-.status-pill.danger, .pago-pill.danger {
-  background: var(--color-danger-bg);
-  color: var(--color-danger-text);
-  border: 1px solid var(--color-danger-border);
-}
-
-.status-pill.info, .pago-pill.info {
-  background: var(--color-info-bg);
-  color: var(--color-info-text);
-  border: 1px solid var(--color-info-border);
-}
-
-.status-pill.neutral, .pago-pill.neutral {
-  background: var(--color-bg-subtle);
-  color: var(--color-text-muted);
-  border: 1px solid var(--color-border);
-}
-
-/* Alertas a ancho completo */
-.alert-box-full {
-  display: flex;
   align-items: flex-start;
-  gap: 1rem;
-  padding: 1rem 1.25rem;
-  border-radius: var(--radius-md, 8px);
+  gap: 0.3rem;
 }
 
-.alert-box-full.observation {
-  background: var(--color-warning-bg);
-  border: 1px solid var(--color-warning-border);
-  color: var(--color-warning-text);
-}
-
-.alert-box-full.payment-obs {
-  background: var(--color-danger-bg);
-  border: 1px solid var(--color-danger-border);
-  border-left: 4px solid var(--color-danger-text);
-  color: var(--color-danger-text);
-}
-
-.alert-icon {
-  font-size: 1.5rem;
-  margin-top: 0.1rem;
-  flex-shrink: 0;
-}
-
-.alert-content {
-  flex: 1;
-}
-
-.alert-title {
-  font-size: 0.95rem;
-  font-weight: 700;
-  margin: 0 0 0.25rem 0;
-  color: inherit;
-}
-
-.alert-desc {
-  font-size: 0.8125rem;
-  line-height: 1.45;
-  color: var(--color-text-main);
-  margin: 0 0 0.5rem 0;
-}
-
-.alert-footnote {
-  font-size: 0.75rem;
-  color: var(--color-text-muted);
-}
-
-.btn-subsanar-banner {
-  display: inline-flex;
+.card-head {
+  display: flex;
   align-items: center;
-  gap: 0.4rem;
-  background: var(--color-danger-text);
-  color: var(--color-bg-surface);
-  border: none;
-  padding: 0.45rem 0.9rem;
-  border-radius: var(--radius-sm, 6px);
-  font-size: 0.78rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-
-.btn-subsanar-banner:hover {
-  filter: brightness(1.15);
-}
-
-/* Grid a 2 Columnas */
-.detail-two-col-grid {
-  display: grid;
-  grid-template-columns: 1.55fr 1fr;
-  gap: 1.5rem;
-  align-items: start;
-}
-
-.col-left, .col-right {
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-}
-
-/* Tarjetas de Panel */
-.panel-card {
-  background: var(--color-bg-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg, 12px);
-  padding: 1.25rem 1.5rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-}
-
-.card-header-row {
-  display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1.15rem;
-  border-bottom: 1px solid var(--color-border-subtle);
+  gap: 0.75rem;
   padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--color-border-subtle);
 }
 
-.header-icon-title {
+.card-title-row {
   display: flex;
   align-items: center;
-  gap: 0.65rem;
-  color: var(--color-primary);
-}
-
-.card-title {
-  font-size: 1.05rem;
-  font-weight: 700;
+  gap: 0.55rem;
   color: var(--color-text-main);
-  margin: 0;
 }
 
-.header-tag {
-  font-size: 0.72rem;
-  font-weight: 700;
-  background: var(--color-bg-subtle);
-  color: var(--color-text-muted);
-  border: 1px solid var(--color-border);
-  padding: 0.2rem 0.55rem;
-  border-radius: 4px;
+.card-title-row i {
+  color: var(--color-accent-kicker);
 }
 
-.panel-desc {
-  font-size: 0.8125rem;
-  color: var(--color-text-muted);
-  margin: -0.5rem 0 1rem 0;
-  line-height: 1.4;
-}
-
-/* Info Grid */
 .info-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 1.15rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem 1.25rem;
 }
 
 .info-item {
@@ -890,44 +655,33 @@ function imprimirCotizacion() {
   gap: 0.2rem;
 }
 
-.info-lbl {
-  font-size: 0.72rem;
-  text-transform: uppercase;
-  color: var(--color-text-muted);
-  font-weight: 600;
-}
-
 .info-val {
-  font-size: 0.875rem;
+  font-size: 0.88rem;
+  font-weight: 600;
   color: var(--color-text-main);
-  line-height: 1.35;
 }
 
 .info-sub {
   font-size: 0.75rem;
-  color: var(--color-text-subtle);
+  color: var(--color-text-muted);
 }
 
-/* Tabla de Costos Full */
-.cost-table-full {
+.cost-list {
   display: flex;
   flex-direction: column;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md, 8px);
-  overflow: hidden;
 }
 
 .cost-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.75rem 1rem;
+  gap: 1rem;
+  padding: 0.75rem 0;
   border-bottom: 1px solid var(--color-border-subtle);
-  background: var(--color-bg-surface);
 }
 
-.cost-row:nth-child(even) {
-  background: var(--color-bg-subtle);
+.cost-row:last-child {
+  border-bottom: none;
 }
 
 .cost-concept {
@@ -936,185 +690,100 @@ function imprimirCotizacion() {
   gap: 0.15rem;
 }
 
-.concept-name {
-  font-size: 0.85rem;
-  font-weight: 600;
+.cost-concept strong {
+  font-size: 0.86rem;
   color: var(--color-text-main);
 }
 
-.concept-desc {
-  font-size: 0.72rem;
+.cost-concept span {
+  font-size: 0.75rem;
   color: var(--color-text-muted);
 }
 
 .cost-val {
   font-size: 0.9rem;
+  font-weight: 600;
   color: var(--color-text-main);
-  text-align: right;
   white-space: nowrap;
 }
 
-.cost-row.highlight-tributos {
-  background: var(--color-bg-muted);
-  border-top: 1px dashed var(--color-border-strong);
+.cost-row.is-total {
+  margin-top: 0.35rem;
+  padding: 0.9rem 1rem;
+  border-radius: var(--radius-md);
+  background: var(--color-bg-subtle);
+  border: 1px solid var(--color-border);
 }
 
-.cost-row.total-row-full {
-  background: var(--color-primary);
-  color: var(--color-primary-text);
-  padding: 1rem 1.25rem;
-  border-bottom: none;
-}
-
-.cost-row.total-row-full .concept-name {
-  color: var(--color-primary-text);
-  font-size: 0.95rem;
-}
-
-.cost-row.total-row-full .concept-desc {
-  color: var(--color-primary-text);
-  opacity: 0.8;
-}
-
-.total-amount-big {
-  font-size: 1.35rem;
-  font-weight: 800;
-  color: var(--color-primary-text);
-}
-
-.card-subtitle-small {
-  font-size: 0.85rem;
+.cost-total-val {
+  font-size: 1.05rem;
   font-weight: 700;
-  color: var(--color-text-main);
-  margin: 0 0 0.5rem 0;
-  display: flex;
-  align-items: center;
+  color: var(--color-primary);
+  white-space: nowrap;
 }
 
 .notes-text {
-  font-size: 0.8125rem;
-  color: var(--color-text-muted);
-  line-height: 1.5;
   margin: 0;
+  font-size: 0.86rem;
+  line-height: 1.5;
+  color: var(--color-text-main);
 }
 
-/* KPIs Financieros Laterales */
-.finance-kpis {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 0.75rem;
+.aside-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
 }
 
-.fin-kpi-item {
+.finance-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.fin-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 0.65rem 0.85rem;
+  border-radius: var(--radius-md);
   background: var(--color-bg-subtle);
   border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-sm, 6px);
 }
 
-.fin-kpi-item.highlight-saldo {
-  background: var(--color-warning-bg);
+.fin-row.is-highlight {
   border-color: var(--color-warning-border);
+  background: var(--color-warning-bg);
 }
 
-.fin-kpi-lbl {
-  font-size: 0.78rem;
-  color: var(--color-text-muted);
-  font-weight: 600;
-}
-
-.fin-kpi-val {
-  font-size: 1.05rem;
+.fin-val {
+  font-size: 0.95rem;
   font-weight: 700;
+  color: var(--color-text-main);
 }
 
-/* Botones Laterales */
-.finance-actions-box {
+.aside-actions {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
 }
 
-.btn-full-primary {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  background: var(--color-primary);
-  color: var(--color-primary-text);
-  border: 1px solid var(--color-primary);
-  padding: 0.65rem 1rem;
-  border-radius: var(--radius-sm, 6px);
-  font-size: 0.8125rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-
-.btn-full-primary:hover {
-  filter: brightness(1.1);
-}
-
-.btn-full-danger {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  background: var(--color-danger-bg);
-  color: var(--color-danger-text);
-  border: 1px solid var(--color-danger-border);
-  padding: 0.65rem 1rem;
-  border-radius: var(--radius-sm, 6px);
-  font-size: 0.8125rem;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.btn-full-danger:hover {
-  background: var(--color-danger-text);
-  color: var(--color-bg-surface);
-  border-color: var(--color-danger-text);
-}
-
-.btn-full-outline {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  background: var(--color-bg-surface);
-  color: var(--color-text-main);
-  border: 1px solid var(--color-border);
-  padding: 0.55rem 1rem;
-  border-radius: var(--radius-sm, 6px);
-  font-size: 0.78rem;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.btn-full-outline:hover {
-  background: var(--color-bg-subtle);
-}
-
-/* Estados de Carga y Vacío */
-.loading-state-card, .empty-state-card {
-  padding: 3rem 1.5rem;
-  text-align: center;
-  background: var(--color-bg-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg, 12px);
+.panel-desc {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.45;
   color: var(--color-text-muted);
 }
 
-/* Responsive */
-@media (max-width: 992px) {
-  .detail-two-col-grid {
+@media (max-width: 720px) {
+  .info-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+@media print {
+  .sga-form-header {
+    display: none;
   }
 }
 </style>

@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { createSSRApp, h } from 'vue'
 import { renderToString } from 'vue/server-renderer'
 import { createPinia, setActivePinia } from 'pinia'
+import PrimeVue from 'primevue/config'
 import ExpedientesTrackingView from '../ExpedientesTrackingView.vue'
 import { portalExpedienteService } from '../../services/portalExpedienteService'
 
@@ -21,7 +22,7 @@ vi.mock('@/shared/composables/useNotification', () => ({
   })
 }))
 
-describe('ExpedientesTrackingView - Tablero Kanban de 2 Columnas B2B', () => {
+describe('ExpedientesTrackingView - Listado Dual sgaUI', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.clearAllMocks()
@@ -32,20 +33,20 @@ describe('ExpedientesTrackingView - Tablero Kanban de 2 Columnas B2B', () => {
     expect(typeof ExpedientesTrackingView).toBe('object')
   })
 
-  it('renderiza la vista y estructura del tablero Kanban sin errores', async () => {
+  it('renderiza SgaListShell y filtro de estado dentro de la barra de filtros', async () => {
     portalExpedienteService.listarExpedientes.mockResolvedValueOnce([])
 
     const app = createSSRApp({
       render: () => h(ExpedientesTrackingView)
     })
+    app.use(PrimeVue)
 
     const html = await renderToString(app)
 
-    // Verifica que la cabecera y KPIs Warm Editorial estén en el DOM
-    expect(html).toContain('Tablero de Expedientes Aduaneros')
-    expect(html).toContain('EXPEDIENTES ABIERTOS')
-    expect(html).toContain('HISTORIAL FINALIZADOS')
-    expect(html).toContain('LEVANTE CONCEDIDO')
+    expect(html).toContain('Vista Canvas')
+    expect(html).toContain('Abiertos (0)')
+    expect(html).not.toContain('role="tablist"')
+    expect(html).not.toContain('Tablero de Expedientes Aduaneros')
     expect(html).toBeTypeOf('string')
   })
 

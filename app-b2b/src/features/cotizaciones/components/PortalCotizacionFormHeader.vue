@@ -1,57 +1,51 @@
 <template>
-  <div class="form-header-bar">
-    <div class="header-titles">
-      <button
+  <header class="sga-form-header">
+    <h1 class="sga-form-title">Solicitar Nueva Cotización Aduanera</h1>
+
+    <div class="sga-form-actions">
+      <Button
         type="button"
-        class="btn-back-link"
-        @click="$emit('cancel')"
-        title="Regresar al panel de cotizaciones"
-      >
-        <i class="pi pi-arrow-left"></i>
-        <span>Volver a Mis Cotizaciones</span>
-      </button>
-
-      <div class="kicker-row">
-        <span class="badge-kicker">PORTAL B2B // SOLICITUD DE COTIZACIÓN</span>
-        <span class="mode-pill mode-create">
-          <i class="pi pi-file-edit"></i>
-          <span>NUEVA SOLICITUD</span>
-        </span>
-      </div>
-
-      <h2 class="form-main-title">
-        Solicitar Nueva Cotización Aduanera
-      </h2>
-      <p class="form-main-desc">
-        Estructure su solicitud logística paso a paso: especifique el régimen y la ruta aduanera, adjunte la documentación técnica de sustento y declare los valores comerciales estimados para su liquidación oficial.
-      </p>
-    </div>
-
-    <div class="header-actions">
-      <button
-        type="button"
-        class="btn-outline-warm"
-        @click="$emit('cancel')"
+        label="Cancelar"
+        severity="secondary"
+        outlined
+        size="small"
         :disabled="submitting"
-      >
-        <span>Cancelar</span>
-      </button>
-      <button
+        @click="$emit('cancel')"
+      />
+
+      <Button
+        v-if="currentStep < 3"
         type="button"
-        class="btn-espresso"
+        label="Continuar"
+        icon="pi pi-arrow-right"
+        iconPos="right"
+        size="small"
+        :disabled="submitting"
+        @click="$emit('next')"
+      />
+
+      <Button
+        v-else
+        type="button"
+        label="Enviar Solicitud"
+        icon="pi pi-send"
+        size="small"
+        :loading="submitting"
+        :disabled="!isFormReady"
         @click="$emit('submit')"
-        :disabled="submitting || !isFormReady"
-      >
-        <i v-if="submitting" class="pi pi-spin pi-spinner"></i>
-        <i v-else class="pi pi-send"></i>
-        <span>{{ submitting ? 'Enviando Solicitud...' : 'Enviar Solicitud a Evaluación' }}</span>
-      </button>
+      />
     </div>
-  </div>
+  </header>
 </template>
 
 <script setup>
+import Button from 'primevue/button'
+
 defineProps({
+  currentStep: {
+    type: Number,
+    default: 1
+  },
   submitting: {
     type: Boolean,
     default: false
@@ -62,15 +56,5 @@ defineProps({
   }
 })
 
-defineEmits(['cancel', 'submit'])
+defineEmits(['cancel', 'next', 'submit'])
 </script>
-
-<style scoped>
-/* Los estilos base (.form-header-bar, .btn-espresso, .btn-outline-warm, .mode-pill.mode-create)
-   provienen de design-system.css y style.css. */
-.mode-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-}
-</style>

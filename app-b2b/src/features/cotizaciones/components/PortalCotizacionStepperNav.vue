@@ -1,58 +1,35 @@
 <template>
-  <div class="stepper-nav-bar">
+  <nav class="sga-stepper-bar portal-stepper-3" aria-label="Pasos de la solicitud">
     <button
+      v-for="step in steps"
+      :key="step.num"
       type="button"
-      :class="['stepper-step-btn', { active: currentStep === 1, completed: currentStep > 1 || Boolean(form?.regimenAduanero) }]"
-      @click="$emit('update:currentStep', 1)"
+      :class="[
+        'sga-stepper-item',
+        {
+          'is-active': currentStep === step.num,
+          'is-completed': currentStep !== step.num && step.completed
+        }
+      ]"
+      @click="$emit('update:currentStep', step.num)"
     >
-      <span class="step-badge">
-        <i v-if="currentStep > 1 || Boolean(form?.regimenAduanero)" class="pi pi-check"></i>
-        <span v-else>1</span>
+      <span class="sga-step-circle">
+        <i v-if="currentStep > step.num && step.completed" class="pi pi-check"></i>
+        <span v-else>{{ step.num }}</span>
       </span>
-      <div class="step-info">
-        <span class="step-label">PASO 01</span>
-        <span class="step-title">Régimen & Logística</span>
+
+      <div class="sga-step-meta">
+        <span class="sga-step-kicker">{{ step.kicker }}</span>
+        <span class="sga-step-title">{{ step.title }}</span>
       </div>
     </button>
-
-    <div class="stepper-divider"></div>
-
-    <button
-      type="button"
-      :class="['stepper-step-btn', { active: currentStep === 2, completed: docsCount > 0 || currentStep > 2 }]"
-      @click="$emit('update:currentStep', 2)"
-    >
-      <span class="step-badge">
-        <i v-if="docsCount > 0 || currentStep > 2" class="pi pi-check"></i>
-        <span v-else>2</span>
-      </span>
-      <div class="step-info">
-        <span class="step-label">PASO 02</span>
-        <span class="step-title">Documentación</span>
-      </div>
-    </button>
-
-    <div class="stepper-divider"></div>
-
-    <button
-      type="button"
-      :class="['stepper-step-btn', { active: currentStep === 3, completed: Number(form?.valorFob) > 0 }]"
-      @click="$emit('update:currentStep', 3)"
-    >
-      <span class="step-badge">
-        <i v-if="Number(form?.valorFob) > 0" class="pi pi-check"></i>
-        <span v-else>3</span>
-      </span>
-      <div class="step-info">
-        <span class="step-label">PASO 03</span>
-        <span class="step-title">Valores Declarados</span>
-      </div>
-    </button>
-  </div>
+  </nav>
 </template>
 
 <script setup>
-defineProps({
+import { computed } from 'vue'
+
+const props = defineProps({
   currentStep: {
     type: Number,
     required: true
@@ -68,93 +45,37 @@ defineProps({
 })
 
 defineEmits(['update:currentStep'])
+
+const steps = computed(() => [
+  {
+    num: 1,
+    kicker: 'PASO 01',
+    title: 'Régimen & Logística',
+    completed: Boolean(props.form?.regimenAduanero && props.form?.idPuertoEnvio && props.form?.idPuertoDestino)
+  },
+  {
+    num: 2,
+    kicker: 'PASO 02',
+    title: 'Documentación',
+    completed: props.docsCount > 0 || props.currentStep > 2
+  },
+  {
+    num: 3,
+    kicker: 'PASO 03',
+    title: 'Valores Declarados',
+    completed: Number(props.form?.valorFob) > 0
+  }
+])
 </script>
 
 <style scoped>
-.stepper-nav-bar {
-  display: flex;
-  align-items: center;
-  background: var(--color-bg-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg, 0.75rem);
-  padding: 0.65rem 1.25rem;
-  box-shadow: var(--shadow-subtle);
-  gap: var(--space-4, 1rem);
-  overflow-x: auto;
+.portal-stepper-3 {
+  grid-template-columns: repeat(3, minmax(160px, 1fr));
 }
 
-.stepper-step-btn {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3, 0.75rem);
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: var(--space-2, 0.5rem) var(--space-3, 0.75rem);
-  border-radius: var(--radius-md, 0.5rem);
-  transition: all var(--transition-fast);
-  flex-shrink: 0;
-}
-
-.stepper-step-btn:hover {
-  background: var(--color-bg-subtle);
-}
-
-.step-badge {
-  width: 2rem;
-  height: 2rem;
-  border-radius: 50%;
-  border: 2px solid var(--color-border);
-  background: var(--color-bg-subtle);
-  color: var(--color-text-muted);
-  font-weight: 700;
-  font-size: var(--font-size-xs, 0.75rem);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all var(--transition-fast);
-}
-
-.stepper-step-btn.active .step-badge {
-  background: var(--color-primary);
-  color: var(--color-primary-text, #ffffff);
-  border-color: var(--color-primary);
-}
-
-.stepper-step-btn.completed .step-badge {
-  background: var(--color-success-bg);
-  color: var(--color-success-text);
-  border-color: var(--color-success-border);
-}
-
-.step-info {
-  display: flex;
-  flex-direction: column;
-  text-align: left;
-}
-
-.step-label {
-  font-size: var(--font-size-2xs, 0.6875rem);
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  color: var(--color-accent-kicker);
-}
-
-.step-title {
-  font-size: var(--font-size-xs, 0.75rem);
-  font-weight: 700;
-  color: var(--color-text-main);
-}
-
-.stepper-step-btn.active .step-title {
-  color: var(--color-text-main);
-  font-weight: 800;
-}
-
-.stepper-divider {
-  flex: 1;
-  height: 2px;
-  background: var(--color-border-subtle);
-  min-width: 1.5rem;
+@media (max-width: 768px) {
+  .portal-stepper-3 {
+    grid-template-columns: repeat(3, minmax(180px, 1fr));
+  }
 }
 </style>

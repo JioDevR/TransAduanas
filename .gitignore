@@ -109,3 +109,10 @@ backup*.sql
 **/superpowers/
 .superpowers/
 .$Diagrama de procesos.drawio.bkp
+# Secretos y evidencias locales de mantenimiento
+**/*.dpapi
+/db/.env
+/db/.env.*
+!/db/.env.example
+/evidencias-monitoreo/
+/monitoreo/*.lock

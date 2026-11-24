@@ -1,0 +1,10 @@
+KIT DE MANTENIMIENTO TRANSADUANAS
+
+Se integra sobre main del repositorio grupal sin mezclar la historia del ZIP local. No actualiza globalmente el backend 0.5.1 del grupo a la instalación local 0.5.5.
+
+Scripts PowerShell: disponibilidad solo lectura; bloqueo exclusivo; limpieza y retención limitadas a laboratorios marcados; lanzadores de backend y mantenimiento con cuenta virtual limitada.
+Los lanzadores reciben -Configuracion con una ruta JSON local. No contiene contraseñas. El backend requiere secretos DPAPI LocalMachine protegidos por ACL y configurados por el administrador; no se versionan.
+Consultar-Disponibilidad apunta al despliegue local 8086 y servicio TransAduanasBackend; adaptar esas referencias antes de instalar en otro equipo.
+Los scripts de limpieza/retención no son una configuración para borrar archivos productivos. Mantienen barreras de ruta, inventario e integridad y protegen la última copia.
+
+POM: PDFBox, FontBox y XMPBox fijados en 2.0.37 mediante dependencyManagement. El código Java del grupo se conserva. No se suben JAR, claves, datos de clientes, uploads, SQL de respaldo ni credenciales.

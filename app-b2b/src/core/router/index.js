@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/core/stores/authStore'
+import { resolveAuthRouteRedirect } from '@/core/router/authGuard'
 import PortalLayout from '@/core/layouts/PortalLayout.vue'
 
 const routes = [
@@ -81,33 +82,20 @@ const router = createRouter({
 
 router.beforeEach((to, from, next) => {
   const authStore = useAuthStore()
-  const isAuth = authStore.isAuthenticated
 
   if (to.meta?.title) {
     document.title = to.meta.title
   }
 
-  // Si no está autenticado y la ruta requiere autenticación
-  if (to.matched.some(record => record.meta?.requiresAuth) && !isAuth) {
-    return next('/login')
-  }
+  const redirectTarget = resolveAuthRouteRedirect({
+    path: to.path,
+    requiresAuth: to.matched.some(record => record.meta?.requiresAuth),
+    isAuthenticated: authStore.isAuthenticated,
+    debeCambiarPassword: authStore.user?.debeCambiarPassword === true
+  })
 
-  // Si está autenticado
-  if (isAuth) {
-    const debeCambiar = authStore.user?.debeCambiarPassword === true
-
-    // Si debe cambiar contraseña por ser primer acceso
-    if (debeCambiar) {
-      if (to.path !== '/cambiar-password-obligatorio') {
-        return next('/cambiar-password-obligatorio')
-      }
-      return next()
-    }
-
-    // Si ya cambió la contraseña e intenta ir a pantalla de cambio obligatorio o login
-    if (!debeCambiar && (to.path === '/cambiar-password-obligatorio' || to.path === '/login')) {
-      return next('/dashboard')
-    }
+  if (redirectTarget) {
+    return next(redirectTarget)
   }
 
   next()

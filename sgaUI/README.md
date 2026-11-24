@@ -14,7 +14,7 @@ Esta carpeta centraliza el sistema de diseño unificado **`sgaUI`** para servir 
 | [`sga-forms.css`](./sga-forms.css) | Patrón unificado de formularios `Split-Screen` (`.sga-split-layout`, `.sga-form-header`), stepper horizontal (`.sga-stepper-bar`), campos/etiquetas (`.sga-form-field`, `.sga-form-label`), diálogos (`.sga-dialog-body`, `.sga-dialog-footer`) y banners (`.sga-banner`). |
 | [`sga-responsive.css`](./sga-responsive.css) | Estándar oficial de responsividad: 4 breakpoints (`1200px`, `900px`, `640px`), grillas seguras (`.sga-grid-2/3/4/auto`), visibilidad condicional y protección anti-zoom en móvil. |
 | [`useResponsive.js`](./useResponsive.js) | Composable reactivo estándar (`useResponsive`, `resolveViewportState`, `SGA_BREAKPOINTS`) sincronizado con los breakpoints CSS para adaptar drawers, modales y lógica de vista. |
-| [`sga-auth.css`](./sga-auth.css) | Estilos reutilizables de pantalla de acceso (`.sga-auth-page`, `.sga-auth-card`, `.sga-auth-brand`, `.sga-auth-form`). |
+| [`sga-auth.css`](./sga-auth.css) | Estilos reutilizables de pantalla de acceso y seguridad (`.sga-auth-page`, `.sga-auth-card`, `.sga-auth-wrapper--wide`, `.sga-auth-brand`, `.sga-auth-form`, `.sga-auth-entity`, `.sga-auth-checklist`, `.sga-auth-hint`, `.sga-auth-secondary-action` y reglas móviles `<= 640px`). |
 | [`sga-shell.css`](./sga-shell.css) | Cascarón principal unificado (`.sga-shell`, `.sga-sidebar` con Drawer móvil en `<= 900px`, `.sga-topbar`, `.sga-module-card`, `.sga-page-content`) y espaciados del layout. |
 | [`README.md`](./README.md) | Documentación completa de paleta, tipografía, espaciado, responsividad y guía de uso. |
 

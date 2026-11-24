@@ -1,11 +1,32 @@
 <template>
   <div class="sga-shell">
-    <PortalSidebar />
+    <div
+      v-if="mobileMenuOpen"
+      class="sga-drawer-backdrop"
+      @click="mobileMenuOpen = false"
+    />
+
+    <PortalSidebar
+      :mobile-open="mobileMenuOpen"
+      @close-mobile="mobileMenuOpen = false"
+    />
 
     <div class="sga-main">
       <!-- Topbar Minimalista en una sola línea (sgaUI) -->
       <header class="sga-topbar">
-        <h1 class="sga-topbar-title">{{ currentTitle }}</h1>
+        <div class="sga-topbar-left">
+          <button
+            type="button"
+            class="sga-mobile-menu-btn"
+            aria-label="Abrir menú de navegación"
+            :aria-expanded="mobileMenuOpen"
+            @click="mobileMenuOpen = true"
+          >
+            <i class="pi pi-bars"></i>
+          </button>
+
+          <h1 class="sga-topbar-title">{{ currentTitle }}</h1>
+        </div>
 
         <div class="sga-topbar-actions">
           <!-- Menú desplegable de Notificaciones -->
@@ -96,6 +117,7 @@ import { useAuthStore } from '@/core/stores/authStore'
 import { useNotificationStore } from '@/features/notificaciones/stores/notificationStore'
 import { useTheme } from '@/shared/composables/useTheme'
 import { useConfirmation } from '@/shared/composables/useConfirmation'
+import { useResponsive } from '@/shared/composables/useResponsive'
 import '../../../../sgaUI/sga-shell.css'
 
 const router = useRouter()
@@ -104,9 +126,22 @@ const authStore = useAuthStore()
 const notificationStore = useNotificationStore()
 const theme = useTheme()
 const { confirmAction } = useConfirmation()
+const { isTabletOrBelow } = useResponsive()
 
+const mobileMenuOpen = ref(false)
 const userPopoverRef = ref(null)
 const notificationMenuRef = ref(null)
+
+watch(isTabletOrBelow, (tabletDown) => {
+  if (!tabletDown) mobileMenuOpen.value = false
+})
+
+watch(
+  () => route.fullPath,
+  () => {
+    mobileMenuOpen.value = false
+  }
+)
 
 const ROUTE_TITLES = {
   Dashboard: 'Resumen General',

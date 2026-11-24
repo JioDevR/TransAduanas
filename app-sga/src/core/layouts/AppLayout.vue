@@ -1,11 +1,32 @@
 <template>
   <div class="sga-shell">
-    <AppSidebar />
+    <div
+      v-if="mobileMenuOpen"
+      class="sga-drawer-backdrop"
+      @click="mobileMenuOpen = false"
+    />
+
+    <AppSidebar
+      :mobile-open="mobileMenuOpen"
+      @close-mobile="mobileMenuOpen = false"
+    />
 
     <div class="sga-main">
       <!-- Topbar Minimalista en una sola línea -->
       <header class="sga-topbar">
-        <h1 class="sga-topbar-title">{{ currentTitle }}</h1>
+        <div class="sga-topbar-left">
+          <button
+            type="button"
+            class="sga-mobile-menu-btn"
+            aria-label="Abrir menú de navegación"
+            :aria-expanded="mobileMenuOpen"
+            @click="mobileMenuOpen = true"
+          >
+            <i class="pi pi-bars"></i>
+          </button>
+
+          <h1 class="sga-topbar-title">{{ currentTitle }}</h1>
+        </div>
 
         <div class="sga-topbar-actions">
           <div
@@ -85,7 +106,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import Button from 'primevue/button'
 import Popover from 'primevue/popover'
@@ -94,6 +115,7 @@ import AppSidebar from '@/shared/components/AppSidebar.vue'
 import { useAuthStore } from '@/features/auth/stores/authStore'
 import { useNavigationStore } from '@/core/stores/navigationStore'
 import { useTheme } from '@/shared/composables/useTheme'
+import { useResponsive } from '@/shared/composables/useResponsive'
 import { ROLE_LABELS } from '@/core/auth/roles'
 import '../../../../sgaUI/sga-shell.css'
 
@@ -102,8 +124,21 @@ const route = useRoute()
 const authStore = useAuthStore()
 const navigationStore = useNavigationStore()
 const { isDark, toggleTheme } = useTheme()
+const { isTabletOrBelow } = useResponsive()
 
+const mobileMenuOpen = ref(false)
 const userPopoverRef = ref(null)
+
+watch(isTabletOrBelow, (tabletDown) => {
+  if (!tabletDown) mobileMenuOpen.value = false
+})
+
+watch(
+  () => route.fullPath,
+  () => {
+    mobileMenuOpen.value = false
+  }
+)
 
 const toggleUserPopover = (event) => {
   userPopoverRef.value?.toggle(event)

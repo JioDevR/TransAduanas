@@ -9,12 +9,14 @@ Esta carpeta centraliza el sistema de diseño unificado **`sgaUI`** para servir 
 | Archivo | Propósito |
 | :--- | :--- |
 | [`sgaThemePreset.js`](./sgaThemePreset.js) | Preset oficial de PrimeVue 4 (`definePreset(Aura, ...)`), listo para importar en `main.js`. |
-| [`sga-theme.css`](./sga-theme.css) | Reglas CSS base (tipografía, números tabulares, listados, colas `.sga-queue-buttons`, botones `ConfirmDialog` y elevación). Importa automáticamente `sga-dashboard.css` y `sga-forms.css`. |
+| [`sga-theme.css`](./sga-theme.css) | Reglas CSS base (base `16px`, escala tipográfica `--sga-text-*`, números tabulares, listados, colas `.sga-queue-buttons`, botones `ConfirmDialog` y elevación). Importa `sga-dashboard.css`, `sga-forms.css` y `sga-responsive.css`. |
 | [`sga-dashboard.css`](./sga-dashboard.css) | Patrón unificado de dashboards operativos (`.sga-dash-header`, `.sga-filters-card`, `.sga-kpis-grid`, `.sga-kpi-card`, `.sga-charts-grid`, `.sga-doughnut-wrap`). |
 | [`sga-forms.css`](./sga-forms.css) | Patrón unificado de formularios `Split-Screen` (`.sga-split-layout`, `.sga-form-header`), stepper horizontal (`.sga-stepper-bar`), campos/etiquetas (`.sga-form-field`, `.sga-form-label`), diálogos (`.sga-dialog-body`, `.sga-dialog-footer`) y banners (`.sga-banner`). |
+| [`sga-responsive.css`](./sga-responsive.css) | Estándar oficial de responsividad: 4 breakpoints (`1200px`, `900px`, `640px`), grillas seguras (`.sga-grid-2/3/4/auto`), visibilidad condicional y protección anti-zoom en móvil. |
+| [`useResponsive.js`](./useResponsive.js) | Composable reactivo estándar (`useResponsive`, `resolveViewportState`, `SGA_BREAKPOINTS`) sincronizado con los breakpoints CSS para adaptar drawers, modales y lógica de vista. |
 | [`sga-auth.css`](./sga-auth.css) | Estilos reutilizables de pantalla de acceso (`.sga-auth-page`, `.sga-auth-card`, `.sga-auth-brand`, `.sga-auth-form`). |
-| [`sga-shell.css`](./sga-shell.css) | Cascarón principal unificado (`.sga-shell`, `.sga-sidebar`, `.sga-topbar`, `.sga-module-card`, `.sga-page-content`) y espaciados del layout. |
-| [`README.md`](./README.md) | Documentación completa de paleta, tipografía, espaciado, geometría y guía de uso. |
+| [`sga-shell.css`](./sga-shell.css) | Cascarón principal unificado (`.sga-shell`, `.sga-sidebar` con Drawer móvil en `<= 900px`, `.sga-topbar`, `.sga-module-card`, `.sga-page-content`) y espaciados del layout. |
+| [`README.md`](./README.md) | Documentación completa de paleta, tipografía, espaciado, responsividad y guía de uso. |
 
 ---
 
@@ -59,12 +61,19 @@ La identidad **Warm Editorial Pro** separa el **color estructural** (arena, latt
 
 ## 2. Tipografía
 
-* **Fuente Principal (UI):** `'Inter', system-ui, sans-serif` (tamaño base `14px`, `line-height: 1.5`).
+* **Base Raíz:** `:root` normalizado a `16px` (`1rem = 16px`), con tamaño operativo de lectura `14px` (`--sga-text-base: 0.875rem`) en `body`.
+* **Fuente Principal (UI):** `'Inter', system-ui, sans-serif` (`line-height: 1.5`).
 * **Fuente Monoespaciada (Códigos y Datos):** `'JetBrains Mono', monospace`.
-* **Números Tabulares (`font-variant-numeric: tabular-nums`):** Aplicado a `DataTable`, `InputNumber` y `code` para alinear verticalmente códigos de expediente (`EXP-001`), RUC, montos USD y pesos VGM.
-* **Jerarquía de Títulos:**
-  * Títulos de sección: `1.45rem`, peso `700`, `letter-spacing: -0.02em`.
-  * Títulos de tarjeta (`.p-card-title`): `1.05rem`, peso `600`, `letter-spacing: -0.015em`.
+* **Números Tabulares (`font-variant-numeric: tabular-nums`):** Aplicado a `code`, `.p-datatable`, `.p-inputnumber-input`, `.font-mono`, `.sga-mono`, `.sga-kpi-value`, `.sga-amount-cell` y `.sga-total-amount`.
+* **Escala Tipográfica Estándar (`sga-theme.css`):**
+  * `--sga-text-2xs` (`0.6875rem` / `11px`): Micro-etiquetas de formulario (`.sga-form-label`) y kickers.
+  * `--sga-text-xs` (`0.75rem` / `12px`): Metadatos, fechas, sub-etiquetas de celda y hints.
+  * `--sga-text-sm` (`0.8125rem` / `13px`): Botones `small`, filtros y celdas densas.
+  * `--sga-text-base` (`0.875rem` / `14px`): Cuerpo operativo estándar.
+  * `--sga-text-md` (`1rem` / `16px`): Subtítulos destacados e inputs en móvil (`<= 640px`, evita auto-zoom en iOS).
+  * `--sga-text-lg` (`clamp(1rem, 0.96rem + 0.2vw, 1.125rem)`): Títulos de tarjeta (`.p-card-title`) y topbar.
+  * `--sga-text-xl` (`clamp(1.125rem, 1.04rem + 0.4vw, 1.35rem)`): Títulos de vista/formulario (`.sga-form-title`, `.sga-panel-title`).
+  * `--sga-text-2xl` (`clamp(1.25rem, 1.1rem + 0.7vw, 1.65rem)`): Cifras KPI y totales de proforma.
 
 ---
 
@@ -138,4 +147,27 @@ Referencia compartida por **Comercial** (`ComercialDashboardPanel.vue`) y **Gest
 * **Listados Duales (Tabla / Canvas):** `.sga-list-panel`, `.sga-panel-header`, `.sga-table-card`, `.sga-table-toolbar`, `.sga-canvas-grid`, `.sga-canvas-card`, `.sga-empty-state`.
 * **Sub-barra de Colas y Notas:** `.sga-queue-buttons` y `.sga-status-note` para el slot `#sub-bar` de `SgaListShell.vue`.
 * **ConfirmDialog:** `.sga-confirm-accept-btn`, `.sga-confirm-reject-btn` y `.sga-confirm-delete-btn` con soporte automático para modo claro y oscuro.
+
+---
+
+## 8. Estándar de Responsividad y Reactividad (`sga-responsive.css` + `useResponsive.js`)
+
+Todo el ecosistema (`app-sga` y `app-b2b`) opera bajo **4 breakpoints oficiales**:
+
+| Tier | Media Query | Dispositivos | Comportamiento Estándar |
+| :--- | :--- | :--- | :--- |
+| **`desktop`** | `> 1200px` | Monitores y laptops estándar | Sidebar sticky (`256px` / `72px`), `--sga-shell-gutter: 2rem`, Split-Screen (`1fr 360px`), grids `.sga-grid-3/4` completos |
+| **`tablet-lg`** | `<= 1200px` | Laptops compactas / Tablet landscape | Split-Screen colapsa a `1fr`, `.sga-grid-4` pasa a 2 columnas |
+| **`tablet`** | `<= 900px` | Tablets portrait y phablets | **Sidebar pasa a Drawer deslizable con backdrop y botón hamburguesa en Topbar** (`.sga-mobile-menu-btn`), `--sga-shell-gutter: 1.25rem`, `.sga-grid-3` pasa a 2 columnas, `.sga-stepper-bar` 2×2 |
+| **`mobile`** | `<= 640px` | Smartphones (`320px–640px`) | `--sga-shell-gutter: 0.875rem`, **1 sola columna** en todos los grids y filtros, inputs a `16px` (anti-zoom iOS), tablas contenidas con scroll táctil dentro de `.sga-table-card` sin desbordar el viewport |
+
+* **Uso reactivo en Vue (`useResponsive`):**
+  ```js
+  import { useResponsive } from '@/shared/composables/useResponsive'
+  const { isMobile, isTabletOrBelow, viewportTier, getDialogWidth } = useResponsive()
+  ```
+  Úsese para adaptar dinámicamente anchos de `Dialog` (`getDialogWidth('540px')`), cerrar drawers al expandir la ventana o conmutar comportamiento en vistas complejas.
+* **Reglas obligatorias contra desbordamiento de Grids y Selects:**
+  * Usar siempre `minmax(0, 1fr)` en columnas CSS Grid (nunca `repeat(N, 1fr)` sin `minmax(0, 1fr)`), y `min-width: 0` en hijos de grid/flex que contengan `Select` o texto largo.
+  * El contenedor `.sga-split-main` define `container-type: inline-size` (`container-name: sga-main`), permitiendo usar `@container sga-main (max-width: 600px)` para colapsar formularios de 2 columnas cuando el panel principal se estrecha (por ejemplo con el Sidebar expandido en laptops de `1280px`).
 

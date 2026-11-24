@@ -108,6 +108,7 @@
       <Button
         v-if="canRejectSelected"
         type="button"
+        label="Rechazar"
         icon="pi pi-times"
         severity="danger"
         outlined

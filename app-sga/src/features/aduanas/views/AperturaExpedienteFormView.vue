@@ -394,7 +394,7 @@ const handleSubmit = async () => {
   gap: 1.125rem;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 640px) {
   .sga-form-grid {
     grid-template-columns: 1fr;
   }

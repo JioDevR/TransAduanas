@@ -1,9 +1,9 @@
 <template>
-  <aside :class="['sga-sidebar', { collapsed: isCollapsed }]">
+  <aside :class="['sga-sidebar', { collapsed: isEffectiveCollapsed, 'is-mobile-open': mobileOpen }]">
     <!-- Cabecera de Marca -->
     <div class="sga-sidebar-brand">
       <div class="sga-brand-badge">SGA</div>
-      <div v-if="!isCollapsed" class="sga-brand-info">
+      <div v-if="!isEffectiveCollapsed" class="sga-brand-info">
         <span class="sga-brand-name">TransAduanas</span>
         <span class="sga-brand-tag">SGA</span>
       </div>
@@ -16,6 +16,14 @@
       >
         <i :class="isCollapsed ? 'pi pi-chevron-right' : 'pi pi-chevron-left'"></i>
       </button>
+      <button
+        type="button"
+        class="sga-drawer-close-btn"
+        @click="$emit('close-mobile')"
+        aria-label="Cerrar menú lateral"
+      >
+        <i class="pi pi-times"></i>
+      </button>
     </div>
 
     <!-- Navegación Dinámica según Módulo Activo -->
@@ -25,18 +33,18 @@
           <button
             type="button"
             :class="['sga-nav-btn', { active: isItemActive(item) }]"
-            @click="item.onClick()"
-            :title="isCollapsed ? item.label : ''"
+            @click="handleNavItemClick(item)"
+            :title="isEffectiveCollapsed ? item.label : ''"
           >
             <span class="sga-nav-dot"></span>
-            <span v-if="!isCollapsed" class="sga-nav-label">{{ item.label }}</span>
+            <span v-if="!isEffectiveCollapsed" class="sga-nav-label">{{ item.label }}</span>
           </button>
         </li>
       </ul>
     </nav>
 
     <!-- Gestor de Módulos (al pie del Sidebar) -->
-    <div v-if="!isCollapsed" class="sga-module-card">
+    <div v-if="!isEffectiveCollapsed" class="sga-module-card">
       <div class="sga-module-kicker">
         <span class="sga-pulse-dot"></span>
         <span>{{ authStore.canSwitchModules ? 'GESTOR DE MÓDULOS' : 'MÓDULO ASIGNADO' }}</span>
@@ -67,14 +75,31 @@ import Select from 'primevue/select'
 import { useAuthStore } from '@/features/auth/stores/authStore'
 import { useNavigationStore } from '@/core/stores/navigationStore'
 
+const props = defineProps({
+  mobileOpen: {
+    type: Boolean,
+    default: false
+  }
+})
+
+const emit = defineEmits(['close-mobile'])
+
 const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
 const navigationStore = useNavigationStore()
 
 const isCollapsed = ref(false)
+const isEffectiveCollapsed = computed(() => isCollapsed.value && !props.mobileOpen)
 const toggleCollapse = () => {
   isCollapsed.value = !isCollapsed.value
+}
+
+const handleNavItemClick = (item) => {
+  item.onClick()
+  if (props.mobileOpen) {
+    emit('close-mobile')
+  }
 }
 
 const MODULE_OPTIONS = [

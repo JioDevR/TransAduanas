@@ -90,4 +90,51 @@ describe('useCotizacionCorrection', () => {
     expect(payload.valorFob).toBe(15000)
     expect(payload.observaciones).toContain('Se ajustó flete')
   })
+
+  it('soporta edición manual/automática de seguro y resuelve objetos seleccionados para sgaUI', () => {
+    const {
+      form,
+      seguroManual,
+      selectedClientObject,
+      selectedPuertoEnvio,
+      selectedMercancia,
+      handleSeguroManualInput,
+      resetearSeguroAutomatico
+    } = useCotizacionCorrection({
+      cotizacion: ref(sampleCotizacion),
+      puertos: ref(samplePuertos),
+      mercancias: ref([{ idMercancia: 3, codigo: '8471.30', nombre: 'Laptops', arancelBasePct: 0 }]),
+      clientes: ref([{ idCliente: 5, razonSocial: 'IMPORTACIONES PERU S.A.C.', tipoDocumento: 'RUC', numeroDocumento: '20556677881' }])
+    })
+
+    expect(selectedClientObject.value?.razonSocial).toBe('IMPORTACIONES PERU S.A.C.')
+    expect(selectedPuertoEnvio.value?.codigoPuerto).toBe('CNSHA')
+    expect(selectedMercancia.value?.codigo).toBe('8471.30')
+
+    handleSeguroManualInput(250)
+    expect(seguroManual.value).toBe(true)
+    expect(form.value.montoSeguroEstimado).toBe(250)
+
+    resetearSeguroAutomatico()
+    expect(seguroManual.value).toBe(false)
+    // 0.75% de 10000 = 75
+    expect(form.value.montoSeguroEstimado).toBe(75)
+  })
+
+  it('normaliza departamentos y provincias de BD con distinta capitalización o sin tildes', () => {
+    const { form } = useCotizacionCorrection({
+      cotizacion: ref({
+        ...sampleCotizacion,
+        origenDepartamento: 'La Libertad',
+        origenProvincia: 'Viru',
+        destinoDepartamento: 'AREQUIPA',
+        destinoProvincia: 'AREQUIPA'
+      })
+    })
+
+    expect(form.value.origenDepartamento).toBe('LA LIBERTAD')
+    expect(form.value.origenProvincia).toBe('Virú')
+    expect(form.value.destinoDepartamento).toBe('AREQUIPA')
+    expect(form.value.destinoProvincia).toBe('Arequipa')
+  })
 })

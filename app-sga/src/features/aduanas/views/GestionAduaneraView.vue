@@ -3,15 +3,15 @@
     <!-- ============================================================== -->
     <!-- VISTA COMPLETA: AUDITORÍA TÉCNICA DEL EXPEDIENTE / COTIZACIÓN   -->
     <!-- ============================================================== -->
-    <AuditoriaExpedienteModal
+    <AuditoriaTecnicaPanel
       v-if="showAuditoriaCompleta && (inspectedCotizacion || inspectedExpediente)"
       :cotizacion="inspectedCotizacion"
       :expediente="inspectedExpediente"
       :processing="processingAction"
       @back="closeAuditoriaCompleta"
       @approve="handleApproveFromAuditoria"
-      @observe="handleObserveFromAuditoria"
-      @reject="handleRejectFromAuditoria"
+      @observe="openRevisionDialog($event, 'observe')"
+      @reject="openRevisionDialog($event, 'reject')"
       @open-apertura="handleAperturaFromAuditoria"
       @doc-updated="loadData"
     />
@@ -130,7 +130,6 @@
     <DocumentosManagerModal
       :visible="showDocumentosModal"
       :entidad-tipo="selectedDocEntidadTipo"
-      :id-entidad="selectedDocEntidadId"
       :entidad-id="selectedDocEntidadId"
       :codigo-entidad="selectedDocCodigoEntidad"
       :titulo-entidad="selectedDocTituloEntidad"
@@ -180,7 +179,7 @@ import RetiroDirectoModal from '../components/RetiroDirectoModal.vue'
 import CierreExpedienteModal from '../components/CierreExpedienteModal.vue'
 import ActualizarTransitoModal from '../components/ActualizarTransitoModal.vue'
 import DocumentosManagerModal from '@/shared/components/DocumentosManagerModal.vue'
-import AuditoriaExpedienteModal from '../components/AuditoriaExpedienteModal.vue'
+import AuditoriaTecnicaPanel from '../components/auditoria/AuditoriaTecnicaPanel.vue'
 import DashboardAduaneroPanel from '../components/DashboardAduaneroPanel.vue'
 import AduanasCotizacionesPanel from '../components/AduanasCotizacionesPanel.vue'
 import CotizacionRevisionDialog from '../components/CotizacionRevisionDialog.vue'
@@ -388,10 +387,14 @@ const loadData = async () => {
       showError(firstFailure.reason?.response?.data?.message || 'Error al sincronizar datos de Supervisión.')
     }
 
-    // Si había una cotización inspeccionada en vista completa, refrescar su dato
+    // Si había una cotización o expediente inspeccionado en vista completa, refrescar su dato
     if (inspectedCotizacion.value) {
       const updated = cotizaciones.value.find((c) => c.idCotizacion === inspectedCotizacion.value.idCotizacion)
       if (updated) inspectedCotizacion.value = updated
+    }
+    if (inspectedExpediente.value) {
+      const updatedExp = expedientes.value.find((e) => e.idExpediente === inspectedExpediente.value.idExpediente)
+      if (updatedExp) inspectedExpediente.value = updatedExp
     }
   } finally {
     loading.value = false
@@ -468,32 +471,12 @@ const handleApproveFromAuditoria = async (cotizacion) => {
   }
 }
 
-const handleObserveFromAuditoria = async ({ cotizacion, reason }) => {
-  const ok = await ejecutarRevisionTecnica({
-    cotizacion,
-    estado: 'OBSERVADA',
-    motivoObservacion: reason,
-    observaciones: 'Observaciones emitidas en auditoría técnica aduanera.'
-  })
-  if (ok) closeAuditoriaCompleta()
-}
-
-const handleRejectFromAuditoria = async ({ cotizacion, reason }) => {
-  const ok = await ejecutarRevisionTecnica({
-    cotizacion,
-    estado: 'RECHAZADA',
-    motivoObservacion: reason,
-    observaciones: 'Rechazo técnico formal emitido en auditoría aduanera.'
-  })
-  if (ok) closeAuditoriaCompleta()
-}
-
 const handleAperturaFromAuditoria = (cotizacion) => {
   closeAuditoriaCompleta()
   goToApertura(cotizacion)
 }
 
-// Acciones rápidas desde la bandeja (Observación / Rechazo)
+// Acciones unificadas de revisión (Observar / Rechazar) desde Bandeja o Auditoría
 const openRevisionDialog = (cotizacion, mode) => {
   actionCotizacion.value = cotizacion
   revisionDialogMode.value = mode
@@ -512,6 +495,9 @@ const handleRevisionConfirm = async ({ cotizacion, mode, reason }) => {
   })
   if (ok) {
     showRevisionDialog.value = false
+    if (showAuditoriaCompleta.value) {
+      closeAuditoriaCompleta()
+    }
   }
 }
 </script>

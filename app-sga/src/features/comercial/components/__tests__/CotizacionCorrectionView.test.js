@@ -1,10 +1,12 @@
 import { describe, it, expect, vi } from 'vitest'
 import { ref, createSSRApp, h } from 'vue'
 import { renderToString } from 'vue/server-renderer'
+import { createPinia } from 'pinia'
 import PrimeVue from 'primevue/config'
+import ToastService from 'primevue/toastservice'
+import ConfirmationService from 'primevue/confirmationservice'
 import CotizacionCorrectionView from '../CotizacionCorrectionView.vue'
 import { useCotizacionCorrection } from '../../composables/useCotizacionCorrection'
-import { documentoService } from '@/features/documentos/services/documentoService'
 
 describe('CotizacionCorrectionView Component & Flow', () => {
   it('exporta un componente Vue 3 válido con props y emits esperados', () => {
@@ -148,50 +150,47 @@ describe('CotizacionCorrectionView Component & Flow', () => {
     expect(form.value.montoTributosEstimado).toBe(0)
   })
 
-  it('invoca documentoService.downloadDocumento con id y nombre original al descargar', async () => {
-    const downloadSpy = vi.spyOn(documentoService, 'downloadDocumento').mockResolvedValue(true)
-    let exposedInstance = null
-
-    const originalSetup = CotizacionCorrectionView.setup
-    CotizacionCorrectionView.setup = (props, ctx) => {
-      const wrappedCtx = {
-        ...ctx,
-        expose: (exposed) => {
-          exposedInstance = exposed
-          if (ctx.expose) ctx.expose(exposed)
-        }
-      }
-      return originalSetup(props, wrappedCtx)
-    }
+  it('renderiza el layout sgaUI Split-Screen con el motivo de observación y proforma lateral', async () => {
+    vi.stubGlobal('localStorage', {
+      getItem: vi.fn(() => null),
+      setItem: vi.fn(),
+      removeItem: vi.fn(),
+      clear: vi.fn()
+    })
 
     try {
       const app = createSSRApp({
         render() {
           return h(CotizacionCorrectionView, {
-            cotizacion: { idCotizacion: 101 }
+            cotizacion: {
+              idCotizacion: 101,
+              codigoCotizacion: 'COT-2026-0101',
+              estado: 'OBSERVADA',
+              motivoObservacion: 'Rectificar flete marítimo y subpartida.',
+              idCliente: 8,
+              clienteRazonSocial: 'COMERCIAL ANDINA S.A.C.',
+              clienteNumeroDocumento: '20100456789',
+              regimenAduanero: 'IMPORTACION_DEFINITIVA',
+              valorFob: 10000,
+              montoFleteEstimado: 1000,
+              montoHonorariosEstimado: 300
+            }
           })
         }
       })
+      app.use(createPinia())
       app.use(PrimeVue)
-      await renderToString(app)
+      app.use(ToastService)
+      app.use(ConfirmationService)
 
-      expect(exposedInstance).toBeDefined()
-      expect(typeof exposedInstance.handleDownloadDoc).toBe('function')
-      await exposedInstance.handleDownloadDoc({
-        idDocumento: 42,
-        nombreOriginal: 'factura_comercial.pdf'
-      })
-
-      expect(downloadSpy).toHaveBeenCalledWith(42, 'factura_comercial.pdf')
-
-      await exposedInstance.handleDownloadDoc({
-        idDocumento: 43
-      })
-
-      expect(downloadSpy).toHaveBeenCalledWith(43, 'documento.pdf')
+      const html = await renderToString(app)
+      expect(html).toContain('sga-form-header')
+      expect(html).toContain('sga-split-layout')
+      expect(html).toContain('COT-2026-0101')
+      expect(html).toContain('Rectificar flete marítimo y subpartida.')
+      expect(html).toContain('COMERCIAL ANDINA S.A.C.')
     } finally {
-      CotizacionCorrectionView.setup = originalSetup
-      downloadSpy.mockRestore()
+      vi.unstubAllGlobals()
     }
   })
 })

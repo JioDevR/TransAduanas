@@ -58,7 +58,7 @@
 /* Rejilla de tarjetas KPI */
 .sga-kpis-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
   gap: 1rem;
 }
 
@@ -118,13 +118,13 @@
 .sga-kpi-value {
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
-  font-size: 1.6rem;
+  font-size: var(--sga-text-2xl, 1.55rem);
   font-weight: 700;
   color: var(--color-text-main);
 }
 
 .sga-kpi-value.is-compact {
-  font-size: 1.3rem;
+  font-size: clamp(1.1rem, 1rem + 0.45vw, 1.3rem);
 }
 
 .sga-kpi-card.is-success .sga-kpi-value { color: var(--color-success-text); }
@@ -170,7 +170,7 @@
 /* Rejilla de gráficos Chart.js */
 .sga-charts-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
   gap: 1rem;
 }
 
@@ -238,10 +238,26 @@
   color: var(--color-text-muted);
 }
 
-@media (max-width: 768px) {
+@media (max-width: 900px) {
   .sga-filters-card,
   .sga-kpi-card,
   .sga-chart-card {
     padding: 1.1rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .sga-filter-field {
+    min-width: 0;
+    max-width: none;
+    flex: 1 1 100%;
+  }
+
+  .sga-dash-actions {
+    width: 100%;
+  }
+
+  .sga-chart-box {
+    height: 210px;
   }
 }

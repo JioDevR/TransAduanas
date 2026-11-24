@@ -1,11 +1,11 @@
 <template>
-  <aside :class="['sga-sidebar', { collapsed: isCollapsed }]">
+  <aside :class="['sga-sidebar', { collapsed: isEffectiveCollapsed, 'is-mobile-open': mobileOpen }]">
     <!-- Cabecera de Marca -->
     <div class="sga-sidebar-brand">
       <div class="sga-brand-badge" title="TransAduanas - Portal de Clientes B2B">
         <i class="pi pi-box"></i>
       </div>
-      <div v-if="!isCollapsed" class="sga-brand-info">
+      <div v-if="!isEffectiveCollapsed" class="sga-brand-info">
         <span class="sga-brand-name">TransAduanas</span>
         <span class="sga-brand-tag">PORTAL CLIENTE</span>
       </div>
@@ -18,11 +18,19 @@
       >
         <i :class="isCollapsed ? 'pi pi-chevron-right' : 'pi pi-chevron-left'"></i>
       </button>
+      <button
+        type="button"
+        class="sga-drawer-close-btn"
+        @click="$emit('close-mobile')"
+        aria-label="Cerrar menú lateral"
+      >
+        <i class="pi pi-times"></i>
+      </button>
     </div>
 
     <!-- Tarjeta de Empresa Autenticada -->
     <div
-      v-if="!isCollapsed"
+      v-if="!isEffectiveCollapsed"
       class="portal-company-card"
       :title="`${authStore.empresaNombre} — RUC: ${authStore.ruc}`"
     >
@@ -46,10 +54,10 @@
             type="button"
             :class="['sga-nav-btn', { active: isItemActive(item.to) }]"
             @click="navigateTo(item.to)"
-            :title="isCollapsed ? item.label : ''"
+            :title="isEffectiveCollapsed ? item.label : ''"
           >
             <span class="sga-nav-dot"></span>
-            <span v-if="!isCollapsed" class="sga-nav-label">{{ item.label }}</span>
+            <span v-if="!isEffectiveCollapsed" class="sga-nav-label">{{ item.label }}</span>
           </button>
         </li>
       </ul>
@@ -58,15 +66,25 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/core/stores/authStore'
+
+const props = defineProps({
+  mobileOpen: {
+    type: Boolean,
+    default: false
+  }
+})
+
+const emit = defineEmits(['close-mobile'])
 
 const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
 
 const isCollapsed = ref(false)
+const isEffectiveCollapsed = computed(() => isCollapsed.value && !props.mobileOpen)
 const toggleCollapse = () => {
   isCollapsed.value = !isCollapsed.value
 }
@@ -85,6 +103,9 @@ const isItemActive = (path) => {
 const navigateTo = (path) => {
   if (route.path !== path) {
     router.push(path)
+  }
+  if (props.mobileOpen) {
+    emit('close-mobile')
   }
 }
 </script>

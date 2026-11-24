@@ -248,11 +248,12 @@ const percepcionOptions = [
   display: flex;
   flex-direction: column;
   gap: 1.35rem;
+  min-width: 0;
 }
 
 .sga-costs-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1rem;
 }
 
@@ -260,6 +261,7 @@ const percepcionOptions = [
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
+  min-width: 0;
 }
 
 .sga-label-row,
@@ -352,7 +354,7 @@ const percepcionOptions = [
 
 .sga-tributos-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.85rem;
 }
 
@@ -364,6 +366,7 @@ const percepcionOptions = [
   border: 1px solid var(--color-border);
   border-radius: 10px;
   background: var(--color-bg-surface);
+  min-width: 0;
 }
 
 .sga-fixed-rate {
@@ -391,6 +394,8 @@ const percepcionOptions = [
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
   padding: 1rem 1.25rem;
   border: 1px solid var(--color-border);
   border-radius: 12px;
@@ -424,6 +429,13 @@ const percepcionOptions = [
 
 .font-mono {
   font-family: var(--font-mono);
+}
+
+@container sga-main (max-width: 600px) {
+  .sga-costs-grid,
+  .sga-tributos-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 900px) {

@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.thymeleaf.context.Context;
 import org.thymeleaf.spring6.SpringTemplateEngine;
+import pe.sga.dto.portal.PortalCotizacionDTO;
 import pe.sga.dto.reporte.UsuarioPortalReporteItemDTO;
 import pe.sga.dto.reporte.UsuarioReporteItemDTO;
 import pe.sga.dto.response.AdminAlmacenamientoDTO;
@@ -696,7 +697,159 @@ public class ReporteJasperServiceImpl implements IReporteJasperService {
     }
 
     private String defaultIfBlank(String value, String fallback) {
-        return value != null && !value.isBlank() ? value.trim() : fallback;
+        String cleaned = sanitizeXmlText(value);
+        return cleaned != null && !cleaned.isBlank() ? cleaned.trim() : fallback;
+    }
+
+    private String sanitizeXmlText(String value) {
+        if (value == null) return null;
+        return value.replaceAll("[\\x00-\\x08\\x0B\\x0C\\x0E-\\x1F]", "");
+    }
+
+    // =========================================================================
+    // 06. PROFORMA DE COTIZACIÓN B2B (PORTAL CLIENTE)
+    // =========================================================================
+    @Override
+    public ByteArrayInputStream exportarCotizacionPortalPdf(PortalCotizacionDTO cotizacion) {
+        if (cotizacion == null) {
+            throw new IllegalArgumentException("La cotización no puede ser nula");
+        }
+
+        boolean pendienteLiquidacion = cotizacion.getIdUsuarioComercial() == null
+                || safeDecimal(cotizacion.getTotalCotizado()).compareTo(BigDecimal.ZERO) <= 0;
+        boolean conTransporte = Boolean.TRUE.equals(cotizacion.getServicioTransporte());
+        boolean esExportacion = "EXPORTACION_DEFINITIVA".equalsIgnoreCase(cotizacion.getRegimenAduanero());
+
+        DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        String codigo = defaultIfBlank(
+                cotizacion.getCodigoCotizacion(),
+                cotizacion.getIdCotizacion() != null ? "COT-" + cotizacion.getIdCotizacion() : "COT-BORRADOR"
+        );
+        String estadoRaw = defaultIfBlank(cotizacion.getEstado(), "PENDIENTE").toUpperCase(Locale.ROOT);
+        String estadoPagoRaw = defaultIfBlank(cotizacion.getEstadoPago(), "SIN_PAGO").toUpperCase(Locale.ROOT);
+
+        Map<String, Object> variables = new HashMap<>();
+        variables.put("codigoCotizacion", codigo);
+        variables.put("fechaEmisionFmt", cotizacion.getFechaEmision() != null
+                ? cotizacion.getFechaEmision().format(dateFormatter)
+                : "En evaluación");
+        variables.put("validezDias", cotizacion.getValidezDias() != null ? cotizacion.getValidezDias() : 30);
+        variables.put("fechaGeneracion", LocalDateTime.now().format(REPORT_DATE_FORMATTER));
+
+        variables.put("razonSocialCliente", defaultIfBlank(cotizacion.getRazonSocialCliente(), "Cliente B2B"));
+        variables.put("rucCliente", defaultIfBlank(cotizacion.getRucCliente(), "—"));
+        variables.put("aceptadaPorCliente", Boolean.TRUE.equals(cotizacion.getAceptadaPorCliente()));
+
+        variables.put("estadoLabel", estadoRaw.replace('_', ' '));
+        variables.put("estadoBadgeClass", resolvePortalEstadoBadgeClass(estadoRaw));
+        variables.put("estadoPagoLabel", resolveEstadoPagoLabel(estadoPagoRaw));
+        variables.put("estadoPagoBadgeClass", resolveEstadoPagoBadgeClass(estadoPagoRaw));
+
+        variables.put("regimenLabel", resolveRegimenLabel(cotizacion.getRegimenAduanero()));
+        variables.put("nombreTipoCarga", defaultIfBlank(cotizacion.getNombreTipoCarga(), "Carga General"));
+        variables.put("nombreMercancia", defaultIfBlank(cotizacion.getNombreMercancia(), "Mercancía General"));
+        variables.put("codigoMercancia", defaultIfBlank(cotizacion.getCodigoMercancia(), "N/A"));
+        variables.put("puertoEnvio", defaultIfBlank(cotizacion.getNombrePuertoEnvio(), "Origen"));
+        variables.put("puertoDestino", defaultIfBlank(cotizacion.getNombrePuertoDestino(), "Destino"));
+        variables.put("asesorNombre", defaultIfBlank(cotizacion.getUsuarioComercialNombre(), "Pendiente de asignación"));
+
+        variables.put("servicioTransporte", conTransporte);
+        variables.put("transporteResumen", resolveTransporteResumen(conTransporte, cotizacion.getCostoTransporteInterno(), pendienteLiquidacion));
+        variables.put("transporteRuta",
+                defaultIfBlank(cotizacion.getOrigenProvincia(), defaultIfBlank(cotizacion.getOrigenDepartamento(), "Origen"))
+                        + " -> "
+                        + defaultIfBlank(cotizacion.getDestinoProvincia(), defaultIfBlank(cotizacion.getDestinoDepartamento(), "Destino")));
+
+        variables.put("valorFobFmt", formatUsd(cotizacion.getValorFob()));
+        variables.put("fleteFmt", formatPendingCost(cotizacion.getMontoFlete(), pendienteLiquidacion));
+        variables.put("seguroFmt", formatPendingCost(cotizacion.getMontoSeguroEstimado(), pendienteLiquidacion));
+        variables.put("honorariosFmt", formatPendingCost(cotizacion.getMontoHonorarios(), pendienteLiquidacion));
+        variables.put("transporteInternoFmt", formatPendingCost(cotizacion.getCostoTransporteInterno(), pendienteLiquidacion));
+        variables.put("tributosFmt", esExportacion
+                ? "Inafecto ($0.00)"
+                : formatPendingCost(cotizacion.getMontoTributos(), pendienteLiquidacion));
+        variables.put("totalServicioFmt", pendienteLiquidacion
+                ? "En liquidación ($0.00)"
+                : formatUsd(cotizacion.getTotalCotizado()));
+
+        variables.put("totalCotizadoFmt", formatUsd(cotizacion.getTotalCotizado()));
+        variables.put("totalAbonadoFmt", formatUsd(cotizacion.getTotalAbonado()));
+        variables.put("saldoPendienteFmt", formatUsd(cotizacion.getSaldoPendiente()));
+
+        String motivoObs = sanitizeXmlText(cotizacion.getMotivoObservacion());
+        String obsComercial = sanitizeXmlText(cotizacion.getObservaciones());
+        variables.put("motivoObservacion",
+                "OBSERVADA".equals(estadoRaw) && motivoObs != null && !motivoObs.isBlank()
+                        ? motivoObs.trim()
+                        : null);
+        variables.put("observaciones",
+                obsComercial != null && !obsComercial.isBlank()
+                        ? obsComercial.trim()
+                        : null);
+
+        return renderHtmlToPdf("reports/proforma-cotizacion-b2b", variables);
+    }
+
+    private String formatPendingCost(BigDecimal value, boolean pendienteLiquidacion) {
+        BigDecimal safe = safeDecimal(value);
+        if (pendienteLiquidacion && safe.compareTo(BigDecimal.ZERO) <= 0) {
+            return "Por asesor";
+        }
+        return formatUsd(safe);
+    }
+
+    private String resolveTransporteResumen(boolean conTransporte, BigDecimal costo, boolean pendienteLiquidacion) {
+        if (!conTransporte) {
+            return "No incluido";
+        }
+        BigDecimal safe = safeDecimal(costo);
+        if (safe.compareTo(BigDecimal.ZERO) > 0) {
+            return formatUsd(safe) + " (Flota SGA)";
+        }
+        return pendienteLiquidacion ? "Solicitado (Por asesor)" : "Incluido";
+    }
+
+    private String resolveRegimenLabel(String regimen) {
+        if (regimen == null || regimen.isBlank()) {
+            return "Régimen Aduanero";
+        }
+        return switch (regimen.trim().toUpperCase(Locale.ROOT)) {
+            case "IMPORTACION_DEFINITIVA" -> "Importación para el Consumo";
+            case "EXPORTACION_DEFINITIVA" -> "Exportación Definitiva";
+            default -> regimen.replace('_', ' ');
+        };
+    }
+
+    private String resolvePortalEstadoBadgeClass(String estado) {
+        return switch (estado) {
+            case "APROBADA" -> "badge-ok";
+            case "PENDIENTE", "EN_REVISION" -> "badge-warn";
+            case "OBSERVADA", "RECHAZADA", "ANULADA" -> "badge-danger";
+            default -> "badge-neutral";
+        };
+    }
+
+    private String resolveEstadoPagoLabel(String estadoPago) {
+        return switch (estadoPago) {
+            case "PAGADO_TOTAL" -> "Pagado Total";
+            case "APROBADO" -> "Aprobado";
+            case "ADELANTO_APROBADO" -> "Adelanto Aprobado";
+            case "PENDIENTE_REVISION" -> "En Revisión Contable";
+            case "SIN_PAGO" -> "Sin Pago";
+            case "PENDIENTE" -> "Pendiente";
+            case "OBSERVADO" -> "Pago Observado";
+            case "RECHAZADO" -> "Pago Rechazado";
+            default -> estadoPago.replace('_', ' ');
+        };
+    }
+
+    private String resolveEstadoPagoBadgeClass(String estadoPago) {
+        return switch (estadoPago) {
+            case "PAGADO_TOTAL", "APROBADO", "ADELANTO_APROBADO" -> "badge-ok";
+            case "PENDIENTE_REVISION" -> "badge-info";
+            case "OBSERVADO", "RECHAZADO" -> "badge-danger";
+            default -> "badge-warn";
+        };
     }
 
     // =========================================================================
@@ -706,7 +859,7 @@ public class ReporteJasperServiceImpl implements IReporteJasperService {
         try {
             Context context = new Context();
             context.setVariables(variables);
-            String html = templateEngine.process(templateName, context);
+            String html = sanitizeXmlText(templateEngine.process(templateName, context));
 
             ByteArrayOutputStream os = new ByteArrayOutputStream();
             PdfRendererBuilder builder = new PdfRendererBuilder();

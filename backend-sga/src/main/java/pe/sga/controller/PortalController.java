@@ -1,8 +1,12 @@
 package pe.sga.controller;
 
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.CacheControl;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -14,6 +18,7 @@ import pe.sga.dto.response.ApiResponseDTO;
 import pe.sga.entity.UsuarioCliente;
 import pe.sga.exception.BadRequestException;
 import pe.sga.service.IPortalService;
+import pe.sga.service.IReporteJasperService;
 
 import org.springframework.http.MediaType;
 import org.springframework.web.multipart.MultipartFile;
@@ -22,16 +27,31 @@ import pe.sga.entity.enums.CategoriaDocumento;
 import pe.sga.entity.enums.EntidadDocumento;
 import pe.sga.service.IDocumentoService;
 
+import java.io.ByteArrayInputStream;
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/portal")
-@RequiredArgsConstructor
 @Slf4j
 public class PortalController {
 
     private final IPortalService portalService;
     private final IDocumentoService documentoService;
+    private final IReporteJasperService reporteJasperService;
+
+    public PortalController(IPortalService portalService, IDocumentoService documentoService) {
+        this(portalService, documentoService, null);
+    }
+
+    @Autowired
+    public PortalController(
+            IPortalService portalService,
+            IDocumentoService documentoService,
+            IReporteJasperService reporteJasperService) {
+        this.portalService = portalService;
+        this.documentoService = documentoService;
+        this.reporteJasperService = reporteJasperService;
+    }
 
     // =========================================================================
     // 1. AUTENTICACIÓN INDEPENDIENTE DEL PORTAL DE CLIENTES B2B
@@ -88,6 +108,41 @@ public class PortalController {
         Integer idCliente = resolverIdCliente(usuarioCliente);
         PortalCotizacionDTO cotizacion = portalService.buscarCotizacionPorId(idCliente, id);
         return ResponseEntity.ok(ApiResponseDTO.ok("Detalle de cotización recuperado", cotizacion));
+    }
+
+    @GetMapping("/cotizaciones/{id}/pdf")
+    @PreAuthorize("hasRole('CLIENTE_PORTAL')")
+    public ResponseEntity<InputStreamResource> descargarCotizacionPdf(
+            @PathVariable Integer id,
+            @RequestParam(defaultValue = "false") boolean download,
+            @AuthenticationPrincipal UsuarioCliente usuarioCliente) {
+        if (reporteJasperService == null) {
+            throw new IllegalStateException("Servicio de generación PDF no disponible");
+        }
+        Integer idCliente = resolverIdCliente(usuarioCliente);
+        PortalCotizacionDTO cotizacion = portalService.buscarCotizacionPorId(idCliente, id);
+        ByteArrayInputStream pdfStream = reporteJasperService.exportarCotizacionPortalPdf(cotizacion);
+
+        String codigoRaw = cotizacion.getCodigoCotizacion();
+        String normalizedCode = codigoRaw != null
+                ? codigoRaw.trim().replaceAll("[^A-Za-z0-9._-]", "-").replaceAll("^-+|-+$", "")
+                : "";
+        String safeCode = !normalizedCode.isEmpty() && !normalizedCode.replaceAll("[^A-Za-z0-9]", "").isEmpty()
+                ? normalizedCode
+                : "cotizacion-" + id;
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentDisposition(
+                ContentDisposition.builder(download ? "attachment" : "inline")
+                        .filename("proforma-" + safeCode + ".pdf")
+                        .build()
+        );
+        headers.setCacheControl(CacheControl.noStore());
+
+        return ResponseEntity.ok()
+                .headers(headers)
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(new InputStreamResource(pdfStream));
     }
 
     @PostMapping("/cotizaciones/solicitar")

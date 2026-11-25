@@ -1,5 +1,6 @@
 package pe.sga.service;
 
+import pe.sga.dto.portal.PortalCotizacionDTO;
 import pe.sga.entity.Usuario;
 
 import java.io.ByteArrayInputStream;
@@ -41,4 +42,6 @@ public interface IReporteJasperService {
     );
 
     ByteArrayInputStream exportarSistemaTiPdf(int dias);
+
+    ByteArrayInputStream exportarCotizacionPortalPdf(PortalCotizacionDTO cotizacion);
 }

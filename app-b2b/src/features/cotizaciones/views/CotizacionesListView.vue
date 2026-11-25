@@ -193,6 +193,18 @@
                   @click="verDetalle(c)"
                 />
                 <Button
+                  type="button"
+                  icon="pi pi-file-pdf"
+                  severity="secondary"
+                  outlined
+                  size="small"
+                  :aria-label="`Descargar proforma PDF ${c.codigoCotizacion || ''}`.trim()"
+                  title="Descargar Proforma PDF"
+                  :loading="activeCotizacionId === c.idCotizacion"
+                  :disabled="activeCotizacionId != null"
+                  @click="descargarProformaPdf(c)"
+                />
+                <Button
                   v-if="c.estado === 'APROBADA' && (c.estadoPago === 'OBSERVADO' || c.estadoPago === 'RECHAZADO')"
                   type="button"
                   label="Subsanar"
@@ -222,9 +234,11 @@
           <CotizacionesB2BCanvasGrid
             :cotizaciones="paginatedCanvasCotizaciones"
             :loading="loading"
+            :downloading-pdf-id="activeCotizacionId"
             @view-detail="verDetalle"
             @pay="irAPagar"
             @fix-payment="irASubsanarPago"
+            @download-pdf="descargarProformaPdf"
           />
 
           <BasePagination
@@ -258,6 +272,7 @@ import CotizacionesB2BCanvasGrid from '../components/CotizacionesB2BCanvasGrid.v
 import PortalCotizacionForm from '../components/PortalCotizacionForm.vue'
 import { portalCotizacionService } from '../services/portalCotizacionService'
 import { useNotification } from '@/shared/composables/useNotification'
+import { useProformaPdf } from '../composables/useProformaPdf'
 import { esPendienteLiquidacion } from '../utils/portalCotizacionFormUtils'
 import {
   formatCurrency,
@@ -268,6 +283,7 @@ import {
 
 const router = useRouter()
 const { showSuccess, showError, showWarn } = useNotification()
+const { activeCotizacionId, descargarProformaPdf } = useProformaPdf()
 
 const showSolicitudForm = ref(false)
 const viewMode = ref('canvas')

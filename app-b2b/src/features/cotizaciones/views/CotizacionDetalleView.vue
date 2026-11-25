@@ -51,12 +51,26 @@
 
         <Button
           type="button"
-          label="Imprimir / PDF"
+          label="Ver / Imprimir PDF"
           icon="pi pi-print"
           severity="secondary"
           outlined
           size="small"
-          @click="imprimirCotizacion"
+          :loading="pdfAction === 'preview'"
+          :disabled="!!pdfAction"
+          @click="abrirProformaPdf(cotizacion)"
+        />
+
+        <Button
+          type="button"
+          label="Descargar PDF"
+          icon="pi pi-file-pdf"
+          severity="secondary"
+          outlined
+          size="small"
+          :loading="pdfAction === 'download'"
+          :disabled="!!pdfAction"
+          @click="descargarProformaPdf(cotizacion)"
         />
       </div>
     </header>
@@ -369,6 +383,7 @@ import Tag from 'primevue/tag'
 import { portalCotizacionService } from '../services/portalCotizacionService'
 import { useNotification } from '@/shared/composables/useNotification'
 import { useConfirmation } from '@/shared/composables/useConfirmation'
+import { useProformaPdf } from '../composables/useProformaPdf'
 import PortalDocumentosUploadPanel from '../components/PortalDocumentosUploadPanel.vue'
 import { esPendienteLiquidacion } from '../utils/portalCotizacionFormUtils'
 import {
@@ -382,6 +397,7 @@ const router = useRouter()
 const route = useRoute()
 const { showSuccess, showError, showWarn } = useNotification()
 const { confirmAction } = useConfirmation()
+const { pdfAction, abrirProformaPdf, descargarProformaPdf } = useProformaPdf()
 
 const cotizacion = ref(null)
 const loading = ref(true)
@@ -507,10 +523,6 @@ async function autorizarCotizacion() {
   } finally {
     aceptando.value = false
   }
-}
-
-function imprimirCotizacion() {
-  window.print()
 }
 </script>
 

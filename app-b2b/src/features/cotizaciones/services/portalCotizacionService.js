@@ -165,6 +165,21 @@ export const portalCotizacionService = {
   descargarDocumento: descargarDocumentoBlob,
 
   /**
+   * Obtiene el binario PDF de la proforma oficial de una cotización generada en el backend.
+   * @param {number|string} id - ID de la cotización
+   * @param {{ download?: boolean }} [options]
+   * @returns {Promise<Blob>}
+   */
+  async descargarProformaPdf(id, { download = false } = {}) {
+    const response = await apiClient.get(`/portal/cotizaciones/${id}/pdf`, {
+      params: { download },
+      responseType: 'blob',
+      headers: { Accept: 'application/pdf, application/json' }
+    })
+    return response.data
+  },
+
+  /**
    * Obtiene el binario de un documento para su previsualización inline en navegador.
    * @param {number|string} idDocumento - ID del documento
    * @returns {Promise<Blob>}

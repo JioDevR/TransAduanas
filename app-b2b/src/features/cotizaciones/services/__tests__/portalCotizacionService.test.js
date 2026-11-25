@@ -269,5 +269,33 @@ describe('portalCotizacionService', () => {
       expect(apiClient.get).toHaveBeenCalledWith('/catalogos/tipos-carga', { params: { soloActivos: true } })
       expect(res).toEqual([{ idTipoCarga: 1 }])
     })
+
+    it('descargarProformaPdf debe llamar GET /portal/cotizaciones/{id}/pdf con responseType blob', async () => {
+      const mockPdf = new Blob(['%PDF-1.4'], { type: 'application/pdf' })
+      apiClient.get.mockResolvedValueOnce({ data: mockPdf })
+
+      const res = await portalCotizacionService.descargarProformaPdf(42)
+
+      expect(apiClient.get).toHaveBeenCalledWith('/portal/cotizaciones/42/pdf', {
+        params: { download: false },
+        responseType: 'blob',
+        headers: { Accept: 'application/pdf, application/json' }
+      })
+      expect(res).toBe(mockPdf)
+    })
+
+    it('descargarProformaPdf soporta download=true para descarga directa', async () => {
+      const mockPdf = new Blob(['%PDF-1.4'], { type: 'application/pdf' })
+      apiClient.get.mockResolvedValueOnce({ data: mockPdf })
+
+      const res = await portalCotizacionService.descargarProformaPdf(42, { download: true })
+
+      expect(apiClient.get).toHaveBeenCalledWith('/portal/cotizaciones/42/pdf', {
+        params: { download: true },
+        responseType: 'blob',
+        headers: { Accept: 'application/pdf, application/json' }
+      })
+      expect(res).toBe(mockPdf)
+    })
   })
 })

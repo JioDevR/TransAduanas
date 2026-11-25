@@ -19,7 +19,7 @@
         tabindex="0"
         role="button"
         @click="$emit('view-detail', c)"
-        @keydown.enter.prevent="$emit('view-detail', c)"
+        @keydown.enter.self.prevent="$emit('view-detail', c)"
       >
         <header class="sga-card-top">
           <span class="sga-card-code sga-mono">{{ c.codigoCotizacion }}</span>
@@ -77,7 +77,7 @@
             <span v-else class="sga-total-amount sga-mono">$ {{ formatCurrency(c.totalCotizado) }}</span>
           </div>
 
-          <div class="b2b-card-actions" @click.stop>
+          <div class="b2b-card-actions" @click.stop @keydown.enter.stop>
             <Button
               v-if="c.estado === 'APROBADA' && (c.estadoPago === 'OBSERVADO' || c.estadoPago === 'RECHAZADO')"
               type="button"
@@ -97,6 +97,18 @@
               outlined
               size="small"
               @click="$emit('pay', c)"
+            />
+            <Button
+              type="button"
+              icon="pi pi-file-pdf"
+              severity="secondary"
+              outlined
+              size="small"
+              :aria-label="`Descargar proforma PDF ${c.codigoCotizacion || ''}`.trim()"
+              title="Descargar Proforma PDF"
+              :loading="downloadingPdfId === c.idCotizacion"
+              :disabled="downloadingPdfId != null"
+              @click="$emit('download-pdf', c)"
             />
             <Button
               type="button"
@@ -128,10 +140,11 @@ import {
 
 defineProps({
   cotizaciones: { type: Array, default: () => [] },
-  loading: { type: Boolean, default: false }
+  loading: { type: Boolean, default: false },
+  downloadingPdfId: { type: [Number, String], default: null }
 })
 
-defineEmits(['view-detail', 'pay', 'fix-payment'])
+defineEmits(['view-detail', 'pay', 'fix-payment', 'download-pdf'])
 
 function getEstadoSeverity(estado) {
   switch (estado) {

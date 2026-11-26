@@ -171,7 +171,6 @@ app-sga/src/
 │   ├── transporte/                        # Despachos en Ruta: Flota Tractos, Choferes MTC y Tracking
 │   ├── finanzas/                          # Validación Financiera: Anticipos y Detracciones SPOT
 │   ├── liquidacion/                       # Liquidaciones Finales: Tributos SUNAT, Gastos y Actas
-│   ├── legal/                             # Asesoría Legal: Auditoría Regulatoria y Normativa
 │   └── documentos/                        # Servicios y componentes de archivo documental
 │
 └── shared/                                # Biblioteca de componentes reutilizables
@@ -181,13 +180,13 @@ app-sga/src/
 
 #### Principios Clave del Frontend:
 
-1. **Shell Maestro y Navegación Dinámica:** `AppLayout.vue` gobierna la estructura de la aplicación. `AppSidebar.vue` detecta automáticamente el rol del usuario conectado y despliega exclusivamente los módulos y sub-opciones autorizadas. Los roles con privilegios de supervisión global (`ADMINISTRADOR_TI` y `GERENTE_GENERAL`) disponen de un selector de contexto para alternar entre los 8 módulos del sistema.
+1. **Shell Maestro y Navegación Dinámica:** `AppLayout.vue` gobierna la estructura de la aplicación. `AppSidebar.vue` detecta automáticamente el rol del usuario conectado y despliega exclusivamente los módulos y sub-opciones autorizadas. Los roles con privilegios de supervisión global (`ADMINISTRADOR_TI` y `GERENTE_GENERAL`) disponen de un selector de contexto para alternar entre los 7 módulos del sistema.
 2. **Sistema de Diseño _Warm Editorial_:** Diseño editorial contemporáneo sin frameworks CSS pesados. Utiliza **Vanilla CSS** con variables personalizadas (`style.css`), rejilla de espaciados estricta de 4px (`--space-*`), tipografía dual (Inter para lectura, JetBrains Mono para códigos/montos) y soporte nativo para alternar entre **Modo Claro** y **Modo Oscuro**.
 3. **Flujo de Peticiones y Manejo de Sesión:** `apiClient.js` inyecta automáticamente el token JWT almacenado en `localStorage`. Si el backend responde con `401 Unauthorized`, el interceptor elimina los datos de sesión y redirige inmediatamente al usuario a `/login` sin recargar la página.
 
 ---
 
-## 6. Matriz de los 8 Roles Institucionales
+## 6. Matriz de los 7 Roles Institucionales
 
 ```
                                ┌─────────────────────────┐
@@ -206,12 +205,6 @@ app-sga/src/
 │ AGENTE COMERCIAL│ │ SUPERVISOR ADU. │ │ AGENTE  │ │ SUPERVISOR TRASP│ │    CONTADOR     │
 │ (Cotizaciones)  │ │(Expedientes/DAM)│ │ ADUAN.  │ │(Flota/Despachos)│ │(Finanzas/Cobros)│
 └─────────────────┘ └─────────────────┘ └─────────┘ └─────────────────┘ └─────────────────┘
-                                            │
-                                            ▼
-                                ┌───────────────────────┐
-                                │     ASESOR LEGAL      │
-                                │ (Auditoría Normativa) │
-                                └───────────────────────┘
 ```
 
 1. **`ADMINISTRADOR_TI`:** Gobernanza de cuentas internas, cuentas del Portal B2B, roles, sedes, catálogos y consola de logs del sistema.
@@ -221,7 +214,6 @@ app-sga/src/
 5. **`AGENTE_ADUANERO`:** Control de pesaje balanza VGM en depósito temporal y verificación de levante aduanero.
 6. **`SUPERVISOR_TRANSPORTE`:** Asignación de tractos y choferes MTC, emisión de guías de remisión y tracking en ruta.
 7. **`CONTADOR`:** Validación obligatoria de anticipos pre-expediente, cálculo de detracciones SPOT y liquidación de gastos.
-8. **`ASESOR_LEGAL`:** Fiscalización de permisos sectoriales (DIGEMID, SENASA, MTC, SUCAMEC), contratos y cumplimiento normativo.
 
 ---
 

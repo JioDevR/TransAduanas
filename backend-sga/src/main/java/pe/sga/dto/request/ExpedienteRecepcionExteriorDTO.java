@@ -22,5 +22,7 @@ public class ExpedienteRecepcionExteriorDTO {
 
     private LocalDateTime fechaRecepcionDestino;
 
+    private Integer idDocumentoConformidad;
+
     private String observaciones;
 }

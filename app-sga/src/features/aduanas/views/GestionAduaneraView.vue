@@ -13,6 +13,7 @@
       @observe="openRevisionDialog($event, 'observe')"
       @reject="openRevisionDialog($event, 'reject')"
       @open-apertura="handleAperturaFromAuditoria"
+      @notify-whatsapp="handleNotifyWhatsApp"
       @doc-updated="loadData"
     />
 
@@ -55,6 +56,7 @@
         @approve="confirmApprove"
         @observe="openRevisionDialog($event, 'observe')"
         @reject="openRevisionDialog($event, 'reject')"
+        @notify-whatsapp="handleNotifyWhatsApp"
       />
 
       <!-- ============================================================== -->
@@ -102,6 +104,7 @@
         @open-levante="openLevanteModal"
         @open-retiro="openRetiroDirectoModal"
         @open-cierre="openCierreModal"
+        @open-asignar-agente="openAsignarAgenteDialog"
       />
     </div>
 
@@ -160,12 +163,99 @@
       @close="showActualizarTransitoModal = false"
       @updated="onTransitoUpdated"
     />
+
+    <!-- Modal: Envío rápido de notificación por enlace WhatsApp tras aprobar/rebotar -->
+    <Dialog
+      v-model:visible="showWhatsAppDialog"
+      modal
+      header="Notificar al Cliente vía WhatsApp"
+      :style="{ width: '520px', maxWidth: '95vw' }"
+    >
+      <div class="sga-wa-dialog">
+        <p class="sga-wa-desc">
+          La cotización <strong>{{ whatsAppCotizacion?.codigoCotizacion }}</strong> fue registrada como
+          <strong>{{ whatsAppCotizacion?.estado }}</strong>. Envíe la notificación directa por WhatsApp:
+        </p>
+        <Textarea
+          :model-value="whatsAppMessagePreview"
+          rows="5"
+          readonly
+          fluid
+        />
+      </div>
+      <template #footer>
+        <Button
+          type="button"
+          label="Cerrar"
+          severity="secondary"
+          outlined
+          size="small"
+          @click="showWhatsAppDialog = false"
+        />
+        <Button
+          type="button"
+          label="Abrir WhatsApp (wa.me)"
+          icon="pi pi-whatsapp"
+          severity="success"
+          size="small"
+          @click="abrirWhatsAppConfirmado"
+        />
+      </template>
+    </Dialog>
+
+    <!-- Modal: Asignar / Reasignar Agente Aduanero al Expediente -->
+    <Dialog
+      v-model:visible="showAsignarAgenteDialog"
+      modal
+      header="Asignar Agente Aduanero Responsable"
+      :style="{ width: '440px', maxWidth: '95vw' }"
+    >
+      <div class="sga-form-field">
+        <label for="asignar-agente-select" class="sga-form-label">
+          Agente Aduanero para {{ expedienteParaAgente?.codigoExpediente }} *
+        </label>
+        <Select
+          id="asignar-agente-select"
+          v-model="selectedAgenteParaExpediente"
+          :options="agentesCatalogo"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Seleccione un agente aduanero"
+          size="small"
+          fluid
+        />
+      </div>
+      <template #footer>
+        <Button
+          type="button"
+          label="Cancelar"
+          severity="secondary"
+          outlined
+          size="small"
+          @click="showAsignarAgenteDialog = false"
+        />
+        <Button
+          type="button"
+          label="Guardar Asignación"
+          icon="pi pi-check"
+          size="small"
+          :loading="savingAgente"
+          :disabled="!selectedAgenteParaExpediente"
+          @click="confirmarAsignarAgente"
+        />
+      </template>
+    </Dialog>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import Button from 'primevue/button'
+import Dialog from 'primevue/dialog'
+import Select from 'primevue/select'
+import Textarea from 'primevue/textarea'
+import { userService } from '@/features/admin/users/services/userService'
 import { gestionAduaneraService } from '../services/gestionAduaneraService'
 import { expedienteService } from '../services/expedienteService'
 import { useAuthStore } from '@/features/auth/stores/authStore'
@@ -187,6 +277,7 @@ import { useAduanasCotizaciones } from '../composables/useAduanasCotizaciones'
 import { useAduanasApertura } from '../composables/useAduanasApertura'
 import { useAduanasExpedientes } from '../composables/useAduanasExpedientes'
 import { filtrarCotizacionesParaSupervision } from '../utils/supervisionCotizacionUtils'
+import { buildCotizacionWhatsAppMessage, openCotizacionWhatsApp } from '@/shared/utils/whatsappUtils'
 
 
 const route = useRoute()
@@ -194,7 +285,7 @@ const router = useRouter()
 const authStore = useAuthStore()
 const navigationStore = useNavigationStore()
 
-const { showSuccess, showError, showInfo } = useNotification()
+const { showSuccess, showError, showInfo, showWarn } = useNotification()
 const { confirmAction } = useConfirmation()
 
 const loading = ref(false)
@@ -422,8 +513,70 @@ const {
   authStore,
   notify: { showSuccess, showError, showInfo },
   confirmAction,
-  onReload: loadData
+  onReload: loadData,
+  onRevisionCompleted: (revisada) => {
+    if (revisada?.clienteTelefono) {
+      whatsAppCotizacion.value = revisada
+      showWhatsAppDialog.value = true
+    }
+  }
 })
+
+const showWhatsAppDialog = ref(false)
+const whatsAppCotizacion = ref(null)
+const whatsAppMessagePreview = computed(() =>
+  whatsAppCotizacion.value ? buildCotizacionWhatsAppMessage(whatsAppCotizacion.value) : ''
+)
+
+const abrirWhatsAppConfirmado = () => {
+  if (!whatsAppCotizacion.value) return
+  handleNotifyWhatsApp(whatsAppCotizacion.value)
+  showWhatsAppDialog.value = false
+}
+
+const showAsignarAgenteDialog = ref(false)
+const expedienteParaAgente = ref(null)
+const selectedAgenteParaExpediente = ref(null)
+const agentesCatalogo = ref([])
+const savingAgente = ref(false)
+
+const openAsignarAgenteDialog = async (exp) => {
+  expedienteParaAgente.value = exp
+  selectedAgenteParaExpediente.value = exp?.idAgenteAduanero || null
+  if (agentesCatalogo.value.length === 0) {
+    try {
+      const lista = await userService.getAgentesAduaneros()
+      agentesCatalogo.value = (lista || []).map((u) => ({
+        value: u.idUsuario,
+        label: u.nombreCompleto || u.username
+      }))
+    } catch {
+      agentesCatalogo.value = (agentesAduanerosDisponibles.value || []).map((a) => ({
+        value: a.id,
+        label: a.nombre
+      }))
+    }
+  }
+  showAsignarAgenteDialog.value = true
+}
+
+const confirmarAsignarAgente = async () => {
+  if (!expedienteParaAgente.value?.idExpediente || !selectedAgenteParaExpediente.value) return
+  savingAgente.value = true
+  try {
+    await expedienteService.asignarAgente(
+      expedienteParaAgente.value.idExpediente,
+      selectedAgenteParaExpediente.value
+    )
+    showSuccess(`Agente aduanero asignado a ${expedienteParaAgente.value.codigoExpediente}.`)
+    showAsignarAgenteDialog.value = false
+    await loadData()
+  } catch (err) {
+    showError(err?.response?.data?.message || 'No se pudo asignar el agente aduanero.')
+  } finally {
+    savingAgente.value = false
+  }
+}
 
 const {
   searchQuery: aperturaSearchQuery,
@@ -461,6 +614,13 @@ const closeAuditoriaCompleta = () => {
 
 const confirmApprove = async (cotizacion) => {
   await aprobarCotizacion(cotizacion)
+}
+
+const handleNotifyWhatsApp = (cotizacion) => {
+  const res = openCotizacionWhatsApp(cotizacion)
+  if (!res.ok) {
+    showWarn(res.reason)
+  }
 }
 
 const handleApproveFromAuditoria = async (cotizacion) => {

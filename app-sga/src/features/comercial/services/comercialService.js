@@ -88,6 +88,11 @@ export const comercialService = {
     return response.data.data
   },
 
+  async enviarCotizacionAAduanas(id) {
+    const response = await apiClient.patch(`/cotizaciones/${id}/enviar-aduanas`)
+    return response.data.data
+  },
+
   async updateCotizacionEstado(id, payload) {
     const response = await apiClient.patch(`/cotizaciones/${id}/estado`, payload)
     return response.data.data

@@ -22,13 +22,31 @@
       </div>
 
       <div class="embarque-fields-grid">
+        <div class="field-item">
+          <label for="embarque-tipo">Modalidad de Transporte *</label>
+          <select id="embarque-tipo" v-model="form.tipoTransporteInternacional" class="text-input">
+            <option value="MARITIMO">Marítimo (Buque / Nave)</option>
+            <option value="AEREO">Aéreo (Vuelo / Aerolínea)</option>
+          </select>
+        </div>
+
+        <div class="field-item">
+          <label for="embarque-vuelo">N° de Vuelo / Referencia Aérea</label>
+          <InputText
+            id="embarque-vuelo"
+            v-model.trim="form.numeroVuelo"
+            placeholder="Ej. LA-2462 / AWB 145-9988"
+            fluid
+          />
+        </div>
+
         <div class="field-item full-width">
-          <label for="embarque-nave">Nave y Número de Viaje *</label>
+          <label for="embarque-nave">Nave / Aerolínea y Número de Viaje *</label>
           <InputText
             id="embarque-nave"
             v-model.trim="form.naveViaje"
             required
-            placeholder="Ej. MSC CAPELLA / V. 2402W"
+            placeholder="Ej. MSC CAPELLA / V. 2402W o LATAM CARGO"
             fluid
           />
         </div>
@@ -105,7 +123,7 @@ import Button from 'primevue/button'
 import InputText from 'primevue/inputtext'
 import Textarea from 'primevue/textarea'
 import BaseModal from '@/shared/components/BaseModal.vue'
-import { expedienteService } from '../services/expedienteService'
+import { expedienteService } from '@/shared/services/expedienteService'
 import { getTodayDateInput } from '@/shared/utils/dateUtils'
 
 const props = defineProps({
@@ -119,6 +137,8 @@ const loading = ref(false)
 const errorMessage = ref('')
 
 const form = ref({
+  tipoTransporteInternacional: 'MARITIMO',
+  numeroVuelo: '',
   naveViaje: '',
   fechaZarpeEtd: '',
   fechaEstimadaLlegadaExterior: '',
@@ -142,10 +162,12 @@ watch(
     if (exp) {
       errorMessage.value = ''
       form.value = {
-        naveViaje: exp.naveViaje || 'MSC CAPELLA / V. 2402W',
+        tipoTransporteInternacional: exp.tipoTransporteInternacional || (exp.modalidad === 'AEREO' ? 'AEREO' : 'MARITIMO'),
+        numeroVuelo: exp.numeroVuelo || '',
+        naveViaje: exp.naveViaje || '',
         fechaZarpeEtd: exp.fechaZarpeEtd || getTodayString(),
         fechaEstimadaLlegadaExterior: exp.fechaLlegadaEta || getFutureDateString(14),
-        puertoDestinoExterior: 'Puerto de Destino Internacional',
+        puertoDestinoExterior: exp.puertoDestinoNombre || 'Puerto de Destino Internacional',
         observaciones: 'Carga estibada y confirmada en sistema de línea naviera.'
       }
     }
@@ -160,11 +182,21 @@ const handleClose = () => {
 
 const handleSubmit = async () => {
   if (!props.expediente?.idExpediente) return
+  if (
+    form.value.fechaZarpeEtd &&
+    form.value.fechaEstimadaLlegadaExterior &&
+    form.value.fechaEstimadaLlegadaExterior < form.value.fechaZarpeEtd
+  ) {
+    errorMessage.value = 'La fecha ETA en destino debe ser igual o posterior a la fecha de zarpe (ETD).'
+    return
+  }
   loading.value = true
   errorMessage.value = ''
 
   try {
     const payload = {
+      tipoTransporteInternacional: form.value.tipoTransporteInternacional,
+      numeroVuelo: form.value.numeroVuelo || null,
       naveViaje: form.value.naveViaje,
       fechaZarpeEtd: form.value.fechaZarpeEtd || null,
       fechaEstimadaLlegadaExterior: form.value.fechaEstimadaLlegadaExterior || null,

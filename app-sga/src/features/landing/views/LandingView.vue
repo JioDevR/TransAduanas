@@ -183,11 +183,6 @@ const modulos = [
     icono: 'pi pi-wallet',
     titulo: 'Finanzas',
     descripcion: 'Validación de pagos, liquidaciones y conciliación.'
-  },
-  {
-    icono: 'pi pi-verified',
-    titulo: 'Legal y Auditoría',
-    descripcion: 'Revisión y auditoría de expedientes.'
   }
 ]
 

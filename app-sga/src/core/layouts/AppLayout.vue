@@ -177,11 +177,9 @@ const MODULE_TITLES = {
       overview: 'Dashboard Ejecutivo y Métricas Generales',
       sedes: 'Gestión Integral de Sedes y Agencias Territoriales',
       puertos: 'Puertos y Terminales Aduaneros',
-      'tipos-carga': 'Tipos de Carga & Contenedores Sugeridos',
+      'tipos-carga': 'Catálogo de Tipos de Carga',
       mercancias: 'Mercancías y Subpartidas Arancelarias',
-      catalogos: 'Puertos y Terminales Aduaneros',
-      flota: 'Parque Automotor & Flota de Transporte',
-      conductores: 'Plantilla de Conductores Acreditados MTC'
+      catalogos: 'Puertos y Terminales Aduaneros'
     },
     getSub: () => navigationStore.gerenciaGeneralSubOption
   },
@@ -205,21 +203,41 @@ const MODULE_TITLES = {
     },
     getSub: () => navigationStore.gestionAduaneraSubOption
   },
-  'agente-aduanero': { default: 'Agente Aduanero' },
+  'agente-aduanero': {
+    default: 'Agente Aduanero',
+    sub: {
+      dashboard: 'Dashboard Operativo del Agente Aduanero',
+      todos: 'Expedientes Aduaneros Asignados',
+      transito: 'Control de Tránsito Internacional y Arribo',
+      inspeccion: 'Aforo y Diligencias ante SUNAT',
+      levante: 'Levante Autorizado y Despacho Final'
+    },
+    getSub: () => navigationStore.agenteAduaneroSubOption
+  },
   'transporte-flota': {
     default: 'Transporte y Flota',
     sub: {
-      cabina: 'Mi Trabajo Actual (Cabina)',
-      camion: 'Camión Asignado',
-      viajes: 'Historial de Mis Viajes',
+      dashboard: 'Dashboard Operativo de Transporte & Flota',
       despachos: 'Monitoreo Global de Despachos',
       unidades: 'Parque Automotor & Flota de Transporte',
-      conductores: 'Plantilla de Conductores Acreditados MTC'
+      conductores: 'Directorio de Conductores Acreditados MTC'
     },
     getSub: () => navigationStore.transporteFlotaSubOption
   },
-  'legal-auditoria': { default: 'Legal y Auditoría' },
-  finanzas: { default: 'Finanzas' }
+  finanzas: {
+    default: 'Finanzas',
+    sub: {
+      dashboard: 'Dashboard Financiero & Tesorería',
+      'abonos-b2b': 'Revisión y Validación de Abonos B2B',
+      'pre-expedientes': 'Pagos Pre-Expedientes (Cotizaciones)',
+      anticipos: 'Pagos Pre-Expedientes (Cotizaciones)',
+      liquidaciones: 'Liquidación Aduanera & Control de Cuentas',
+      'por-liquidar': 'Expedientes Pendientes de Liquidación',
+      conciliacion: 'Facturación & Conciliación Bancaria',
+      facturacion: 'Facturación & Conciliación Bancaria'
+    },
+    getSub: () => navigationStore.finanzasSubOption
+  }
 }
 
 const currentTitle = computed(() => {

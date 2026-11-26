@@ -29,6 +29,9 @@ public class ExpedienteRecojoExportacionDTO {
     @Size(max = 255, message = "El almacén de destino no puede exceder 255 caracteres")
     private String almacenDestinoTerminal;
 
+    @Size(max = 100, message = "El distrito de destino no puede exceder 100 caracteres")
+    private String distritoDestino;
+
     @NotNull(message = "La fecha programada de recojo es obligatoria")
     private LocalDateTime fechaProgramadaRecojo;
 

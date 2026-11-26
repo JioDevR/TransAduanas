@@ -5,6 +5,8 @@ import lombok.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
+import pe.sga.dto.response.ExpedienteEventoDTO;
 
 @Getter
 @Setter
@@ -16,6 +18,8 @@ public class PortalExpedienteDTO {
     private String codigoExpediente;
     private Integer idCotizacion;
     private String codigoCotizacion;
+    private String regimenAduanero;
+    private Boolean servicioTransporte;
     private Integer idCliente;
     private String razonSocialCliente;
     private String rucCliente;
@@ -28,7 +32,14 @@ public class PortalExpedienteDTO {
     private String nombreTipoCarga;
 
     // Agente Asignado
+    private Integer idAgenteAduanero;
     private String agenteAduaneroNombre;
+    private Boolean pendienteAsignacionAgente;
+
+    // Contacto Exterior
+    private String contactoExteriorNombre;
+    private String contactoExteriorTelefono;
+    private String contactoExteriorCorreo;
 
     // DAM y SUNAT
     private String numeroDam;
@@ -37,13 +48,38 @@ public class PortalExpedienteDTO {
     private LocalDateTime fechaLevanteAutorizacion;
     private String detalleInspeccion;
 
-    // Nave, Contenedor y Tránsito
+    // Nave, Contenedor, Vuelo y Tránsito
     private String naveViaje;
+    private String tipoTransporteInternacional;
+    private String numeroVuelo;
     private String numeroContenedor;
     private String precintoAduanero;
     private LocalDate fechaZarpeEtd;
     private LocalDate fechaLlegadaEta;
     private LocalDateTime fechaArriboAduana;
+
+    // Hitos Operativos & Conformidades
+    private Boolean enEsperaTransito;
+    private Boolean enRevisionAduana;
+    private Integer idDocumentoConformidadDestino;
+    private Boolean verificacionOrigenOk;
+    private LocalDateTime fechaVerificacionOrigen;
+    private Boolean cuadrillaSolicitada;
+    private String cuadrillaDetalle;
+    private LocalDateTime fechaCitaInspeccion;
+    private String codigoCitaInspeccion;
+    private Boolean revisionRojoFinalizada;
+    private Boolean envioSunatSimuladoOk;
+    private String codigoTransmisionSunat;
+    private LocalDateTime fechaEnvioSunat;
+    private Boolean entregadoAlmacenVerde;
+    private LocalDateTime fechaEntregaAlmacenVerde;
+    private String informeConformidadTexto;
+    private LocalDateTime fechaInformeConformidad;
+    private String receptorConformidadNombre;
+    private String receptorConformidadDni;
+    private Integer idDocumentoConformidadInforme;
+    private List<ExpedienteEventoDTO> eventos;
 
     // Estado del Expediente
     private String estadoExpediente; // ASIGNADO, NUMERADO, EN_CANAL, LEVANTE_AUTORIZADO, CUSTODIA_ALMACEN, EN_DESPACHO, FINALIZADO
@@ -65,11 +101,15 @@ public class PortalExpedienteDTO {
     // Datos de Transporte y Despacho Local
     private Boolean tieneTransporte;
     private String codigoTracking;
+    private String tipoTraslado;
+    private String guiaRemisionTransporte;
     private String placaTracto;
     private String conductorNombre;
     private String direccionPartida;
     private String direccionLlegada;
     private String distritoLlegada;
     private LocalDateTime fechaProgramadaTransporte;
+    private LocalDateTime fechaSalidaRuta;
+    private LocalDateTime fechaEntregaConforme;
     private String estadoTransporte;
 }

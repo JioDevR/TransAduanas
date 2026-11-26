@@ -75,6 +75,16 @@
               @click="$emit('fix-payment', p.idPago)"
             />
             <Button
+              v-if="p.idComprobanteFactura"
+              type="button"
+              :label="p.numeroFacturaEmitida || 'Factura PDF'"
+              icon="pi pi-file-pdf"
+              severity="success"
+              outlined
+              size="small"
+              @click="$emit('view-factura', p.idComprobanteFactura, p.numeroFacturaEmitida)"
+            />
+            <Button
               v-if="p.idDocumentoComprobante"
               type="button"
               label="Voucher"
@@ -102,7 +112,7 @@ defineProps({
   loading: { type: Boolean, default: false }
 })
 
-defineEmits(['fix-payment', 'view-voucher'])
+defineEmits(['fix-payment', 'view-voucher', 'view-factura'])
 </script>
 
 <style scoped>

@@ -23,6 +23,7 @@ import pe.sga.repository.IDocumentoAdjuntoRepository;
 import pe.sga.repository.LiquidacionFinancieraRepository;
 import pe.sga.repository.UsuarioRepository;
 import pe.sga.service.IAuditoriaService;
+import pe.sga.service.IComprobanteFacturaService;
 import pe.sga.service.ILiquidacionFinancieraService;
 
 import java.math.BigDecimal;
@@ -41,10 +42,16 @@ public class LiquidacionFinancieraServiceImpl implements ILiquidacionFinancieraS
     private final UsuarioRepository usuarioRepository;
     private final IDocumentoAdjuntoRepository documentoRepository;
     private IAuditoriaService auditoriaService;
+    private IComprobanteFacturaService comprobanteFacturaService;
 
     @Autowired(required = false)
     public void setAuditoriaService(IAuditoriaService auditoriaService) {
         this.auditoriaService = auditoriaService;
+    }
+
+    @Autowired(required = false)
+    public void setComprobanteFacturaService(IComprobanteFacturaService comprobanteFacturaService) {
+        this.comprobanteFacturaService = comprobanteFacturaService;
     }
 
     private void auditar(String accion, Integer idLiq, String detalle) {
@@ -320,6 +327,9 @@ public class LiquidacionFinancieraServiceImpl implements ILiquidacionFinancieraS
         }
 
         LiquidacionFinanciera guardada = liquidacionRepository.save(lf);
+        if (comprobanteFacturaService != null) {
+            comprobanteFacturaService.emitirAutomaticoPorLiquidacion(guardada, null);
+        }
         auditar("PAGAR_LIQUIDACION", guardada.getIdLiquidacion(),
                 "Pago registrado para liquidación " + guardada.getCodigoLiquidacion() + " (op. " + guardada.getNumeroOperacion() + ")");
         return mapToResponse(guardada);

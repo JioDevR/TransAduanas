@@ -34,6 +34,7 @@ import java.util.Optional;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -201,17 +202,17 @@ public class SecurityConfigTest {
         when(usuarioRepository.findByUsername("comercial")).thenReturn(Optional.of(comercial));
         String token = tokenProvider.generateToken(comercial);
 
-        mockMvc.perform(get("/api/v1/transporte/despachos/mi-despacho-activo")
+        mockMvc.perform(get("/api/v1/transporte/despachos")
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isForbidden());
 
-        mockMvc.perform(get("/api/v1/transporte/despachos/mis-despachos")
+        mockMvc.perform(delete("/api/v1/transporte/despachos/1")
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isForbidden());
     }
 
     @Test
-    void despachoMisDespachos_supervisorTransporte_retorna200() throws Exception {
+    void transporteEndpoints_supervisorTransporte_retorna200() throws Exception {
         Usuario supervisor = Usuario.builder()
                 .idUsuario(12)
                 .username("sup.transporte")
@@ -221,14 +222,10 @@ public class SecurityConfigTest {
                 .build();
 
         when(usuarioRepository.findByUsername("sup.transporte")).thenReturn(Optional.of(supervisor));
-        when(despachoTransporteService.listarMisDespachos(12)).thenReturn(List.of());
+        when(despachoTransporteService.listarConFiltros(false, null, null, null)).thenReturn(List.of());
         String token = tokenProvider.generateToken(supervisor);
 
-        mockMvc.perform(get("/api/v1/transporte/despachos/mi-despacho-activo")
-                        .header("Authorization", "Bearer " + token))
-                .andExpect(status().isOk());
-
-        mockMvc.perform(get("/api/v1/transporte/despachos/mis-despachos")
+        mockMvc.perform(get("/api/v1/transporte/despachos")
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk());
     }

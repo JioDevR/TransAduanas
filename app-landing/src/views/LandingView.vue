@@ -262,11 +262,6 @@ const modulos = [
     icono: 'pi pi-wallet',
     titulo: 'Finanzas y Cobranzas',
     descripcion: 'Validación bancaria de comprobantes de pago, liquidaciones de gastos portuarios y facturación.'
-  },
-  {
-    icono: 'pi pi-verified',
-    titulo: 'Legal y Auditoría',
-    descripcion: 'Conformidad legal, revisión preventiva de inconsistencias documentales y cumplimiento normativo.'
   }
 ]
 

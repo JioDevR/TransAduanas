@@ -7,11 +7,13 @@ import org.springframework.transaction.annotation.Transactional;
 import pe.sga.dto.request.ConductorRequestDTO;
 import pe.sga.dto.response.ConductorResponseDTO;
 import pe.sga.entity.Conductor;
-import pe.sga.entity.Usuario;
+import pe.sga.entity.enums.CategoriaLicenciaMtc;
+import pe.sga.entity.enums.EstadoOperativoConductor;
+import pe.sga.entity.enums.EstadoTransporte;
 import pe.sga.exception.BadRequestException;
 import pe.sga.exception.ResourceNotFoundException;
 import pe.sga.repository.ConductorRepository;
-import pe.sga.repository.UsuarioRepository;
+import pe.sga.repository.DespachoTransporteRepository;
 import pe.sga.service.IAuditoriaService;
 import pe.sga.service.IConductorService;
 
@@ -21,8 +23,11 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ConductorServiceImpl implements IConductorService {
 
+    private static final List<EstadoTransporte> ESTADOS_DESPACHO_ACTIVOS =
+            List.of(EstadoTransporte.PROGRAMADO, EstadoTransporte.EN_RUTA);
+
     private final ConductorRepository conductorRepository;
-    private final UsuarioRepository usuarioRepository;
+    private final DespachoTransporteRepository despachoRepository;
 
     private IAuditoriaService auditoriaService;
 
@@ -56,6 +61,16 @@ public class ConductorServiceImpl implements IConductorService {
 
     @Override
     @Transactional(readOnly = true)
+    public List<ConductorResponseDTO> listarDisponibles() {
+        return conductorRepository
+                .findByEstadoOperativoAndEstadoActivo(EstadoOperativoConductor.DISPONIBLE, true)
+                .stream()
+                .map(this::mapToResponse)
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public ConductorResponseDTO buscarPorId(Integer idConductor) {
         Conductor conductor = conductorRepository.findById(idConductor)
                 .orElseThrow(() -> new ResourceNotFoundException("Conductor no encontrado con ID: " + idConductor));
@@ -65,7 +80,8 @@ public class ConductorServiceImpl implements IConductorService {
     @Override
     @Transactional(readOnly = true)
     public ConductorResponseDTO buscarPorLicencia(String numeroLicencia) {
-        Conductor conductor = conductorRepository.findByNumeroLicencia(numeroLicencia)
+        String normalizada = numeroLicencia != null ? numeroLicencia.trim().toUpperCase() : "";
+        Conductor conductor = conductorRepository.findByNumeroLicencia(normalizada)
                 .orElseThrow(() -> new ResourceNotFoundException("Conductor no encontrado con licencia: " + numeroLicencia));
         return mapToResponse(conductor);
     }
@@ -78,27 +94,24 @@ public class ConductorServiceImpl implements IConductorService {
             throw new BadRequestException("Ya existe un conductor registrado con la licencia: " + licencia);
         }
 
-        Usuario usuario = null;
-        if (dto.getIdUsuario() != null) {
-            if (conductorRepository.existsByUsuario_IdUsuario(dto.getIdUsuario())) {
-                throw new BadRequestException("El usuario seleccionado ya está vinculado a otro conductor");
-            }
-            usuario = usuarioRepository.findById(dto.getIdUsuario())
-                    .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con ID: " + dto.getIdUsuario()));
+        String documento = normalizeNullable(dto.getNumeroDocumento());
+        if (documento != null && conductorRepository.existsByNumeroDocumento(documento)) {
+            throw new BadRequestException("Ya existe un conductor registrado con el documento: " + documento);
         }
 
         Conductor conductor = Conductor.builder()
-                .usuario(usuario)
                 .nombres(dto.getNombres().trim())
                 .apellidos(dto.getApellidos().trim())
-                .numeroDocumento(dto.getNumeroDocumento() != null ? dto.getNumeroDocumento().trim() : null)
-                .tipoLicencia(dto.getTipoLicencia() != null ? dto.getTipoLicencia().trim().toUpperCase() : "A-IIIc")
+                .numeroDocumento(documento)
+                .tipoLicencia(dto.getTipoLicencia() != null ? dto.getTipoLicencia() : CategoriaLicenciaMtc.A_IIIC)
                 .numeroLicencia(licencia)
                 .fechaVencimientoLicencia(dto.getFechaVencimientoLicencia())
-                .telefono(dto.getTelefono() != null ? dto.getTelefono().trim() : null)
-                .estadoOperativo(dto.getEstadoOperativo() != null ? dto.getEstadoOperativo().trim().toUpperCase() : "DISPONIBLE")
+                .telefono(normalizeNullable(dto.getTelefono()))
+                .estadoOperativo(dto.getEstadoOperativo() != null
+                        ? dto.getEstadoOperativo()
+                        : EstadoOperativoConductor.DISPONIBLE)
                 .estadoActivo(dto.getEstadoActivo() != null ? dto.getEstadoActivo() : true)
-                .observaciones(dto.getObservaciones() != null ? dto.getObservaciones().trim() : null)
+                .observaciones(normalizeNullable(dto.getObservaciones()))
                 .build();
 
         Conductor guardado = conductorRepository.save(conductor);
@@ -122,28 +135,42 @@ public class ConductorServiceImpl implements IConductorService {
             conductor.setNumeroLicencia(licencia);
         }
 
-        if (dto.getIdUsuario() != null) {
-            if (conductor.getUsuario() == null || !conductor.getUsuario().getIdUsuario().equals(dto.getIdUsuario())) {
-                if (conductorRepository.existsByUsuario_IdUsuario(dto.getIdUsuario())) {
-                    throw new BadRequestException("El usuario seleccionado ya está vinculado a otro conductor");
-                }
-                Usuario usuario = usuarioRepository.findById(dto.getIdUsuario())
-                        .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con ID: " + dto.getIdUsuario()));
-                conductor.setUsuario(usuario);
-            }
-        } else {
-            conductor.setUsuario(null);
+        String documento = normalizeNullable(dto.getNumeroDocumento());
+        if (documento != null && conductorRepository.existsByNumeroDocumentoAndIdConductorNot(documento, idConductor)) {
+            throw new BadRequestException("Ya existe otro conductor registrado con el documento: " + documento);
         }
 
-        if (dto.getNombres() != null) conductor.setNombres(dto.getNombres().trim());
-        if (dto.getApellidos() != null) conductor.setApellidos(dto.getApellidos().trim());
-        if (dto.getNumeroDocumento() != null) conductor.setNumeroDocumento(dto.getNumeroDocumento().trim());
-        if (dto.getTipoLicencia() != null) conductor.setTipoLicencia(dto.getTipoLicencia().trim().toUpperCase());
-        if (dto.getFechaVencimientoLicencia() != null) conductor.setFechaVencimientoLicencia(dto.getFechaVencimientoLicencia());
-        if (dto.getTelefono() != null) conductor.setTelefono(dto.getTelefono().trim());
-        if (dto.getEstadoOperativo() != null) conductor.setEstadoOperativo(dto.getEstadoOperativo().trim().toUpperCase());
-        if (dto.getEstadoActivo() != null) conductor.setEstadoActivo(dto.getEstadoActivo());
-        if (dto.getObservaciones() != null) conductor.setObservaciones(dto.getObservaciones().trim());
+        if (dto.getEstadoOperativo() != null
+                && dto.getEstadoOperativo() != conductor.getEstadoOperativo()
+                && (dto.getEstadoOperativo() == EstadoOperativoConductor.DESCANSO
+                        || dto.getEstadoOperativo() == EstadoOperativoConductor.SUSPENDIDO)
+                && despachoRepository.existsByConductor_IdConductorAndEstadoTransporteIn(
+                        idConductor, ESTADOS_DESPACHO_ACTIVOS)) {
+            throw new BadRequestException(
+                    "No se puede cambiar el estado operativo a " + dto.getEstadoOperativo()
+                            + " porque el conductor tiene un despacho programado o en ruta.");
+        }
+
+        conductor.setNombres(dto.getNombres().trim());
+        conductor.setApellidos(dto.getApellidos().trim());
+        conductor.setNumeroDocumento(documento);
+        if (dto.getTipoLicencia() != null) {
+            conductor.setTipoLicencia(dto.getTipoLicencia());
+        }
+        conductor.setFechaVencimientoLicencia(dto.getFechaVencimientoLicencia());
+        conductor.setTelefono(normalizeNullable(dto.getTelefono()));
+        if (dto.getEstadoOperativo() != null) {
+            conductor.setEstadoOperativo(dto.getEstadoOperativo());
+        }
+        if (dto.getEstadoActivo() != null) {
+            if (!dto.getEstadoActivo() && despachoRepository.existsByConductor_IdConductorAndEstadoTransporteIn(
+                    idConductor, ESTADOS_DESPACHO_ACTIVOS)) {
+                throw new BadRequestException(
+                        "No se puede desactivar un conductor asignado a un despacho programado o en ruta.");
+            }
+            conductor.setEstadoActivo(dto.getEstadoActivo());
+        }
+        conductor.setObservaciones(normalizeNullable(dto.getObservaciones()));
 
         Conductor guardado = conductorRepository.save(conductor);
         auditar("ACTUALIZAR_CONDUCTOR", guardado.getIdConductor(),
@@ -157,7 +184,13 @@ public class ConductorServiceImpl implements IConductorService {
     public void eliminar(Integer idConductor) {
         Conductor conductor = conductorRepository.findById(idConductor)
                 .orElseThrow(() -> new ResourceNotFoundException("Conductor no encontrado con ID: " + idConductor));
-        // Borrado lógico estándar
+
+        if (despachoRepository.existsByConductor_IdConductorAndEstadoTransporteIn(
+                idConductor, ESTADOS_DESPACHO_ACTIVOS)) {
+            throw new BadRequestException(
+                    "No se puede dar de baja a un conductor asignado a un despacho programado o en ruta.");
+        }
+
         conductor.setEstadoActivo(false);
         conductorRepository.save(conductor);
         auditar("DESACTIVAR_CONDUCTOR", conductor.getIdConductor(),
@@ -175,14 +208,17 @@ public class ConductorServiceImpl implements IConductorService {
                 "Conductor reactivado: " + conductor.getNombres() + " " + conductor.getApellidos());
     }
 
-    private ConductorResponseDTO mapToResponse(Conductor c) {
-        Integer idUser = c.getUsuario() != null ? c.getUsuario().getIdUsuario() : null;
-        String username = c.getUsuario() != null ? c.getUsuario().getUsername() : null;
+    private String normalizeNullable(String val) {
+        if (val == null) {
+            return null;
+        }
+        String trimmed = val.trim();
+        return trimmed.isEmpty() ? null : trimmed;
+    }
 
+    private ConductorResponseDTO mapToResponse(Conductor c) {
         return ConductorResponseDTO.builder()
                 .idConductor(c.getIdConductor())
-                .idUsuario(idUser)
-                .username(username)
                 .nombres(c.getNombres())
                 .apellidos(c.getApellidos())
                 .nombreCompleto(c.getNombres() + " " + c.getApellidos())

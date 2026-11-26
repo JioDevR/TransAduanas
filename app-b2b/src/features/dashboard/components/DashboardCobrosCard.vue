@@ -115,7 +115,7 @@
                 label="Abonar"
                 size="small"
                 outlined
-                @click="$emit('navigate', '/pagos/registrar')"
+                @click="$emit('navigate', `/pagos/registrar?tipo=${ob.tipoObligacion === 'COTIZACION' || ob.tipoObligacion === 'ANTICIPO_COTIZACION' ? 'cotizacion' : 'expediente'}&id=${ob.idCotizacion || ob.idExpediente || ob.idReferencia}`)"
               />
             </div>
           </li>

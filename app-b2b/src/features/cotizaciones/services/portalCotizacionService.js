@@ -63,6 +63,16 @@ export const portalCotizacionService = {
   },
 
   /**
+   * Rechaza o solicita ajuste comercial sobre una cotización aprobada aún no aceptada.
+   * @param {number|string} id
+   * @param {{ accion?: 'RECHAZAR' | 'OBSERVAR', motivo?: string }} payload
+   */
+  async rechazarCotizacion(id, payload = {}) {
+    const response = await apiClient.patch(`/portal/cotizaciones/${id}/rechazar`, payload)
+    return response.data?.data || response.data
+  },
+
+  /**
    * Obtiene el catálogo de puertos aduaneros activos.
    */
   async obtenerPuertos(soloActivos = true) {

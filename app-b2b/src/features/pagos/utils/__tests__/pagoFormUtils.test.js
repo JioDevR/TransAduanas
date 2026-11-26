@@ -3,6 +3,7 @@ import {
   calcularMontoPorcentaje,
   getPagoTagSeverity,
   getTipoObligacionMeta,
+  isCotizacionObligacion,
   validarRegistroPagoForm,
   validarSubsanacionPagoForm
 } from '../pagoFormUtils'
@@ -22,6 +23,14 @@ describe('pagoFormUtils', () => {
     expect(getPagoTagSeverity('OBSERVADO')).toBe('danger')
     expect(getPagoTagSeverity('SIN_PAGO')).toBe('warn')
 
+    expect(isCotizacionObligacion('ANTICIPO_COTIZACION')).toBe(true)
+    expect(isCotizacionObligacion('COTIZACION')).toBe(true)
+    expect(isCotizacionObligacion('EXPEDIENTE_HEREDADO')).toBe(false)
+
+    expect(getTipoObligacionMeta('ANTICIPO_COTIZACION')).toEqual({
+      label: 'Anticipo Pre-Expediente',
+      severity: 'info'
+    })
     expect(getTipoObligacionMeta('COTIZACION')).toEqual({
       label: 'Anticipo Pre-Expediente',
       severity: 'info'
@@ -32,7 +41,7 @@ describe('pagoFormUtils', () => {
     })
   })
 
-  it('valida el formulario de registro de pago', () => {
+  it('valida el formulario de registro de pago y regla de anticipo mayor al 30%', () => {
     expect(
       validarRegistroPagoForm({
         montoAbonado: 0,
@@ -42,6 +51,30 @@ describe('pagoFormUtils', () => {
         archivoVoucher: { name: 'v.pdf' }
       }).valid
     ).toBe(false)
+
+    expect(
+      validarRegistroPagoForm({
+        montoAbonado: 300,
+        saldoPendienteMax: 1000,
+        totalContratadoUsd: 1000,
+        totalAmortizadoUsd: 0,
+        numeroOperacion: 'OP-1',
+        bancoOrigen: 'BCP',
+        archivoVoucher: { name: 'v.pdf' }
+      }).valid
+    ).toBe(false)
+
+    expect(
+      validarRegistroPagoForm({
+        montoAbonado: 310,
+        saldoPendienteMax: 1000,
+        totalContratadoUsd: 1000,
+        totalAmortizadoUsd: 0,
+        numeroOperacion: 'OP-1',
+        bancoOrigen: 'BCP',
+        archivoVoucher: { name: 'v.pdf' }
+      })
+    ).toEqual({ valid: true })
 
     expect(
       validarRegistroPagoForm({

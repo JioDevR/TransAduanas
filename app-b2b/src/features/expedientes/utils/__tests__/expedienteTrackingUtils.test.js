@@ -60,4 +60,24 @@ describe('expedienteTrackingUtils', () => {
     expect(getDocumentIcon('application/vnd.ms-excel')).toBe('pi pi-file-excel')
     expect(getDocumentIcon(null)).toBe('pi pi-file')
   })
+
+  it('construye timeline específico de exportación y fase pendiente de agente', () => {
+    expect(getExpedientePhase({ estadoExpediente: 'ASIGNADO', pendienteAsignacionAgente: true }).label).toBe('Por Asignar Agente')
+
+    const stepsExport = buildTimelineSteps({
+      regimenAduanero: 'EXPORTACION_DEFINITIVA',
+      estadoExpediente: 'LEVANTE_AUTORIZADO',
+      fechaArriboAduana: '2026-11-10T09:00:00',
+      numeroDam: '118-2026-40-000111',
+      canalSunat: 'VERDE',
+      fechaLevanteAutorizacion: '2026-11-11T10:00:00',
+      numeroVuelo: 'LA-2462',
+      observaciones: '[EMBARQUE CONFIRMADO] Vuelo LA-2462'
+    })
+    expect(stepsExport).toHaveLength(6)
+    expect(stepsExport[1].label).toBe('Almacén Central')
+    expect(stepsExport[4].label).toBe('Vuelo / Embarque')
+    expect(stepsExport[4].completed).toBe(true)
+    expect(stepsExport[4].detail).toBe('LA-2462')
+  })
 })

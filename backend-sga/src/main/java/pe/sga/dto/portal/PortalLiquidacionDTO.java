@@ -39,6 +39,7 @@ public class PortalLiquidacionDTO {
     // Cobranza y Facturación
     private String estadoPago; // PENDIENTE, EN_CONCILIACION, PAGADO
     private String numeroFactura;
+    private Integer idComprobanteFactura;
     private LocalDate fechaEmision;
     private LocalDateTime fechaPago;
 

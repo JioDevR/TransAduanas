@@ -1,252 +1,325 @@
 <template>
-  <div class="actions-wrapper">
-    <!-- ============================================================== -->
-    <!-- CASO 1: PESTAÑA EXPEDIENTES / TODOS -> SOLO VER INFORME Y DOCS -->
-    <!-- ============================================================== -->
-    <template v-if="isTabExpedientes">
-      <button
+  <div class="sga-agente-actions">
+    <!-- Pestaña EXPEDIENTES / TODOS: Acceso rápido a Documentos e Informe -->
+    <template v-if="isTabTodos">
+      <Button
         type="button"
-        class="action-btn-outline"
-        title="Bóveda de Documentos Digitales (BL, DAM, Factura)"
-        @click="$emit('documentos', expediente)"
-      >
-        <i class="pi pi-paperclip"></i>
-        <span>Docs</span>
-      </button>
-
-      <button
+        label="Docs"
+        icon="pi pi-paperclip"
+        severity="secondary"
+        outlined
+        size="small"
+        title="Bóveda de Documentos Digitales"
+        @click.stop="$emit('documentos', expediente)"
+      />
+      <Button
         type="button"
-        class="action-btn-primary"
-        title="Ver informe completo y auditoría del expediente"
-        @click="$emit('detalle', expediente)"
-      >
-        <i class="pi pi-file-edit"></i>
-        <span>Ver Informe</span>
-      </button>
+        label="Informe"
+        icon="pi pi-file-edit"
+        size="small"
+        title="Ver informe completo del expediente"
+        @click.stop="$emit('detalle', expediente)"
+      />
     </template>
 
-    <!-- ============================================================== -->
-    <!-- CASO 2: PESTAÑA TRÁNSITO / ARRIBO -> SOLO HITOS DE TRÁNSITO    -->
-    <!-- ============================================================== -->
+    <!-- Pestaña TRÁNSITO / ARRIBO -->
     <template v-else-if="activeTab === 'transito'">
-      <!-- Exportación en Tránsito -->
-      <template v-if="isExport">
-        <button
-          v-if="expediente.servicioTransporte && !expediente.idDespachoTransporte && (expediente.estadoExpediente === 'ASIGNADO' || expediente.estadoExpediente === 'EN_TRAMITE')"
+      <template v-if="acc.isExport">
+        <Button
+          v-if="acc.puedeRecojoExportacion"
           type="button"
-          class="action-btn-outline approve"
-          title="Solicitar Recojo de Carga en Planta"
-          @click="$emit('recojo-exportacion', expediente)"
-        >
-          <i class="pi pi-truck"></i>
-          <span>Pedir Recojo</span>
-        </button>
-
-        <button
-          v-if="expediente.estadoExpediente === 'ASIGNADO' || (expediente.estadoExpediente === 'EN_TRAMITE' && !expediente.fechaArriboAduana)"
+          label="Pedir Recojo"
+          icon="pi pi-truck"
+          severity="success"
+          outlined
+          size="small"
+          @click.stop="$emit('recojo-exportacion', expediente)"
+        />
+        <Button
+          v-if="acc.puedeIngresoOrigen"
           type="button"
-          class="action-btn-outline"
-          title="Confirmar Ingreso a Depósito Temporal (VGM)"
-          @click="$emit('ingreso-origen', expediente)"
-        >
-          <i class="pi pi-inbox"></i>
-          <span>Ingreso Almacén</span>
-        </button>
-
-        <button
-          v-if="expediente.estadoExpediente !== 'CERRADO'"
+          label="Ingreso Almacén"
+          icon="pi pi-inbox"
+          severity="secondary"
+          outlined
+          size="small"
+          @click.stop="$emit('ingreso-origen', expediente)"
+        />
+        <Button
+          v-if="acc.puedeEditarTransito"
           type="button"
-          class="action-btn-outline"
-          title="Actualizar Datos de Salida (Nave, Contenedor, Precinto)"
-          @click="$emit('transito', expediente)"
-        >
-          <i class="pi pi-globe"></i>
-          <span>Tránsito</span>
-        </button>
+          label="Tránsito"
+          icon="pi pi-globe"
+          severity="secondary"
+          outlined
+          size="small"
+          @click.stop="$emit('transito', expediente)"
+        />
       </template>
 
-      <!-- Importación en Tránsito -->
       <template v-else>
-        <!-- 1. Salida de Origen -->
-        <button
-          v-if="!hasZarpeConfirmado && !isCerrado"
+        <Button
+          v-if="acc.puedeVerificacionOrigen"
           type="button"
-          class="action-btn-outline approve"
-          title="Confirmar Salida Real de Origen (Nave, Contenedor, Precinto, Zarpe)"
-          @click="$emit('salida-origen', expediente)"
-        >
-          <i class="pi pi-send"></i>
-          <span>Salida Origen</span>
-        </button>
-
-        <!-- 2. Arribo a Destino -->
-        <button
-          v-if="hasZarpeConfirmado && !hasArribo && !isCerrado"
+          label="Verificar Origen"
+          icon="pi pi-check-square"
+          severity="info"
+          outlined
+          size="small"
+          @click.stop="$emit('verificacion-origen', expediente)"
+        />
+        <Button
+          v-if="acc.puedeSalidaOrigen"
           type="button"
-          class="action-btn-outline approve"
-          title="Confirmar Arribo de Nave/Carga a Puerto de Destino"
-          @click="$emit('arribo-destino', expediente)"
-        >
-          <i class="pi pi-compass"></i>
-          <span>Confirmar Arribo</span>
-        </button>
-
-        <!-- 3. Actualizar Tránsito -->
-        <button
-          v-if="hasZarpeConfirmado && !isCerrado"
+          label="Salida Origen"
+          icon="pi pi-send"
+          severity="success"
+          outlined
+          size="small"
+          @click.stop="$emit('salida-origen', expediente)"
+        />
+        <Button
+          v-if="acc.puedeConfirmarArribo"
           type="button"
-          class="action-btn-outline"
-          title="Actualizar Datos de Embarque (Nave, Contenedor, Precinto, ETA)"
-          @click="$emit('transito', expediente)"
-        >
-          <i class="pi pi-globe"></i>
-          <span>Tránsito</span>
-        </button>
-
-        <!-- Indicador si ya arribó -->
-        <span
-          v-if="hasArribo && !hasCanal && !isCerrado"
-          class="status-pill-waiting"
-          title="Mercancía arribada. Esperando que el Supervisor asigne Canal SUNAT"
-        >
-          <i class="pi pi-clock"></i>
-          <span>Esperando Canal</span>
-        </span>
+          label="Confirmar Arribo"
+          icon="pi pi-compass"
+          severity="success"
+          outlined
+          size="small"
+          @click.stop="$emit('arribo-destino', expediente)"
+        />
+        <Button
+          v-if="acc.puedeEditarTransito"
+          type="button"
+          label="Tránsito"
+          icon="pi pi-globe"
+          severity="secondary"
+          outlined
+          size="small"
+          @click.stop="$emit('transito', expediente)"
+        />
       </template>
 
-      <!-- Botón Ver Informe -->
-      <button
+      <Tag
+        v-if="acc.esperandoCanal"
+        value="Esperando Canal"
+        icon="pi pi-clock"
+        severity="warn"
+        rounded
+      />
+
+      <Button
         type="button"
-        class="action-btn-primary"
-        title="Ver informe completo"
-        @click="$emit('detalle', expediente)"
-      >
-        <i class="pi pi-file-edit"></i>
-        <span>Informe</span>
-      </button>
+        icon="pi pi-paperclip"
+        severity="secondary"
+        outlined
+        size="small"
+        title="Bóveda de Documentos"
+        aria-label="Documentos"
+        @click.stop="$emit('documentos', expediente)"
+      />
+      <Button
+        type="button"
+        label="Informe"
+        icon="pi pi-file-edit"
+        size="small"
+        @click.stop="$emit('detalle', expediente)"
+      />
     </template>
 
-    <!-- ============================================================== -->
-    <!-- CASO 3: PESTAÑA INSPECCIÓN / AFORO -> SOLO DILIGENCIA SUNAT    -->
-    <!-- ============================================================== -->
+    <!-- Pestaña INSPECCIÓN / AFORO SUNAT -->
     <template v-else-if="activeTab === 'inspeccion'">
-      <button
-        v-if="!isCerrado"
+      <Button
+        v-if="acc.puedeCuadrillaCitaRojo"
         type="button"
-        class="action-btn-outline observe"
+        label="Cuadrilla / Cita"
+        icon="pi pi-users"
+        severity="danger"
+        outlined
+        size="small"
+        title="Canal Rojo: Solicitar cuadrilla y registrar cita de inspección física"
+        @click.stop="$emit('cuadrilla-rojo', expediente)"
+      />
+      <Button
+        v-if="acc.puedeFinalizarRojo"
+        type="button"
+        label="Finalizar Revisión"
+        icon="pi pi-check-circle"
+        severity="danger"
+        size="small"
+        title="Canal Rojo: Finalizar inspección física y autorizar levante"
+        @click.stop="$emit('finalizar-rojo', expediente)"
+      />
+      <Button
+        v-if="acc.puedeEnviarSunatNaranja"
+        type="button"
+        label="Enviar a SUNAT"
+        icon="pi pi-cloud-upload"
+        severity="warn"
+        size="small"
+        title="Canal Naranja: Envío simulado de documentos directamente a SUNAT"
+        @click.stop="$emit('enviar-sunat', expediente)"
+      />
+      <Button
+        v-if="acc.puedeDiligencia"
+        type="button"
+        label="Diligencia"
+        icon="pi pi-search-plus"
+        severity="warn"
+        outlined
+        size="small"
         title="Registrar Acta de Diligencia / Aforo SUNAT"
-        @click="$emit('diligencia', expediente)"
-      >
-        <i class="pi pi-search-plus"></i>
-        <span>Diligencia</span>
-      </button>
-
-      <button
+        @click.stop="$emit('diligencia', expediente)"
+      />
+      <Button
+        v-if="acc.puedeIngresoAlmacen"
         type="button"
-        class="action-btn-icon"
+        label="Balanza VGM"
+        icon="pi pi-box"
+        severity="secondary"
+        outlined
+        size="small"
+        title="Registrar Ingreso a Depósito / Balanza VGM"
+        @click.stop="$emit('ingreso-almacen', expediente)"
+      />
+      <Button
+        type="button"
+        icon="pi pi-paperclip"
+        severity="secondary"
+        outlined
+        size="small"
         title="Bóveda de Documentos"
-        @click="$emit('documentos', expediente)"
-      >
-        <i class="pi pi-paperclip"></i>
-      </button>
-
-      <button
+        aria-label="Documentos"
+        @click.stop="$emit('documentos', expediente)"
+      />
+      <Button
         type="button"
-        class="action-btn-primary"
-        title="Ver informe completo"
-        @click="$emit('detalle', expediente)"
-      >
-        <i class="pi pi-file-edit"></i>
-        <span>Informe</span>
-      </button>
+        label="Informe"
+        icon="pi pi-file-edit"
+        size="small"
+        @click.stop="$emit('detalle', expediente)"
+      />
     </template>
 
-    <!-- ============================================================== -->
-    <!-- CASO 4: PESTAÑA LEVANTE & DESPACHO -> SOLO RETIRO Y TRANSPORTE -->
-    <!-- ============================================================== -->
+    <!-- Pestaña LEVANTE & DESPACHO -->
     <template v-else-if="activeTab === 'levante'">
-      <template v-if="!isExport">
-        <button
-          v-if="expediente.servicioTransporte && !expediente.idDespachoTransporte"
+      <template v-if="!acc.isExport">
+        <Button
+          v-if="acc.puedeEntregadoAlmacenVerde"
           type="button"
-          class="action-btn-outline approve"
-          title="Solicitar Traslado Terrestre a Transporte y Flota"
-          @click="$emit('solicitar-transporte', expediente)"
-        >
-          <i class="pi pi-truck"></i>
-          <span>Pedir Envío</span>
-        </button>
-
-        <button
-          v-if="!expediente.servicioTransporte"
+          label="Entregado Almacén"
+          icon="pi pi-check-square"
+          severity="success"
+          outlined
+          size="small"
+          @click.stop="$emit('entregado-almacen-verde', expediente)"
+        />
+        <Button
+          v-if="acc.puedeSolicitarTransporte"
           type="button"
-          class="action-btn-outline"
-          title="Registrar Acta de Retiro en Terminal por el Cliente"
-          @click="$emit('retiro-directo', expediente)"
-        >
-          <i class="pi pi-check"></i>
-          <span>Retiro Directo</span>
-        </button>
+          label="Pedir Envío"
+          icon="pi pi-truck"
+          severity="success"
+          outlined
+          size="small"
+          @click.stop="$emit('solicitar-transporte', expediente)"
+        />
+        <Button
+          v-if="acc.puedeRetiroDirecto"
+          type="button"
+          label="Retiro Directo"
+          icon="pi pi-check"
+          severity="secondary"
+          outlined
+          size="small"
+          @click.stop="$emit('retiro-directo', expediente)"
+        />
+        <Button
+          v-if="acc.puedeInformeConformidad"
+          type="button"
+          label="Informe Conformidad"
+          icon="pi pi-file-check"
+          severity="info"
+          outlined
+          size="small"
+          @click.stop="$emit('informe-conformidad', expediente)"
+        />
+        <Button
+          v-if="acc.puedeIngresoAlmacen"
+          type="button"
+          label="Balanza VGM"
+          icon="pi pi-box"
+          severity="secondary"
+          outlined
+          size="small"
+          title="Registrar Ingreso a Depósito / Balanza VGM"
+          @click.stop="$emit('ingreso-almacen', expediente)"
+        />
       </template>
 
       <template v-else>
-        <button
-          v-if="!isEmbarcado"
+        <Button
+          v-if="acc.puedeEmbarque"
           type="button"
-          class="action-btn-outline approve"
-          title="Confirmar Embarque Internacional"
-          @click="$emit('embarque', expediente)"
-        >
-          <i class="pi pi-send"></i>
-          <span>Confirmar Embarque</span>
-        </button>
-
-        <button
-          v-else-if="!isRecepcionado"
+          label="Confirmar Embarque"
+          icon="pi pi-send"
+          severity="success"
+          outlined
+          size="small"
+          @click.stop="$emit('embarque', expediente)"
+        />
+        <Button
+          v-else-if="acc.puedeRecepcionExterior"
           type="button"
-          class="action-btn-outline approve"
-          title="Confirmar Recepción Conforme en Destino Exterior"
-          @click="$emit('recepcion-exterior', expediente)"
-        >
-          <i class="pi pi-check-circle"></i>
-          <span>Entrega Exterior</span>
-        </button>
+          label="Entrega Exterior"
+          icon="pi pi-check-circle"
+          severity="success"
+          outlined
+          size="small"
+          @click.stop="$emit('recepcion-exterior', expediente)"
+        />
       </template>
 
-      <button
+      <Button
+        v-if="acc.puedeFinalizarExpediente"
         type="button"
-        class="action-btn-icon"
-        title="Bóveda de Documentos"
-        @click="$emit('documentos', expediente)"
-      >
-        <i class="pi pi-paperclip"></i>
-      </button>
+        label="Finalizar"
+        icon="pi pi-lock"
+        severity="success"
+        size="small"
+        @click.stop="$emit('finalizar-expediente', expediente)"
+      />
 
-      <button
+      <Button
         type="button"
-        class="action-btn-primary"
-        title="Ver informe completo"
-        @click="$emit('detalle', expediente)"
-      >
-        <i class="pi pi-file-edit"></i>
-        <span>Informe</span>
-      </button>
+        icon="pi pi-paperclip"
+        severity="secondary"
+        outlined
+        size="small"
+        title="Bóveda de Documentos"
+        aria-label="Documentos"
+        @click.stop="$emit('documentos', expediente)"
+      />
+      <Button
+        type="button"
+        label="Informe"
+        icon="pi pi-file-edit"
+        size="small"
+        @click.stop="$emit('detalle', expediente)"
+      />
     </template>
   </div>
 </template>
 
 <script setup>
 import { computed } from 'vue'
+import Button from 'primevue/button'
+import Tag from 'primevue/tag'
+import { getAccionesPermitidasAgente } from '../utils/agenteWorkflowUtils'
 
 const props = defineProps({
-  expediente: {
-    type: Object,
-    required: true
-  },
-  activeTab: {
-    type: String,
-    default: 'todos'
-  }
+  expediente: { type: Object, required: true },
+  activeTab: { type: String, default: 'todos' }
 })
 
 defineEmits([
@@ -261,151 +334,30 @@ defineEmits([
   'ingreso-origen',
   'embarque',
   'recepcion-exterior',
+  'verificacion-origen',
+  'cuadrilla-rojo',
+  'finalizar-rojo',
+  'enviar-sunat',
+  'entregado-almacen-verde',
+  'informe-conformidad',
+  'finalizar-expediente',
   'documentos',
   'detalle'
 ])
 
-const isTabExpedientes = computed(() => {
+const isTabTodos = computed(() => {
   return props.activeTab === 'todos' || props.activeTab === 'expedientes' || !props.activeTab
 })
 
-const isExport = computed(() => {
-  return (props.expediente?.regimenAduanero || '').toUpperCase().includes('EXPORT')
-})
-
-const hasZarpeConfirmado = computed(() => {
-  const obs = props.expediente?.observaciones || ''
-  if (obs.includes('SALIDA ORIGEN CONFIRMADA')) return true
-  if (hasArribo.value || hasCanal.value) return true
-  if (props.expediente?.estadoExpediente === 'ASIGNADO') return false
-  return props.expediente?.estadoExpediente !== 'ASIGNADO'
-})
-
-const hasArribo = computed(() => {
-  return Boolean(props.expediente?.fechaArriboAduana)
-})
-
-const hasCanal = computed(() => {
-  return props.expediente?.canalSunat && props.expediente?.canalSunat !== 'PENDIENTE'
-})
-
-const isCerrado = computed(() => {
-  return props.expediente?.estadoExpediente === 'CERRADO' || props.expediente?.estadoExpediente === 'ANULADO'
-})
-
-const isEmbarcado = computed(() => {
-  const obs = props.expediente?.observaciones || ''
-  return obs.includes('EMBARCADO')
-})
-
-const isRecepcionado = computed(() => {
-  const obs = props.expediente?.observaciones || ''
-  return obs.includes('RECEPCIÓN DESTINO EXTERIOR')
-})
+const acc = computed(() => getAccionesPermitidasAgente(props.expediente))
 </script>
 
 <style scoped>
-.actions-wrapper {
+.sga-agente-actions {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 0.375rem;
+  gap: 0.4rem;
   flex-wrap: wrap;
-}
-
-.action-btn-outline {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  padding: 0.35rem 0.65rem;
-  font-size: var(--font-size-xs, 0.75rem);
-  font-weight: 700;
-  border-radius: var(--radius-sm, 6px);
-  border: 1px solid var(--color-border);
-  background: var(--color-bg-surface);
-  color: var(--color-text-main);
-  cursor: pointer;
-  white-space: nowrap;
-  transition: all var(--transition-fast, 0.15s ease);
-}
-
-.action-btn-outline:hover {
-  background: var(--color-bg-subtle);
-  border-color: var(--color-border-strong);
-}
-
-.action-btn-outline.approve {
-  border-color: var(--color-success-border);
-  color: var(--color-success-text);
-  background: var(--color-success-bg);
-}
-
-.action-btn-outline.approve:hover {
-  filter: brightness(0.95);
-}
-
-.action-btn-outline.observe {
-  border-color: var(--color-warning-border);
-  color: var(--color-warning-text);
-  background: var(--color-warning-bg);
-}
-
-.action-btn-outline.observe:hover {
-  filter: brightness(0.95);
-}
-
-.status-pill-waiting {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-  padding: 0.25rem 0.5rem;
-  font-size: var(--font-size-2xs, 0.6875rem);
-  font-weight: 600;
-  border-radius: 4px;
-  background: var(--color-warning-bg);
-  color: var(--color-warning-text);
-  border: 1px dashed var(--color-warning-border);
-  white-space: nowrap;
-}
-
-.action-btn-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 30px;
-  height: 30px;
-  border-radius: var(--radius-sm, 6px);
-  border: 1px solid var(--color-border);
-  background: var(--color-bg-surface);
-  color: var(--color-text-muted);
-  cursor: pointer;
-  transition: all var(--transition-fast, 0.15s ease);
-}
-
-.action-btn-icon:hover {
-  color: var(--color-text-main);
-  border-color: var(--color-border-strong);
-  background: var(--color-bg-subtle);
-}
-
-.action-btn-primary {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.35rem;
-  padding: 0.35rem 0.75rem;
-  border-radius: var(--radius-sm, 6px);
-  border: 1px solid var(--color-primary);
-  background: var(--color-primary);
-  color: var(--color-primary-text);
-  font-size: var(--font-size-xs, 0.75rem);
-  font-weight: 700;
-  cursor: pointer;
-  transition: all var(--transition-fast, 0.15s ease);
-}
-
-.action-btn-primary:hover {
-  background: var(--color-primary-hover);
-  border-color: var(--color-primary-hover);
 }
 </style>

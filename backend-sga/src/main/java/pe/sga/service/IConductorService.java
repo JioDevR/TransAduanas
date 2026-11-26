@@ -11,6 +11,8 @@ public interface IConductorService {
 
     List<ConductorResponseDTO> listarActivos();
 
+    List<ConductorResponseDTO> listarDisponibles();
+
     ConductorResponseDTO buscarPorId(Integer idConductor);
 
     ConductorResponseDTO buscarPorLicencia(String numeroLicencia);

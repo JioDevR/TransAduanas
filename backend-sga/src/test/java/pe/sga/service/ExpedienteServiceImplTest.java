@@ -9,8 +9,14 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import pe.sga.dto.request.ExpedienteActualizarDTO;
+import pe.sga.dto.request.ExpedienteAsignarAgenteDTO;
 import pe.sga.dto.request.ExpedienteCrearDTO;
+import pe.sga.dto.request.ExpedienteCuadrillaCitaDTO;
+import pe.sga.dto.request.ExpedienteEventoRequestDTO;
+import pe.sga.dto.request.ExpedienteInformeConformidadDTO;
+import pe.sga.dto.request.ExpedienteRecojoExportacionDTO;
 import pe.sga.dto.request.ExpedienteSalidaOrigenDTO;
+import pe.sga.dto.request.ExpedienteSunatSimuladoDTO;
 import pe.sga.dto.response.ExpedienteResponseDTO;
 import pe.sga.entity.Cliente;
 import pe.sga.entity.Cotizacion;
@@ -97,7 +103,8 @@ class ExpedienteServiceImplTest {
             e.setIdExpediente(77);
             return e;
         });
-        when(despachoRepository.findByExpediente_IdExpediente(77)).thenReturn(Optional.empty());
+        when(despachoRepository.findFirstByExpediente_IdExpedienteAndEstadoTransporteNotOrderByIdDespachoTransporteDesc(
+                eq(77), any())).thenReturn(Optional.empty());
 
         ExpedienteResponseDTO res = expedienteService.crear(dto);
 
@@ -188,7 +195,8 @@ class ExpedienteServiceImplTest {
 
         when(expedienteRepository.findById(15)).thenReturn(Optional.of(exp));
         when(expedienteRepository.save(any(Expediente.class))).thenAnswer(inv -> inv.getArgument(0));
-        when(despachoRepository.findByExpediente_IdExpediente(15)).thenReturn(Optional.empty());
+        when(despachoRepository.findFirstByExpediente_IdExpedienteAndEstadoTransporteNotOrderByIdDespachoTransporteDesc(
+                eq(15), any())).thenReturn(Optional.empty());
 
         ExpedienteResponseDTO res = expedienteService.confirmarSalidaOrigen(15, dto);
 
@@ -208,5 +216,106 @@ class ExpedienteServiceImplTest {
 
         verify(expedienteRepository).findAll();
         verify(expedienteRepository).findByEstadoExpedienteNot(EstadoExpediente.ANULADO);
+    }
+
+    @Test
+    @DisplayName("Canales SUNAT diferenciados (Rojo, Naranja, Verde) e Informe de Conformidad")
+    void canalesDiferenciadosYConformidad_funcionanCorrectamente() {
+        Expediente expRojo = Expediente.builder()
+                .idExpediente(30)
+                .codigoExpediente("EXP-2026-0030")
+                .canalSunat(CanalSunat.ROJO)
+                .estadoExpediente(EstadoExpediente.INSPECCION)
+                .build();
+
+        when(expedienteRepository.findById(30)).thenReturn(Optional.of(expRojo));
+        when(expedienteRepository.save(any(Expediente.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(despachoRepository.findFirstByExpediente_IdExpedienteAndEstadoTransporteNotOrderByIdDespachoTransporteDesc(
+                eq(30), any())).thenReturn(Optional.empty());
+
+        ExpedienteResponseDTO conCita = expedienteService.solicitarCuadrillaYCitaRojo(30,
+                ExpedienteCuadrillaCitaDTO.builder()
+                        .cuadrillaDetalle("Cuadrilla A-01")
+                        .fechaCitaInspeccion(java.time.LocalDateTime.now().plusDays(1))
+                        .build(),
+                "Agente 1");
+        assertTrue(conCita.getCuadrillaSolicitada());
+        assertNotNull(conCita.getCodigoCitaInspeccion());
+
+        ExpedienteResponseDTO finRojo = expedienteService.finalizarRevisionRojo(30, null, "Agente 1");
+        assertTrue(finRojo.getRevisionRojoFinalizada());
+        assertEquals(EstadoExpediente.LEVANTE_AUTORIZADO, finRojo.getEstadoExpediente());
+
+        Expediente expNaranja = Expediente.builder()
+                .idExpediente(31)
+                .codigoExpediente("EXP-2026-0031")
+                .canalSunat(CanalSunat.NARANJA)
+                .estadoExpediente(EstadoExpediente.INSPECCION)
+                .build();
+        when(expedienteRepository.findById(31)).thenReturn(Optional.of(expNaranja));
+        when(despachoRepository.findFirstByExpediente_IdExpedienteAndEstadoTransporteNotOrderByIdDespachoTransporteDesc(
+                eq(31), any())).thenReturn(Optional.empty());
+
+        ExpedienteResponseDTO sunat = expedienteService.enviarDocumentosSunatSimulado(31,
+                ExpedienteSunatSimuladoDTO.builder().documentosIncluidos("Factura + BL").build(), "Agente 1");
+        assertTrue(sunat.getEnvioSunatSimuladoOk());
+        assertTrue(sunat.getCodigoTransmisionSunat().startsWith("SUNAT-SIM-"));
+        assertEquals(EstadoExpediente.LEVANTE_AUTORIZADO, sunat.getEstadoExpediente());
+
+        Expediente expVerde = Expediente.builder()
+                .idExpediente(32)
+                .codigoExpediente("EXP-2026-0032")
+                .canalSunat(CanalSunat.VERDE)
+                .estadoExpediente(EstadoExpediente.LEVANTE_AUTORIZADO)
+                .build();
+        when(expedienteRepository.findById(32)).thenReturn(Optional.of(expVerde));
+        when(despachoRepository.findFirstByExpediente_IdExpedienteAndEstadoTransporteNotOrderByIdDespachoTransporteDesc(
+                eq(32), any())).thenReturn(Optional.empty());
+
+        ExpedienteResponseDTO verde = expedienteService.marcarEntregadoAlmacenVerde(32, "Entregado en almacén", "Agente 1");
+        assertTrue(verde.getEntregadoAlmacenVerde());
+
+        ExpedienteResponseDTO informe = expedienteService.emitirInformeConformidadEntrega(32,
+                ExpedienteInformeConformidadDTO.builder()
+                        .receptorNombre("Juan Perez")
+                        .receptorDni("44556677")
+                        .detalleConformidad("Mercadería entregada completa.")
+                        .build(),
+                "Agente 1");
+        assertEquals("Juan Perez", informe.getReceptorConformidadNombre());
+        assertEquals("Mercadería entregada completa.", informe.getInformeConformidadTexto());
+    }
+
+    @Test
+    @DisplayName("Asignación de agente, evento manual y bloqueo de transporte sin servicio contratado")
+    void asignarAgente_eventoManual_yValidacionServicioTransporte() {
+        Cotizacion sinTrans = Cotizacion.builder().idCotizacion(7).servicioTransporte(false).build();
+        Usuario agente = Usuario.builder().idUsuario(9).nombres("Ana").apellidos("Aduanas").build();
+        Expediente exp = Expediente.builder()
+                .idExpediente(40)
+                .codigoExpediente("EXP-2026-0040")
+                .cotizacion(sinTrans)
+                .estadoExpediente(EstadoExpediente.ASIGNADO)
+                .build();
+
+        when(expedienteRepository.findById(40)).thenReturn(Optional.of(exp));
+        when(usuarioRepository.findById(9)).thenReturn(Optional.of(agente));
+        when(expedienteRepository.save(any(Expediente.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(despachoRepository.findFirstByExpediente_IdExpedienteAndEstadoTransporteNotOrderByIdDespachoTransporteDesc(
+                eq(40), any())).thenReturn(Optional.empty());
+
+        ExpedienteResponseDTO asignado = expedienteService.asignarAgente(40,
+                ExpedienteAsignarAgenteDTO.builder().idAgenteAduanero(9).build(), "Supervisor");
+        assertEquals(9, asignado.getIdAgenteAduanero());
+
+        ExpedienteResponseDTO conEvento = expedienteService.registrarEventoManual(40,
+                ExpedienteEventoRequestDTO.builder().codigoEstado("REVISION_ADUANA").titulo("Revisión Aduana").build(), "Ana Aduanas");
+        assertTrue(conEvento.getEnRevisionAduana());
+
+        assertThrows(BadRequestException.class, () -> expedienteService.solicitarRecojoExportacion(40,
+                ExpedienteRecojoExportacionDTO.builder()
+                        .direccionRecojoPlanta("Av Industrial 100")
+                        .almacenDestinoTerminal("DPW")
+                        .build()));
     }
 }

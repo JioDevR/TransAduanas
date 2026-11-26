@@ -83,14 +83,23 @@
           </div>
 
           <div class="sga-form-field">
-            <label class="sga-form-label">Modalidad de Abono Rápido</label>
+            <label class="sga-form-label">Modalidad de Abono Rápido (Anticipo &gt; 30%)</label>
             <div class="presets-grid">
+              <button
+                type="button"
+                :class="['preset-card', { 'is-selected': presetSeleccionado === '35' }]"
+                @click="aplicarPreset(35)"
+              >
+                <span class="preset-label">35% Anticipo (&gt; 30%)</span>
+                <strong class="sga-mono preset-val">$ {{ formatCurrency(monto35Calculado) }}</strong>
+              </button>
+
               <button
                 type="button"
                 :class="['preset-card', { 'is-selected': presetSeleccionado === '50' }]"
                 @click="aplicarPreset(50)"
               >
-                <span class="preset-label">50% Anticipo</span>
+                <span class="preset-label">50% Mitad</span>
                 <strong class="sga-mono preset-val">$ {{ formatCurrency(monto50Calculado) }}</strong>
               </button>
 
@@ -131,6 +140,12 @@
             />
             <span v-if="errorMontoExcedido" class="error-hint">
               El monto ingresado excede el saldo pendiente ($ {{ formatCurrency(saldoPendienteMax) }}).
+            </span>
+            <span v-else-if="errorAnticipoMinimo" class="error-hint">
+              El anticipo inicial debe ser mayor al 30% del total cotizado (&gt; $ {{ formatCurrency(umbral30Usd) }} USD) o cubrir el 100% del saldo.
+            </span>
+            <span v-else-if="requiereMinimo30" class="sga-cell-sub">
+              Anticipo inicial mínimo: mayor al 30% del total (&gt; $ {{ formatCurrency(umbral30Usd) }} USD).
             </span>
           </div>
         </section>
@@ -351,6 +366,27 @@ const saldoPendienteMax = computed(() =>
   obligacionSeleccionada.value ? Number(obligacionSeleccionada.value.saldoPendienteUsd || 0) : 0
 )
 
+const totalContratadoObligacion = computed(() =>
+  obligacionSeleccionada.value ? Number(obligacionSeleccionada.value.totalContratadoUsd || 0) : 0
+)
+
+const totalAmortizadoObligacion = computed(() =>
+  obligacionSeleccionada.value ? Number(obligacionSeleccionada.value.totalAmortizadoUsd || 0) : 0
+)
+
+const requiereMinimo30 = computed(() =>
+  totalAmortizadoObligacion.value === 0 && totalContratadoObligacion.value > 0
+)
+
+const umbral30Usd = computed(() =>
+  calcularMontoPorcentaje(totalContratadoObligacion.value, 30)
+)
+
+const monto35Calculado = computed(() => {
+  const base = totalContratadoObligacion.value > 0 ? totalContratadoObligacion.value : saldoPendienteMax.value
+  return Math.min(saldoPendienteMax.value, calcularMontoPorcentaje(base, 35))
+})
+
 const monto50Calculado = computed(() => calcularMontoPorcentaje(saldoPendienteMax.value, 50))
 
 const saldoRestanteEstimado = computed(() =>
@@ -360,6 +396,12 @@ const saldoRestanteEstimado = computed(() =>
 const errorMontoExcedido = computed(() => {
   const monto = Number(form.value.montoAbonado || 0)
   return monto > saldoPendienteMax.value && saldoPendienteMax.value > 0
+})
+
+const errorAnticipoMinimo = computed(() => {
+  if (!requiereMinimo30.value || saldoPendienteMax.value <= 0) return false
+  const monto = Number(form.value.montoAbonado || 0)
+  return monto > 0 && monto < saldoPendienteMax.value && monto <= umbral30Usd.value
 })
 
 async function cargarObligaciones() {
@@ -401,7 +443,7 @@ async function cargarObligaciones() {
 function aplicarObligacion(ob) {
   form.value.tipoObligacion = ob.tipoObligacion
   form.value.idReferencia = ob.idReferencia
-  aplicarPreset(50)
+  aplicarPreset(35)
 }
 
 function cambiarObligacion() {
@@ -412,7 +454,9 @@ function cambiarObligacion() {
 
 function aplicarPreset(pct) {
   presetSeleccionado.value = String(pct)
-  if (pct === 50) {
+  if (pct === 35) {
+    form.value.montoAbonado = monto35Calculado.value
+  } else if (pct === 50) {
     form.value.montoAbonado = monto50Calculado.value
   } else if (pct === 100) {
     form.value.montoAbonado = saldoPendienteMax.value
@@ -425,7 +469,9 @@ function activarMontoLibre() {
 
 function onMontoManualInput() {
   const val = Number(form.value.montoAbonado || 0)
-  if (val === monto50Calculado.value) {
+  if (val === monto35Calculado.value) {
+    presetSeleccionado.value = '35'
+  } else if (val === monto50Calculado.value) {
     presetSeleccionado.value = '50'
   } else if (val === saldoPendienteMax.value) {
     presetSeleccionado.value = '100'
@@ -438,6 +484,8 @@ async function confirmarYRegistrar() {
   const check = validarRegistroPagoForm({
     montoAbonado: form.value.montoAbonado,
     saldoPendienteMax: saldoPendienteMax.value,
+    totalContratadoUsd: totalContratadoObligacion.value,
+    totalAmortizadoUsd: totalAmortizadoObligacion.value,
     numeroOperacion: form.value.numeroOperacion,
     bancoOrigen: form.value.bancoOrigen,
     archivoVoucher: archivoVoucher.value

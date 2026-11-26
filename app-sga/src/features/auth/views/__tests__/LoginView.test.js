@@ -34,7 +34,7 @@ describe('LoginView - Sanitización de Redirección y Redirección Segura', () =
 
   it('usa fallback de rol cuando redirect es null, undefined o no string', () => {
     expect(computeTargetRedirect(null, ROLES.GERENTE_GENERAL)).toBe('/gerencia-general/dashboard')
-    expect(computeTargetRedirect(undefined, ROLES.ASESOR_LEGAL)).toBe('/legal-auditoria')
+    expect(computeTargetRedirect(undefined, ROLES.SUPERVISOR_TRANSPORTE)).toBe('/transporte-flota')
     expect(computeTargetRedirect(12345, ROLES.AGENTE_ADUANERO)).toBe('/agente-aduanero')
   })
 })

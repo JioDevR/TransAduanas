@@ -45,6 +45,21 @@ describe('auditoriaCotizacionUtils', () => {
     expect(res.canAperturar).toBe(false)
   })
 
+  it('infiere modalidad aérea por aeropuerto/tipo de carga si el DTO no trae modalidad explícita', () => {
+    const res = normalizeAuditoriaData(
+      {
+        idCotizacion: 5,
+        codigoCotizacion: 'COT-2026-0005',
+        estado: 'APROBADA',
+        puertoEnvioNombre: 'Aeropuerto Internacional de Viracopos-Campinas',
+        puertoDestinoNombre: 'Aeropuerto Internacional Jorge Chávez',
+        tipoCargaNombre: 'Contenedor Aéreo ULD (AKE / LD3 / DQF)'
+      },
+      null
+    )
+    expect(res.isAirModal).toBe(true)
+  })
+
   it('calcula CIF, Ad-Valórem, IGV, Percepción y Total Tributos correctamente', () => {
     const liq = calcularLiquidacionAduanera({
       montoFobEstimado: 10000,

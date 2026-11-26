@@ -2,6 +2,7 @@ import { ref, computed } from 'vue'
 import { useAuthStore } from '@/features/auth/stores/authStore'
 import { expedienteService } from '@/shared/services/expedienteService'
 import { userService } from '@/features/admin/users/services/userService'
+import { belongsToAgentePhase } from '../utils/agenteWorkflowUtils'
 
 export function useAgenteBandeja() {
   const authStore = useAuthStore()
@@ -18,15 +19,14 @@ export function useAgenteBandeja() {
   const filterRegimen = ref('')
   const filterCanal = ref('')
   const searchQuery = ref('')
+  const sortBy = ref('RECENT')
   const selectedAgenteId = ref(null)
 
-  // Roles que tienen privilegios de supervisión global sobre las bandejas
   const esSupervisorOAdmin = computed(() => {
     const rol = authStore.user?.rol
     return rol === 'ADMINISTRADOR_TI' || rol === 'GERENTE_GENERAL' || rol === 'SUPERVISOR_ADUANERO'
   })
 
-  // Carga de catálogo de agentes para selector de supervisión
   const loadAgentes = async () => {
     if (!esSupervisorOAdmin.value) return
     try {
@@ -37,19 +37,17 @@ export function useAgenteBandeja() {
     }
   }
 
-  // Carga principal de expedientes
   const loadData = async () => {
     loading.value = true
     errorMessage.value = ''
     try {
-      let params = {}
+      const params = {}
       if (esSupervisorOAdmin.value) {
         if (selectedAgenteId.value) {
           params.idAgente = Number(selectedAgenteId.value)
         }
       } else {
-        const idAgente = authStore.user?.idUsuario || -1
-        params.idAgente = idAgente
+        params.idAgente = authStore.user?.idUsuario || -1
       }
 
       const data = await expedienteService.getExpedientes(params)
@@ -62,7 +60,6 @@ export function useAgenteBandeja() {
     }
   }
 
-  // Métricas dinámicas calculadas para los KPIs
   const kpiCounts = computed(() => {
     const list = expedientes.value || []
     let transito = 0
@@ -70,20 +67,9 @@ export function useAgenteBandeja() {
     let levante = 0
 
     for (const exp of list) {
-      const est = exp.estadoExpediente
-      const canal = exp.canalSunat
-
-      if (est === 'ASIGNADO' || est === 'EN_TRAMITE') {
-        transito++
-      }
-
-      if (canal === 'ROJO' || canal === 'NARANJA' || est === 'INSPECCION') {
-        inspeccion++
-      }
-
-      if (est === 'LEVANTE_AUTORIZADO' || !!exp.fechaLevanteAutorizacion) {
-        levante++
-      }
+      if (belongsToAgentePhase(exp, 'transito')) transito++
+      if (belongsToAgentePhase(exp, 'inspeccion')) inspeccion++
+      if (belongsToAgentePhase(exp, 'levante')) levante++
     }
 
     return {
@@ -94,38 +80,44 @@ export function useAgenteBandeja() {
     }
   })
 
-  // Filtrado reactivo integral
+  const hasActiveFilters = computed(() => {
+    return Boolean(
+      filterRegimen.value ||
+      filterCanal.value ||
+      searchQuery.value?.trim() ||
+      sortBy.value !== 'RECENT'
+    )
+  })
+
+  const resetFilters = () => {
+    filterRegimen.value = ''
+    filterCanal.value = ''
+    searchQuery.value = ''
+    sortBy.value = 'RECENT'
+  }
+
   const filteredExpedientes = computed(() => {
     const q = searchQuery.value?.toLowerCase().trim()
     const regimen = filterRegimen.value
     const canal = filterCanal.value
     const tab = activeTab.value
 
-    return (expedientes.value || []).filter((exp) => {
-      // 1. Filtro por fase / pestaña activa
-      if (tab === 'transito') {
-        if (exp.estadoExpediente !== 'ASIGNADO' && exp.estadoExpediente !== 'EN_TRAMITE') return false
-      } else if (tab === 'inspeccion') {
-        const enAforo = exp.canalSunat === 'ROJO' || exp.canalSunat === 'NARANJA' || exp.estadoExpediente === 'INSPECCION'
-        if (!enAforo) return false
-      } else if (tab === 'levante') {
-        const conLevante = exp.estadoExpediente === 'LEVANTE_AUTORIZADO' || !!exp.fechaLevanteAutorizacion
-        if (!conLevante) return false
+    const list = (expedientes.value || []).filter((exp) => {
+      if (tab !== 'dashboard' && !belongsToAgentePhase(exp, tab)) {
+        return false
       }
 
-      // 2. Filtro por Régimen
       if (regimen) {
         const regStr = (exp.regimenAduanero || '').toUpperCase()
         if (regimen === 'EXPORTACION' && !regStr.includes('EXPORT')) return false
         if (regimen === 'IMPORTACION' && !regStr.includes('IMPORT')) return false
       }
 
-      // 3. Filtro por Canal SUNAT
-      if (canal && exp.canalSunat !== canal) {
-        return false
+      if (canal) {
+        const expCanal = exp.canalSunat || 'PENDIENTE'
+        if (expCanal !== canal) return false
       }
 
-      // 4. Búsqueda por texto libre
       if (q) {
         const match =
           exp.codigoExpediente?.toLowerCase().includes(q) ||
@@ -134,16 +126,36 @@ export function useAgenteBandeja() {
           exp.clienteNumeroDocumento?.toLowerCase().includes(q) ||
           exp.numeroDam?.toLowerCase().includes(q) ||
           exp.numeroContenedor?.toLowerCase().includes(q) ||
-          exp.naveViaje?.toLowerCase().includes(q)
+          exp.naveViaje?.toLowerCase().includes(q) ||
+          exp.agenteAduaneroNombre?.toLowerCase().includes(q)
         if (!match) return false
       }
 
       return true
     })
+
+    const sorted = [...list]
+    if (sortBy.value === 'CODE_ASC') {
+      sorted.sort((a, b) => (a.codigoExpediente || '').localeCompare(b.codigoExpediente || ''))
+    } else if (sortBy.value === 'OLDEST') {
+      sorted.sort((a, b) => {
+        const ta = new Date(a.fechaApertura || 0).getTime() || a.idExpediente || 0
+        const tb = new Date(b.fechaApertura || 0).getTime() || b.idExpediente || 0
+        return ta - tb
+      })
+    } else {
+      sorted.sort((a, b) => {
+        const ta = new Date(a.fechaApertura || 0).getTime() || a.idExpediente || 0
+        const tb = new Date(b.fechaApertura || 0).getTime() || b.idExpediente || 0
+        return tb - ta
+      })
+    }
+
+    return sorted
   })
 
   const cambiarTab = (tabKey) => {
-    activeTab.value = tabKey
+    activeTab.value = tabKey === 'expedientes' ? 'todos' : (tabKey || 'dashboard')
   }
 
   return {
@@ -155,8 +167,11 @@ export function useAgenteBandeja() {
     filterRegimen,
     filterCanal,
     searchQuery,
+    sortBy,
     selectedAgenteId,
     esSupervisorOAdmin,
+    hasActiveFilters,
+    resetFilters,
     kpiCounts,
     filteredExpedientes,
     loadAgentes,

@@ -22,6 +22,18 @@
         <Button
           v-if="cotizacion.estado === 'APROBADA' && !cotizacion.aceptadaPorCliente"
           type="button"
+          label="Solicitar Ajuste / Rechazar"
+          icon="pi pi-times-circle"
+          severity="danger"
+          outlined
+          size="small"
+          :disabled="aceptando || rechazando"
+          @click="abrirRechazoDialog"
+        />
+
+        <Button
+          v-if="cotizacion.estado === 'APROBADA' && !cotizacion.aceptadaPorCliente"
+          type="button"
           label="Autorizar y Pagar"
           icon="pi pi-check-circle"
           severity="success"
@@ -372,6 +384,61 @@
         </aside>
       </div>
     </template>
+
+    <Dialog
+      v-model:visible="showRechazoDialog"
+      modal
+      header="Responder Cotización Comercial"
+      :style="{ width: '480px', maxWidth: '95vw' }"
+    >
+      <div class="sga-dialog-body">
+        <p class="notes-text">
+          Indique si desea solicitar una revisión de costos/condiciones al asesor comercial o rechazar definitivamente la propuesta
+          <strong>{{ cotizacion?.codigoCotizacion }}</strong>.
+        </p>
+        <div class="sga-form-field">
+          <label for="rechazo-accion" class="sga-form-label">Acción</label>
+          <Select
+            id="rechazo-accion"
+            v-model="rechazoForm.accion"
+            :options="rechazoAccionOptions"
+            optionLabel="label"
+            optionValue="value"
+            size="small"
+            fluid
+          />
+        </div>
+        <div class="sga-form-field">
+          <label for="rechazo-motivo" class="sga-form-label">Motivo o Detalle *</label>
+          <Textarea
+            id="rechazo-motivo"
+            v-model.trim="rechazoForm.motivo"
+            rows="3"
+            fluid
+            placeholder="Ej. Ajustar flete o modalidad de transporte antes de aprobar..."
+          />
+        </div>
+      </div>
+      <template #footer>
+        <Button
+          type="button"
+          label="Cancelar"
+          severity="secondary"
+          outlined
+          size="small"
+          @click="showRechazoDialog = false"
+        />
+        <Button
+          type="button"
+          :label="rechazoForm.accion === 'OBSERVAR' ? 'Solicitar Ajuste' : 'Confirmar Rechazo'"
+          :severity="rechazoForm.accion === 'OBSERVAR' ? 'warn' : 'danger'"
+          size="small"
+          :loading="rechazando"
+          :disabled="!rechazoForm.motivo"
+          @click="confirmarRechazoCotizacion"
+        />
+      </template>
+    </Dialog>
   </div>
 </template>
 
@@ -379,7 +446,10 @@
 import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import Button from 'primevue/button'
+import Dialog from 'primevue/dialog'
+import Select from 'primevue/select'
 import Tag from 'primevue/tag'
+import Textarea from 'primevue/textarea'
 import { portalCotizacionService } from '../services/portalCotizacionService'
 import { useNotification } from '@/shared/composables/useNotification'
 import { useConfirmation } from '@/shared/composables/useConfirmation'
@@ -402,6 +472,13 @@ const { pdfAction, abrirProformaPdf, descargarProformaPdf } = useProformaPdf()
 const cotizacion = ref(null)
 const loading = ref(true)
 const aceptando = ref(false)
+const rechazando = ref(false)
+const showRechazoDialog = ref(false)
+const rechazoForm = ref({ accion: 'OBSERVAR', motivo: '' })
+const rechazoAccionOptions = [
+  { label: 'Solicitar ajuste comercial (revisión)', value: 'OBSERVAR' },
+  { label: 'Rechazar propuesta definitivamente', value: 'RECHAZAR' }
+]
 
 onMounted(() => {
   cargarDetalle()
@@ -522,6 +599,34 @@ async function autorizarCotizacion() {
     showError(err.response?.data?.message || 'Error al autorizar cotización')
   } finally {
     aceptando.value = false
+  }
+}
+
+function abrirRechazoDialog() {
+  rechazoForm.value = { accion: 'OBSERVAR', motivo: '' }
+  showRechazoDialog.value = true
+}
+
+async function confirmarRechazoCotizacion() {
+  if (!cotizacion.value || !rechazoForm.value.motivo) return
+  rechazando.value = true
+  try {
+    await portalCotizacionService.rechazarCotizacion(cotizacion.value.idCotizacion, {
+      accion: rechazoForm.value.accion,
+      motivo: rechazoForm.value.motivo
+    })
+    showRechazoDialog.value = false
+    showSuccess(
+      rechazoForm.value.accion === 'OBSERVAR'
+        ? 'Se envió su solicitud de ajuste al asesor comercial.'
+        : 'La cotización fue marcada como rechazada.',
+      'Respuesta Registrada'
+    )
+    await cargarDetalle()
+  } catch (err) {
+    showError(err.response?.data?.message || 'No se pudo registrar su respuesta sobre la cotización.')
+  } finally {
+    rechazando.value = false
   }
 }
 </script>

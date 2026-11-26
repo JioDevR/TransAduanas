@@ -78,15 +78,12 @@ describe('navigationStore', () => {
     expect(store.navTick).toBe(1)
   })
 
-  it('gestiona las 5 sub-opciones canónicas de transporte-flota con valor por defecto dashboard', () => {
+  it('gestiona las 4 sub-opciones canónicas de transporte-flota con valor por defecto dashboard', () => {
     const store = useNavigationStore()
     expect(store.transporteFlotaSubOption).toBe('dashboard')
 
     store.setTransporteFlotaSubOption('despachos')
     expect(store.transporteFlotaSubOption).toBe('despachos')
-
-    store.setTransporteFlotaSubOption('cabina')
-    expect(store.transporteFlotaSubOption).toBe('cabina')
 
     store.setTransporteFlotaSubOption('unidades')
     expect(store.transporteFlotaSubOption).toBe('unidades')
@@ -94,9 +91,12 @@ describe('navigationStore', () => {
     store.setTransporteFlotaSubOption('conductores')
     expect(store.transporteFlotaSubOption).toBe('conductores')
 
-    // Alias retrocompatibles
+    // Alias retrocompatibles redirigen a despachos
+    store.setTransporteFlotaSubOption('cabina')
+    expect(store.transporteFlotaSubOption).toBe('despachos')
+
     store.setTransporteFlotaSubOption('camion')
-    expect(store.transporteFlotaSubOption).toBe('cabina')
+    expect(store.transporteFlotaSubOption).toBe('despachos')
 
     store.setTransporteFlotaSubOption('viajes')
     expect(store.transporteFlotaSubOption).toBe('despachos')
@@ -106,14 +106,28 @@ describe('navigationStore', () => {
     const store = useNavigationStore()
     store.setComercialSubOption('clientes')
     store.setGestionAduaneraSubOption('expedientes')
-    store.setLegalAuditoriaSubOption('auditorias')
 
     store.resetModuleToDefaultView('comercial')
     store.resetModuleToDefaultView('gestion-aduanera')
-    store.resetModuleToDefaultView('legal-auditoria')
 
     expect(store.comercialSubOption).toBe(DEFAULT_MODULE_SUB_OPTION.comercial)
     expect(store.gestionAduaneraSubOption).toBe(DEFAULT_MODULE_SUB_OPTION['gestion-aduanera'])
-    expect(store.legalAuditoriaSubOption).toBe(DEFAULT_MODULE_SUB_OPTION['legal-auditoria'])
+  })
+
+  it('gestiona las 5 sub-opciones de agente-aduanero y normaliza alias expedientes -> todos', () => {
+    const store = useNavigationStore()
+    expect(store.agenteAduaneroSubOption).toBe('dashboard')
+
+    store.setAgenteAduaneroSubOption('expedientes')
+    expect(store.agenteAduaneroSubOption).toBe('todos')
+
+    store.setAgenteAduaneroSubOption('transito')
+    expect(store.agenteAduaneroSubOption).toBe('transito')
+
+    store.setAgenteAduaneroSubOption('inspeccion')
+    expect(store.agenteAduaneroSubOption).toBe('inspeccion')
+
+    store.setAgenteAduaneroSubOption('levante')
+    expect(store.agenteAduaneroSubOption).toBe('levante')
   })
 })

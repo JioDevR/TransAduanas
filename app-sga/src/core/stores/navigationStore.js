@@ -12,13 +12,12 @@ export const DEFAULT_MODULE_SUB_OPTION = {
   'gestion-aduanera': 'dashboard',
   'agente-aduanero': 'dashboard',
   'transporte-flota': 'dashboard',
-  finanzas: 'dashboard',
-  'legal-auditoria': 'expedientes'
+  finanzas: 'dashboard'
 }
 
 export const useNavigationStore = defineStore('navigation', {
   state: () => ({
-    // Módulo activo: 'administracion-ti' | 'gerencia-general' | 'comercial' | 'gestion-aduanera' | 'agente-aduanero' | 'transporte-flota' | 'finanzas' | 'legal-auditoria'
+    // Módulo activo: 'administracion-ti' | 'gerencia-general' | 'comercial' | 'gestion-aduanera' | 'agente-aduanero' | 'transporte-flota' | 'finanzas'
     activeModule: 'administracion-ti',
     // Sub-opciones en Administración TI: 'dashboard' | 'users' | 'portal-users' | 'auditoria' | 'almacenamiento' | 'about'
     administracionTiSubOption: 'dashboard',
@@ -30,10 +29,8 @@ export const useNavigationStore = defineStore('navigation', {
     gestionAduaneraSubOption: 'dashboard',
     // Sub-opciones en Agente Aduanero: 'dashboard' | 'todos' | 'transito' | 'inspeccion' | 'levante'
     agenteAduaneroSubOption: 'dashboard',
-    // Sub-opciones en Transporte y Flota: 'dashboard' | 'despachos' | 'cabina' | 'unidades' | 'conductores'
+    // Sub-opciones en Transporte y Flota: 'dashboard' | 'despachos' | 'unidades' | 'conductores'
     transporteFlotaSubOption: 'dashboard',
-    // Sub-opciones en Legal y Auditoría: 'expedientes' | 'auditorias'
-    legalAuditoriaSubOption: 'expedientes',
     // Sub-opciones en Finanzas: 'dashboard' | 'pre-expedientes' | 'liquidaciones' | 'conciliacion'
     finanzasSubOption: 'dashboard',
     // Disparadores de acciones modales directas
@@ -65,8 +62,7 @@ export const useNavigationStore = defineStore('navigation', {
         'gestion-aduanera': 'Gestión Aduanera',
         'agente-aduanero': 'Agente Aduanero',
         'transporte-flota': 'Transporte y Flota',
-        'finanzas': 'Finanzas',
-        'legal-auditoria': 'Legal y Auditoría'
+        'finanzas': 'Finanzas'
       }
       return titles[this.currentModule] || 'Operaciones'
     },
@@ -78,7 +74,6 @@ export const useNavigationStore = defineStore('navigation', {
     supervisionSubOption: (state) => state.gestionAduaneraSubOption,
     aduanasSubOption: (state) => state.agenteAduaneroSubOption,
     transporteSubOption: (state) => state.transporteFlotaSubOption,
-    legalSubOption: (state) => state.legalAuditoriaSubOption,
     liquidadorSubOption: (state) => state.gestionAduaneraSubOption,
     ventasActionTrigger: (state) => state.comercialActionTrigger,
     adminActionTrigger: (state) => state.administracionTiActionTrigger
@@ -95,8 +90,7 @@ export const useNavigationStore = defineStore('navigation', {
         liquidador: 'gestion-aduanera',
         aduanas: 'agente-aduanero',
         logistica: 'agente-aduanero',
-        transporte: 'transporte-flota',
-        legal: 'legal-auditoria'
+        transporte: 'transporte-flota'
       }
       const target = mapping[moduleName] || moduleName
       if (this.activeModule === target) return
@@ -146,8 +140,9 @@ export const useNavigationStore = defineStore('navigation', {
     },
 
     setAgenteAduaneroSubOption(option) {
-      if (this.agenteAduaneroSubOption === option) return
-      this.agenteAduaneroSubOption = option
+      const target = option === 'expedientes' ? 'todos' : option
+      if (this.agenteAduaneroSubOption === target) return
+      this.agenteAduaneroSubOption = target
       this.navTick++
     },
     setAduanasSubOption(option) {
@@ -156,8 +151,9 @@ export const useNavigationStore = defineStore('navigation', {
 
     setTransporteFlotaSubOption(option) {
       let canon = option
-      if (option === 'camion') canon = 'cabina'
-      else if (option === 'viajes') canon = 'despachos'
+      if (option === 'cabina' || option === 'camion' || option === 'viajes') {
+        canon = 'despachos'
+      }
 
       if (this.transporteFlotaSubOption === canon) return
       this.transporteFlotaSubOption = canon
@@ -165,15 +161,6 @@ export const useNavigationStore = defineStore('navigation', {
     },
     setTransporteSubOption(option) {
       this.setTransporteFlotaSubOption(option)
-    },
-
-    setLegalAuditoriaSubOption(option) {
-      if (this.legalAuditoriaSubOption === option) return
-      this.legalAuditoriaSubOption = option
-      this.navTick++
-    },
-    setLegalSubOption(option) {
-      this.setLegalAuditoriaSubOption(option)
     },
 
     setFinanzasSubOption(option) {
@@ -219,8 +206,7 @@ export const useNavigationStore = defineStore('navigation', {
         'gestion-aduanera': (v) => this.setGestionAduaneraSubOption(v),
         'agente-aduanero': (v) => this.setAgenteAduaneroSubOption(v),
         'transporte-flota': (v) => this.setTransporteFlotaSubOption(v),
-        finanzas: (v) => this.setFinanzasSubOption(v),
-        'legal-auditoria': (v) => this.setLegalAuditoriaSubOption(v)
+        finanzas: (v) => this.setFinanzasSubOption(v)
       }
       setters[target]?.(defaultOpt)
     }

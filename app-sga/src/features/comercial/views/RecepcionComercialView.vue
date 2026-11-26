@@ -75,6 +75,7 @@
         @correct="openCorrectionCotizacion"
         @open-docs="openDocumentosCotizacion"
         @view-observation="openViewObservation"
+        @send-aduanas="handleSendToAduanas"
         @notify-whatsapp="notifyObservationViaWhatsApp"
         @delete="handleDeleteCotizacion"
       />
@@ -154,6 +155,7 @@ import { useNavigationStore } from '@/core/stores/navigationStore'
 import { useNotification } from '@/shared/composables/useNotification'
 import { useConfirmation } from '@/shared/composables/useConfirmation'
 import { formatRegimen } from '@/shared/utils/formatters'
+import { openCotizacionWhatsApp } from '@/shared/utils/whatsappUtils'
 import ClienteRegistrationForm from '../components/ClienteRegistrationForm.vue'
 import CotizacionRegistrationForm from '../components/CotizacionRegistrationForm.vue'
 import CotizacionCorrectionView from '../components/CotizacionCorrectionView.vue'
@@ -263,18 +265,23 @@ const getClienteTelefono = (idCliente) => {
 }
 
 const notifyObservationViaWhatsApp = (cotizacion) => {
-  const tel = cotizacion.clienteTelefono || getClienteTelefono(cotizacion.idCliente) || ''
-  const digitsOnly = tel.replace(/[^0-9]/g, '')
-  if (!digitsOnly) {
-    showToast('El cliente no tiene registrado número de teléfono/celular de contacto.', 'warn')
-    return
+  const res = openCotizacionWhatsApp(cotizacion, {
+    fallbackPhone: getClienteTelefono(cotizacion?.idCliente)
+  })
+  if (!res.ok) {
+    showToast(res.reason, 'warn')
   }
-  const phone = digitsOnly.startsWith('51') ? digitsOnly : `51${digitsOnly}`
-  const reason = cotizacion.motivoObservacion || 'Se requieren ajustes documentarios y técnicos en la propuesta comercial.'
-  const msg = `Hola *${cotizacion.clienteRazonSocial || 'Estimado Cliente'}*, le saluda TransAduanas SGA.\n\nLe informamos que su cotización aduanera *${cotizacion.codigoCotizacion}* ha sido revisada por Supervisión Técnica y presenta la siguiente observación:\n\n📌 *Motivo:* ${reason}\n\nPor favor facilítenos los datos o documentos solicitados para subsanar la cotización y continuar con su trámite.\n\nAtentamente,\n*Área Comercial - TransAduanas*`
+}
 
-  const url = `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`
-  window.open(url, '_blank')
+const handleSendToAduanas = async (cotizacion) => {
+  if (!cotizacion?.idCotizacion) return
+  try {
+    await comercialService.enviarCotizacionAAduanas(cotizacion.idCotizacion)
+    showSuccess(`Cotización ${cotizacion.codigoCotizacion} enviada a Gestión Aduanera.`)
+    await loadData()
+  } catch (err) {
+    showError(err?.response?.data?.message || 'No se pudo enviar la cotización a Gestión Aduanera.')
+  }
 }
 
 // Cerrar todos los formularios de vista completa y volver a los listados

@@ -68,6 +68,15 @@
 
       <template #actions>
         <Button
+          v-if="cotizacionesElegibles.length > 0"
+          type="button"
+          :label="`Generar Expediente Simple (${cotizacionesElegibles.length})`"
+          icon="pi pi-folder-plus"
+          severity="success"
+          size="small"
+          @click="abrirModalExpedienteSimple(null)"
+        />
+        <Button
           type="button"
           label="Actualizar"
           icon="pi pi-sync"
@@ -211,6 +220,19 @@
       @close="cerrarDetalle"
       @preview-doc="handlePrevisualizar"
       @download-doc="handleDescargar"
+      @edit-client-data="abrirModalExpedienteSimple"
+      @preview-informe="handleVerInformeConformidad"
+      @download-informe="handleDescargarInformeConformidad"
+    />
+
+    <!-- Modal de Generación de Expediente Simple / Completar Datos -->
+    <ExpedienteSimpleModal
+      :visible="showSimpleModal"
+      :expediente="expedienteParaEditarDatos"
+      :cotizaciones-elegibles="cotizacionesElegibles"
+      :saving="savingSimple"
+      @close="showSimpleModal = false"
+      @submit="handleSubmitSimple"
     />
   </div>
 </template>
@@ -229,6 +251,7 @@ import SgaListShell from '@/shared/components/SgaListShell.vue'
 import BasePagination from '@/shared/components/BasePagination.vue'
 import ExpedientesB2BCanvasGrid from '../components/ExpedientesB2BCanvasGrid.vue'
 import ExpedienteTrackingModal from '../components/ExpedienteTrackingModal.vue'
+import ExpedienteSimpleModal from '../components/ExpedienteSimpleModal.vue'
 import { usePortalExpedientes } from '../composables/usePortalExpedientes'
 import { formatDate } from '@/shared/utils/formatters'
 import {
@@ -243,6 +266,8 @@ const pageSize = ref(9)
 
 const {
   loading,
+  savingSimple,
+  cotizacionesElegibles,
   searchQuery,
   filterRegimen,
   filterCanal,
@@ -259,11 +284,29 @@ const {
   loadingDocs,
   resetFilters,
   cargarExpedientes,
+  guardarExpedienteSimple,
   abrirDetalle,
   cerrarDetalle,
   handleDescargar,
-  handlePrevisualizar
+  handlePrevisualizar,
+  handleVerInformeConformidad,
+  handleDescargarInformeConformidad
 } = usePortalExpedientes()
+
+const showSimpleModal = ref(false)
+const expedienteParaEditarDatos = ref(null)
+
+function abrirModalExpedienteSimple(exp = null) {
+  expedienteParaEditarDatos.value = exp || null
+  showSimpleModal.value = true
+}
+
+async function handleSubmitSimple(formPayload) {
+  const res = await guardarExpedienteSimple(formPayload)
+  if (res) {
+    showSimpleModal.value = false
+  }
+}
 
 const faseOptions = computed(() => [
   { label: `Abiertos (${abiertosCount.value})`, value: 'ABIERTOS' },

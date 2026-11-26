@@ -49,64 +49,78 @@ describe('useAgenteBandeja', () => {
     expect(kpiCounts.value.inspeccion).toBe(0)
   })
 
-  it('filtra correctamente por pestaña activa (transito, inspeccion, levante)', async () => {
+  it('filtra correctamente por pestaña activa sin fugar cerrados ni levantes a inspeccion', async () => {
     expedienteService.getExpedientes.mockResolvedValueOnce([
       { idExpediente: 1, estadoExpediente: 'ASIGNADO', canalSunat: 'PENDIENTE' },
       { idExpediente: 2, estadoExpediente: 'INSPECCION', canalSunat: 'ROJO' },
-      { idExpediente: 3, estadoExpediente: 'LEVANTE_AUTORIZADO', canalSunat: 'VERDE' }
+      { idExpediente: 3, estadoExpediente: 'LEVANTE_AUTORIZADO', canalSunat: 'ROJO', fechaLevanteAutorizacion: '2026-11-15T10:00:00' },
+      { idExpediente: 4, estadoExpediente: 'CERRADO', canalSunat: 'ROJO', fechaLevanteAutorizacion: '2026-11-10T10:00:00' }
     ])
 
-    const { loadData, activeTab, filteredExpedientes } = useAgenteBandeja()
+    const { loadData, activeTab, filteredExpedientes, kpiCounts } = useAgenteBandeja()
     await loadData()
+
+    expect(kpiCounts.value.inspeccion).toBe(1)
+    expect(kpiCounts.value.levante).toBe(1)
 
     activeTab.value = 'inspeccion'
-    expect(filteredExpedientes.value.length).toBe(1)
-    expect(filteredExpedientes.value[0].idExpediente).toBe(2)
+    expect(filteredExpedientes.value.map((e) => e.idExpediente)).toEqual([2])
 
     activeTab.value = 'transito'
-    expect(filteredExpedientes.value.length).toBe(1)
-    expect(filteredExpedientes.value[0].idExpediente).toBe(1)
+    expect(filteredExpedientes.value.map((e) => e.idExpediente)).toEqual([1])
 
     activeTab.value = 'levante'
-    expect(filteredExpedientes.value.length).toBe(1)
-    expect(filteredExpedientes.value[0].idExpediente).toBe(3)
+    expect(filteredExpedientes.value.map((e) => e.idExpediente)).toEqual([3])
 
     activeTab.value = 'todos'
-    expect(filteredExpedientes.value.length).toBe(3)
+    expect(filteredExpedientes.value.length).toBe(4)
   })
 
-  it('filtra por régimen, canal y término de búsqueda', async () => {
+  it('filtra por régimen, canal, ordenamiento y limpia filtros con resetFilters()', async () => {
     expedienteService.getExpedientes.mockResolvedValueOnce([
-      { idExpediente: 1, codigoExpediente: 'EXP-IMP-01', regimenAduanero: 'IMPORTACION', canalSunat: 'VERDE', clienteRazonSocial: 'ACME SAC' },
-      { idExpediente: 2, codigoExpediente: 'EXP-EXP-02', regimenAduanero: 'EXPORTACION', canalSunat: 'ROJO', clienteRazonSocial: 'GLOBAL EXPORT' }
+      { idExpediente: 1, codigoExpediente: 'EXP-IMP-02', regimenAduanero: 'IMPORTACION_DEFINITIVA', canalSunat: 'VERDE', clienteRazonSocial: 'ACME SAC', fechaApertura: '2026-11-01T10:00:00' },
+      { idExpediente: 2, codigoExpediente: 'EXP-EXP-01', regimenAduanero: 'EXPORTACION_DEFINITIVA', canalSunat: 'ROJO', clienteRazonSocial: 'GLOBAL EXPORT', fechaApertura: '2026-11-05T10:00:00' }
     ])
 
-    const { loadData, filterRegimen, filterCanal, searchQuery, filteredExpedientes } = useAgenteBandeja()
+    const { loadData, filterRegimen, filterCanal, searchQuery, sortBy, hasActiveFilters, resetFilters, filteredExpedientes } = useAgenteBandeja()
     await loadData()
 
+    expect(filteredExpedientes.value[0].idExpediente).toBe(2)
+
+    sortBy.value = 'CODE_ASC'
+    expect(filteredExpedientes.value[0].codigoExpediente).toBe('EXP-EXP-01')
+
     filterRegimen.value = 'EXPORTACION'
+    expect(hasActiveFilters.value).toBe(true)
     expect(filteredExpedientes.value.length).toBe(1)
-    expect(filteredExpedientes.value[0].codigoExpediente).toBe('EXP-EXP-02')
+    expect(filteredExpedientes.value[0].codigoExpediente).toBe('EXP-EXP-01')
 
     filterRegimen.value = ''
     filterCanal.value = 'VERDE'
     expect(filteredExpedientes.value.length).toBe(1)
-    expect(filteredExpedientes.value[0].codigoExpediente).toBe('EXP-IMP-01')
+    expect(filteredExpedientes.value[0].codigoExpediente).toBe('EXP-IMP-02')
 
     filterCanal.value = ''
     searchQuery.value = 'global'
     expect(filteredExpedientes.value.length).toBe(1)
     expect(filteredExpedientes.value[0].clienteRazonSocial).toBe('GLOBAL EXPORT')
+
+    resetFilters()
+    expect(hasActiveFilters.value).toBe(false)
+    expect(filteredExpedientes.value.length).toBe(2)
   })
 
-  it('permite a un supervisor/admin auditar agentes específicos', async () => {
+  it('permite a un supervisor/admin auditar agentes específicos y normaliza alias de tab', async () => {
     mockAuthUser = { idUsuario: 99, rol: 'SUPERVISOR_ADUANERO', nombre: 'Supervisor General' }
     expedienteService.getExpedientes.mockResolvedValueOnce([
       { idExpediente: 101, codigoExpediente: 'EXP-101', idAgenteAduanero: 11 }
     ])
 
-    const { esSupervisorOAdmin, selectedAgenteId, loadData } = useAgenteBandeja()
+    const { esSupervisorOAdmin, selectedAgenteId, loadData, cambiarTab, activeTab } = useAgenteBandeja()
     expect(esSupervisorOAdmin.value).toBe(true)
+
+    cambiarTab('expedientes')
+    expect(activeTab.value).toBe('todos')
 
     selectedAgenteId.value = 11
     await loadData()

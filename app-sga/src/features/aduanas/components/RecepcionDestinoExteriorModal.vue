@@ -56,6 +56,20 @@
         </div>
 
         <div class="field-item full-width">
+          <label for="recep-archivo">Documento de Conformidad en País de Destino (PDF / Imagen)</label>
+          <input
+            id="recep-archivo"
+            type="file"
+            accept=".pdf,image/*"
+            class="text-input"
+            @change="onConformidadSelected"
+          />
+          <small v-if="archivoConformidad" class="sga-cell-sub">
+            Archivo listo para subir: {{ archivoConformidad.name }}
+          </small>
+        </div>
+
+        <div class="field-item full-width">
           <label for="recep-obs">Observaciones de Conformidad del Destinatario</label>
           <Textarea
             id="recep-obs"
@@ -94,8 +108,9 @@ import Button from 'primevue/button'
 import InputText from 'primevue/inputtext'
 import Textarea from 'primevue/textarea'
 import BaseModal from '@/shared/components/BaseModal.vue'
-import { expedienteService } from '../services/expedienteService'
-import { getNowDateTimeInput } from '@/shared/utils/dateUtils'
+import { expedienteService } from '@/shared/services/expedienteService'
+import { documentoService } from '@/features/documentos/services/documentoService'
+import { getNowDateTimeInput, toLocalDateTimePayload } from '@/shared/utils/dateUtils'
 
 const props = defineProps({
   visible: { type: Boolean, default: false },
@@ -106,6 +121,11 @@ const emit = defineEmits(['close', 'saved'])
 
 const loading = ref(false)
 const errorMessage = ref('')
+const archivoConformidad = ref(null)
+
+const onConformidadSelected = (event) => {
+  archivoConformidad.value = event?.target?.files?.[0] || null
+}
 
 const form = ref({
   consignatarioExterior: '',
@@ -136,6 +156,7 @@ watch(
 
 const handleClose = () => {
   errorMessage.value = ''
+  archivoConformidad.value = null
   emit('close')
 }
 
@@ -145,10 +166,23 @@ const handleSubmit = async () => {
   errorMessage.value = ''
 
   try {
+    let idDocumentoConformidad = null
+    if (archivoConformidad.value) {
+      const uploaded = await documentoService.upload([archivoConformidad.value], {
+        categoria: 'CONFORMIDAD_DESTINO',
+        descripcion: `Conformidad en país de destino — ${form.value.consignatarioExterior}`,
+        entidadTipo: 'EXPEDIENTE',
+        idEntidad: props.expediente.idExpediente
+      })
+      const firstDoc = Array.isArray(uploaded) ? uploaded[0] : uploaded
+      idDocumentoConformidad = firstDoc?.idDocumento || null
+    }
+
     const payload = {
       consignatarioExterior: form.value.consignatarioExterior,
       documentoRecepcion: form.value.documentoRecepcion,
-      fechaRecepcionDestino: form.value.fechaRecepcionDestino ? new Date(form.value.fechaRecepcionDestino).toISOString() : null,
+      fechaRecepcionDestino: toLocalDateTimePayload(form.value.fechaRecepcionDestino),
+      idDocumentoConformidad,
       observaciones: form.value.observaciones
     }
 

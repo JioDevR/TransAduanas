@@ -79,7 +79,17 @@
 
           <div class="b2b-card-actions" @click.stop @keydown.enter.stop>
             <Button
-              v-if="c.estado === 'APROBADA' && (c.estadoPago === 'OBSERVADO' || c.estadoPago === 'RECHAZADO')"
+              v-if="c.estado === 'APROBADA' && !c.aceptadaPorCliente"
+              type="button"
+              label="Revisar y Autorizar"
+              icon="pi pi-check-circle"
+              severity="success"
+              outlined
+              size="small"
+              @click="$emit('view', c)"
+            />
+            <Button
+              v-else-if="c.estado === 'APROBADA' && (c.estadoPago === 'OBSERVADO' || c.estadoPago === 'RECHAZADO')"
               type="button"
               label="Subsanar"
               icon="pi pi-pencil"

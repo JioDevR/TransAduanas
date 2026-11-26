@@ -1,5 +1,6 @@
 import { ref, computed, watch } from 'vue'
 import { portalExpedienteService } from '../services/portalExpedienteService'
+import { portalCotizacionService } from '@/features/cotizaciones/services/portalCotizacionService'
 import { useNotification } from '@/shared/composables/useNotification'
 import { downloadBlob, openBlobInNewTab } from '@/shared/utils/download'
 import { isExportExpediente } from '../utils/expedienteTrackingUtils'
@@ -11,7 +12,9 @@ export function usePortalExpedientes() {
   const { showSuccess, showError } = useNotification()
 
   const expedientes = ref([])
+  const cotizacionesElegibles = ref([])
   const loading = ref(true)
+  const savingSimple = ref(false)
 
   const searchQuery = ref('')
   const filterRegimen = ref('TODOS')
@@ -107,12 +110,68 @@ export function usePortalExpedientes() {
   async function cargarExpedientes() {
     loading.value = true
     try {
-      const data = await portalExpedienteService.listarExpedientes()
+      const [data, cots] = await Promise.all([
+        portalExpedienteService.listarExpedientes(),
+        typeof portalCotizacionService.listarCotizaciones === 'function'
+          ? portalCotizacionService.listarCotizaciones().catch(() => [])
+          : Promise.resolve([])
+      ])
       expedientes.value = data || []
+      const idsConExp = new Set((data || []).map(e => e.idCotizacion).filter(Boolean))
+      cotizacionesElegibles.value = (cots || []).filter(c =>
+        c.estado === 'APROBADA' &&
+        !c.tieneExpediente &&
+        !idsConExp.has(c.idCotizacion) &&
+        (c.estadoPago === 'ADELANTO_APROBADO' || c.estadoPago === 'PAGADO_TOTAL' || Number(c.totalAbonado || 0) > 0)
+      )
     } catch (err) {
       showError(err.response?.data?.message || 'Error al cargar los expedientes aduaneros')
     } finally {
       loading.value = false
+    }
+  }
+
+  async function guardarExpedienteSimple({ isEdit, idExpediente, payload }) {
+    savingSimple.value = true
+    try {
+      let result
+      if (isEdit && idExpediente) {
+        result = await portalExpedienteService.actualizarDatosCliente(idExpediente, payload)
+        showSuccess('Datos del expediente actualizados correctamente.', 'Expediente Actualizado')
+      } else {
+        result = await portalExpedienteService.crearExpedienteSimple(payload)
+        showSuccess(`Expediente simple ${result?.codigoExpediente || ''} creado. Gestión Aduanera asignará su agente.`, 'Expediente Creado')
+      }
+      await cargarExpedientes()
+      if (selectedExpediente.value?.idExpediente && result?.idExpediente === selectedExpediente.value.idExpediente) {
+        selectedExpediente.value = result
+      }
+      return result
+    } catch (err) {
+      showError(err.response?.data?.message || 'No se pudo guardar el expediente.')
+      return null
+    } finally {
+      savingSimple.value = false
+    }
+  }
+
+  async function handleVerInformeConformidad(exp) {
+    if (!exp?.idExpediente) return
+    try {
+      const blob = await portalExpedienteService.descargarInformeConformidadPdf(exp.idExpediente, { download: false })
+      openBlobInNewTab(blob, 'application/pdf')
+    } catch {
+      showError('No se pudo abrir el Informe de Conformidad de Entrega')
+    }
+  }
+
+  async function handleDescargarInformeConformidad(exp) {
+    if (!exp?.idExpediente) return
+    try {
+      const blob = await portalExpedienteService.descargarInformeConformidadPdf(exp.idExpediente, { download: true })
+      downloadBlob(blob, `informe-conformidad-${exp.codigoExpediente}.pdf`, 'application/pdf')
+    } catch {
+      showError('No se pudo descargar el Informe de Conformidad de Entrega')
     }
   }
 
@@ -170,7 +229,9 @@ export function usePortalExpedientes() {
 
   return {
     expedientes,
+    cotizacionesElegibles,
     loading,
+    savingSimple,
     searchQuery,
     filterRegimen,
     filterCanal,
@@ -187,9 +248,12 @@ export function usePortalExpedientes() {
     loadingDocs,
     resetFilters,
     cargarExpedientes,
+    guardarExpedienteSimple,
     abrirDetalle,
     cerrarDetalle,
     handleDescargar,
-    handlePrevisualizar
+    handlePrevisualizar,
+    handleVerInformeConformidad,
+    handleDescargarInformeConformidad
   }
 }

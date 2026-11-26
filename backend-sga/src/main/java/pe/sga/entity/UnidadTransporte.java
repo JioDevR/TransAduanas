@@ -2,9 +2,12 @@ package pe.sga.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import pe.sga.entity.enums.EstadoOperativoFlota;
+import pe.sga.entity.enums.TipoVehiculo;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "unidad_transporte")
@@ -32,9 +35,10 @@ public class UnidadTransporte {
     @Column(name = "ano_fabricacion")
     private Integer anoFabricacion;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "tipo_vehiculo", nullable = false, length = 50)
     @Builder.Default
-    private String tipoVehiculo = "TRACTO_PLATAFORMA";
+    private TipoVehiculo tipoVehiculo = TipoVehiculo.TRACTO;
 
     @Column(name = "capacidad_carga_kg", nullable = false, precision = 10, scale = 2)
     @Builder.Default
@@ -50,9 +54,10 @@ public class UnidadTransporte {
     @Builder.Default
     private Integer kilometrajeActual = 0;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "estado_operativo", nullable = false, length = 20)
     @Builder.Default
-    private String estadoOperativo = "DISPONIBLE";
+    private EstadoOperativoFlota estadoOperativo = EstadoOperativoFlota.DISPONIBLE;
 
     @Column(name = "estado_activo", nullable = false)
     @Builder.Default
@@ -60,4 +65,28 @@ public class UnidadTransporte {
 
     @Column(name = "observaciones", columnDefinition = "TEXT")
     private String observaciones;
+
+    @Version
+    @Column(name = "version")
+    private Long version;
+
+    @Column(name = "created_at", updatable = false)
+    private LocalDateTime createdAt;
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        LocalDateTime now = LocalDateTime.now();
+        if (this.createdAt == null) {
+            this.createdAt = now;
+        }
+        this.updatedAt = now;
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
+    }
 }

@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <title th:text="${tipoComprobante} + ' ' + ${numeroCompleto}">Comprobante de Pago</title>
+    <style>
+        @page {
+            size: A4 portrait;
+            margin: 16mm 14mm 18mm 14mm;
+            @top-right {
+                content: "TRANSADUANAS DEL PERU S.A.C. // COMPROBANTE FINANCIERO";
+                font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+                font-size: 7.5pt;
+                font-weight: bold;
+                color: #9a7f60;
+            }
+            @bottom-left {
+                content: "Representación impresa generada por SGA Finanzas — TransAduanas del Perú S.A.C.";
+                font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+                font-size: 7pt;
+                color: #8c827a;
+            }
+            @bottom-right {
+                content: "Página " counter(page) " de " counter(pages);
+                font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+                font-size: 7.5pt;
+                font-weight: bold;
+                color: #352f2a;
+            }
+        }
+
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            color: #2b2520;
+            background-color: #ffffff;
+            font-size: 8.5pt;
+            line-height: 1.45;
+            margin: 0;
+            padding: 0;
+        }
+
+        .font-mono { font-family: 'Courier New', Courier, monospace; }
+        .text-right { text-align: right !important; }
+        .text-success { color: #1e6638; }
+        .text-danger { color: #9e2a2b; }
+
+        .header-table {
+            width: 100%;
+            table-layout: fixed;
+            border-bottom: 2px solid #352f2a;
+            padding-bottom: 12px;
+            margin-bottom: 14px;
+        }
+        .header-left { width: 60%; vertical-align: top; padding-right: 12px; }
+        .header-right { width: 40%; vertical-align: top; }
+
+        .brand-kicker {
+            font-size: 7.5pt;
+            font-weight: bold;
+            letter-spacing: 0.9px;
+            color: #9a7f60;
+            text-transform: uppercase;
+            margin-bottom: 3px;
+        }
+        .company-name {
+            font-size: 14.5pt;
+            font-weight: bold;
+            color: #2b2520;
+            margin: 0 0 3px 0;
+        }
+        .company-meta {
+            font-size: 7.8pt;
+            color: #5b5148;
+            margin: 1px 0;
+        }
+
+        .invoice-box {
+            border: 2px solid #352f2a;
+            border-radius: 6px;
+            background-color: #fbf9f6;
+            padding: 10px 12px;
+            text-align: center;
+        }
+        .invoice-ruc {
+            font-size: 8.5pt;
+            font-weight: bold;
+            color: #5b5148;
+            margin-bottom: 4px;
+        }
+        .invoice-type {
+            background-color: #352f2a;
+            color: #ffffff;
+            font-size: 9.5pt;
+            font-weight: bold;
+            letter-spacing: 0.6px;
+            padding: 4px 8px;
+            border-radius: 3px;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+        .invoice-number {
+            font-size: 12.5pt;
+            font-weight: bold;
+            color: #824728;
+        }
+
+        .client-card {
+            width: 100%;
+            table-layout: fixed;
+            background-color: #fbf9f6;
+            border: 1px solid #e4dacb;
+            border-radius: 5px;
+            border-collapse: separate;
+            margin-bottom: 14px;
+            page-break-inside: avoid;
+        }
+        .client-card td {
+            padding: 8px 11px;
+            vertical-align: top;
+            word-wrap: break-word;
+        }
+        .micro-label {
+            font-size: 6.8pt;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #7c7066;
+            margin-bottom: 2px;
+        }
+        .info-val {
+            font-size: 8.6pt;
+            font-weight: bold;
+            color: #2b2520;
+        }
+        .info-sub {
+            font-size: 7.8pt;
+            color: #5b5148;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 2px 7px;
+            border-radius: 3px;
+            font-size: 7pt;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .badge-ok { background-color: #eaf6ed; color: #1e6638; border: 1px solid #bce5c6; }
+        .badge-danger { background-color: #fdf0f0; color: #9e2a2b; border: 1px solid #f6c8c8; }
+
+        .data-table {
+            width: 100%;
+            table-layout: fixed;
+            border-collapse: collapse;
+            margin-bottom: 12px;
+        }
+        .data-table th {
+            background-color: #352f2a;
+            color: #ffffff;
+            font-size: 7.4pt;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            padding: 7px 9px;
+            text-align: left;
+            border: 1px solid #352f2a;
+        }
+        .data-table td {
+            font-size: 8.2pt;
+            padding: 8px 9px;
+            border-bottom: 1px solid #e6dfd5;
+            border-left: 1px solid #f0ebe3;
+            border-right: 1px solid #f0ebe3;
+            vertical-align: top;
+            word-wrap: break-word;
+        }
+
+        .totals-layout {
+            width: 100%;
+            table-layout: fixed;
+            border-collapse: collapse;
+            margin-bottom: 14px;
+            page-break-inside: avoid;
+        }
+        .totals-left {
+            width: 55%;
+            vertical-align: top;
+            padding-right: 12px;
+        }
+        .totals-right {
+            width: 45%;
+            vertical-align: top;
+        }
+
+        .summary-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid #e4dacb;
+            background-color: #faf8f5;
+        }
+        .summary-table td {
+            padding: 6px 9px;
+            font-size: 8.2pt;
+            border-bottom: 1px solid #ede6db;
+        }
+        .summary-table tr.grand-row td {
+            background-color: #fdf1e8;
+            border-top: 1.5px solid #d48252;
+            border-bottom: 1.5px solid #d48252;
+            font-weight: bold;
+            font-size: 9.8pt;
+            color: #824728;
+        }
+
+        .notes-box {
+            background-color: #faf8f5;
+            border: 1px solid #e4dacb;
+            border-left: 3px solid #d48252;
+            border-radius: 4px;
+            padding: 8px 10px;
+            font-size: 7.8pt;
+            color: #352f2a;
+            margin-bottom: 8px;
+        }
+
+        .legal-footer {
+            margin-top: 16px;
+            padding-top: 8px;
+            border-top: 1px solid #e4dacb;
+            font-size: 7.2pt;
+            color: #6b6158;
+            line-height: 1.45;
+        }
+    </style>
+</head>
+<body>
+    <table class="header-table">
+        <tr>
+            <td class="header-left">
+                <div class="brand-kicker">AGENCIA DE ADUANAS Y LOGÍSTICA INTERNACIONAL</div>
+                <h1 class="company-name">TransAduanas del Perú S.A.C.</h1>
+                <p class="company-meta">Av. Elmer Faucett Nro. 2850 — Callao, Lima, Perú</p>
+                <p class="company-meta">Agencia Autorizada SUNAT · Finanzas y Tesorería SGA</p>
+                <p class="company-meta">Contacto: tesoreria@transaduanas.pe</p>
+            </td>
+            <td class="header-right">
+                <div class="invoice-box">
+                    <div class="invoice-ruc font-mono">R.U.C. 20601234567</div>
+                    <div class="invoice-type" th:text="${tipoComprobanteLabel}">FACTURA ELECTRÓNICA</div>
+                    <div class="invoice-number font-mono" th:text="${numeroCompleto}">F001-000001</div>
+                </div>
+            </td>
+        </tr>
+    </table>
+
+    <table class="client-card">
+        <tr>
+            <td style="width: 60%;">
+                <div class="micro-label">SEÑOR(ES) / RAZÓN SOCIAL</div>
+                <div class="info-val" th:text="${clienteRazonSocial}">Cliente S.A.C.</div>
+                <div class="info-sub">
+                    RUC / Doc: <span class="font-mono info-val" th:text="${clienteNumeroDocumento}">20000000001</span>
+                </div>
+                <div class="info-sub" th:if="${clienteDireccion != null}">
+                    Dirección: <span th:text="${clienteDireccion}">Lima, Perú</span>
+                </div>
+            </td>
+            <td style="width: 40%;">
+                <div class="micro-label">DATOS DE EMISIÓN</div>
+                <div class="info-sub">Fecha Emisión: <span class="font-mono info-val" th:text="${fechaEmisionFmt}">24/11/2026 21:40</span></div>
+                <div class="info-sub">Referencia: <span class="font-mono info-val" th:text="${codigoReferencia}">COT-2026-0001</span></div>
+                <div class="info-sub">Moneda: <span class="font-mono info-val" th:text="${monedaLabel}">USD ($)</span> &#8226; T.C.: <span class="font-mono" th:text="${tipoCambioFmt}">3.7500</span></div>
+                <div style="margin-top: 4px;">
+                    <span th:class="${estado == 'ANULADA' ? 'badge badge-danger' : 'badge badge-ok'}"
+                          th:text="${estado}">EMITIDA</span>
+                </div>
+            </td>
+        </tr>
+    </table>
+
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th style="width: 14%;">CANT.</th>
+                <th style="width: 58%;">DESCRIPCIÓN DEL SERVICIO / CONCEPTO</th>
+                <th style="width: 14%;" class="text-right">V. UNITARIO</th>
+                <th style="width: 14%;" class="text-right">IMPORTE</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td class="font-mono">1.00 UND</td>
+                <td>
+                    <div class="info-val" th:text="${origenLabel}">Servicio Aduanero</div>
+                    <div class="info-sub" th:text="${concepto}">Concepto detallado del servicio</div>
+                </td>
+                <td class="text-right font-mono" th:text="${subtotalGravadoFmt}">0.00</td>
+                <td class="text-right font-mono" th:text="${subtotalGravadoFmt}">0.00</td>
+            </tr>
+            <tr th:if="${tieneInafecto}">
+                <td class="font-mono">1.00 UND</td>
+                <td>
+                    <div class="info-val">Tributos Aduaneros SUNAT (Inafecto / Reembolsable)</div>
+                    <div class="info-sub">Ad-Valorem, IGV e IPM liquidados ante SUNAT con DAM</div>
+                </td>
+                <td class="text-right font-mono" th:text="${inafectoFmt}">0.00</td>
+                <td class="text-right font-mono" th:text="${inafectoFmt}">0.00</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <table class="totals-layout">
+        <tr>
+            <td class="totals-left">
+                <div class="notes-box" th:if="${bancoDestino != null || numeroOperacion != null}">
+                    <div class="micro-label">TRAZABILIDAD BANCARIA VERIFICADA</div>
+                    <div>Entidad Receptora: <strong th:text="${bancoDestino != null ? bancoDestino : '—'}">BCP</strong></div>
+                    <div>N° Operación: <strong class="font-mono" th:text="${numeroOperacion != null ? numeroOperacion : '—'}">OP-0001</strong></div>
+                </div>
+                <div class="notes-box">
+                    <div class="micro-label">EQUIVALENTE CONTABLE EN SOLES</div>
+                    <div>Total Equivalente (PEN): <strong class="font-mono" th:text="${totalEquivalentePenFmt}">S/ 0.00</strong></div>
+                    <div th:if="${observaciones != null}" style="margin-top: 3px;" th:text="${observaciones}">Obs</div>
+                </div>
+            </td>
+            <td class="totals-right">
+                <table class="summary-table">
+                    <tr th:if="${tieneInafecto}">
+                        <td>Op. Inafecta (Tributos SUNAT)</td>
+                        <td class="text-right font-mono" th:text="${inafectoFmt}">0.00</td>
+                    </tr>
+                    <tr>
+                        <td>Op. Gravada (Base Imponible)</td>
+                        <td class="text-right font-mono" th:text="${subtotalGravadoFmt}">0.00</td>
+                    </tr>
+                    <tr>
+                        <td>I.G.V. (18%)</td>
+                        <td class="text-right font-mono" th:text="${igvMontoFmt}">0.00</td>
+                    </tr>
+                    <tr class="grand-row">
+                        <td>IMPORTE TOTAL</td>
+                        <td class="text-right font-mono" th:text="${totalComprobanteFmt}">0.00</td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+
+    <div class="legal-footer">
+        <strong>Documento generado automáticamente por el Módulo de Finanzas SGA — TransAduanas del Perú S.A.C.</strong><br />
+        Emitido tras la validación bancaria conforme del abono o liquidación. Disponible para descarga permanente en el Portal B2B del cliente.
+    </div>
+</body>
+</html>

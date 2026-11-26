@@ -78,8 +78,8 @@
           <Button
             v-else
             type="button"
-            :label="o.tipoObligacion === 'COTIZACION' ? 'Abonar' : 'Amortizar'"
-            :icon="o.tipoObligacion === 'COTIZACION' ? 'pi pi-wallet' : 'pi pi-credit-card'"
+            :label="isCotizacionObligacion(o.tipoObligacion) ? 'Abonar' : 'Amortizar'"
+            :icon="isCotizacionObligacion(o.tipoObligacion) ? 'pi pi-wallet' : 'pi pi-credit-card'"
             size="small"
             @click="$emit('pay', o)"
           />
@@ -93,7 +93,7 @@
 import Button from 'primevue/button'
 import Tag from 'primevue/tag'
 import { formatCurrency, formatEstadoPago } from '@/shared/utils/formatters'
-import { getPagoTagSeverity, getTipoObligacionMeta } from '../utils/pagoFormUtils'
+import { getPagoTagSeverity, getTipoObligacionMeta, isCotizacionObligacion } from '../utils/pagoFormUtils'
 
 defineProps({
   obligaciones: { type: Array, default: () => [] },

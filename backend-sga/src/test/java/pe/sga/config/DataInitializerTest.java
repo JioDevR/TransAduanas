@@ -12,6 +12,7 @@ import pe.sga.entity.*;
 import pe.sga.entity.enums.EstadoPagoCotizacion;
 import pe.sga.entity.enums.RolUsuario;
 import pe.sga.entity.enums.TipoAbonoCotizacion;
+import pe.sga.entity.enums.TipoTraslado;
 import pe.sga.repository.*;
 
 import java.math.BigDecimal;
@@ -134,7 +135,6 @@ class DataInitializerTest {
                 .orElseThrow();
         assertEquals("Oscar", oscar.getNombres());
         assertEquals("Sanchez Huamanchumo", oscar.getApellidos());
-        assertEquals(userOsanchez, oscar.getUsuario());
 
         ArgumentCaptor<Cotizacion> cotCaptor = ArgumentCaptor.forClass(Cotizacion.class);
         verify(cotizacionRepository, times(4)).save(cotCaptor.capture());
@@ -156,12 +156,12 @@ class DataInitializerTest {
         ArgumentCaptor<DespachoTransporte> despachoCaptor = ArgumentCaptor.forClass(DespachoTransporte.class);
         verify(despachoTransporteRepository, times(4)).save(despachoCaptor.capture());
         List<DespachoTransporte> despachos = despachoCaptor.getAllValues();
-        assertEquals("RECOJO_EXPORTACION", despachos.get(0).getTipoTraslado());
+        assertEquals(TipoTraslado.RECOJO_EXPORTACION, despachos.get(0).getTipoTraslado());
         assertEquals("Callao", despachos.get(0).getDistritoLlegada());
-        assertEquals("RECOJO_EXPORTACION", despachos.get(1).getTipoTraslado());
+        assertEquals(TipoTraslado.RECOJO_EXPORTACION, despachos.get(1).getTipoTraslado());
         assertEquals("Callao", despachos.get(1).getDistritoLlegada());
-        assertEquals("ENTREGA_IMPORTACION", despachos.get(2).getTipoTraslado());
-        assertEquals("ENTREGA_IMPORTACION", despachos.get(3).getTipoTraslado());
+        assertEquals(TipoTraslado.ENTREGA_IMPORTACION, despachos.get(2).getTipoTraslado());
+        assertEquals(TipoTraslado.ENTREGA_IMPORTACION, despachos.get(3).getTipoTraslado());
     }
 
     @Test

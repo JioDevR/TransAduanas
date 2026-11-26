@@ -7,6 +7,7 @@ import pe.sga.entity.enums.EstadoExpediente;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 @Setter
@@ -52,10 +53,35 @@ public class ExpedienteResponseDTO {
     private String detalleInspeccion;
     private LocalDateTime fechaLevanteAutorizacion;
 
-    // Contenedor y Nave
+    // Contenedor y Nave / Vuelo
     private String numeroContenedor;
     private String precintoAduanero;
     private String naveViaje;
+    private String tipoTransporteInternacional;
+    private String numeroVuelo;
+
+    // Marcación de Estados Operativos y Canales SUNAT
+    private Boolean enEsperaTransito;
+    private Boolean enRevisionAduana;
+    private Integer idDocumentoConformidadDestino;
+    private Boolean verificacionOrigenOk;
+    private LocalDateTime fechaVerificacionOrigen;
+    private Boolean cuadrillaSolicitada;
+    private String cuadrillaDetalle;
+    private LocalDateTime fechaCitaInspeccion;
+    private String codigoCitaInspeccion;
+    private Boolean revisionRojoFinalizada;
+    private Boolean envioSunatSimuladoOk;
+    private String codigoTransmisionSunat;
+    private LocalDateTime fechaEnvioSunat;
+    private Boolean entregadoAlmacenVerde;
+    private LocalDateTime fechaEntregaAlmacenVerde;
+    private String informeConformidadTexto;
+    private LocalDateTime fechaInformeConformidad;
+    private String receptorConformidadNombre;
+    private String receptorConformidadDni;
+    private Integer idDocumentoConformidadInforme;
+    private List<ExpedienteEventoDTO> eventos;
 
     // Estado del Expediente
     private EstadoExpediente estadoExpediente;

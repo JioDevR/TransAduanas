@@ -7,7 +7,8 @@ import {
   calculateTransitDays,
   canSwapMonthDay,
   swapMonthDay,
-  addDaysToDate
+  addDaysToDate,
+  toLocalDateTimePayload
 } from '../dateUtils'
 
 describe('dateUtils - Utilidades de Fechas y Cronogramas Logísticos', () => {
@@ -65,5 +66,12 @@ describe('dateUtils - Utilidades de Fechas y Cronogramas Logísticos', () => {
     expect(addDaysToDate('2026-11-12', 0)).toBe('2026-11-12')
     expect(addDaysToDate('2026-11-12', 1)).toBe('2026-11-13')
     expect(addDaysToDate('2026-11-12', 21)).toBe('2026-12-03')
+  })
+
+  it('toLocalDateTimePayload normaliza datetime-local a LocalDateTime sin sufijo Z', () => {
+    expect(toLocalDateTimePayload('2026-11-24T08:30')).toBe('2026-11-24T08:30:00')
+    expect(toLocalDateTimePayload('2026-11-24T08:30:45')).toBe('2026-11-24T08:30:45')
+    expect(toLocalDateTimePayload('')).toBeNull()
+    expect(toLocalDateTimePayload(null)).toBeNull()
   })
 })

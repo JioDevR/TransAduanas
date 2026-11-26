@@ -131,6 +131,15 @@ public class CotizacionController {
         return ResponseEntity.ok(ApiResponseDTO.ok("Revisión técnica de cotización registrada", revisada));
     }
 
+    @PatchMapping("/{id}/enviar-aduanas")
+    @PreAuthorize(SecurityRoles.ACCESS_CLIENTE_COTIZACION_WRITE)
+    public ResponseEntity<ApiResponseDTO<CotizacionResponseDTO>> enviarAGestionAduanera(
+            @PathVariable Integer id,
+            @AuthenticationPrincipal Usuario usuarioActual) {
+        CotizacionResponseDTO enviada = cotizacionService.enviarAGestionAduanera(id, usuarioActual);
+        return ResponseEntity.ok(ApiResponseDTO.ok("Cotización enviada a Gestión Aduanera para evaluación técnica", enviada));
+    }
+
     @PatchMapping("/{id}/estado")
     @PreAuthorize(SecurityRoles.ACCESS_COTIZACION_APROBACION)
     public ResponseEntity<ApiResponseDTO<CotizacionResponseDTO>> cambiarEstado(

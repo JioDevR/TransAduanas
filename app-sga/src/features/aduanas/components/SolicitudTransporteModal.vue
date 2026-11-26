@@ -274,45 +274,4 @@ const handleSubmit = async () => {
   padding-top: 1rem;
   border-top: 1px solid var(--color-border-subtle);
 }
-
-.btn-modal-cancel {
-  padding: 0.6rem 1.2rem;
-  background: transparent;
-  border: 1px solid var(--color-border);
-  color: var(--color-text-main);
-  border-radius: 4px;
-  font-size: 0.875rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.btn-modal-cancel:hover:not(:disabled) {
-  background: var(--color-bg-subtle);
-}
-
-.btn-modal-save {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.6rem 1.25rem;
-  background: var(--color-info-bg);
-  border: 1px solid var(--color-info-border);
-  color: var(--color-info-text);
-  border-radius: 4px;
-  font-size: 0.875rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.btn-modal-save:hover:not(:disabled) {
-  filter: brightness(0.95);
-}
-
-.btn-modal-save:disabled,
-.btn-modal-cancel:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
 </style>

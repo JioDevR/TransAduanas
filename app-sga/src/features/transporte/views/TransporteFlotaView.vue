@@ -1,522 +1,245 @@
 <template>
-  <div class="transporte-flota-shell">
-    <!-- 1. Barra de Herramientas Superior Warm Editorial -->
-    <TransporteHeaderToolbar
-      :loading="loadingGlobal"
-      :en-ruta-count="enRutaCount"
-      :disponibles-count="tractosDisponiblesCount"
-      @recargar="recargarTodo"
-      @programar-despacho="openCrearDespachoModal"
+  <div class="transporte-flota-view">
+    <TransporteDashboardPanel
+      v-if="activeTab === 'dashboard'"
+      :despachos="despachosList"
+      :alertas-mtc="alertasMtc"
+      :kpis="kpis"
+      :loading="loading"
+      @refresh="loadAllData"
+      @navigate="switchTab"
+      @select-filter="handleFilterFromDashboard"
+      @programar-despacho="showCrearDespachoDialog = true"
+      @ver-detalle="openDetalleDialog"
     />
 
-    <!-- 2. Pestañas de Navegación del Módulo Sincronizadas con Sidebar -->
-    <nav class="transporte-tabs-nav" aria-label="Navegación Transporte">
-      <button
-        type="button"
-        :class="['tab-btn', { active: currentTab === 'dashboard' }]"
-        @click="switchTab('dashboard')"
-      >
-        <span class="tab-num">01</span>
-        <i class="pi pi-chart-bar"></i>
-        <span>Dashboard Operativo</span>
-      </button>
-
-      <button
-        type="button"
-        :class="['tab-btn', { active: currentTab === 'despachos' }]"
-        @click="switchTab('despachos')"
-      >
-        <span class="tab-num">02</span>
-        <i class="pi pi-list"></i>
-        <span>Monitoreo & Despachos</span>
-        <span class="tab-badge">{{ despachosList.length }}</span>
-      </button>
-
-      <button
-        type="button"
-        :class="['tab-btn', { active: currentTab === 'cabina' }]"
-        @click="switchTab('cabina')"
-      >
-        <span class="tab-num">03</span>
-        <i class="pi pi-compass"></i>
-        <span>Cabina de Ruta</span>
-        <span v-if="enRutaCount > 0" class="tab-badge-pulse">{{ enRutaCount }} EN RUTA</span>
-      </button>
-
-      <button
-        type="button"
-        :class="['tab-btn', { active: currentTab === 'unidades' }]"
-        @click="switchTab('unidades')"
-      >
-        <span class="tab-num">04</span>
-        <i class="pi pi-truck"></i>
-        <span>Parque de Flota</span>
-        <span class="tab-badge">{{ unidadesList.length }}</span>
-      </button>
-
-      <button
-        type="button"
-        :class="['tab-btn', { active: currentTab === 'conductores' }]"
-        @click="switchTab('conductores')"
-      >
-        <span class="tab-num">05</span>
-        <i class="pi pi-users"></i>
-        <span>Directorio Choferes</span>
-        <span class="tab-badge">{{ conductoresList.length }}</span>
-      </button>
-    </nav>
-
-    <!-- 3. Contenedores de Sub-paneles -->
-    <main class="transporte-content-area">
-      <!-- Sub-panel 01: Dashboard Operativo -->
-      <TransporteDashboardPanel
-        v-if="currentTab === 'dashboard'"
-        :despachos="despachosList"
-        :unidades="unidadesList"
-        :conductores="conductoresList"
-        :loading="loadingGlobal"
-        @select-filter="handleFilterFromDashboard"
-        @go-tab="switchTab"
-      />
-
-      <!-- Sub-panel 02: Bandeja de Despachos -->
-      <TransporteDespachosTable
-        v-else-if="currentTab === 'despachos'"
-        :despachos-list="despachosList"
-        :loading="loadingGlobal"
-        :initial-filter="despachosTableFilter"
-        @asignar-recursos="openAsignarRecursos"
-        @iniciar-ruta="handleIniciarRutaDirecto"
-        @confirmar-entrega="openConfirmarEntrega"
-        @ver-cabina="handleVerEnCabina"
-        @reportar-incidencia="openReportarIncidencia"
-      />
-
-      <!-- Sub-panel 03: Cabina de Ruta -->
-      <CabinaRutaConductorPanel
-        v-else-if="currentTab === 'cabina'"
-        :despacho="miDespachoActivo"
-        :despachos-list="despachosList"
-        :preselected-id="cabinaPreselectedId"
-        @iniciar-ruta="handleIniciarRutaDirecto"
-        @confirmar-entrega="openConfirmarEntrega"
-        @reportar-incidencia="openReportarIncidencia"
-        @go-despachos="switchTab('despachos')"
-      />
-
-      <!-- Sub-panel 04: Parque de Flota MTC -->
-      <FlotaManagementPanel
-        v-else-if="currentTab === 'unidades'"
-      />
-
-      <!-- Sub-panel 05: Directorio de Choferes Profesionales -->
-      <ConductoresManagementPanel
-        v-else-if="currentTab === 'conductores'"
-      />
-    </main>
-
-    <!-- 4. Modales de Negocio -->
-    <CrearDespachoModal
-      :visible="showCrearDespachoModal"
-      @close="showCrearDespachoModal = false"
-      @saved="onDespachoGuardado"
+    <DespachosPanel
+      v-else-if="activeTab === 'despachos'"
+      class="fade-in"
+      :despachos="despachosList"
+      :loading="loading"
+      :initial-estado="despachosInitialEstado"
+      @refresh="loadAllData"
+      @programar="showCrearDespachoDialog = true"
+      @detalle="openDetalleDialog"
+      @aceptar="aceptarSolicitud"
+      @asignar="openAsignarDialog"
+      @iniciar-ruta="iniciarRuta"
+      @incidencia="openIncidenciaDialog"
+      @entregar="openEntregaDialog"
+      @anular="anularDespacho"
     />
 
-    <AsignarRecursosModal
-      :visible="showAsignarRecursosModal"
+    <FlotaPanel
+      v-else-if="activeTab === 'unidades'"
+      class="fade-in"
+      :unidades="unidadesList"
+      :loading="loading"
+      @refresh="loadAllData"
+      @crear="openUnidadForm(null)"
+      @editar="openUnidadForm"
+    />
+
+    <ConductoresPanel
+      v-else-if="activeTab === 'conductores'"
+      class="fade-in"
+      :conductores="conductoresList"
+      :loading="loading"
+      @refresh="loadAllData"
+      @crear="openConductorForm(null)"
+      @editar="openConductorForm"
+    />
+
+    <!-- Diálogos Operativos de Despacho -->
+    <CrearDespachoDialog
+      :visible="showCrearDespachoDialog"
+      :unidades="unidadesList"
+      :conductores="conductoresList"
+      @close="showCrearDespachoDialog = false"
+      @saved="loadAllData"
+    />
+
+    <AsignarRecursosDialog
+      :visible="showAsignarDialog"
       :despacho="selectedDespacho"
-      @close="showAsignarRecursosModal = false"
-      @saved="onDespachoGuardado"
+      :unidades="unidadesList"
+      :conductores="conductoresList"
+      @close="showAsignarDialog = false"
+      @saved="onActionSaved"
     />
 
-    <ConfirmarEntregaModal
-      :visible="showConfirmarEntregaModal"
+    <ConfirmarEntregaDialog
+      :visible="showEntregaDialog"
       :despacho="selectedDespacho"
-      @close="showConfirmarEntregaModal = false"
-      @saved="onEntregaConfirmada"
+      @close="showEntregaDialog = false"
+      @saved="onActionSaved"
     />
 
-    <!-- Modal Reportar Incidencia -->
-    <Dialog
-      v-model:visible="showIncidenciaModal"
-      modal
-      header="BITÁCORA // REGISTRAR INCIDENCIA EN RUTA"
-      :style="{ width: '520px' }"
-    >
-      <form @submit.prevent="submitIncidencia" class="incidencia-form">
-        <p class="incidencia-subtitle">
-          Despacho: <strong class="font-mono">{{ selectedDespacho?.codigoTracking }}</strong>
-        </p>
-        <div class="form-group">
-          <label class="form-label">Detalle de la eventualidad / novedad en ruta</label>
-          <textarea
-            v-model="incidenciaTexto"
-            rows="4"
-            class="form-textarea"
-            placeholder="Describa la incidencia (control aduanero SUNAT, congestión portuaria, desperfecto técnico, desvío autorizado)..."
-            required
-          ></textarea>
-        </div>
-        <div class="modal-footer-actions">
-          <button type="button" class="btn-outline-warm" @click="showIncidenciaModal = false">
-            Cancelar
-          </button>
-          <button type="submit" class="btn-espresso" :disabled="savingIncidencia">
-            <i v-if="savingIncidencia" class="pi pi-spin pi-spinner"></i>
-            <span>Asentar Reporte</span>
-          </button>
-        </div>
-      </form>
-    </Dialog>
+    <IncidenciaDialog
+      :visible="showIncidenciaDialog"
+      :despacho="selectedDespacho"
+      @close="showIncidenciaDialog = false"
+      @saved="onActionSaved"
+    />
+
+    <DespachoDetalleDialog
+      :visible="showDetalleDialog"
+      :despacho="selectedDespacho"
+      @close="showDetalleDialog = false"
+      @asignar="openAsignarDialog"
+      @iniciar-ruta="handleIniciarRutaDesdeDetalle"
+      @incidencia="openIncidenciaDialog"
+      @entregar="openEntregaDialog"
+      @anular="handleAnularDesdeDetalle"
+    />
+
+    <!-- Diálogos Maestros de Flota & Conductores -->
+    <UnidadFormDialog
+      :visible="showUnidadFormDialog"
+      :unidad="selectedUnidad"
+      @close="showUnidadFormDialog = false"
+      @saved="loadAllData"
+    />
+
+    <ConductorFormDialog
+      :visible="showConductorFormDialog"
+      :conductor="selectedConductor"
+      @close="showConductorFormDialog = false"
+      @saved="loadAllData"
+    />
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import Dialog from 'primevue/dialog'
 import { useNavigationStore } from '@/core/stores/navigationStore'
-import { transporteFlotaService } from '../services/transporteFlotaService'
-import TransporteHeaderToolbar from '../components/TransporteHeaderToolbar.vue'
+import { useTransporteData } from '../composables/useTransporteData'
+import { useDespachoActions } from '../composables/useDespachoActions'
 import TransporteDashboardPanel from '../components/TransporteDashboardPanel.vue'
-import TransporteDespachosTable from '../components/TransporteDespachosTable.vue'
-import CabinaRutaConductorPanel from '../components/CabinaRutaConductorPanel.vue'
-import FlotaManagementPanel from '../components/FlotaManagementPanel.vue'
-import ConductoresManagementPanel from '../components/ConductoresManagementPanel.vue'
-import CrearDespachoModal from '../components/CrearDespachoModal.vue'
-import AsignarRecursosModal from '../components/AsignarRecursosModal.vue'
-import ConfirmarEntregaModal from '../components/ConfirmarEntregaModal.vue'
-import { useNotification } from '@/shared/composables/useNotification'
-import { useConfirmation } from '@/shared/composables/useConfirmation'
+import DespachosPanel from '../components/DespachosPanel.vue'
+import FlotaPanel from '../components/FlotaPanel.vue'
+import ConductoresPanel from '../components/ConductoresPanel.vue'
+import CrearDespachoDialog from '../components/dialogs/CrearDespachoDialog.vue'
+import AsignarRecursosDialog from '../components/dialogs/AsignarRecursosDialog.vue'
+import ConfirmarEntregaDialog from '../components/dialogs/ConfirmarEntregaDialog.vue'
+import IncidenciaDialog from '../components/dialogs/IncidenciaDialog.vue'
+import DespachoDetalleDialog from '../components/dialogs/DespachoDetalleDialog.vue'
+import UnidadFormDialog from '../components/dialogs/UnidadFormDialog.vue'
+import ConductorFormDialog from '../components/dialogs/ConductorFormDialog.vue'
 
 const route = useRoute()
 const router = useRouter()
 const navigationStore = useNavigationStore()
-const { showSuccess, showError, showInfo } = useNotification()
-const { confirmAction } = useConfirmation()
 
-// Estados reactivos globales
-const despachosList = ref([])
-const unidadesList = ref([])
-const conductoresList = ref([])
-const miDespachoActivo = ref(null)
-const loadingGlobal = ref(false)
-
-// Navegación de pestañas
-const currentTab = computed(() => {
-  return navigationStore.transporteFlotaSubOption || 'dashboard'
-})
-
-const despachosTableFilter = ref('')
-const cabinaPreselectedId = ref(null)
-
-// Modales
-const showCrearDespachoModal = ref(false)
-const showAsignarRecursosModal = ref(false)
-const showConfirmarEntregaModal = ref(false)
-const showIncidenciaModal = ref(false)
+const { despachosList, unidadesList, conductoresList, loading, alertasMtc, kpis, loadAllData } =
+  useTransporteData()
 
 const selectedDespacho = ref(null)
-const incidenciaTexto = ref('')
-const savingIncidencia = ref(false)
+const selectedUnidad = ref(null)
+const selectedConductor = ref(null)
+const despachosInitialEstado = ref('ALL')
 
-// Métricas computadas
-const enRutaCount = computed(() => {
-  return despachosList.value.filter(d => (d.estadoTransporte || '').toUpperCase() === 'EN_RUTA').length
-})
+const showCrearDespachoDialog = ref(false)
+const showAsignarDialog = ref(false)
+const showEntregaDialog = ref(false)
+const showIncidenciaDialog = ref(false)
+const showDetalleDialog = ref(false)
+const showUnidadFormDialog = ref(false)
+const showConductorFormDialog = ref(false)
 
-const tractosDisponiblesCount = computed(() => {
-  return unidadesList.value.filter(u => u.estadoActivo && (u.estadoOperativo || '').toUpperCase() === 'DISPONIBLE').length
-})
+const activeTab = computed(() => navigationStore.transporteFlotaSubOption || 'dashboard')
 
-// Carga inicial y sincronización
 const switchTab = (tab) => {
-  let target = tab
-  if (tab === 'camion') target = 'cabina'
-  if (tab === 'viajes') target = 'despachos'
-
   navigationStore.setActiveModule('transporte-flota')
-  navigationStore.setTransporteFlotaSubOption(target)
-
-  if (route.query.tab !== target) {
-    router.push({ path: '/transporte-flota', query: { tab: target } })
+  navigationStore.setTransporteFlotaSubOption(tab)
+  if (tab !== 'despachos') {
+    despachosInitialEstado.value = 'ALL'
+  }
+  if (route.query.tab !== navigationStore.transporteFlotaSubOption) {
+    router.push({ path: '/transporte-flota', query: { tab: navigationStore.transporteFlotaSubOption } })
   }
 }
 
-watch(() => route.query.tab, (newTab) => {
-  if (newTab && newTab !== navigationStore.transporteFlotaSubOption) {
-    navigationStore.setTransporteFlotaSubOption(newTab)
-  }
-}, { immediate: true })
-
-watch(() => route.query.id, (newId) => {
-  if (newId) {
-    cabinaPreselectedId.value = newId
-  }
-}, { immediate: true })
-
-const recargarTodo = async () => {
-  loadingGlobal.value = true
-  try {
-    const [despachos, unidades, conductores] = await Promise.all([
-      transporteFlotaService.getDespachos(),
-      transporteFlotaService.getUnidades(),
-      transporteFlotaService.getConductores()
-    ])
-
-    despachosList.value = Array.isArray(despachos) ? despachos : []
-    unidadesList.value = Array.isArray(unidades) ? unidades : []
-    conductoresList.value = Array.isArray(conductores) ? conductores : []
-
-    try {
-      miDespachoActivo.value = await transporteFlotaService.getMiDespachoActivo()
-    } catch {
-      miDespachoActivo.value = null
+watch(
+  () => route.query.tab,
+  (newTab) => {
+    if (newTab) {
+      navigationStore.setTransporteFlotaSubOption(newTab)
     }
-  } catch (err) {
-    showError(err.message || 'Error al sincronizar datos de transporte')
-  } finally {
-    loadingGlobal.value = false
+  },
+  { immediate: true }
+)
+
+const onActionSaved = async () => {
+  await loadAllData()
+  if (selectedDespacho.value?.idDespachoTransporte) {
+    selectedDespacho.value =
+      despachosList.value.find(
+        (d) => d.idDespachoTransporte === selectedDespacho.value.idDespachoTransporte
+      ) || null
   }
 }
 
-// Handlers de modales y acciones operativas
-const openCrearDespachoModal = () => {
-  showCrearDespachoModal.value = true
-}
+const { aceptarSolicitud, iniciarRuta, anularDespacho } = useDespachoActions({ onReload: onActionSaved })
 
-const openAsignarRecursos = (despacho) => {
-  selectedDespacho.value = despacho
-  showAsignarRecursosModal.value = true
-}
-
-const openConfirmarEntrega = (despacho) => {
-  selectedDespacho.value = despacho
-  showConfirmarEntregaModal.value = true
-}
-
-const openReportarIncidencia = (despacho) => {
-  selectedDespacho.value = despacho
-  incidenciaTexto.value = ''
-  showIncidenciaModal.value = true
-}
-
-const handleIniciarRutaDirecto = async (despacho) => {
-  const ok = await confirmAction({
-    header: 'Iniciar Ruta de Transporte',
-    message: `¿Confirma la salida a ruta del despacho ${despacho.codigoTracking}? La unidad y el conductor pasarán a estado EN RUTA y se notificará al cliente.`,
-    acceptLabel: 'Iniciar Ruta',
-    severity: 'info'
-  })
-  if (!ok) return
-
-  try {
-    await transporteFlotaService.iniciarRuta(despacho.idDespachoTransporte)
-    showSuccess(`Ruta iniciada para despacho ${despacho.codigoTracking}`)
-    await recargarTodo()
-  } catch (err) {
-    showError(err.response?.data?.message || err.message || 'Error al iniciar ruta')
-  }
-}
-
-const handleVerEnCabina = (despacho) => {
-  cabinaPreselectedId.value = despacho.idDespachoTransporte
-  selectedDespacho.value = despacho
-  switchTab('cabina')
-}
-
-const handleFilterFromDashboard = (status) => {
-  despachosTableFilter.value = status
+const handleFilterFromDashboard = (estado) => {
+  despachosInitialEstado.value = estado || 'ALL'
   switchTab('despachos')
 }
 
-const submitIncidencia = async () => {
-  if (!selectedDespacho.value || !incidenciaTexto.value.trim()) return
-  savingIncidencia.value = true
-  try {
-    await transporteFlotaService.reportarIncidencia(
-      selectedDespacho.value.idDespachoTransporte,
-      incidenciaTexto.value.trim()
-    )
-    showSuccess('Incidencia registrada exitosamente en la bitácora')
-    showIncidenciaModal.value = false
-    await recargarTodo()
-  } catch (err) {
-    showError(err.response?.data?.message || 'Error al asentar incidencia')
-  } finally {
-    savingIncidencia.value = false
-  }
+const openDetalleDialog = (despacho) => {
+  selectedDespacho.value = despacho
+  showDetalleDialog.value = true
 }
 
-const onDespachoGuardado = async () => {
-  showSuccess('Operación guardada exitosamente')
-  await recargarTodo()
+const openAsignarDialog = (despacho) => {
+  selectedDespacho.value = despacho
+  showDetalleDialog.value = false
+  showAsignarDialog.value = true
 }
 
-const onEntregaConfirmada = async () => {
-  showSuccess('Entrega conforme asentada y unidad liberada')
-  await recargarTodo()
+const openEntregaDialog = (despacho) => {
+  selectedDespacho.value = despacho
+  showDetalleDialog.value = false
+  showEntregaDialog.value = true
+}
+
+const openIncidenciaDialog = (despacho) => {
+  selectedDespacho.value = despacho
+  showDetalleDialog.value = false
+  showIncidenciaDialog.value = true
+}
+
+const handleIniciarRutaDesdeDetalle = (despacho) => {
+  showDetalleDialog.value = false
+  iniciarRuta(despacho)
+}
+
+const handleAnularDesdeDetalle = (despacho) => {
+  showDetalleDialog.value = false
+  anularDespacho(despacho)
+}
+
+const openUnidadForm = (unidad) => {
+  selectedUnidad.value = unidad
+  showUnidadFormDialog.value = true
+}
+
+const openConductorForm = (conductor) => {
+  selectedConductor.value = conductor
+  showConductorFormDialog.value = true
 }
 
 onMounted(() => {
-  recargarTodo()
+  loadAllData()
 })
 </script>
 
 <style scoped>
-.transporte-flota-shell {
+.transporte-flota-view {
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
-  padding: 1.5rem;
-  width: 100%;
-}
-
-.transporte-tabs-nav {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  overflow-x: auto;
-  border-bottom: 1px solid var(--color-border);
-  padding-bottom: 0.5rem;
-}
-
-.tab-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.625rem 1rem;
-  border-radius: var(--radius-md, 0.5rem);
-  background: transparent;
-  border: 1px solid transparent;
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: var(--color-text-muted);
-  cursor: pointer;
-  white-space: nowrap;
-  transition: all 0.15s ease;
-}
-
-.tab-btn:hover {
-  background: var(--color-bg-subtle);
-  color: var(--color-text-main);
-}
-
-.tab-btn.active {
-  background: var(--color-bg-surface);
-  color: var(--color-primary);
-  border-color: var(--color-border);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-}
-
-.tab-num {
-  font-family: var(--font-mono);
-  font-size: 0.6875rem;
-  color: var(--color-text-subtle);
-}
-
-.tab-badge {
-  font-family: var(--font-mono);
-  font-size: 0.6875rem;
-  background: var(--color-bg-subtle);
-  padding: 0.1rem 0.4rem;
-  border-radius: 9999px;
-  color: var(--color-text-muted);
-}
-
-.tab-badge-pulse {
-  font-family: var(--font-mono);
-  font-size: 0.6875rem;
-  font-weight: 700;
-  background: var(--color-info-bg);
-  color: var(--color-info-text);
-  padding: 0.1rem 0.5rem;
-  border-radius: 9999px;
-  border: 1px solid var(--color-info-border);
-}
-
-.transporte-content-area {
-  min-height: 500px;
-}
-
-/* Modales */
-.incidencia-form {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.incidencia-subtitle {
-  margin: 0;
-  font-size: 0.875rem;
-  color: var(--color-text-muted);
-}
-
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.375rem;
-}
-
-.form-label {
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: var(--color-text-main);
-}
-
-.form-textarea {
-  width: 100%;
-  padding: 0.75rem;
-  background-color: var(--color-bg-surface);
-  color: var(--color-text-main);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md, 0.5rem);
-  font-size: 0.875rem;
-  font-family: inherit;
-  resize: vertical;
-}
-
-.modal-footer-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.75rem;
-  margin-top: 0.5rem;
-}
-
-.btn-espresso {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  background: var(--color-primary);
-  color: var(--color-primary-text);
-  border: 1px solid var(--color-primary);
-  padding: 0.625rem 1rem;
-  border-radius: var(--radius-md, 0.5rem);
-  font-size: 0.875rem;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.btn-espresso:hover:not(:disabled) {
-  background: var(--color-primary-hover);
-  border-color: var(--color-primary-hover);
-}
-
-.btn-outline-warm {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  background: transparent;
-  color: var(--color-text-main);
-  border: 1px solid var(--color-border);
-  padding: 0.625rem 0.875rem;
-  border-radius: var(--radius-md, 0.5rem);
-  font-size: 0.875rem;
-  font-weight: 500;
-  cursor: pointer;
-}
-
-.btn-outline-warm:hover:not(:disabled) {
-  background: var(--color-bg-subtle);
 }
 </style>

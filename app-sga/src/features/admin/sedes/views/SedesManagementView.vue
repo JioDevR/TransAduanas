@@ -1,986 +1,291 @@
 <template>
-  <div class="sedes-management-view">
-    <!-- Formulario de Registro / Edición a Pantalla Completa (Estilo Editorial Maestro) -->
+  <div class="catalogo-page fade-in">
     <SedeRegistrationForm
       v-if="showForm"
-      :sede-to-edit="selectedSede"
-      @cancel="showForm = false"
-      @saved="handleSedeSaved"
+      :sede-to-edit="editingItem"
+      @cancel="closeForm"
+      @saved="onSaved"
     />
 
-    <!-- Directorio y Métricas Territoriales -->
     <template v-else>
-      <!-- 1. Toolbar de Acciones Warm Editorial (Sin Banners Invasivos) -->
-      <div class="sedes-action-toolbar">
-        <div class="toolbar-left-info">
-          <span class="badge-kicker">INFRAESTRUCTURA & CONTROL TERRITORIAL // SEDES ADUANERAS</span>
-          <h3 class="toolbar-title">Directorio de Sedes y Agencias Territoriales</h3>
-        </div>
-
-        <div class="toolbar-actions-group">
-          <span class="count-badge font-mono">{{ filteredSedes.length }} de {{ sedes.length }} sedes</span>
-
-          <button
-            type="button"
-            class="btn-outline-warm"
-            @click="loadSedes"
-            :disabled="loading"
-            title="Recargar datos desde el servidor"
-          >
-            <i :class="['pi pi-sync', { 'pi-spin': loading }]"></i>
-            <span>Actualizar</span>
-          </button>
-
-          <!-- Botón de Exportación JasperReports -->
-          <button
-            type="button"
-            class="btn-outline-warm"
-            @click="handleExportPdf"
-            :disabled="exportingPdf"
-            title="Descargar reporte oficial JasperReports en PDF"
-          >
-            <i :class="['pi', exportingPdf ? 'pi-spin pi-spinner' : 'pi-file-pdf']"></i>
-            <span>Ver Reporte (PDF)</span>
-          </button>
-
-          <!-- Botón Crear Nueva Sede -->
-          <button
-            type="button"
-            class="btn-espresso"
-            @click="openCreateModal"
-          >
-            <i class="pi pi-plus"></i>
-            <span>+ Nueva Sede</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- 2. Grid de Métricas KPI Técnicas (Estándar Editorial Warm) -->
-      <div class="metrics-kpi-grid">
-        <div class="kpi-card" @click="loadSedes">
-          <div class="kpi-card-header">
-            <span class="kpi-num">01</span>
-            <span class="kpi-label">Sedes Registradas</span>
-            <i class="pi pi-building kpi-icon"></i>
-          </div>
-          <div class="kpi-main-stat">
-            <span class="kpi-value font-mono">{{ sedes.length }}</span>
-            <span class="kpi-badge accent">Agencias</span>
-          </div>
-          <div class="kpi-footer-note">
-            <span>Red territorial operativa nacional</span>
-          </div>
-        </div>
-
-        <div class="kpi-card success-card">
-          <div class="kpi-card-header">
-            <span class="kpi-num">02</span>
-            <span class="kpi-label">Sedes Operativas</span>
-            <i class="pi pi-check-circle kpi-icon success"></i>
-          </div>
-          <div class="kpi-main-stat">
-            <span class="kpi-value font-mono text-success">{{ operativasCount }}</span>
-            <span class="kpi-badge success">En Servicio</span>
-          </div>
-          <div class="kpi-footer-note">
-            <span>Operaciones aduaneras activas</span>
-          </div>
-        </div>
-
-        <div class="kpi-card danger-card">
-          <div class="kpi-card-header">
-            <span class="kpi-num">03</span>
-            <span class="kpi-label">Inactivas / Mant.</span>
-            <i class="pi pi-exclamation-circle kpi-icon danger"></i>
-          </div>
-          <div class="kpi-main-stat">
-            <span class="kpi-value font-mono text-danger">{{ inactivasCount }}</span>
-            <span class="kpi-badge warning">En Pausa</span>
-          </div>
-          <div class="kpi-footer-note">
-            <span>Terminales fuera de servicio</span>
-          </div>
-        </div>
-
-        <div class="kpi-card">
-          <div class="kpi-card-header">
-            <span class="kpi-num">04</span>
-            <span class="kpi-label">Jurisdicciones</span>
-            <i class="pi pi-map-marker kpi-icon"></i>
-          </div>
-          <div class="kpi-main-stat">
-            <span class="kpi-value font-mono">{{ distritosCount }}</span>
-            <span class="kpi-badge info">Distritos</span>
-          </div>
-          <div class="kpi-footer-note">
-            <span>Callao, Paita, Matarani, Jorge Chávez</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- 3. Contenedor de Directorio y Tabla Principal -->
-      <div class="section-container">
-
-      <!-- Barra de Filtros y Búsqueda -->
-      <div class="filters-bar">
-        <div class="search-input-wrapper">
-          <i class="pi pi-search search-icon"></i>
-          <input
-            v-model.trim="searchQuery"
-            type="text"
-            placeholder="Buscar por código, nombre, distrito o dirección..."
-            class="table-search-input"
-          />
-          <button
-            v-if="searchQuery"
-            type="button"
-            class="clear-search-btn"
-            @click="searchQuery = ''"
-            title="Limpiar búsqueda"
-          >
-            <i class="pi pi-times"></i>
-          </button>
-        </div>
-
-        <div class="filter-group">
-          <!-- Filtro por Tipo -->
-          <select v-model="filterTipo" class="filter-select">
-            <option value="">Todos los Tipos</option>
-            <option value="SEDE_CENTRAL">Sede Central</option>
-            <option value="AGENCIA">Agencia Aduanera</option>
-            <option value="SUCURSAL">Sucursal</option>
-            <option value="TERMINAL">Terminal / Depósito</option>
-          </select>
-
-          <!-- Filtro por Estado -->
-          <select v-model="filterEstado" class="filter-select">
-            <option value="">Todos los Estados</option>
-            <option value="OPERATIVO">Operativo</option>
-            <option value="INACTIVO">Inactivo</option>
-            <option value="MANTENIMIENTO">Mantenimiento</option>
-          </select>
-        </div>
-      </div>
-
-      <!-- Tabla PrimeVue DataTable -->
-      <div class="table-card">
-        <DataTable
-          :value="filteredSedes"
-          :loading="loading"
-          responsiveLayout="scroll"
-          class="custom-datatable p-datatable-sm"
-          paginator
-          :rows="15"
-          :rowsPerPageOptions="[15, 30, 50]"
-          currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} sedes"
-          paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown CurrentPageReport"
+      <section class="sga-kpis-grid">
+        <article
+          class="sga-kpi-card is-primary"
+          :class="{ 'is-active-filter': !hasActiveFilters }"
+          @click="resetFilters"
         >
-          <!-- Empty State -->
-          <template #empty>
-            <div class="empty-state-box">
-              <i class="pi pi-building empty-icon"></i>
-              <p class="empty-text">No se encontraron sedes aduaneras registradas.</p>
-            </div>
-          </template>
+          <div class="sga-kpi-head">
+            <span class="sga-kpi-index">01</span>
+            <span class="sga-kpi-label">Sedes Registradas</span>
+            <i class="pi pi-building sga-kpi-icon"></i>
+          </div>
+          <div class="sga-kpi-stat">
+            <span class="sga-kpi-value sga-mono">{{ items.length }}</span>
+            <span class="sga-kpi-pill">Todas</span>
+          </div>
+        </article>
 
-          <!-- Código de Sede -->
-          <Column field="codigoSede" header="CÓDIGO" :sortable="true" style="min-width: 140px">
-            <template #body="{ data }">
-              <span class="code-badge">{{ data.codigoSede }}</span>
-            </template>
-          </Column>
+        <article
+          class="sga-kpi-card is-success"
+          :class="{ 'is-active-filter': filters.estado === 'OPERATIVO' }"
+          @click="toggleFilter('estado', 'OPERATIVO')"
+        >
+          <div class="sga-kpi-head">
+            <span class="sga-kpi-index">02</span>
+            <span class="sga-kpi-label">Operativas</span>
+            <i class="pi pi-check-circle sga-kpi-icon"></i>
+          </div>
+          <div class="sga-kpi-stat">
+            <span class="sga-kpi-value sga-mono">{{ operativasCount }}</span>
+            <span class="sga-kpi-pill is-success">En Servicio</span>
+          </div>
+        </article>
 
-          <!-- Nombre y Tipo -->
-          <Column field="nombre" header="NOMBRE DE SEDE" :sortable="true" style="min-width: 240px">
-            <template #body="{ data }">
-              <div class="sede-info-cell">
-                <span class="sede-name-text">{{ data.nombre }}</span>
-                <Tag
-                  :value="formatTipoLabel(data.tipo)"
-                  :severity="getTipoSeverity(data.tipo)"
-                  rounded
-                  class="tipo-tag"
+        <article
+          class="sga-kpi-card is-warn"
+          :class="{ 'is-active-filter': filters.estado === 'MANTENIMIENTO' }"
+          @click="toggleFilter('estado', 'MANTENIMIENTO')"
+        >
+          <div class="sga-kpi-head">
+            <span class="sga-kpi-index">03</span>
+            <span class="sga-kpi-label">Mantenimiento</span>
+            <i class="pi pi-wrench sga-kpi-icon"></i>
+          </div>
+          <div class="sga-kpi-stat">
+            <span class="sga-kpi-value sga-mono">{{ mantenimientoCount }}</span>
+            <span class="sga-kpi-pill is-warn">En Pausa</span>
+          </div>
+        </article>
+
+        <article
+          class="sga-kpi-card is-info"
+          :class="{ 'is-active-filter': filters.tipo === 'SEDE_CENTRAL' }"
+          @click="toggleFilter('tipo', 'SEDE_CENTRAL')"
+        >
+          <div class="sga-kpi-head">
+            <span class="sga-kpi-index">04</span>
+            <span class="sga-kpi-label">Sedes Centrales</span>
+            <i class="pi pi-sitemap sga-kpi-icon"></i>
+          </div>
+          <div class="sga-kpi-stat">
+            <span class="sga-kpi-value sga-mono">{{ centralesCount }}</span>
+            <span class="sga-kpi-pill is-info">{{ distritosCount }} distritos</span>
+          </div>
+        </article>
+      </section>
+
+      <SgaListShell v-model:viewMode="viewMode" title="Directorio de Sedes y Agencias">
+        <template #header-right>
+          <div class="sga-dash-actions">
+            <Tag :value="`${filteredItems.length} de ${items.length}`" severity="secondary" class="sga-mono" rounded />
+            <Button icon="pi pi-sync" severity="secondary" outlined size="small" :loading="loading" aria-label="Actualizar" @click="loadItems" />
+            <Button label="PDF" icon="pi pi-file-pdf" severity="secondary" outlined size="small" :loading="exportingPdf" @click="exportPdf" />
+            <Button label="Nueva Sede" icon="pi pi-plus" size="small" @click="openCreate" />
+          </div>
+        </template>
+
+        <template #filters>
+          <IconField class="sga-filter-search">
+            <InputIcon class="pi pi-search" />
+            <InputText v-model="filters.search" size="small" placeholder="Buscar código, nombre, distrito..." fluid />
+          </IconField>
+          <Select v-model="filters.tipo" :options="tipoOptions" optionLabel="label" optionValue="value" size="small" class="sga-filter-select" />
+          <Select v-model="filters.estado" :options="estadoOptions" optionLabel="label" optionValue="value" size="small" class="sga-filter-select" />
+          <Select v-model="filters.sortBy" :options="sortOptions" optionLabel="label" optionValue="value" size="small" class="sga-filter-select sga-sort-select" />
+          <Button v-if="hasActiveFilters" icon="pi pi-filter-slash" label="Limpiar" severity="secondary" text size="small" @click="resetFilters" />
+        </template>
+
+        <div v-if="filteredItems.length === 0 && !loading" class="sga-empty-state">
+          <i class="pi pi-building sga-empty-icon"></i>
+          <p class="sga-empty-title">No se encontraron sedes con los filtros aplicados</p>
+          <Button v-if="hasActiveFilters" label="Restablecer Filtros" severity="secondary" outlined size="small" @click="resetFilters" />
+        </div>
+
+        <div v-else-if="viewMode === 'canvas'" class="sga-canvas-wrapper">
+          <div class="sga-canvas-grid">
+            <article v-for="sede in filteredItems" :key="sede.idSede" class="sga-card-surface sga-canvas-card">
+              <div class="sga-card-top">
+                <span class="sga-card-code sga-mono">{{ sede.codigoSede }}</span>
+                <Tag :value="sede.estado" :severity="getSedeEstadoSeverity(sede.estado)" rounded />
+              </div>
+              <div class="sga-card-client">
+                <h4 class="sga-client-title">{{ sede.nombre }}</h4>
+                <p class="sga-client-meta">{{ formatSedeTipo(sede.tipo) }} · {{ sede.distrito }}</p>
+              </div>
+              <div class="sga-card-meta-grid">
+                <div class="sga-meta-item full-span">
+                  <span class="sga-meta-label">Dirección</span>
+                  <span class="sga-meta-val">{{ sede.direccion }}</span>
+                </div>
+                <div class="sga-meta-item">
+                  <span class="sga-meta-label">Teléfono</span>
+                  <span class="sga-meta-val sga-mono">{{ sede.telefono || 'Sin registro' }}</span>
+                </div>
+              </div>
+              <div class="sga-card-footer">
+                <span class="sga-footer-left sga-text-muted">{{ formatSedeTipo(sede.tipo) }}</span>
+                <CatalogoRowActions
+                  :is-active="sede.estado === 'OPERATIVO'"
+                  :label="sede.codigoSede"
+                  @edit="openEdit(sede)"
+                  @toggle="toggleEstado(sede)"
                 />
               </div>
-            </template>
-          </Column>
+            </article>
+          </div>
+        </div>
 
-          <!-- Distrito & Dirección -->
-          <Column field="distrito" header="UBICACIÓN" :sortable="true" style="min-width: 220px">
-            <template #body="{ data }">
-              <div class="location-cell">
-                <span class="distrito-text"><i class="pi pi-map-marker"></i> {{ data.distrito }}</span>
-                <span class="direccion-text">{{ data.direccion }}</span>
-              </div>
-            </template>
-          </Column>
-
-          <!-- Teléfono -->
-          <Column field="telefono" header="TELÉFONO" style="min-width: 130px">
-            <template #body="{ data }">
-              <span class="phone-text">
-                <i v-if="data.telefono" class="pi pi-phone phone-icon"></i>
-                {{ data.telefono || '—' }}
-              </span>
-            </template>
-          </Column>
-
-          <!-- Estado -->
-          <Column field="estado" header="ESTADO" :sortable="true" style="min-width: 120px">
-            <template #body="{ data }">
-              <Tag
-                :value="data.estado"
-                :severity="getEstadoSeverity(data.estado)"
-                rounded
-              />
-            </template>
-          </Column>
-
-          <!-- Acciones -->
-          <Column header="ACCIONES" style="min-width: 140px; text-align: right">
-            <template #body="{ data }">
-              <div class="action-buttons-cell">
-                <!-- Editar -->
-                <button
-                  type="button"
-                  class="action-btn edit-action"
-                  @click="openEditModal(data)"
-                  title="Editar datos de sede"
-                >
-                  <i class="pi pi-pencil"></i>
-                  <span>Editar</span>
-                </button>
-
-                <!-- Desactivar (si está operativo) -->
-                <button
-                  v-if="data.estado === 'OPERATIVO'"
-                  type="button"
-                  class="action-btn delete-action"
-                  @click="handleToggleEstado(data)"
-                  title="Desactivar sede"
-                >
-                  <i class="pi pi-ban"></i>
-                  <span>Desactivar</span>
-                </button>
-
-                <!-- Reactivar (si está inactivo o en mantenimiento) -->
-                <button
-                  v-else
-                  type="button"
-                  class="action-btn reactivate-action"
-                  @click="handleToggleEstado(data)"
-                  title="Reactivar sede"
-                >
-                  <i class="pi pi-check-circle"></i>
-                  <span>Reactivar</span>
-                </button>
-              </div>
-            </template>
-          </Column>
-        </DataTable>
-      </div>
-    </div>
+        <div v-else class="sga-table-scroll">
+          <DataTable :value="filteredItems" :loading="loading" paginator :rows="12" dataKey="idSede" size="small" stripedRows>
+            <Column field="codigoSede" header="CÓDIGO" sortable>
+              <template #body="{ data }">
+                <span class="sga-code-cell sga-mono">{{ data.codigoSede }}</span>
+              </template>
+            </Column>
+            <Column field="nombre" header="SEDE / DIRECCIÓN" sortable>
+              <template #body="{ data }">
+                <div class="sga-cell-stack">
+                  <span class="sga-cell-primary">{{ data.nombre }}</span>
+                  <span class="sga-cell-sub">{{ data.direccion }}</span>
+                </div>
+              </template>
+            </Column>
+            <Column field="distrito" header="DISTRITO" sortable />
+            <Column field="tipo" header="TIPO" sortable>
+              <template #body="{ data }">
+                <Tag :value="formatSedeTipo(data.tipo)" :icon="getSedeTipoIcon(data.tipo)" severity="secondary" rounded />
+              </template>
+            </Column>
+            <Column field="estado" header="ESTADO" sortable>
+              <template #body="{ data }">
+                <Tag :value="data.estado" :severity="getSedeEstadoSeverity(data.estado)" rounded />
+              </template>
+            </Column>
+            <Column header="ACCIONES" style="width: 110px">
+              <template #body="{ data }">
+                <CatalogoRowActions
+                  :is-active="data.estado === 'OPERATIVO'"
+                  :label="data.codigoSede"
+                  @edit="openEdit(data)"
+                  @toggle="toggleEstado(data)"
+                />
+              </template>
+            </Column>
+          </DataTable>
+        </div>
+      </SgaListShell>
     </template>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-import DataTable from 'primevue/datatable'
+import { computed, onMounted } from 'vue'
+import Button from 'primevue/button'
 import Column from 'primevue/column'
+import DataTable from 'primevue/datatable'
+import IconField from 'primevue/iconfield'
+import InputIcon from 'primevue/inputicon'
+import InputText from 'primevue/inputtext'
+import Select from 'primevue/select'
 import Tag from 'primevue/tag'
+import SgaListShell from '@/shared/components/SgaListShell.vue'
 import SedeRegistrationForm from '../components/SedeRegistrationForm.vue'
+import CatalogoRowActions from '@/features/admin/catalogos/components/CatalogoRowActions.vue'
 import sedeService from '../services/sedeService'
-import { openBlobInNewTab } from '@/shared/utils/download'
-import { useNotification } from '@/shared/composables/useNotification'
-import { useConfirmation } from '@/shared/composables/useConfirmation'
-import { getEstadoSeverity } from '@/shared/utils/formatters'
+import { useCatalogoList } from '@/features/admin/catalogos/composables/useCatalogoList'
+import {
+  formatSedeTipo,
+  getSedeTipoIcon,
+  getSedeEstadoSeverity
+} from '@/features/gerencia/utils/gerenciaFormatters'
 
-const { showSuccess, showError } = useNotification()
-const { confirmAction } = useConfirmation()
+const tipoOptions = [
+  { label: 'Todos los tipos', value: '' },
+  { label: 'Sede Central', value: 'SEDE_CENTRAL' },
+  { label: 'Agencia Operativa', value: 'AGENCIA' },
+  { label: 'Terminal / Almacén', value: 'TERMINAL' }
+]
 
-const sedes = ref([])
-const loading = ref(false)
-const exportingPdf = ref(false)
-const searchQuery = ref('')
-const filterTipo = ref('')
-const filterEstado = ref('')
+const estadoOptions = [
+  { label: 'Todos los estados', value: '' },
+  { label: 'Operativo', value: 'OPERATIVO' },
+  { label: 'Mantenimiento', value: 'MANTENIMIENTO' },
+  { label: 'Inactivo', value: 'INACTIVO' }
+]
 
-const showForm = ref(false)
-const selectedSede = ref(null)
+const sortOptions = [
+  { label: 'Código (A-Z)', value: 'CODIGO_ASC' },
+  { label: 'Nombre (A-Z)', value: 'NOMBRE_ASC' }
+]
 
-const operativasCount = computed(() => {
-  return sedes.value.filter((s) => s.estado === 'OPERATIVO').length
-})
-
-const inactivasCount = computed(() => {
-  return sedes.value.filter((s) => s.estado !== 'OPERATIVO').length
-})
-
-const distritosCount = computed(() => {
-  const set = new Set(sedes.value.map((s) => s.distrito).filter(Boolean))
-  return set.size
-})
-
-const filteredSedes = computed(() => {
-  let list = [...sedes.value]
-
-  if (searchQuery.value) {
-    const q = searchQuery.value.toLowerCase()
-    list = list.filter(
-      (s) =>
-        (s.codigoSede && s.codigoSede.toLowerCase().includes(q)) ||
-        (s.nombre && s.nombre.toLowerCase().includes(q)) ||
-        (s.distrito && s.distrito.toLowerCase().includes(q)) ||
-        (s.direccion && s.direccion.toLowerCase().includes(q))
-    )
-  }
-
-  if (filterTipo.value) {
-    list = list.filter((s) => s.tipo === filterTipo.value)
-  }
-
-  if (filterEstado.value) {
-    list = list.filter((s) => s.estado === filterEstado.value)
-  }
-
-  return list
-})
-
-const loadSedes = async () => {
-  loading.value = true
-  try {
-    const data = await sedeService.getSedes(false)
-    sedes.value = data || []
-  } catch (err) {
-    console.error('Error al cargar sedes:', err)
-  } finally {
-    loading.value = false
-  }
-}
-
-const openCreateModal = () => {
-  selectedSede.value = null
-  showForm.value = true
-}
-
-const openEditModal = (sede) => {
-  selectedSede.value = sede
-  showForm.value = true
-}
-
-const handleSedeSaved = () => {
-  showForm.value = false
-  loadSedes()
-}
-
-const handleToggleEstado = async (sede) => {
-  if (sede.estado === 'OPERATIVO') {
-    const confirmed = await confirmAction({
-      header: 'Confirmar Desactivación de Sede',
-      message: `¿Desea desactivar la sede ${sede.codigoSede} — ${sede.nombre}?`,
-      icon: 'pi pi-exclamation-triangle',
-      acceptLabel: 'Desactivar',
-      acceptClass: 'p-button-danger'
-    })
-    if (!confirmed) return
-  }
-
-  try {
-    if (sede.estado === 'OPERATIVO') {
-      await sedeService.deleteSede(sede.idSede)
-      showSuccess(`Sede ${sede.codigoSede} desactivada correctamente`)
-    } else {
-      await sedeService.reactivateSede(sede.idSede)
-      showSuccess(`Sede ${sede.codigoSede} reactivada correctamente`)
+const {
+  items,
+  loading,
+  exportingPdf,
+  showForm,
+  editingItem,
+  viewMode,
+  filters,
+  hasActiveFilters,
+  filteredItems,
+  toggleFilter,
+  resetFilters,
+  loadItems,
+  openCreate,
+  openEdit,
+  closeForm,
+  onSaved,
+  toggleEstado,
+  exportPdf
+} = useCatalogoList({
+  entityLabel: 'Sede',
+  getId: (s) => s.idSede,
+  getCode: (s) => s.codigoSede,
+  activeStatus: 'OPERATIVO',
+  loadFn: () => sedeService.getSedes(false),
+  deleteFn: (id) => sedeService.deleteSede(id),
+  reactivateFn: (id) => sedeService.reactivateSede(id),
+  pdfFn: () => sedeService.downloadPdf(),
+  initialFilters: { search: '', tipo: '', estado: '', sortBy: 'CODIGO_ASC' },
+  filterItem: (s, f) => {
+    if (f.tipo && s.tipo !== f.tipo) return false
+    if (f.estado && s.estado !== f.estado) return false
+    if (f.search) {
+      const q = f.search.toLowerCase()
+      const hay = `${s.codigoSede || ''} ${s.nombre || ''} ${s.distrito || ''} ${s.direccion || ''}`.toLowerCase()
+      if (!hay.includes(q)) return false
     }
-    await loadSedes()
-  } catch (err) {
-    console.error('Error al cambiar estado de sede:', err)
-    showError(err.response?.data?.message || 'Error al cambiar estado de la sede')
+    return true
+  },
+  sortItems: (list, sortBy) => {
+    const copy = [...list]
+    if (sortBy === 'NOMBRE_ASC') return copy.sort((a, b) => (a.nombre || '').localeCompare(b.nombre || ''))
+    return copy.sort((a, b) => (a.codigoSede || '').localeCompare(b.codigoSede || ''))
+  },
+  messages: {
+    created: 'Nueva sede territorial registrada exitosamente',
+    updated: 'Sede territorial actualizada exitosamente'
   }
-}
-
-const handleExportPdf = async () => {
-  exportingPdf.value = true
-  try {
-    const blob = await sedeService.downloadPdf()
-    openBlobInNewTab(blob)
-    showSuccess('Reporte oficial de sedes abierto en nueva pestaña')
-  } catch (err) {
-    console.error('Error al descargar reporte de sedes:', err)
-    showError('No se pudo generar el reporte de sedes')
-  } finally {
-    exportingPdf.value = false
-  }
-}
-
-const formatTipoLabel = (tipo) => {
-  const map = {
-    SEDE_CENTRAL: 'Central',
-    AGENCIA: 'Agencia',
-    SUCURSAL: 'Sucursal',
-    TERMINAL: 'Terminal'
-  }
-  return map[tipo] || tipo
-}
-
-const getTipoSeverity = (tipo) => {
-  switch (tipo) {
-    case 'SEDE_CENTRAL':
-      return 'info'
-    case 'AGENCIA':
-      return 'success'
-    case 'TERMINAL':
-      return 'warn'
-    default:
-      return 'secondary'
-  }
-}
-
-onMounted(() => {
-  loadSedes()
 })
+
+const operativasCount = computed(() => items.value.filter((s) => s.estado === 'OPERATIVO').length)
+const mantenimientoCount = computed(() => items.value.filter((s) => s.estado !== 'OPERATIVO').length)
+const centralesCount = computed(() => items.value.filter((s) => s.tipo === 'SEDE_CENTRAL').length)
+const distritosCount = computed(() => new Set(items.value.map((s) => s.distrito).filter(Boolean)).size)
+
+onMounted(loadItems)
 </script>
 
 <style scoped>
-.sedes-management-view {
+.catalogo-page {
   display: flex;
   flex-direction: column;
-  gap: var(--space-6, 1.5rem);
-  padding-bottom: var(--space-10, 2.5rem);
+  gap: 1.25rem;
   width: 100%;
 }
 
-/* ==========================================================================
-   1. TOOLBAR DE ACCIONES WARM EDITORIAL
-   ========================================================================== */
-.sedes-action-toolbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: var(--space-4, 1rem);
-  background: var(--color-bg-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg, 12px);
-  padding: var(--space-4, 1rem) var(--space-5, 1.25rem);
-  box-shadow: var(--shadow-subtle);
-}
-
-.toolbar-left-info {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.badge-kicker {
-  font-size: var(--font-size-2xs, 0.6875rem);
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--color-accent-kicker);
-}
-
-.toolbar-title {
-  font-size: var(--font-size-xl, 1.25rem);
-  font-weight: 700;
-  color: var(--color-text-main);
-  margin: 0;
-  letter-spacing: -0.015em;
-}
-
-.toolbar-actions-group {
-  display: flex;
-  align-items: center;
-  gap: 0.65rem;
-  flex-wrap: wrap;
-}
-
-.count-badge {
-  font-size: var(--font-size-xs, 0.75rem);
-  font-weight: 700;
-  color: var(--color-accent-kicker);
-  background: var(--color-bg-subtle);
-  border: 1px solid var(--color-border-subtle);
-  padding: 0.35rem 0.65rem;
-  border-radius: var(--radius-pill, 9999px);
-}
-
-/* ==========================================================================
-   2. REJILLA DE TARJETAS KPI (WARM EDITORIAL)
-   ========================================================================== */
-.metrics-kpi-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: var(--space-4, 1rem);
-}
-
-@media (max-width: 1200px) {
-  .metrics-kpi-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 640px) {
-  .metrics-kpi-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-.kpi-card {
-  background: var(--color-bg-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg, 12px);
-  padding: var(--space-4, 1rem) var(--space-5, 1.25rem);
-  box-shadow: var(--shadow-card);
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  gap: var(--space-3, 0.75rem);
-  cursor: pointer;
-  transition: transform var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
-}
-
-.kpi-card:hover {
-  transform: translateY(-2px);
-  border-color: var(--color-border-strong);
-  box-shadow: var(--shadow-elevated);
-}
-
-.kpi-card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.kpi-num {
-  font-family: var(--font-mono, monospace);
-  font-size: var(--font-size-2xs, 0.6875rem);
-  font-weight: 700;
-  color: var(--color-accent-kicker);
-  background: var(--color-bg-subtle);
-  border: 1px solid var(--color-border-subtle);
-  padding: 0.15rem 0.45rem;
-  border-radius: 4px;
-}
-
-.kpi-label {
-  font-size: var(--font-size-xs, 0.75rem);
-  font-weight: 600;
-  color: var(--color-text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-right: auto;
-  margin-left: 0.65rem;
-}
-
-.kpi-icon {
-  font-size: 1.1rem;
-  color: var(--color-text-subtle);
-}
-
-.kpi-icon.warning {
-  color: var(--color-warning-text, #d97706);
-}
-
-.kpi-icon.danger {
-  color: var(--color-danger-text, #ef4444);
-}
-
-.kpi-icon.success {
-  color: var(--color-success-text, #16a34a);
-}
-
-.kpi-main-stat {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 0.5rem;
-}
-
-.kpi-value {
-  font-family: var(--font-sans);
-  font-size: 1.65rem;
-  font-weight: 800;
-  color: var(--color-text-main);
-  line-height: 1.1;
-  letter-spacing: -0.02em;
-}
-
-.kpi-value.font-mono {
-  font-family: var(--font-mono, monospace);
-  font-size: 1.35rem;
-}
-
-.text-success {
-  color: var(--color-success-text, #16a34a) !important;
-}
-
-.text-danger {
-  color: var(--color-danger-text, #ef4444) !important;
-}
-
-.kpi-badge {
-  font-size: var(--font-size-2xs, 0.6875rem);
-  font-weight: 700;
-  padding: 0.2rem 0.55rem;
-  border-radius: var(--radius-pill, 9999px);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.kpi-badge.accent {
-  background: var(--color-bg-subtle);
-  color: var(--color-accent-kicker);
-  border: 1px solid var(--color-border-subtle);
-}
-
-.kpi-badge.warning {
-  background: var(--color-warning-bg, #fef3c7);
-  color: var(--color-warning-text, #92400e);
-}
-
-.kpi-badge.success {
-  background: var(--color-success-bg, #dcfce7);
-  color: var(--color-success-text, #166534);
-}
-
-.kpi-badge.info {
-  background: var(--color-info-bg, #e0f2fe);
-  color: var(--color-info-text, #0369a1);
-}
-
-.kpi-footer-note {
-  font-size: var(--font-size-xs, 0.75rem);
-  color: var(--color-text-subtle);
-  border-top: 1px dashed var(--color-border-subtle);
-  padding-top: var(--space-2, 0.5rem);
-}
-
-/* Botones Oficiales Warm Editorial */
-.btn-espresso {
-  background: var(--color-primary);
-  color: var(--color-primary-text);
-  border: 1px solid var(--color-primary);
-  padding: 0.55rem 1rem;
-  border-radius: var(--radius-md, 8px);
-  font-weight: 600;
-  font-size: var(--font-size-sm, 0.8125rem);
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  transition: all var(--transition-fast);
-}
-
-.btn-espresso:hover:not(:disabled) {
-  background: var(--color-primary-hover);
-  border-color: var(--color-primary-hover);
-}
-
-.btn-outline-warm {
-  background: var(--color-bg-surface);
-  color: var(--color-text-main);
-  border: 1px solid var(--color-border);
-  padding: 0.5rem 0.9rem;
-  border-radius: var(--radius-md, 8px);
-  font-weight: 600;
-  font-size: var(--font-size-sm, 0.8125rem);
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  transition: all var(--transition-fast);
-}
-
-.btn-outline-warm:hover:not(:disabled) {
-  background: var(--color-bg-subtle);
-  border-color: var(--color-border-strong);
-}
-
-/* 3. Sección Principal */
-.section-container {
-  background: var(--color-bg-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-xl);
-  padding: 1.75rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
-}
-
-.section-header-row {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1.5rem;
-  margin-bottom: 1.25rem;
-}
-
-.section-title {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: var(--color-text-main);
-  margin: 0;
-}
-
-.section-controls {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-}
-
-.count-badge {
-  background: var(--color-bg-subtle);
-  border: 1px solid var(--color-border);
-  color: var(--color-text-muted);
-  font-size: 0.75rem;
-  font-weight: 600;
-  padding: 0.4rem 0.75rem;
-  border-radius: var(--radius-pill);
-}
-
-/* Barra de Filtros */
-.filters-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  margin-bottom: 1.25rem;
-  flex-wrap: wrap;
-}
-
-.search-input-wrapper {
-  position: relative;
-  display: flex;
-  align-items: center;
-  flex: 1;
-  min-width: 300px;
-}
-
-.search-icon {
-  position: absolute;
-  left: 0.85rem;
-  color: var(--color-text-subtle);
-  font-size: 0.875rem;
-  pointer-events: none;
-}
-
-.table-search-input {
-  width: 100%;
-  padding: 0.6rem 2.2rem 0.6rem 2.4rem;
-  background: var(--color-bg-subtle);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  color: var(--color-text-main);
-  font-size: 0.85rem;
-  font-family: inherit;
-  outline: none;
-  transition: all var(--transition-fast);
-}
-
-.table-search-input:focus {
-  background: var(--color-bg-surface);
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(214, 180, 118, 0.2);
-}
-
-.clear-search-btn {
-  position: absolute;
-  right: 0.65rem;
-  background: transparent;
-  border: none;
-  color: var(--color-text-subtle);
-  cursor: pointer;
-  padding: 0.2rem;
-}
-
-.filter-group {
-  display: flex;
-  align-items: center;
-  gap: 0.65rem;
-}
-
-.filter-select {
-  padding: 0.6rem 0.85rem;
-  background-color: var(--color-bg-subtle);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  color: var(--color-text-main);
-  font-size: 0.825rem;
-  font-family: inherit;
-  cursor: pointer;
-  outline: none;
-}
-
-.filter-select:focus {
-  border-color: var(--color-primary);
-}
-
-.table-card {
-  background: var(--color-bg-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg, 12px);
-  overflow: hidden;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
-}
-
-:deep(.p-datatable .p-paginator) {
-  background: var(--color-bg-subtle) !important;
-  border-top: 1px solid var(--color-border-subtle) !important;
-  color: var(--color-text-muted) !important;
-}
-
-/* Celdas Custom en Tabla */
-.code-badge {
-  font-family: var(--font-mono);
-  font-size: 0.775rem;
-  font-weight: 800;
-  color: var(--color-accent-kicker);
-  background: var(--color-bg-subtle);
-  padding: 0.2rem 0.45rem;
-  border-radius: 4px;
-  border: 1px solid var(--color-border-subtle);
-}
-
-.sede-info-cell {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-}
-
-.sede-name-text {
-  font-size: 0.875rem;
-  font-weight: 700;
-  color: var(--color-text-main);
-}
-
-.tipo-tag {
-  align-self: flex-start;
-  font-size: 0.65rem !important;
-  padding: 0.1rem 0.45rem !important;
-}
-
-.location-cell {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.distrito-text {
-  font-size: 0.825rem;
-  font-weight: 600;
-  color: var(--color-text-main);
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-}
-
-.distrito-text i {
-  color: var(--color-accent-kicker);
-  font-size: 0.8rem;
-}
-
-.direccion-text {
-  font-size: 0.75rem;
-  color: var(--color-text-subtle);
-}
-
-.phone-text {
-  font-size: 0.8rem;
-  color: var(--color-text-muted);
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-}
-
-.phone-icon {
-  font-size: 0.75rem;
-  color: var(--color-text-subtle);
-}
-
-.action-buttons-cell {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 0.5rem;
-}
-
-.action-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  padding: 0.35rem 0.65rem;
-  border-radius: var(--radius-sm);
-  font-size: 0.75rem;
-  font-weight: 600;
-  cursor: pointer;
-  border: 1px solid transparent;
-  transition: all var(--transition-fast);
-}
-
-.edit-action {
-  background: var(--color-bg-subtle);
-  border-color: var(--color-border);
-  color: var(--color-text-main);
-}
-
-.edit-action:hover {
-  background: var(--color-bg-surface);
-  border-color: var(--color-primary);
-  color: var(--color-primary);
-}
-
-.delete-action {
-  background: var(--color-danger-bg);
-  border-color: var(--color-danger-border);
-  color: var(--color-danger-text);
-}
-
-.delete-action:hover {
-  filter: brightness(1.1);
-}
-
-.reactivate-action {
-  background: var(--color-success-bg);
-  border-color: var(--color-success-border);
-  color: var(--color-success-text);
-}
-
-.reactivate-action:hover {
-  filter: brightness(1.1);
-}
-
-.empty-state-box {
-  padding: 3rem 1rem;
-  text-align: center;
-  color: var(--color-text-subtle);
-}
-
-.empty-icon {
-  font-size: 2.25rem;
-  margin-bottom: 0.75rem;
-  color: var(--color-accent-kicker);
-}
-
-.empty-text {
-  font-size: 0.9rem;
-  margin: 0;
-}
-
-@media (max-width: 1024px) {
-  .metrics-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 640px) {
-  .metrics-grid {
-    grid-template-columns: 1fr;
-  }
-  .section-header-row {
-    flex-direction: column;
-    align-items: stretch;
-  }
+.is-active-filter {
+  outline: 2px solid var(--sga-accent, #8c5a3c);
+  outline-offset: 1px;
 }
 </style>

@@ -24,10 +24,16 @@ public class ConductorController {
 
     @GetMapping
     public ResponseEntity<ApiResponseDTO<List<ConductorResponseDTO>>> listar(
-            @RequestParam(required = false, defaultValue = "false") boolean soloActivos) {
-        List<ConductorResponseDTO> lista = soloActivos
-                ? conductorService.listarActivos()
-                : conductorService.listarTodos();
+            @RequestParam(required = false, defaultValue = "false") boolean soloActivos,
+            @RequestParam(required = false, defaultValue = "false") boolean soloDisponibles) {
+        List<ConductorResponseDTO> lista;
+        if (soloDisponibles) {
+            lista = conductorService.listarDisponibles();
+        } else if (soloActivos) {
+            lista = conductorService.listarActivos();
+        } else {
+            lista = conductorService.listarTodos();
+        }
         return ResponseEntity.ok(ApiResponseDTO.ok("Lista de conductores recuperada", lista));
     }
 

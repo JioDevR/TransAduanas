@@ -109,8 +109,7 @@ const MODULE_OPTIONS = [
   { value: 'gestion-aduanera', label: '03 Gestión Aduanera' },
   { value: 'agente-aduanero', label: '04 Agente Aduanero' },
   { value: 'transporte-flota', label: '05 Transporte y Flota' },
-  { value: 'finanzas', label: '06 Finanzas' },
-  { value: 'legal-auditoria', label: '07 Legal y Auditoría' }
+  { value: 'finanzas', label: '06 Finanzas' }
 ]
 
 const MODULE_META = {
@@ -120,8 +119,7 @@ const MODULE_META = {
   'gestion-aduanera': { code: '03', title: 'GESTIÓN ADUANERA' },
   'agente-aduanero': { code: '04', title: 'AGENTE ADUANERO' },
   'transporte-flota': { code: '05', title: 'TRANSPORTE Y FLOTA' },
-  finanzas: { code: '06', title: 'FINANZAS' },
-  'legal-auditoria': { code: '07', title: 'LEGAL Y AUDITORÍA' }
+  finanzas: { code: '06', title: 'FINANZAS' }
 }
 
 const activeModuleShortTitle = computed(() => MODULE_META[navigationStore.currentModule]?.title || 'OPERACIONES')
@@ -231,9 +229,8 @@ const currentNavItems = computed(() => {
     return [
       { key: 'dashboard', label: 'Dashboard Operativo', match: ['dashboard'], onClick: go('dashboard') },
       { key: 'despachos', label: 'Monitoreo & Despachos', match: ['despachos'], onClick: go('despachos') },
-      { key: 'cabina', label: 'Cabina de Ruta', match: ['cabina'], onClick: go('cabina') },
       { key: 'unidades', label: 'Parque de Flota', match: ['unidades'], onClick: go('unidades') },
-      { key: 'conductores', label: 'Directorio Choferes', match: ['conductores'], onClick: go('conductores') }
+      { key: 'conductores', label: 'Directorio Conductores', match: ['conductores'], onClick: go('conductores') }
     ]
   }
 
@@ -249,14 +246,6 @@ const currentNavItems = computed(() => {
     ]
   }
 
-  if (mod === 'legal-auditoria') {
-    const go = (sub) => () => selectSub('legal-auditoria', navigationStore.setLegalAuditoriaSubOption, sub, { path: '/legal-auditoria', query: { tab: sub } })
-    return [
-      { key: 'expedientes', label: 'Expedientes & Recursos', match: ['expedientes'], onClick: go('expedientes') },
-      { key: 'auditorias', label: 'Auditorías SUNAT', match: ['auditorias'], onClick: go('auditorias') }
-    ]
-  }
-
   return []
 })
 
@@ -268,8 +257,7 @@ const activeSubOptionByModule = computed(() => {
     'gestion-aduanera': navigationStore.gestionAduaneraSubOption,
     'agente-aduanero': navigationStore.agenteAduaneroSubOption,
     'transporte-flota': navigationStore.transporteFlotaSubOption,
-    finanzas: navigationStore.finanzasSubOption,
-    'legal-auditoria': navigationStore.legalAuditoriaSubOption
+    finanzas: navigationStore.finanzasSubOption
   }
   return map[navigationStore.currentModule] || ''
 })

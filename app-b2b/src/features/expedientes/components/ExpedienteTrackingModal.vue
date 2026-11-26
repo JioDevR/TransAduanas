@@ -18,7 +18,11 @@
           <div class="dam-meta-row">
             <span class="sga-mono meta-chip">{{ expediente.codigoExpediente }}</span>
             <span>Cotización: <strong class="sga-mono">{{ expediente.codigoCotizacion || '—' }}</strong></span>
-            <span>Agente SGA: <strong>{{ expediente.agenteAduaneroNombre || 'Asignado' }}</strong></span>
+            <span>
+              Agente SGA:
+              <strong v-if="expediente.agenteAduaneroNombre">{{ expediente.agenteAduaneroNombre }}</strong>
+              <Tag v-else value="Pendiente de Asignación" severity="warn" class="sga-mini-tag" rounded />
+            </span>
           </div>
         </div>
 
@@ -133,6 +137,158 @@
         </article>
       </section>
 
+      <!-- Contacto Exterior & Manifiesto Internacional -->
+      <section class="ops-two-cols">
+        <article class="sga-card-surface op-card">
+          <div class="op-head-between">
+            <div class="op-head">
+              <span class="op-icon"><i class="pi pi-globe"></i></span>
+              <div>
+                <h4 class="op-title">Contacto Exterior & Carga</h4>
+                <span class="op-sub">Datos de contraparte internacional</span>
+              </div>
+            </div>
+            <Button
+              v-if="expediente.estadoExpediente !== 'CERRADO' && expediente.estadoExpediente !== 'ANULADO'"
+              type="button"
+              label="Completar Datos"
+              icon="pi pi-pencil"
+              severity="secondary"
+              outlined
+              size="small"
+              @click="$emit('edit-client-data', expediente)"
+            />
+          </div>
+
+          <div class="op-rows">
+            <div class="op-row">
+              <span>Contacto Exterior</span>
+              <strong>{{ expediente.contactoExteriorNombre || 'Sin registrar' }}</strong>
+            </div>
+            <div v-if="expediente.contactoExteriorTelefono" class="op-row">
+              <span>Teléfono</span>
+              <strong class="sga-mono">{{ expediente.contactoExteriorTelefono }}</strong>
+            </div>
+            <div v-if="expediente.contactoExteriorCorreo" class="op-row">
+              <span>Correo</span>
+              <strong>{{ expediente.contactoExteriorCorreo }}</strong>
+            </div>
+            <div v-if="expediente.naveViaje || expediente.numeroVuelo" class="op-row">
+              <span>Nave / Vuelo</span>
+              <strong class="sga-mono">{{ expediente.numeroVuelo || expediente.naveViaje }}</strong>
+            </div>
+            <div v-if="expediente.numeroContenedor" class="op-row">
+              <span>Contenedor / Precinto</span>
+              <strong class="sga-mono">{{ expediente.numeroContenedor }} {{ expediente.precintoAduanero ? `(${expediente.precintoAduanero})` : '' }}</strong>
+            </div>
+          </div>
+        </article>
+
+        <!-- Control de Canal / Inspección / SUNAT -->
+        <article class="sga-card-surface op-card">
+          <div class="op-head">
+            <span class="op-icon"><i class="pi pi-shield"></i></span>
+            <div>
+              <h4 class="op-title">Control Aduanero & Despacho</h4>
+              <span class="op-sub">Seguimiento específico de canal y entrega</span>
+            </div>
+          </div>
+
+          <div class="op-rows">
+            <div v-if="expediente.verificacionOrigenOk" class="op-row">
+              <span>Verificación en Origen</span>
+              <Tag value="Verificado" severity="success" rounded />
+            </div>
+            <div v-if="expediente.cuadrillaSolicitada" class="op-row">
+              <span>Cuadrilla / Cita Canal Rojo</span>
+              <strong>{{ expediente.codigoCitaInspeccion || 'Programada' }} — {{ expediente.cuadrillaDetalle }}</strong>
+            </div>
+            <div v-if="expediente.fechaCitaInspeccion" class="op-row">
+              <span>Fecha Cita Inspección</span>
+              <strong class="sga-mono">{{ formatDateTime(expediente.fechaCitaInspeccion) }}</strong>
+            </div>
+            <div v-if="expediente.envioSunatSimuladoOk" class="op-row">
+              <span>Transmisión SUNAT (Naranja)</span>
+              <strong class="sga-mono">{{ expediente.codigoTransmisionSunat }}</strong>
+            </div>
+            <div v-if="expediente.entregadoAlmacenVerde" class="op-row">
+              <span>Almacén Canal Verde</span>
+              <Tag value="Entregado en Almacén" severity="success" rounded />
+            </div>
+            <div v-if="expediente.detalleInspeccion" class="op-row">
+              <span>Detalle Diligencia</span>
+              <strong>{{ expediente.detalleInspeccion }}</strong>
+            </div>
+            <div v-if="expediente.fechaEntregaConforme" class="op-row">
+              <span>Entrega Conforme</span>
+              <strong class="sga-mono">{{ formatDateTime(expediente.fechaEntregaConforme) }}</strong>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <!-- Informe de Conformidad de Entrega (Importación / Cierre) -->
+      <section v-if="expediente.informeConformidadTexto" class="sga-card-surface docs-card">
+        <div class="docs-head">
+          <div>
+            <span class="sga-kicker">ACTA DE CONFORMIDAD DE ENTREGA</span>
+            <h4 class="op-title">Informe de Conformidad al Cliente</h4>
+            <p class="canal-desc" style="margin-top: 0.25rem;">
+              Receptor: <strong>{{ expediente.receptorConformidadNombre }}</strong>
+              <span v-if="expediente.receptorConformidadDni"> (DNI: {{ expediente.receptorConformidadDni }})</span>
+            </p>
+          </div>
+          <div class="doc-actions">
+            <Button
+              type="button"
+              label="Ver Informe PDF"
+              icon="pi pi-eye"
+              severity="secondary"
+              outlined
+              size="small"
+              @click="$emit('preview-informe', expediente)"
+            />
+            <Button
+              type="button"
+              label="Descargar PDF"
+              icon="pi pi-download"
+              size="small"
+              @click="$emit('download-informe', expediente)"
+            />
+          </div>
+        </div>
+        <p class="op-empty" style="color: var(--color-text-main); margin: 0;">
+          {{ expediente.informeConformidadTexto }}
+        </p>
+      </section>
+
+      <!-- Bitácora Cronológica de Estados y Tiempos -->
+      <section v-if="expediente.eventos && expediente.eventos.length > 0" class="sga-card-surface docs-card">
+        <div class="docs-head">
+          <div>
+            <span class="sga-kicker">BITÁCORA EN TIEMPO REAL</span>
+            <h4 class="op-title">Historial de Estados y Tiempos del Agente ({{ expediente.eventos.length }})</h4>
+          </div>
+        </div>
+        <ul class="docs-list">
+          <li v-for="ev in expediente.eventos" :key="ev.idEvento" class="doc-row">
+            <div class="doc-info">
+              <i class="pi pi-clock doc-icon"></i>
+              <div class="doc-meta">
+                <strong class="doc-name">{{ ev.titulo }}</strong>
+                <span class="doc-sub">
+                  {{ ev.descripcion || ev.codigoEstado }}
+                </span>
+              </div>
+            </div>
+            <div class="doc-meta" style="text-align: right;">
+              <span class="doc-sub sga-mono">{{ formatDateTime(ev.fechaEvento) }}</span>
+              <span class="doc-sub">{{ ev.usuarioNombre || 'Agente SGA' }}</span>
+            </div>
+          </li>
+        </ul>
+      </section>
+
       <!-- Bóveda Documental del Despacho -->
       <section class="sga-card-surface docs-card">
         <div class="docs-head">
@@ -216,7 +372,7 @@ const props = defineProps({
   loadingDocs: { type: Boolean, default: false }
 })
 
-defineEmits(['close', 'preview-doc', 'download-doc'])
+defineEmits(['close', 'preview-doc', 'download-doc', 'edit-client-data', 'preview-informe', 'download-informe'])
 
 const dialogHeader = computed(() => {
   if (!props.expediente) return 'Tracking de Expediente'
@@ -329,6 +485,14 @@ const timelineSteps = computed(() => buildTimelineSteps(props.expediente))
   display: flex;
   align-items: center;
   gap: 0.75rem;
+}
+
+.op-head-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
 }
 
 .op-icon {

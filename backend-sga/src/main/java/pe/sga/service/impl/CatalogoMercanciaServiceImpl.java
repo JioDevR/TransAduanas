@@ -107,7 +107,12 @@ public class CatalogoMercanciaServiceImpl implements ICatalogoMercanciaService {
         if (dto.getNombre() != null) entity.setNombre(dto.getNombre().trim());
         if (dto.getCategoria() != null) entity.setCategoria(dto.getCategoria().trim().toUpperCase());
         if (dto.getRequierePermiso() != null) entity.setRequierePermiso(dto.getRequierePermiso());
-        if (dto.getEntidadReguladora() != null) entity.setEntidadReguladora(dto.getEntidadReguladora().trim().toUpperCase());
+        if (Boolean.FALSE.equals(entity.getRequierePermiso())) {
+            entity.setEntidadReguladora(null);
+        } else if (dto.getEntidadReguladora() != null) {
+            String entidad = dto.getEntidadReguladora().trim().toUpperCase();
+            entity.setEntidadReguladora(entidad.isEmpty() ? null : entidad);
+        }
         if (dto.getArancelBasePct() != null) entity.setArancelBasePct(dto.getArancelBasePct());
         if (dto.getEstado() != null) entity.setEstado(dto.getEstado().trim().toUpperCase());
 

@@ -119,6 +119,18 @@
 
       <Button
         type="button"
+        label="WhatsApp"
+        icon="pi pi-whatsapp"
+        severity="success"
+        outlined
+        size="small"
+        :disabled="!selectedRow || !selectedRowHasPhone"
+        :title="whatsAppBtnTitle"
+        @click="$emit('notify-whatsapp', selectedRow)"
+      />
+
+      <Button
+        type="button"
         label="Actualizar"
         icon="pi pi-sync"
         severity="secondary"
@@ -304,7 +316,8 @@ const emit = defineEmits([
   'open-docs',
   'approve',
   'observe',
-  'reject'
+  'reject',
+  'notify-whatsapp'
 ])
 
 const viewMode = ref('table')
@@ -369,6 +382,12 @@ const sortOptions = [
 const canApproveSelected = computed(() => isCotizacionRevisable(selectedRow.value?.estado))
 const canRejectSelected = computed(() => isCotizacionRevisable(selectedRow.value?.estado))
 const canObserveSelected = computed(() => isCotizacionObservable(selectedRow.value?.estado))
+const selectedRowHasPhone = computed(() => Boolean(String(selectedRow.value?.clienteTelefono || '').replace(/[^0-9]/g, '')))
+const whatsAppBtnTitle = computed(() => {
+  if (!selectedRow.value) return 'Seleccione una cotización'
+  if (!selectedRowHasPhone.value) return 'El cliente no tiene teléfono registrado'
+  return 'Enviar resumen de estado por WhatsApp al cliente'
+})
 
 watch(
   () => props.cotizaciones,

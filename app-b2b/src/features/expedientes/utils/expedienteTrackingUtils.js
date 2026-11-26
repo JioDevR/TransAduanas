@@ -36,10 +36,17 @@ export function getExpedientePhase(exp) {
     }
   }
   if (exp.fechaArriboAduana) {
-    return { label: 'Arribado en Puerto', icon: 'pi pi-compass', severity: 'info' }
+    return {
+      label: isExportExpediente(exp) ? 'En Almacén Central / Terminal' : 'Arribado en Puerto',
+      icon: 'pi pi-compass',
+      severity: 'info'
+    }
   }
   if (isZarpeConfirmado(exp)) {
     return { label: 'En Tránsito Internacional', icon: 'pi pi-send', severity: 'info' }
+  }
+  if (exp.pendienteAsignacionAgente) {
+    return { label: 'Por Asignar Agente', icon: 'pi pi-user-plus', severity: 'warn' }
   }
   return { label: 'Apertura / Pendiente Salida', icon: 'pi pi-clock', severity: 'secondary' }
 }
@@ -91,17 +98,69 @@ export function calculateLeadTime(exp) {
 
 export function buildTimelineSteps(exp) {
   if (!exp) return []
+  const isExport = isExportExpediente(exp)
   const zarpe = isZarpeConfirmado(exp)
   const arribado = Boolean(exp.fechaArriboAduana)
   const numerado = Boolean(exp.numeroDam)
   const levante = Boolean(exp.fechaLevanteAutorizacion || exp.estadoExpediente === 'LEVANTE_AUTORIZADO')
   const cerrado = exp.estadoExpediente === 'CERRADO'
 
+  if (isExport) {
+    const obs = exp.observaciones || ''
+    const embarcado = obs.includes('EMBARQUE CONFIRMADO') || Boolean(exp.fechaZarpeEtd && levante)
+    const recepcionExterior = obs.includes('RECEPCIÓN DESTINO EXTERIOR') || Boolean(exp.idDocumentoConformidadDestino)
+
+    return [
+      {
+        num: 1,
+        label: 'Expediente & Recojo',
+        detail: exp.tieneTransporte ? (exp.estadoTransporte || 'Transporte activo') : 'Ingreso directo',
+        completed: true,
+        active: false
+      },
+      {
+        num: 2,
+        label: 'Almacén Central',
+        detail: arribado ? formatDateTime(exp.fechaArriboAduana) : 'Por ingresar',
+        completed: arribado,
+        active: !arribado
+      },
+      {
+        num: 3,
+        label: 'Revisión Aduana',
+        detail: numerado ? (exp.canalSunat || 'Con DAM') : (exp.enRevisionAduana ? 'En revisión' : 'Pendiente'),
+        completed: numerado,
+        active: arribado && !numerado
+      },
+      {
+        num: 4,
+        label: 'Levante & Tránsito',
+        detail: levante ? (exp.enEsperaTransito ? 'En espera tránsito' : 'Autorizado') : 'En gestión',
+        completed: levante,
+        active: numerado && !levante
+      },
+      {
+        num: 5,
+        label: 'Vuelo / Embarque',
+        detail: embarcado ? (exp.numeroVuelo || exp.naveViaje || 'Embarcado') : 'Por embarcar',
+        completed: embarcado,
+        active: levante && !embarcado
+      },
+      {
+        num: 6,
+        label: 'Destino & Finalizado',
+        detail: cerrado ? (exp.fechaCierre ? formatDate(exp.fechaCierre) : 'Finalizado') : (recepcionExterior ? 'Conformidad OK' : 'En curso'),
+        completed: cerrado || recepcionExterior,
+        active: embarcado && !cerrado && !recepcionExterior
+      }
+    ]
+  }
+
   return [
     {
       num: 1,
       label: 'Cotización',
-      detail: 'Aprobada',
+      detail: exp.verificacionOrigenOk ? 'Verificado origen' : 'Aprobada',
       completed: true,
       active: false
     },

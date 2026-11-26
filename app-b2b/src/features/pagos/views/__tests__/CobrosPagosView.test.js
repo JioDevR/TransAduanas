@@ -5,6 +5,7 @@ import { createPinia, setActivePinia } from 'pinia'
 import PrimeVue from 'primevue/config'
 import CobrosPagosView from '../CobrosPagosView.vue'
 import ObservadosBandejaPanel from '../../components/ObservadosBandejaPanel.vue'
+import HistorialVouchersCanvasGrid from '../../components/HistorialVouchersCanvasGrid.vue'
 import { portalPagoService } from '../../services/portalPagoService'
 
 vi.mock('vue-router', () => ({
@@ -124,5 +125,34 @@ describe('CobrosPagosView Component - Estándar sgaUI', () => {
     expect(html).toContain('PAG-COT-2026-0003')
     expect(html).toContain('El voucher no es legible')
     expect(html).toContain('Subsanar Abono')
+  })
+
+  it('HistorialVouchersCanvasGrid muestra el botón de Factura PDF cuando el abono fue facturado', async () => {
+    const app = createSSRApp({
+      render() {
+        return h(HistorialVouchersCanvasGrid, {
+          anticipos: [
+            {
+              idPago: 22,
+              codigoPago: 'PAG-COT-2026-0022',
+              codigoCotizacion: 'COT-2026-0010',
+              montoAbonado: 1180,
+              bancoOrigen: 'BCP',
+              bancoDestino: 'BCP USD',
+              numeroOperacion: 'OP-881122',
+              fechaOperacion: '2026-11-24',
+              estadoPago: 'APROBADO',
+              idComprobanteFactura: 9,
+              numeroFacturaEmitida: 'F001-000009'
+            }
+          ]
+        })
+      }
+    })
+    app.use(PrimeVue)
+
+    const html = await renderToString(app)
+    expect(html).toContain('PAG-COT-2026-0022')
+    expect(html).toContain('F001-000009')
   })
 })

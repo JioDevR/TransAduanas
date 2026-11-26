@@ -12,7 +12,8 @@ export function useAduanasCotizaciones({
   authStore,
   notify,
   confirmAction,
-  onReload
+  onReload,
+  onRevisionCompleted
 }) {
   const subQueueCotizaciones = ref(authStore?.canSwitchModules ? 'todas' : 'nuevas')
   const searchQuery = ref('')
@@ -93,7 +94,7 @@ export function useAduanasCotizaciones({
     if (!cotizacion?.idCotizacion) return false
     processingAction.value = true
     try {
-      await gestionAduaneraService.revisarCotizacion(cotizacion.idCotizacion, {
+      const revisada = await gestionAduaneraService.revisarCotizacion(cotizacion.idCotizacion, {
         idAgenteRevisor: authStore.user?.idUsuario || 1,
         estado,
         motivoObservacion,
@@ -102,7 +103,7 @@ export function useAduanasCotizaciones({
 
       if (estado === 'APROBADA') {
         notify.showSuccess(`¡Cotización ${cotizacion.codigoCotizacion} Aprobada! Lista para apertura de Expediente Aduanero.`)
-        const notifCred = getCredencialesPostAprobacionNotification(cotizacion)
+        const notifCred = getCredencialesPostAprobacionNotification(revisada || cotizacion)
         notify.showInfo(notifCred.message, notifCred.title, notifCred.life)
       } else if (estado === 'OBSERVADA') {
         notify.showInfo(`Cotización ${cotizacion.codigoCotizacion} devuelta como Observada para corrección por Ventas.`)
@@ -112,6 +113,9 @@ export function useAduanasCotizaciones({
 
       if (onReload) {
         await onReload()
+      }
+      if (onRevisionCompleted) {
+        onRevisionCompleted(revisada || { ...cotizacion, estado, motivoObservacion })
       }
       return true
     } catch (err) {

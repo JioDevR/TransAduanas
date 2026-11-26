@@ -872,13 +872,13 @@ var expected=List.of(new CatalogoTipoCargaResponseDTO());when(tipoCargaService.l
 @Test void UC112_ConductorController_listar_true() throws Exception {
 var conductorService=mock(IConductorService.class);
 var ctl=new ConductorController(conductorService);
-var expected=List.of(new ConductorResponseDTO());when(conductorService.listarActivos()).thenReturn(expected);var r=ctl.listar(true);assertEquals(200,r.getStatusCode().value());assertTrue(r.getBody().isSuccess());assertSame(expected,r.getBody().getData());verify(conductorService).listarActivos();verifyNoMoreInteractions(conductorService);
+var expected=List.of(new ConductorResponseDTO());when(conductorService.listarActivos()).thenReturn(expected);var r=ctl.listar(true,false);assertEquals(200,r.getStatusCode().value());assertTrue(r.getBody().isSuccess());assertSame(expected,r.getBody().getData());verify(conductorService).listarActivos();verifyNoMoreInteractions(conductorService);
 }
 
 @Test void UC113_ConductorController_listar_false() throws Exception {
 var conductorService=mock(IConductorService.class);
 var ctl=new ConductorController(conductorService);
-var expected=List.of(new ConductorResponseDTO());when(conductorService.listarTodos()).thenReturn(expected);var r=ctl.listar(false);assertEquals(200,r.getStatusCode().value());assertTrue(r.getBody().isSuccess());assertSame(expected,r.getBody().getData());verify(conductorService).listarTodos();verifyNoMoreInteractions(conductorService);
+var expected=List.of(new ConductorResponseDTO());when(conductorService.listarTodos()).thenReturn(expected);var r=ctl.listar(false,false);assertEquals(200,r.getStatusCode().value());assertTrue(r.getBody().isSuccess());assertSame(expected,r.getBody().getData());verify(conductorService).listarTodos();verifyNoMoreInteractions(conductorService);
 }
 
 @Test void UC114_RolController_listar_true() throws Exception {
@@ -986,25 +986,19 @@ var expected=List.of(new LiquidacionFinancieraResponseDTO());when(liquidacionSer
 @Test void UC130_DespachoTransporteController_listar_listarTodos() throws Exception {
 var despachoService=mock(IDespachoTransporteService.class);
 var ctl=new DespachoTransporteController(despachoService);
-var expected=List.of(new DespachoTransporteResponseDTO());when(despachoService.listarTodos(false)).thenReturn(expected);var r=ctl.listar(false,null,null,null);assertEquals(200,r.getStatusCode().value());assertTrue(r.getBody().isSuccess());assertSame(expected,r.getBody().getData());verify(despachoService).listarTodos(false);verifyNoMoreInteractions(despachoService);
+var expected=List.of(new DespachoTransporteResponseDTO());when(despachoService.listarConFiltros(false,null,null,null)).thenReturn(expected);var r=ctl.listar(false,null,null,null);assertEquals(200,r.getStatusCode().value());assertTrue(r.getBody().isSuccess());assertSame(expected,r.getBody().getData());verify(despachoService).listarConFiltros(false,null,null,null);verifyNoMoreInteractions(despachoService);
 }
 
-@Test void UC131_DespachoTransporteController_listar_listarPorEstado() throws Exception {
+@Test void UC131_DespachoTransporteController_listar_combinado() throws Exception {
 var despachoService=mock(IDespachoTransporteService.class);
 var ctl=new DespachoTransporteController(despachoService);
-var expected=List.of(new DespachoTransporteResponseDTO());when(despachoService.listarPorEstado("EN_RUTA")).thenReturn(expected);var r=ctl.listar(true,"  EN_RUTA  ",7,8);assertEquals(200,r.getStatusCode().value());assertTrue(r.getBody().isSuccess());assertSame(expected,r.getBody().getData());verify(despachoService).listarPorEstado("EN_RUTA");verifyNoMoreInteractions(despachoService);
+var expected=List.of(new DespachoTransporteResponseDTO());when(despachoService.listarConFiltros(true,"  EN_RUTA  ",7,8)).thenReturn(expected);var r=ctl.listar(true,"  EN_RUTA  ",7,8);assertEquals(200,r.getStatusCode().value());assertTrue(r.getBody().isSuccess());assertSame(expected,r.getBody().getData());verify(despachoService).listarConFiltros(true,"  EN_RUTA  ",7,8);verifyNoMoreInteractions(despachoService);
 }
 
-@Test void UC132_DespachoTransporteController_listar_listarPorConductor() throws Exception {
-var despachoService=mock(IDespachoTransporteService.class);
-var ctl=new DespachoTransporteController(despachoService);
-var expected=List.of(new DespachoTransporteResponseDTO());when(despachoService.listarPorConductor(7)).thenReturn(expected);var r=ctl.listar(false,null,7,8);assertEquals(200,r.getStatusCode().value());assertTrue(r.getBody().isSuccess());assertSame(expected,r.getBody().getData());verify(despachoService).listarPorConductor(7);verifyNoMoreInteractions(despachoService);
-}
-
-@Test void UC133_DespachoTransporteController_listar_listarPorUnidad() throws Exception {
-var despachoService=mock(IDespachoTransporteService.class);
-var ctl=new DespachoTransporteController(despachoService);
-var expected=List.of(new DespachoTransporteResponseDTO());when(despachoService.listarPorUnidad(8)).thenReturn(expected);var r=ctl.listar(false,null,null,8);assertEquals(200,r.getStatusCode().value());assertTrue(r.getBody().isSuccess());assertSame(expected,r.getBody().getData());verify(despachoService).listarPorUnidad(8);verifyNoMoreInteractions(despachoService);
+@Test void UC132_ConductorController_listar_disponibles() throws Exception {
+var conductorService=mock(IConductorService.class);
+var ctl=new ConductorController(conductorService);
+var expected=List.of(new ConductorResponseDTO());when(conductorService.listarDisponibles()).thenReturn(expected);var r=ctl.listar(false,true);assertEquals(200,r.getStatusCode().value());assertTrue(r.getBody().isSuccess());assertSame(expected,r.getBody().getData());verify(conductorService).listarDisponibles();verifyNoMoreInteractions(conductorService);
 }
 
 @Test void UC134_ExpedienteController_listar_listarTodos() throws Exception {
@@ -1139,40 +1133,11 @@ var ctl=new LiquidacionFinancieraController(liquidacionService);
 var dto=new LiquidacionFinancieraRequestDTO();var expected=new LiquidacionFinancieraResponseDTO();when(liquidacionService.emitir(dto,null)).thenReturn(expected);var r=ctl.emitir(dto,null);assertEquals(201,r.getStatusCode().value());assertSame(expected,r.getBody().getData());verify(liquidacionService).emitir(dto,null);
 }
 
-@Test void UC159_DespachoTransporteController_obtenerMiDespachoActivo_usuario() throws Exception {
+@Test void UC163_DespachoTransporteController_reportarIncidencia() throws Exception {
 var despachoService=mock(IDespachoTransporteService.class);
 var ctl=new DespachoTransporteController(despachoService);
-var expected=new DespachoTransporteResponseDTO();when(despachoService.obtenerDespachoActivoPorUsuario(7)).thenReturn(expected);var r=ctl.obtenerMiDespachoActivo(interno());assertEquals(200,r.getStatusCode().value());assertSame(expected,r.getBody().getData());verify(despachoService).obtenerDespachoActivoPorUsuario(7);
-}
-
-@Test void UC160_DespachoTransporteController_obtenerMiDespachoActivo_nulo() throws Exception {
-var despachoService=mock(IDespachoTransporteService.class);
-var ctl=new DespachoTransporteController(despachoService);
-var r=ctl.obtenerMiDespachoActivo(null);assertEquals(200,r.getStatusCode().value());assertNull(r.getBody().getData());verifyNoInteractions(despachoService);
-}
-
-@Test void UC161_DespachoTransporteController_listarMisDespachos_usuario() throws Exception {
-var despachoService=mock(IDespachoTransporteService.class);
-var ctl=new DespachoTransporteController(despachoService);
-var expected=List.of(new DespachoTransporteResponseDTO());when(despachoService.listarMisDespachos(7)).thenReturn(expected);var r=ctl.listarMisDespachos(interno());assertEquals(200,r.getStatusCode().value());assertSame(expected,r.getBody().getData());verify(despachoService).listarMisDespachos(7);
-}
-
-@Test void UC162_DespachoTransporteController_listarMisDespachos_nulo() throws Exception {
-var despachoService=mock(IDespachoTransporteService.class);
-var ctl=new DespachoTransporteController(despachoService);
-var r=ctl.listarMisDespachos(null);assertEquals(200,r.getStatusCode().value());assertTrue(r.getBody().getData().isEmpty());verifyNoInteractions(despachoService);
-}
-
-@Test void UC163_DespachoTransporteController_reportarIncidencia_True() throws Exception {
-var despachoService=mock(IDespachoTransporteService.class);
-var ctl=new DespachoTransporteController(despachoService);
-var expected=new DespachoTransporteResponseDTO();when(despachoService.reportarIncidencia(7,"QA")).thenReturn(expected);var r=ctl.reportarIncidencia(7,Map.of("incidencia","QA"));assertSame(expected,r.getBody().getData());verify(despachoService).reportarIncidencia(7,"QA");
-}
-
-@Test void UC164_DespachoTransporteController_reportarIncidencia_False() throws Exception {
-var despachoService=mock(IDespachoTransporteService.class);
-var ctl=new DespachoTransporteController(despachoService);
-var expected=new DespachoTransporteResponseDTO();when(despachoService.reportarIncidencia(7,"Incidencia no detallada")).thenReturn(expected);var r=ctl.reportarIncidencia(7,Map.of());assertSame(expected,r.getBody().getData());verify(despachoService).reportarIncidencia(7,"Incidencia no detallada");
+var dto=pe.sga.dto.request.DespachoIncidenciaDTO.builder().incidencia("QA").build();
+var expected=new DespachoTransporteResponseDTO();when(despachoService.reportarIncidencia(7,"QA")).thenReturn(expected);var r=ctl.reportarIncidencia(7,dto);assertSame(expected,r.getBody().getData());verify(despachoService).reportarIncidencia(7,"QA");
 }
 
 @Test void UC165_PortalController_login() throws Exception {

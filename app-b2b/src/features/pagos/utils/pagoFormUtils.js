@@ -66,28 +66,54 @@ export function getPagoTagSeverity(estadoPago) {
   }
 }
 
+export const MIN_ANTICIPO_PCT = 30
+
+export function isCotizacionObligacion(tipoObligacion) {
+  return tipoObligacion === 'COTIZACION' || tipoObligacion === 'ANTICIPO_COTIZACION'
+}
+
 export function getTipoObligacionMeta(tipoObligacion) {
-  if (tipoObligacion === 'COTIZACION') {
+  if (isCotizacionObligacion(tipoObligacion)) {
     return { label: 'Anticipo Pre-Expediente', severity: 'info' }
   }
   return { label: 'Despacho Aduanero', severity: 'secondary' }
 }
 
+export function calcularMinimoAnticipoMayor30(totalContratado) {
+  const total = Number(totalContratado || 0)
+  if (!Number.isFinite(total) || total <= 0) return 0
+  const base30 = Number((Math.round((total * 30) + Number.EPSILON) / 100).toFixed(2))
+  return Number((base30 + 0.01).toFixed(2))
+}
+
 export function validarRegistroPagoForm({
   montoAbonado,
   saldoPendienteMax,
+  totalContratadoUsd = 0,
+  totalAmortizadoUsd = 0,
   numeroOperacion,
   bancoOrigen,
   archivoVoucher
 }) {
   const monto = Number(montoAbonado || 0)
   const saldo = Number(saldoPendienteMax || 0)
+  const totalContratado = Number(totalContratadoUsd || 0)
+  const totalAmortizado = Number(totalAmortizadoUsd || 0)
 
   if (!Number.isFinite(monto) || monto <= 0) {
     return { valid: false, error: 'Por favor ingrese un monto válido a abonar.' }
   }
   if (saldo > 0 && monto > saldo) {
     return { valid: false, error: 'El monto ingresado excede el saldo pendiente de la obligación.' }
+  }
+  if (totalAmortizado === 0 && totalContratado > 0 && saldo > 0 && monto < saldo) {
+    const umbral30 = Number((Math.round((totalContratado * 30) + Number.EPSILON) / 100).toFixed(2))
+    if (monto <= umbral30) {
+      return {
+        valid: false,
+        error: `El anticipo inicial debe ser mayor al ${MIN_ANTICIPO_PCT}% del total cotizado (> $ ${umbral30.toFixed(2)} USD) o cancelar el 100% del saldo.`
+      }
+    }
   }
   if (!String(bancoOrigen || '').trim()) {
     return { valid: false, error: 'Debe seleccionar el banco emisor.' }

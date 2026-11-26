@@ -19,6 +19,9 @@ public interface UsuarioClienteRepository extends JpaRepository<UsuarioCliente, 
     @Query("SELECT DISTINCT uc.cliente.idCliente FROM UsuarioCliente uc WHERE uc.cliente.idCliente IN :idsClientes")
     Set<Integer> findClienteIdsWithUsuario(@Param("idsClientes") Collection<Integer> idsClientes);
 
+    @Query("SELECT DISTINCT uc.cliente.idCliente FROM UsuarioCliente uc WHERE uc.cliente.idCliente IN :idsClientes AND uc.debeCambiarPassword = true")
+    Set<Integer> findClienteIdsWithCambioPasswordPendiente(@Param("idsClientes") Collection<Integer> idsClientes);
+
     List<UsuarioCliente> findByCliente_NumeroDocumento(String ruc);
 
     Optional<UsuarioCliente> findByCliente_CorreoContacto(String correoContacto);

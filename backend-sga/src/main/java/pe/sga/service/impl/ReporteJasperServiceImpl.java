@@ -15,7 +15,9 @@ import pe.sga.dto.reporte.UsuarioReporteItemDTO;
 import pe.sga.dto.response.AdminAlmacenamientoDTO;
 import pe.sga.dto.response.AdminDashboardResponseDTO;
 import pe.sga.dto.response.AdminSistemaEstadoDTO;
+import pe.sga.dto.response.ComprobanteFacturaResponseDTO;
 import pe.sga.dto.response.CotizacionResponseDTO;
+import pe.sga.dto.response.ExpedienteResponseDTO;
 import pe.sga.entity.AuditoriaEvento;
 import pe.sga.entity.CatalogoMercancia;
 import pe.sga.entity.CatalogoPuerto;
@@ -790,6 +792,69 @@ public class ReporteJasperServiceImpl implements IReporteJasperService {
         return renderHtmlToPdf("reports/proforma-cotizacion-b2b", variables);
     }
 
+    // =========================================================================
+    // 07. COMPROBANTE DE FACTURA / BOLETA POR ABONO O LIQUIDACIÓN
+    // =========================================================================
+    @Override
+    public ByteArrayInputStream exportarComprobanteFacturaPdf(ComprobanteFacturaResponseDTO factura) {
+        if (factura == null) {
+            throw new IllegalArgumentException("El comprobante es obligatorio para generar el PDF.");
+        }
+
+        String moneda = factura.getMoneda() != null ? factura.getMoneda().trim().toUpperCase(Locale.ROOT) : "PEN";
+        String simbolo = "USD".equals(moneda) ? "$ " : "S/ ";
+
+        BigDecimal inafecto = safeDecimal(factura.getInafecto());
+        BigDecimal subtotal = safeDecimal(factura.getSubtotalGravado());
+        BigDecimal igv = safeDecimal(factura.getIgvMonto());
+        BigDecimal total = safeDecimal(factura.getTotalComprobante());
+        BigDecimal totalPen = safeDecimal(factura.getTotalEquivalentePen());
+        BigDecimal tc = safeDecimal(factura.getTipoCambio());
+
+        String tipoComprobante = factura.getTipoComprobante() != null
+                ? factura.getTipoComprobante().toUpperCase(Locale.ROOT)
+                : "FACTURA";
+
+        Map<String, Object> variables = new HashMap<>();
+        variables.put("tipoComprobante", tipoComprobante);
+        variables.put("tipoComprobanteLabel", "BOLETA".equals(tipoComprobante) ? "BOLETA DE VENTA" : "FACTURA ELECTRÓNICA");
+        variables.put("numeroCompleto", defaultIfBlank(factura.getNumeroCompleto(), "F001-000000"));
+        variables.put("clienteRazonSocial", defaultIfBlank(factura.getClienteRazonSocial(), "Cliente"));
+        variables.put("clienteNumeroDocumento", defaultIfBlank(factura.getClienteNumeroDocumento(), "—"));
+        variables.put("clienteDireccion", factura.getClienteDireccion() != null && !factura.getClienteDireccion().isBlank()
+                ? factura.getClienteDireccion()
+                : null);
+        variables.put("fechaEmisionFmt", factura.getFechaEmision() != null
+                ? factura.getFechaEmision().format(REPORT_DATE_FORMATTER)
+                : LocalDateTime.now().format(REPORT_DATE_FORMATTER));
+        variables.put("codigoReferencia", defaultIfBlank(factura.getCodigoReferencia(), "—"));
+        variables.put("monedaLabel", "USD".equals(moneda) ? "Dólares (USD $)" : "Soles (PEN S/)");
+        variables.put("tipoCambioFmt", formatDecimal(tc.compareTo(BigDecimal.ZERO) > 0 ? tc : new BigDecimal("3.7500"), 4));
+        variables.put("estado", defaultIfBlank(factura.getEstado(), "EMITIDA"));
+        variables.put("origenLabel", "LIQUIDACION_ADUANERA".equals(factura.getOrigenTipo())
+                ? "Liquidación Aduanera de Despacho"
+                : "Anticipo / Abono de Servicio Aduanero");
+        variables.put("concepto", defaultIfBlank(factura.getConcepto(), "Servicios logísticos y aduaneros"));
+        variables.put("tieneInafecto", inafecto.compareTo(BigDecimal.ZERO) > 0);
+        variables.put("inafectoFmt", simbolo + formatDecimal(inafecto, 2));
+        variables.put("subtotalGravadoFmt", simbolo + formatDecimal(subtotal, 2));
+        variables.put("igvMontoFmt", simbolo + formatDecimal(igv, 2));
+        variables.put("totalComprobanteFmt", simbolo + formatDecimal(total, 2));
+        variables.put("totalEquivalentePenFmt", "S/ " + formatDecimal(totalPen, 2));
+        variables.put("bancoDestino", factura.getBancoDestino());
+        variables.put("numeroOperacion", factura.getNumeroOperacion());
+        variables.put("observaciones", factura.getObservaciones());
+
+        return renderHtmlToPdf("reports/comprobante-factura", variables);
+    }
+
+    private String formatDecimal(BigDecimal val, int scale) {
+        NumberFormat nf = NumberFormat.getNumberInstance(Locale.US);
+        nf.setMinimumFractionDigits(scale);
+        nf.setMaximumFractionDigits(scale);
+        return nf.format(safeDecimal(val));
+    }
+
     private String formatPendingCost(BigDecimal value, boolean pendienteLiquidacion) {
         BigDecimal safe = safeDecimal(value);
         if (pendienteLiquidacion && safe.compareTo(BigDecimal.ZERO) <= 0) {
@@ -850,6 +915,33 @@ public class ReporteJasperServiceImpl implements IReporteJasperService {
             case "OBSERVADO", "RECHAZADO" -> "badge-danger";
             default -> "badge-warn";
         };
+    }
+
+    @Override
+    public ByteArrayInputStream exportarInformeConformidadPdf(ExpedienteResponseDTO expediente) {
+        Map<String, Object> vars = new HashMap<>();
+        String clienteRaz = expediente.getClienteRazonSocial() != null && !expediente.getClienteRazonSocial().isBlank()
+                ? expediente.getClienteRazonSocial() : "Cliente B2B";
+        String receptorNom = expediente.getReceptorConformidadNombre() != null && !expediente.getReceptorConformidadNombre().isBlank()
+                ? expediente.getReceptorConformidadNombre() : clienteRaz;
+
+        vars.put("codigoExpediente", expediente.getCodigoExpediente() != null ? expediente.getCodigoExpediente() : "EXP-S/N");
+        vars.put("numeroDam", expediente.getNumeroDam() != null && !expediente.getNumeroDam().isBlank() ? expediente.getNumeroDam() : "Pendiente");
+        vars.put("clienteRazonSocial", clienteRaz);
+        vars.put("clienteRuc", expediente.getClienteNumeroDocumento() != null ? expediente.getClienteNumeroDocumento() : "—");
+        vars.put("mercanciaNombre", expediente.getMercanciaNombre() != null ? expediente.getMercanciaNombre() : "Carga General");
+        vars.put("canalSunat", expediente.getCanalSunat() != null ? expediente.getCanalSunat().name() : "PENDIENTE");
+        vars.put("agenteNombre", expediente.getAgenteAduaneroNombre() != null ? expediente.getAgenteAduaneroNombre() : "Agente Aduanero SGA");
+        vars.put("receptorNombre", receptorNom);
+        vars.put("receptorDni", expediente.getReceptorConformidadDni() != null && !expediente.getReceptorConformidadDni().isBlank()
+                ? expediente.getReceptorConformidadDni() : "—");
+        vars.put("detalleConformidad", expediente.getInformeConformidadTexto() != null && !expediente.getInformeConformidadTexto().isBlank()
+                ? expediente.getInformeConformidadTexto()
+                : "Entrega realizada conforme en destino final sin observaciones.");
+        vars.put("fechaInforme", expediente.getFechaInformeConformidad() != null
+                ? expediente.getFechaInformeConformidad().format(REPORT_DATE_FORMATTER)
+                : LocalDateTime.now().format(REPORT_DATE_FORMATTER));
+        return renderHtmlToPdf("reports/informe-conformidad", vars);
     }
 
     // =========================================================================

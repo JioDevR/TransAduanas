@@ -7,7 +7,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pe.sga.dto.request.CotizacionPagoRegistrarDTO;
 import pe.sga.dto.request.CotizacionPagoValidarDTO;
+import pe.sga.dto.response.ComprobanteFacturaResponseDTO;
 import pe.sga.dto.response.CotizacionPagoResponseDTO;
+import pe.sga.entity.ComprobanteFactura;
 import pe.sga.entity.Cotizacion;
 import pe.sga.entity.CotizacionPago;
 import pe.sga.entity.DocumentoAdjunto;
@@ -18,12 +20,14 @@ import pe.sga.entity.enums.RolUsuario;
 import pe.sga.exception.BadRequestException;
 import pe.sga.exception.ResourceNotFoundException;
 import pe.sga.entity.NotificacionCliente;
+import pe.sga.repository.ComprobanteFacturaRepository;
 import pe.sga.repository.CotizacionPagoRepository;
 import pe.sga.repository.CotizacionRepository;
 import pe.sga.repository.IDocumentoAdjuntoRepository;
 import pe.sga.repository.NotificacionClienteRepository;
 import pe.sga.repository.UsuarioRepository;
 import pe.sga.service.IAuditoriaService;
+import pe.sga.service.IComprobanteFacturaService;
 import pe.sga.service.ICotizacionPagoService;
 
 import java.math.BigDecimal;
@@ -42,10 +46,22 @@ public class CotizacionPagoServiceImpl implements ICotizacionPagoService {
     private final IDocumentoAdjuntoRepository documentoRepository;
     private final NotificacionClienteRepository notificacionClienteRepository;
     private IAuditoriaService auditoriaService;
+    private IComprobanteFacturaService comprobanteFacturaService;
+    private ComprobanteFacturaRepository comprobanteFacturaRepository;
 
     @Autowired(required = false)
     public void setAuditoriaService(IAuditoriaService auditoriaService) {
         this.auditoriaService = auditoriaService;
+    }
+
+    @Autowired(required = false)
+    public void setComprobanteFacturaService(IComprobanteFacturaService comprobanteFacturaService) {
+        this.comprobanteFacturaService = comprobanteFacturaService;
+    }
+
+    @Autowired(required = false)
+    public void setComprobanteFacturaRepository(ComprobanteFacturaRepository comprobanteFacturaRepository) {
+        this.comprobanteFacturaRepository = comprobanteFacturaRepository;
     }
 
     private void auditar(String modulo, String accion, Integer idPago, String detalle) {
@@ -156,7 +172,7 @@ public class CotizacionPagoServiceImpl implements ICotizacionPagoService {
     @Override
     @Transactional(readOnly = true)
     public List<CotizacionPagoResponseDTO> listarTodos() {
-        return cotizacionPagoRepository.findAll().stream()
+        return cotizacionPagoRepository.findAllByOrderByFechaRegistroDesc().stream()
                 .map(this::mapToResponse)
                 .toList();
     }
@@ -193,15 +209,25 @@ public class CotizacionPagoServiceImpl implements ICotizacionPagoService {
             // Recalcular saldo y totales de cotización
             recalcularFinanzasCotizacion(cotizacion);
 
+            // Emisión automática de comprobante / factura al aprobar abono
+            ComprobanteFacturaResponseDTO facturaEmitida = null;
+            if (comprobanteFacturaService != null) {
+                facturaEmitida = comprobanteFacturaService.emitirAutomaticoPorAbono(pago, finanzas);
+            }
+
             // Notificación al portal de clientes B2B (Diagrama: Pago Aprobado / Habilitado para apertura de expediente)
             if (cotizacion != null && cotizacion.getCliente() != null) {
+                String textoFactura = facturaEmitida != null
+                        ? " Se ha emitido automáticamente el comprobante " + facturaEmitida.getNumeroCompleto() + ", disponible para descarga en su historial."
+                        : "";
                 NotificacionCliente notif = NotificacionCliente.builder()
                         .cliente(cotizacion.getCliente())
                         .titulo("Anticipo de Pago Validado: " + pago.getCodigoPago())
                         .mensaje("Su abono de " + pago.getMoneda() + " " + pago.getMontoAbonado()
                                 + " (Operación N° " + pago.getNumeroOperacion() + ") para la cotización "
                                 + cotizacion.getCodigoCotizacion()
-                                + " ha sido verificado y aprobado por Finanzas. Su servicio queda expedito para la apertura del expediente aduanero.")
+                                + " ha sido verificado y aprobado por Finanzas. Su servicio queda expedito para la apertura del expediente aduanero."
+                                + textoFactura)
                         .tipo("PAGO")
                         .leido(false)
                         .enlace("/pagos?tab=historial")
@@ -353,6 +379,11 @@ public class CotizacionPagoServiceImpl implements ICotizacionPagoService {
 
     private CotizacionPagoResponseDTO mapToResponse(CotizacionPago p) {
         Cotizacion c = p.getCotizacion();
+        ComprobanteFactura factura = (comprobanteFacturaRepository != null && p.getIdPago() != null)
+                ? comprobanteFacturaRepository
+                        .findFirstByPagoCotizacion_IdPagoAndEstadoOrderByIdComprobanteDesc(p.getIdPago(), "EMITIDA")
+                        .orElse(null)
+                : null;
         return CotizacionPagoResponseDTO.builder()
                 .idPago(p.getIdPago())
                 .idCotizacion(c != null ? c.getIdCotizacion() : null)
@@ -379,6 +410,8 @@ public class CotizacionPagoServiceImpl implements ICotizacionPagoService {
                 .usuarioFinanzasNombre(p.getUsuarioFinanzas() != null ? p.getUsuarioFinanzas().getNombreCompleto() : null)
                 .fechaValidacion(p.getFechaValidacion())
                 .observacionFinanzas(p.getObservacionFinanzas())
+                .idComprobanteFactura(factura != null ? factura.getIdComprobante() : null)
+                .numeroFacturaEmitida(factura != null ? factura.getNumeroCompleto() : null)
                 .idUsuarioRegistro(p.getUsuarioRegistro() != null ? p.getUsuarioRegistro().getIdUsuario() : null)
                 .usuarioRegistroNombre(p.getUsuarioRegistro() != null ? p.getUsuarioRegistro().getNombreCompleto() : null)
                 .fechaRegistro(p.getFechaRegistro())

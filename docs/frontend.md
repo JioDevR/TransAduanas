@@ -11,7 +11,7 @@ La interfaz de usuario de la plataforma se compone de **dos aplicaciones Single 
 
 | Aplicación | Directorio en Repositorio | Carpeta de Documentación | Alcance y Perfil de Usuario |
 | :--- | :--- | :--- | :--- |
-| **Frontend Interno SGA** | [`app-sga/`](../app-sga) | [`docs/app-sga/`](app-sga) | **Sistema Operativo Interno (Puerto 5180):** 8 roles institucionales (Comercial, Aduanas, Almacén VGM, Transporte TMS, Finanzas, Liquidación, Legal, Gerencia y TI). 6 capítulos detallados. |
+| **Frontend Interno SGA** | [`app-sga/`](../app-sga) | [`docs/app-sga/`](app-sga) | **Sistema Operativo Interno (Puerto 5180):** 7 roles institucionales (Comercial, Aduanas, Almacén VGM, Transporte TMS, Finanzas, Liquidación, Gerencia y TI). 6 capítulos detallados. |
 | **Portal del Cliente B2B** | [`app-portal-cliente/`](../app-portal-cliente) | [`docs/app-portal-clientes/`](app-portal-clientes) | **Extranet Corporativa B2B (Puerto 5174):** Autoservicio para clientes importadores y exportadores por RUC (Tracking DAM, cotizaciones en USD, deuda heredada y subida de vouchers). 5 capítulos detallados. |
 
 ---
@@ -20,7 +20,7 @@ La interfaz de usuario de la plataforma se compone de **dos aplicaciones Single 
 1. [`docs/app-sga/01_introduccion_y_arquitectura.md`](app-sga/01_introduccion_y_arquitectura.md) — Visión para no técnicos, arquitectura SPA con Vue 3.5, Vite 8 y Feature-Based.
 2. [`docs/app-sga/02_dependencias_y_librerias.md`](app-sga/02_dependencias_y_librerias.md) — Inventario exhaustivo del `package.json` de `app-sga`.
 3. [`docs/app-sga/03_nucleo_autenticacion_y_enrutamiento.md`](app-sga/03_nucleo_autenticacion_y_enrutamiento.md) — `apiClient.js` (JWT y 401), Pinia stores, `roles.js` y guardias de seguridad en `router`.
-4. [`docs/app-sga/04_catalogo_modulos_y_vistas.md`](app-sga/04_catalogo_modulos_y_vistas.md) — Catálogo de vistas de los 8 roles institucionales y sus modales de negocio.
+4. [`docs/app-sga/04_catalogo_modulos_y_vistas.md`](app-sga/04_catalogo_modulos_y_vistas.md) — Catálogo de vistas de los 7 roles institucionales y sus modales de negocio.
 5. [`docs/app-sga/05_componentes_compartidos_y_estilos.md`](app-sga/05_componentes_compartidos_y_estilos.md) — Tokens Warm Editorial, modo claro/oscuro, `AppSidebar`, `BaseModal` y composables.
 6. [`docs/app-sga/06_pruebas_y_ejecucion.md`](app-sga/06_pruebas_y_ejecucion.md) — Testing con Vitest, build Rollup con división de chunks y troubleshooting.
 
@@ -69,8 +69,7 @@ La interfaz de usuario de la plataforma se compone de **dos aplicaciones Single 
    - [9.7 Agente Aduanero (Depósito y Almacén VGM)](#97-agente-aduanero-depósito-y-almacén-vgm)
    - [9.8 Transporte y Flota (Despacho y Tracking)](#98-transporte-y-flota-despacho-y-tracking)
    - [9.9 Finanzas (Anticipos, Cobranzas y Liquidación)](#99-finanzas-anticipos-cobranzas-y-liquidación)
-   - [9.10 Legal y Auditoría Normativa](#910-legal-y-auditoría-normativa)
-   - [9.11 Archivo Documental Digital](#911-archivo-documental-digital)
+   - [9.10 Archivo Documental Digital](#910-archivo-documental-digital)
 10. [Biblioteca de Componentes Compartidos y Composables](#10-biblioteca-de-componentes-compartidos-y-composables)
 11. [Configuración, Entorno y Puesta en Marcha](#11-configuración-entorno-y-puesta-en-marcha)
 12. [Portal del Cliente B2B (`app-portal-cliente`)](#12-portal-del-cliente-b2b-app-portal-cliente)
@@ -345,10 +344,6 @@ app-sga/
     │   ├── liquidacion/                 # Módulo de Liquidación Aduanera y Tributaria
     │   │   └── views/                   # LiquidacionAduaneraView.vue
     │   │
-    │   ├── legal/                       # Módulo de Asesoría Legal y Normativa
-    │   │   ├── components/              # AuditoriaExpedienteModal.vue
-    │   │   └── views/                   # LegalAuditoriaView.vue
-    │   │
     │   └── documentos/                  # Módulo de Archivo Digital y Gestión Documental
     │       └── services/documentoService.js # Carga multipart, descarga y preview de archivos
     │
@@ -508,7 +503,6 @@ Ubicado en `src/core/stores/navigationStore.js`, gestiona la navegación interna
   - `agenteAduaneroSubOption`: `'almacen' | 'expedientes' | 'despacho'`
   - `transporteFlotaSubOption`: `'despachos' | 'unidades' | 'conductores'`
   - `finanzasSubOption`: `'liquidaciones' | 'por-liquidar' | 'conciliacion' | 'anticipos'`
-  - `legalAuditoriaSubOption`: `'expedientes' | 'auditorias'`
 - **Disparadores Modales Directos (`triggers`):** Permiten que botones del Sidebar abran inmediatamente modales específicos (e.g. "Nueva Cotización", "Nuevo Usuario") mediante un contador reactivo `navTick`.
 
 ---
@@ -569,7 +563,6 @@ router.beforeEach(async (to, from, next) => {
 | **`AGENTE_ADUANERO`**       | `/agente-aduanero`            | Depósito temporal, control de pesaje balanza VGM y verificación de levante aduanero (`/agente-aduanero`).                                      |
 | **`SUPERVISOR_TRANSPORTE`** | `/transporte-flota`           | Programación de órdenes de despacho, asignación de tractos/choferes MTC y tracking en ruta (`/transporte-flota`).                              |
 | **`CONTADOR`**              | `/finanzas`                   | Validación de anticipos pre-expediente, balances de liquidación final y cálculo de detracciones SPOT (`/finanzas`).                            |
-| **`ASESOR_LEGAL`**          | `/legal-auditoria`            | Fiscalización normativa de expedientes aduaneros, permisos sectoriales (DIGEMID, SENASA) y archivo digital (`/legal-auditoria`).               |
 
 ---
 
@@ -709,16 +702,7 @@ router.beforeEach(async (to, from, next) => {
 
 ---
 
-### 9.11 Asesoría Legal y Auditoría Normativa (`features/legal`)
-
-- **Auditoría Regulatoria (`LegalAuditoriaView.vue` & `AuditoriaExpedienteModal.vue`):**  
-  - Fiscalización jurídica de expedientes aduaneros cerrados o en trámite.
-  - Inspección de permisos sectoriales obligatorios (VUCE, DIGEMID para fármacos, SENASA para alimentos/agro, SUCAMEC para materiales restringidos).
-  - Verificación de plazos máximos para evitar abandono legal de mercancías ante SUNAT.
-
----
-
-### 9.12 Archivo Documental Digital (`features/documentos`)
+### 9.11 Archivo Documental Digital (`features/documentos`)
 
 - Carga de archivos sustentatorios mediante zona interactiva de arrastre (_Drag & Drop_) o explorador del sistema (`DocumentosUploadPanel.vue`).
 - Clasificación por categorías normativas: Factura Comercial, Packing List, Conocimiento de Embarque (BL), DAM, Comprobante de Pago, Ticket de Balanza VGM.

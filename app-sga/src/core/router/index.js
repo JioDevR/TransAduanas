@@ -124,10 +124,6 @@ router.beforeEach(async (to, from, next) => {
       navStore.setGerenciaGeneralSubOption('mercancias')
     } else if (toPath.includes('dashboard') || toPath.includes('resumen')) {
       navStore.setGerenciaGeneralSubOption('dashboard')
-    } else if (toPath.includes('flota')) {
-      navStore.setGerenciaGeneralSubOption('flota')
-    } else if (toPath.includes('conductores')) {
-      navStore.setGerenciaGeneralSubOption('conductores')
     } else {
       navStore.setGerenciaGeneralSubOption('dashboard')
     }
@@ -168,15 +164,6 @@ router.beforeEach(async (to, from, next) => {
       navStore.setTransporteFlotaSubOption(to.query.tab)
     } else {
       navStore.resetModuleToDefaultView('transporte-flota')
-    }
-  } else if (toPath.startsWith('/legal-auditoria')) {
-    if (navStore.activeModule !== 'legal-auditoria') {
-      navStore.setActiveModule('legal-auditoria')
-    }
-    if (to?.query?.tab) {
-      navStore.setLegalAuditoriaSubOption(to.query.tab)
-    } else {
-      navStore.resetModuleToDefaultView('legal-auditoria')
     }
   } else if (toPath.startsWith('/finanzas')) {
     if (navStore.activeModule !== 'finanzas') {

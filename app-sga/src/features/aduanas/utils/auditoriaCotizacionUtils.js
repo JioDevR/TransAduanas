@@ -12,7 +12,10 @@ export function normalizeAuditoriaData(cotizacion = null, expediente = null) {
   const isExpedienteView = Boolean(expediente || cotizacion?.codigoExpediente)
   const estado = raw.estado || raw.estadoExpediente || ''
   const modalidadRaw = raw.modalidad || raw.puertoEnvioTipo || raw.puertoDestinoTipo || ''
-  const isAirModal = String(modalidadRaw).toUpperCase() === 'AEREO'
+  const textoInferencia = `${raw.puertoEnvioNombre || ''} ${raw.puertoDestinoNombre || ''} ${raw.tipoCargaNombre || ''}`.toUpperCase()
+  const isAirModal = modalidadRaw
+    ? String(modalidadRaw).toUpperCase() === 'AEREO'
+    : textoInferencia.includes('AEROPUERTO') || textoInferencia.includes('AÉREO') || textoInferencia.includes('AEREO')
 
   const entidadTipo = isExpedienteView ? 'EXPEDIENTE' : 'COTIZACION'
   const entidadId = isExpedienteView

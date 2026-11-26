@@ -1,8 +1,9 @@
 import { ref, computed, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { portalPagoService } from '../services/portalPagoService'
+import { isCotizacionObligacion } from '../utils/pagoFormUtils'
 import { useNotification } from '@/shared/composables/useNotification'
-import { openBlobInNewTab } from '@/shared/utils/download'
+import { downloadBlob, openBlobInNewTab } from '@/shared/utils/download'
 
 /**
  * Composable de estado y filtros para Cobros y Pagos del Portal B2B.
@@ -14,6 +15,8 @@ export function usePortalPagos() {
 
   const obligaciones = ref([])
   const anticipos = ref([])
+  const liquidaciones = ref([])
+  const facturas = ref([])
   const requestedSection = ref(null)
   const loading = ref(true)
 
@@ -26,7 +29,7 @@ export function usePortalPagos() {
   const filtroHistorialEstado = ref('')
 
   const cotizacionesPreExpediente = computed(() =>
-    obligaciones.value.filter(o => o.tipoObligacion === 'COTIZACION')
+    obligaciones.value.filter(o => isCotizacionObligacion(o.tipoObligacion))
   )
 
   const expedientesHeredados = computed(() =>
@@ -44,7 +47,7 @@ export function usePortalPagos() {
 
   const obligacionesFiltradas = computed(() => {
     return obligaciones.value.filter(o => {
-      if (filtroTipoObligacion.value === 'COTIZACION' && o.tipoObligacion !== 'COTIZACION') {
+      if (filtroTipoObligacion.value === 'COTIZACION' && !isCotizacionObligacion(o.tipoObligacion)) {
         return false
       }
       if (
@@ -141,13 +144,21 @@ export function usePortalPagos() {
   async function cargarTodo() {
     loading.value = true
     try {
-      const [dataObligaciones, dataAnticipos] = await Promise.all([
+      const [dataObligaciones, dataAnticipos, dataFacturas, dataLiquidaciones] = await Promise.all([
         portalPagoService.listarObligaciones(),
-        portalPagoService.listarAnticipos()
+        portalPagoService.listarAnticipos(),
+        typeof portalPagoService.listarFacturas === 'function'
+          ? portalPagoService.listarFacturas().catch(() => [])
+          : Promise.resolve([]),
+        typeof portalPagoService.listarLiquidaciones === 'function'
+          ? portalPagoService.listarLiquidaciones().catch(() => [])
+          : Promise.resolve([])
       ])
 
       obligaciones.value = dataObligaciones || []
       anticipos.value = dataAnticipos || []
+      facturas.value = dataFacturas || []
+      liquidaciones.value = dataLiquidaciones || []
 
       verificarQuerySubsanacion()
     } catch (err) {
@@ -193,9 +204,34 @@ export function usePortalPagos() {
     }
   }
 
+  async function verFacturaPdf(idComprobante, numeroCompleto = '') {
+    if (!idComprobante) return
+    try {
+      const blob = await portalPagoService.descargarFacturaPdf(idComprobante, { download: false })
+      const opened = openBlobInNewTab(blob, 'application/pdf')
+      if (!opened) {
+        downloadBlob(blob, `${numeroCompleto || 'factura-' + idComprobante}.pdf`, 'application/pdf')
+      }
+    } catch {
+      showError('No se pudo generar la vista previa de la factura')
+    }
+  }
+
+  async function descargarFacturaPdf(idComprobante, numeroCompleto = '') {
+    if (!idComprobante) return
+    try {
+      const blob = await portalPagoService.descargarFacturaPdf(idComprobante, { download: true })
+      downloadBlob(blob, `${numeroCompleto || 'factura-' + idComprobante}.pdf`, 'application/pdf')
+    } catch {
+      showError('No se pudo descargar el PDF de la factura')
+    }
+  }
+
   return {
     obligaciones,
     anticipos,
+    liquidaciones,
+    facturas,
     requestedSection,
     loading,
     filtroTipoObligacion,
@@ -215,6 +251,8 @@ export function usePortalPagos() {
     subsanarAbonoCotizacion,
     irASubsanarPago,
     irARegistrarPago,
-    verComprobante
+    verComprobante,
+    verFacturaPdf,
+    descargarFacturaPdf
   }
 }

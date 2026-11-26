@@ -149,7 +149,7 @@
           </div>
           <div class="sga-meta-item full-span">
             <span class="sga-meta-label">MÓDULOS OPERATIVOS</span>
-            <span class="sga-meta-val">Comercial, Gestión Aduanera, Agente Aduanero, Transporte y Flota, Finanzas, Legal</span>
+            <span class="sga-meta-val">Comercial, Gestión Aduanera, Agente Aduanero, Transporte y Flota, Finanzas</span>
           </div>
           <div class="sga-meta-item full-span">
             <span class="sga-meta-label">GOBIERNO Y ADMINISTRACIÓN TI</span>

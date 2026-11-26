@@ -15,8 +15,10 @@ import org.springframework.web.bind.annotation.*;
 import pe.sga.dto.portal.*;
 import pe.sga.dto.request.LoginRequestDTO;
 import pe.sga.dto.response.ApiResponseDTO;
+import pe.sga.dto.response.ComprobanteFacturaResponseDTO;
 import pe.sga.entity.UsuarioCliente;
 import pe.sga.exception.BadRequestException;
+import pe.sga.service.IComprobanteFacturaService;
 import pe.sga.service.IPortalService;
 import pe.sga.service.IReporteJasperService;
 
@@ -38,6 +40,12 @@ public class PortalController {
     private final IPortalService portalService;
     private final IDocumentoService documentoService;
     private final IReporteJasperService reporteJasperService;
+    private IComprobanteFacturaService comprobanteFacturaService;
+
+    @Autowired(required = false)
+    public void setComprobanteFacturaService(IComprobanteFacturaService comprobanteFacturaService) {
+        this.comprobanteFacturaService = comprobanteFacturaService;
+    }
 
     public PortalController(IPortalService portalService, IDocumentoService documentoService) {
         this(portalService, documentoService, null);
@@ -164,7 +172,18 @@ public class PortalController {
             @AuthenticationPrincipal UsuarioCliente usuarioCliente) {
         Integer idCliente = resolverIdCliente(usuarioCliente);
         PortalCotizacionDTO aceptada = portalService.aceptarCotizacion(idCliente, id);
-        return ResponseEntity.ok(ApiResponseDTO.ok("Cotización aceptada por el cliente", aceptada));
+        return ResponseEntity.ok(ApiResponseDTO.ok("Cotización aceptada por el cliente. Orden de cobro habilitada.", aceptada));
+    }
+
+    @PatchMapping("/cotizaciones/{id}/rechazar")
+    @PreAuthorize("hasRole('CLIENTE_PORTAL')")
+    public ResponseEntity<ApiResponseDTO<PortalCotizacionDTO>> rechazarCotizacion(
+            @PathVariable Integer id,
+            @Valid @RequestBody(required = false) PortalCotizacionRechazoDTO dto,
+            @AuthenticationPrincipal UsuarioCliente usuarioCliente) {
+        Integer idCliente = resolverIdCliente(usuarioCliente);
+        PortalCotizacionDTO actualizada = portalService.rechazarCotizacion(idCliente, id, dto);
+        return ResponseEntity.ok(ApiResponseDTO.ok("Respuesta sobre la cotización registrada exitosamente", actualizada));
     }
 
     // =========================================================================
@@ -188,6 +207,54 @@ public class PortalController {
         Integer idCliente = resolverIdCliente(usuarioCliente);
         PortalExpedienteDTO expediente = portalService.buscarExpedientePorId(idCliente, id);
         return ResponseEntity.ok(ApiResponseDTO.ok("Detalle de tracking de expediente recuperado", expediente));
+    }
+
+    @PostMapping("/expedientes/simple")
+    @PreAuthorize("hasRole('CLIENTE_PORTAL')")
+    public ResponseEntity<ApiResponseDTO<PortalExpedienteDTO>> crearExpedienteSimple(
+            @Valid @RequestBody PortalExpedienteSimpleDTO dto,
+            @AuthenticationPrincipal UsuarioCliente usuarioCliente) {
+        Integer idCliente = resolverIdCliente(usuarioCliente);
+        PortalExpedienteDTO creado = portalService.crearExpedienteSimple(idCliente, dto, usuarioCliente.getIdUsuarioCliente());
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponseDTO.ok("Expediente simple generado. Pendiente de asignación de agente aduanero.", creado));
+    }
+
+    @PatchMapping("/expedientes/{id}/datos-cliente")
+    @PreAuthorize("hasRole('CLIENTE_PORTAL')")
+    public ResponseEntity<ApiResponseDTO<PortalExpedienteDTO>> actualizarDatosClienteExpediente(
+            @PathVariable Integer id,
+            @Valid @RequestBody PortalExpedienteDatosClienteDTO dto,
+            @AuthenticationPrincipal UsuarioCliente usuarioCliente) {
+        Integer idCliente = resolverIdCliente(usuarioCliente);
+        PortalExpedienteDTO actualizado = portalService.actualizarDatosClienteExpediente(idCliente, id, dto);
+        return ResponseEntity.ok(ApiResponseDTO.ok("Datos operativos del expediente actualizados exitosamente", actualizado));
+    }
+
+    @GetMapping("/expedientes/{id}/informe-conformidad/pdf")
+    @PreAuthorize("hasRole('CLIENTE_PORTAL')")
+    public ResponseEntity<InputStreamResource> descargarInformeConformidadPdf(
+            @PathVariable Integer id,
+            @RequestParam(defaultValue = "false") boolean download,
+            @AuthenticationPrincipal UsuarioCliente usuarioCliente) {
+        if (reporteJasperService == null) {
+            throw new BadRequestException("Servicio de generación de PDF no disponible");
+        }
+        Integer idCliente = resolverIdCliente(usuarioCliente);
+        var expDto = portalService.obtenerExpedienteParaInformePdf(idCliente, id);
+        ByteArrayInputStream pdfStream = reporteJasperService.exportarInformeConformidadPdf(expDto);
+        HttpHeaders headers = new HttpHeaders();
+        String filename = "informe-conformidad-" + expDto.getCodigoExpediente() + ".pdf";
+        headers.setContentDisposition(
+                (download ? ContentDisposition.attachment() : ContentDisposition.inline())
+                        .filename(filename)
+                        .build()
+        );
+        headers.setCacheControl(CacheControl.noStore());
+        return ResponseEntity.ok()
+                .headers(headers)
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(new InputStreamResource(pdfStream));
     }
 
     @GetMapping("/expedientes/{id}/documentos")
@@ -242,6 +309,48 @@ public class PortalController {
         Integer idCliente = resolverIdCliente(usuarioCliente);
         List<PortalLiquidacionDTO> liquidaciones = portalService.listarLiquidaciones(idCliente);
         return ResponseEntity.ok(ApiResponseDTO.ok("Liquidaciones de despacho recuperadas", liquidaciones));
+    }
+
+    @GetMapping("/pagos/facturas")
+    @PreAuthorize("hasRole('CLIENTE_PORTAL')")
+    public ResponseEntity<ApiResponseDTO<List<ComprobanteFacturaResponseDTO>>> listarFacturas(
+            @AuthenticationPrincipal UsuarioCliente usuarioCliente) {
+        Integer idCliente = resolverIdCliente(usuarioCliente);
+        List<ComprobanteFacturaResponseDTO> facturas = comprobanteFacturaService != null
+                ? comprobanteFacturaService.listarPorCliente(idCliente)
+                : List.of();
+        return ResponseEntity.ok(ApiResponseDTO.ok("Comprobantes y facturas emitidas recuperadas", facturas));
+    }
+
+    @GetMapping("/pagos/facturas/{id}/pdf")
+    @PreAuthorize("hasRole('CLIENTE_PORTAL')")
+    public ResponseEntity<InputStreamResource> descargarFacturaPdf(
+            @PathVariable Integer id,
+            @RequestParam(defaultValue = "false") boolean download,
+            @AuthenticationPrincipal UsuarioCliente usuarioCliente) {
+        if (reporteJasperService == null || comprobanteFacturaService == null) {
+            throw new IllegalStateException("Servicio de facturación PDF no disponible");
+        }
+        Integer idCliente = resolverIdCliente(usuarioCliente);
+        ComprobanteFacturaResponseDTO factura = comprobanteFacturaService.buscarPorIdParaCliente(idCliente, id);
+        ByteArrayInputStream pdf = reporteJasperService.exportarComprobanteFacturaPdf(factura);
+
+        String safeNumber = factura.getNumeroCompleto() != null
+                ? factura.getNumeroCompleto().replaceAll("[^A-Za-z0-9._-]", "-")
+                : "factura-" + id;
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentDisposition(
+                ContentDisposition.builder(download ? "attachment" : "inline")
+                        .filename(safeNumber + ".pdf")
+                        .build()
+        );
+        headers.setCacheControl(CacheControl.noStore());
+
+        return ResponseEntity.ok()
+                .headers(headers)
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(new InputStreamResource(pdf));
     }
 
     @PostMapping("/pagos/registrar-voucher")

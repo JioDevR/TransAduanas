@@ -33,6 +33,14 @@ export const portalPagoService = {
   },
 
   /**
+   * Lista las liquidaciones aduaneras finales emitidas para el cliente.
+   */
+  async listarLiquidaciones() {
+    const response = await apiClient.get('/portal/pagos/liquidaciones')
+    return response.data?.data || []
+  },
+
+  /**
    * Obtiene los datos de un pago/anticipo específico por su ID.
    * @param {number|string} idPago
    */
@@ -132,6 +140,28 @@ export const portalPagoService = {
 
     const response = await apiClient.put(`/portal/pagos/anticipos/${idPago}/corregir`, jsonPayload)
     return response.data?.data || response.data
+  },
+
+  /**
+   * Lista las facturas / comprobantes electrónicos emitidos para el cliente.
+   */
+  async listarFacturas() {
+    const response = await apiClient.get('/portal/pagos/facturas')
+    return response.data?.data || []
+  },
+
+  /**
+   * Obtiene el PDF de una factura o boleta emitida en el portal B2B.
+   * @param {number|string} idComprobante
+   * @param {{ download?: boolean }} [options]
+   */
+  async descargarFacturaPdf(idComprobante, { download = false } = {}) {
+    const response = await apiClient.get(`/portal/pagos/facturas/${idComprobante}/pdf`, {
+      params: { download },
+      responseType: 'blob',
+      headers: { Accept: 'application/pdf, application/json' }
+    })
+    return response.data
   },
 
   /**

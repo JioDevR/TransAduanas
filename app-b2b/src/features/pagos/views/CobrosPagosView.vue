@@ -165,8 +165,8 @@
             <Button
               v-else
               type="button"
-              :label="o.tipoObligacion === 'COTIZACION' ? 'Abonar' : 'Amortizar'"
-              :icon="o.tipoObligacion === 'COTIZACION' ? 'pi pi-wallet' : 'pi pi-credit-card'"
+              :label="isCotizacionObligacion(o.tipoObligacion) ? 'Abonar' : 'Amortizar'"
+              :icon="isCotizacionObligacion(o.tipoObligacion) ? 'pi pi-wallet' : 'pi pi-credit-card'"
               size="small"
               @click="handlePayObligacion(o)"
             />
@@ -259,7 +259,12 @@
 
           <Column header="CÓDIGO PAGO">
             <template #body="{ data: p }">
-              <span class="sga-code-cell sga-mono">{{ p.codigoPago }}</span>
+              <div class="sga-cell-stack">
+                <span class="sga-code-cell sga-mono">{{ p.codigoPago }}</span>
+                <span v-if="p.numeroFacturaEmitida" class="sga-cell-sub sga-mono sga-text-success">
+                  {{ p.numeroFacturaEmitida }}
+                </span>
+              </div>
             </template>
           </Column>
 
@@ -324,6 +329,16 @@
                   @click="irASubsanarPago(p.idPago)"
                 />
                 <Button
+                  v-if="p.idComprobanteFactura"
+                  type="button"
+                  label="Factura PDF"
+                  icon="pi pi-file-pdf"
+                  severity="success"
+                  outlined
+                  size="small"
+                  @click="verFacturaPdf(p.idComprobanteFactura, p.numeroFacturaEmitida)"
+                />
+                <Button
                   v-if="p.idDocumentoComprobante"
                   type="button"
                   label="Voucher"
@@ -344,6 +359,7 @@
             :loading="loading"
             @fix-payment="irASubsanarPago"
             @view-voucher="verComprobante"
+            @view-factura="verFacturaPdf"
           />
 
           <BasePagination
@@ -358,6 +374,87 @@
         </template>
       </SgaListShell>
     </div>
+
+    <!-- 4. BLOQUE DE FACTURAS ELECTRÓNICAS EMITIDAS -->
+    <section class="sga-card-surface b2b-facturas-card">
+      <div class="sga-table-toolbar">
+        <div>
+          <span class="sga-kicker">COMPROBANTES ELECTRONICOS</span>
+          <h3 class="sga-panel-title">Facturas y Boletas Emitidas ({{ facturas.length }})</h3>
+        </div>
+      </div>
+
+      <DataTable
+        :value="facturas"
+        :loading="loading"
+        dataKey="idComprobante"
+        responsiveLayout="scroll"
+        paginator
+        :rows="8"
+        :rowsPerPageOptions="[8, 15, 30]"
+      >
+        <template #empty>
+          <div class="sga-empty-state">
+            <i class="pi pi-file-pdf sga-empty-icon"></i>
+            <p class="sga-empty-title">Sin facturas emitidas aún</p>
+            <p class="sga-empty-desc">
+              Una vez que Finanzas valide y apruebe su comprobante de pago, su factura o boleta electrónica aparecerá aquí para ver y descargar.
+            </p>
+          </div>
+        </template>
+        <Column header="COMPROBANTE">
+          <template #body="{ data: f }">
+            <div class="sga-cell-stack">
+              <span class="sga-code-cell sga-mono">{{ f.numeroCompleto }}</span>
+              <span class="sga-cell-sub">{{ f.tipoComprobante }}</span>
+            </div>
+          </template>
+        </Column>
+
+        <Column header="REFERENCIA">
+          <template #body="{ data: f }">
+            <span class="sga-code-cell sga-mono">{{ f.codigoReferencia }}</span>
+          </template>
+        </Column>
+
+        <Column header="CONCEPTO">
+          <template #body="{ data: f }">
+            <span class="sga-cell-muted">{{ f.concepto }}</span>
+          </template>
+        </Column>
+
+        <Column header="TOTAL">
+          <template #body="{ data: f }">
+            <span class="sga-amount-cell sga-mono sga-text-success">
+              {{ f.moneda === 'PEN' ? 'S/' : '$' }} {{ formatCurrency(f.totalComprobante) }}
+            </span>
+          </template>
+        </Column>
+
+        <Column header="ACCIONES">
+          <template #body="{ data: f }">
+            <div class="b2b-table-actions">
+              <Button
+                type="button"
+                label="Ver PDF"
+                icon="pi pi-eye"
+                severity="secondary"
+                outlined
+                size="small"
+                @click="verFacturaPdf(f.idComprobante, f.numeroCompleto)"
+              />
+              <Button
+                type="button"
+                label="Descargar"
+                icon="pi pi-download"
+                size="small"
+                @click="descargarFacturaPdf(f.idComprobante, f.numeroCompleto)"
+              />
+            </div>
+          </template>
+        </Column>
+      </DataTable>
+    </section>
   </div>
 </template>
 
@@ -377,12 +474,13 @@ import ObligacionesCanvasGrid from '../components/ObligacionesCanvasGrid.vue'
 import HistorialVouchersCanvasGrid from '../components/HistorialVouchersCanvasGrid.vue'
 import ObservadosBandejaPanel from '../components/ObservadosBandejaPanel.vue'
 import { usePortalPagos } from '../composables/usePortalPagos'
-import { getPagoTagSeverity, getTipoObligacionMeta } from '../utils/pagoFormUtils'
+import { getPagoTagSeverity, getTipoObligacionMeta, isCotizacionObligacion } from '../utils/pagoFormUtils'
 import { formatCurrency, formatEstadoPago } from '@/shared/utils/formatters'
 
 const {
   obligaciones,
   anticipos,
+  facturas,
   requestedSection,
   loading,
   filtroTipoObligacion,
@@ -402,7 +500,9 @@ const {
   subsanarAbonoCotizacion,
   irASubsanarPago,
   irARegistrarPago,
-  verComprobante
+  verComprobante,
+  verFacturaPdf,
+  descargarFacturaPdf
 } = usePortalPagos()
 
 const viewModeObligaciones = ref('canvas')
@@ -462,7 +562,7 @@ watch(requestedSection, async (section) => {
 })
 
 function handlePayObligacion(o) {
-  const tipo = o.tipoObligacion === 'COTIZACION' ? 'cotizacion' : 'expediente'
+  const tipo = isCotizacionObligacion(o.tipoObligacion) ? 'cotizacion' : 'expediente'
   const id = o.idCotizacion || o.idExpediente || o.idReferencia
   irARegistrarPago(tipo, id)
 }

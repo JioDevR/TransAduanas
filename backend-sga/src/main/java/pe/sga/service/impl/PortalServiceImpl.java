@@ -10,10 +10,13 @@ import org.springframework.transaction.annotation.Transactional;
 import pe.sga.config.JwtTokenProvider;
 import pe.sga.dto.portal.*;
 import pe.sga.dto.request.LoginRequestDTO;
+import pe.sga.dto.response.ExpedienteEventoDTO;
+import pe.sga.dto.response.ExpedienteResponseDTO;
 import pe.sga.entity.*;
 import pe.sga.entity.enums.EstadoCotizacion;
 import pe.sga.entity.enums.EstadoExpediente;
 import pe.sga.entity.enums.EstadoPagoCotizacion;
+import pe.sga.entity.enums.EstadoTransporte;
 import pe.sga.entity.enums.RolUsuario;
 import pe.sga.entity.enums.TipoAbonoCotizacion;
 import pe.sga.exception.BadRequestException;
@@ -57,10 +60,22 @@ public class PortalServiceImpl implements IPortalService {
     private final JwtTokenProvider tokenProvider;
 
     private IAuditoriaService auditoriaService;
+    private ComprobanteFacturaRepository comprobanteFacturaRepository;
+    private ExpedienteEventoRepository expedienteEventoRepository;
+
+    @Autowired(required = false)
+    public void setExpedienteEventoRepository(ExpedienteEventoRepository expedienteEventoRepository) {
+        this.expedienteEventoRepository = expedienteEventoRepository;
+    }
 
     @Autowired(required = false)
     public void setAuditoriaService(IAuditoriaService auditoriaService) {
         this.auditoriaService = auditoriaService;
+    }
+
+    @Autowired(required = false)
+    public void setComprobanteFacturaRepository(ComprobanteFacturaRepository comprobanteFacturaRepository) {
+        this.comprobanteFacturaRepository = comprobanteFacturaRepository;
     }
 
     private void auditar(String accion, String entidad, Integer idEntidad, String detalle) {
@@ -305,6 +320,47 @@ public class PortalServiceImpl implements IPortalService {
     }
 
     @Override
+    @Transactional
+    public PortalCotizacionDTO rechazarCotizacion(Integer idCliente, Integer idCotizacion, PortalCotizacionRechazoDTO dto) {
+        Cotizacion cotizacion = cotizacionRepository.findById(idCotizacion)
+                .orElseThrow(() -> new ResourceNotFoundException("Cotización no encontrada con ID: " + idCotizacion));
+
+        if (cotizacion.getCliente() == null || !cotizacion.getCliente().getIdCliente().equals(idCliente)) {
+            throw new ResourceNotFoundException("Cotización no encontrada o no pertenece a su empresa");
+        }
+
+        if (cotizacion.getEstado() != EstadoCotizacion.APROBADA) {
+            throw new BadRequestException("Solo se pueden responder cotizaciones con aprobación técnica vigente.");
+        }
+
+        boolean tieneAbonos = cotizacion.getTotalAbonado() != null && cotizacion.getTotalAbonado().compareTo(BigDecimal.ZERO) > 0;
+        boolean yaAceptada = cotizacion.getObservaciones() != null && cotizacion.getObservaciones().contains("Aceptada formalmente por el cliente");
+        if (tieneAbonos || yaAceptada) {
+            throw new BadRequestException("No se puede rechazar una cotización que ya fue aceptada o tiene abonos registrados.");
+        }
+
+        String accion = dto != null && dto.getAccion() != null ? dto.getAccion().trim().toUpperCase() : "RECHAZAR";
+        String motivo = dto != null && dto.getMotivo() != null && !dto.getMotivo().isBlank()
+                ? dto.getMotivo().trim()
+                : "Sin observaciones adicionales del cliente.";
+
+        if ("OBSERVAR".equals(accion)) {
+            cotizacion.setEstado(EstadoCotizacion.OBSERVADA);
+            cotizacion.setMotivoObservacion("[Solicitud de ajuste B2B] " + motivo);
+        } else {
+            cotizacion.setEstado(EstadoCotizacion.RECHAZADA);
+            cotizacion.setMotivoObservacion("[Rechazada por cliente B2B] " + motivo);
+        }
+
+        cotizacion.setObservaciones((cotizacion.getObservaciones() != null ? cotizacion.getObservaciones() + " | " : "")
+                + "Respuesta cliente B2B (" + cotizacion.getEstado().name() + ") el " + LocalDateTime.now() + ": " + motivo);
+        Cotizacion guardada = cotizacionRepository.save(cotizacion);
+        auditar("RECHAZAR_COTIZACION_PORTAL", "COTIZACION", guardada.getIdCotizacion(),
+                "Cotización " + guardada.getCodigoCotizacion() + " marcada como " + guardada.getEstado().name() + " por el cliente");
+        return mapToPortalCotizacion(guardada);
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public List<PortalExpedienteDTO> listarExpedientes(Integer idCliente) {
         validarCliente(idCliente);
@@ -316,7 +372,9 @@ public class PortalServiceImpl implements IPortalService {
         Map<Integer, ControlAlmacen> almacenMap = controlAlmacenRepository.findByExpediente_IdExpedienteIn(idsExp).stream()
                 .filter(a -> a.getExpediente() != null)
                 .collect(Collectors.toMap(a -> a.getExpediente().getIdExpediente(), Function.identity(), (a, b) -> a));
-        Map<Integer, DespachoTransporte> transporteMap = despachoTransporteRepository.findByExpediente_IdExpedienteIn(idsExp).stream()
+        Map<Integer, DespachoTransporte> transporteMap = despachoTransporteRepository
+                .findByExpediente_IdExpedienteInAndEstadoTransporteNot(idsExp, EstadoTransporte.CANCELADO)
+                .stream()
                 .filter(t -> t.getExpediente() != null)
                 .collect(Collectors.toMap(t -> t.getExpediente().getIdExpediente(), Function.identity(), (a, b) -> a));
 
@@ -336,6 +394,136 @@ public class PortalServiceImpl implements IPortalService {
         }
 
         return mapToPortalExpediente(expediente);
+    }
+
+    @Override
+    @Transactional
+    public PortalExpedienteDTO crearExpedienteSimple(Integer idCliente, PortalExpedienteSimpleDTO dto, Integer idUsuarioCliente) {
+        validarCliente(idCliente);
+        Cotizacion cotizacion = cotizacionRepository.findById(dto.getIdCotizacion())
+                .orElseThrow(() -> new ResourceNotFoundException("Cotización no encontrada con ID: " + dto.getIdCotizacion()));
+
+        if (cotizacion.getCliente() == null || !cotizacion.getCliente().getIdCliente().equals(idCliente)) {
+            throw new ResourceNotFoundException("Cotización no encontrada o no pertenece a su empresa");
+        }
+        if (cotizacion.getEstado() != EstadoCotizacion.APROBADA) {
+            throw new BadRequestException("Solo se puede generar expediente para cotizaciones aprobadas.");
+        }
+        boolean tienePagoAprobado = "ADELANTO_APROBADO".equals(cotizacion.getEstadoPago())
+                || "PAGADO_TOTAL".equals(cotizacion.getEstadoPago())
+                || cotizacionPagoRepository.existsByCotizacion_IdCotizacionAndEstadoPago(cotizacion.getIdCotizacion(), EstadoPagoCotizacion.APROBADO);
+        if (!tienePagoAprobado) {
+            throw new BadRequestException("Su anticipo debe ser validado por Finanzas antes de generar el expediente.");
+        }
+        if (expedienteRepository.existsByCotizacion_IdCotizacion(cotizacion.getIdCotizacion())) {
+            throw new BadRequestException("Ya existe un expediente aperturado para la cotización " + cotizacion.getCodigoCotizacion());
+        }
+
+        int year = LocalDate.now().getYear();
+        long count = expedienteRepository.count() + 1;
+        String codigoExpediente;
+        do {
+            codigoExpediente = String.format("EXP-%d-%04d", year, count);
+            count++;
+        } while (expedienteRepository.existsByCodigoExpediente(codigoExpediente));
+
+        Expediente expediente = Expediente.builder()
+                .codigoExpediente(codigoExpediente)
+                .cotizacion(cotizacion)
+                .cliente(cotizacion.getCliente())
+                .mercancia(cotizacion.getMercancia())
+                .tipoCarga(cotizacion.getTipoCarga())
+                .agenteAduanero(null)
+                .fechaAsignacion(null)
+                .contactoExteriorNombre(dto.getContactoExteriorNombre().trim())
+                .contactoExteriorTelefono(dto.getContactoExteriorTelefono())
+                .contactoExteriorCorreo(dto.getContactoExteriorCorreo())
+                .fechaZarpeEtd(dto.getFechaZarpeEtd())
+                .fechaLlegadaEta(dto.getFechaLlegadaEta())
+                .numeroContenedor(dto.getNumeroContenedor())
+                .naveViaje(dto.getNaveViaje())
+                .canalSunat(pe.sga.entity.enums.CanalSunat.PENDIENTE)
+                .notificadoAgente(false)
+                .estadoExpediente(EstadoExpediente.ASIGNADO)
+                .fechaApertura(LocalDateTime.now())
+                .observaciones(dto.getObservaciones())
+                .build();
+
+        Expediente guardado = expedienteRepository.save(expediente);
+
+        if (expedienteEventoRepository != null) {
+            expedienteEventoRepository.save(ExpedienteEvento.builder()
+                    .expediente(guardado)
+                    .codigoEstado("EXPEDIENTE_CREADO")
+                    .titulo("Expediente Simple Generado (Portal B2B)")
+                    .descripcion("El cliente completó contacto exterior (" + dto.getContactoExteriorNombre().trim()
+                            + "). Pendiente de asignación de agente aduanero en Gestión Aduanera.")
+                    .regimen(cotizacion.getRegimenAduanero())
+                    .usuarioNombre("Portal B2B Cliente")
+                    .fechaEvento(LocalDateTime.now())
+                    .build());
+        }
+
+        crearNotificacion(idCliente,
+                "Expediente Simple Creado: " + guardado.getCodigoExpediente(),
+                "Su expediente " + guardado.getCodigoExpediente()
+                        + " fue generado correctamente. Gestión Aduanera asignará un Agente Aduanero a la brevedad.",
+                "DAM",
+                "/expedientes");
+
+        auditar("CREAR_EXPEDIENTE_SIMPLE_PORTAL", "EXPEDIENTE", guardado.getIdExpediente(),
+                "Expediente simple " + guardado.getCodigoExpediente() + " creado desde Portal B2B");
+        return mapToPortalExpediente(guardado);
+    }
+
+    @Override
+    @Transactional
+    public PortalExpedienteDTO actualizarDatosClienteExpediente(Integer idCliente, Integer idExpediente, PortalExpedienteDatosClienteDTO dto) {
+        Expediente expediente = expedienteRepository.findById(idExpediente)
+                .orElseThrow(() -> new ResourceNotFoundException("Expediente no encontrado con ID: " + idExpediente));
+        if (expediente.getCliente() == null || !expediente.getCliente().getIdCliente().equals(idCliente)) {
+            throw new ResourceNotFoundException("Expediente no encontrado o no pertenece a su empresa");
+        }
+        if (expediente.getEstadoExpediente() == EstadoExpediente.CERRADO || expediente.getEstadoExpediente() == EstadoExpediente.ANULADO) {
+            throw new BadRequestException("No se pueden modificar datos de un expediente cerrado o anulado.");
+        }
+
+        expediente.setContactoExteriorNombre(dto.getContactoExteriorNombre().trim());
+        expediente.setContactoExteriorTelefono(dto.getContactoExteriorTelefono());
+        expediente.setContactoExteriorCorreo(dto.getContactoExteriorCorreo());
+        if (dto.getNumeroContenedor() != null) expediente.setNumeroContenedor(dto.getNumeroContenedor());
+        if (dto.getNaveViaje() != null) expediente.setNaveViaje(dto.getNaveViaje());
+        if (dto.getObservaciones() != null) expediente.setObservaciones(dto.getObservaciones());
+
+        Expediente guardado = expedienteRepository.save(expediente);
+        auditar("ACTUALIZAR_DATOS_EXPEDIENTE_PORTAL", "EXPEDIENTE", guardado.getIdExpediente(),
+                "Contacto exterior actualizado en Portal B2B para " + guardado.getCodigoExpediente());
+        return mapToPortalExpediente(guardado);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ExpedienteResponseDTO obtenerExpedienteParaInformePdf(Integer idCliente, Integer idExpediente) {
+        Expediente e = expedienteRepository.findById(idExpediente)
+                .orElseThrow(() -> new ResourceNotFoundException("Expediente no encontrado con ID: " + idExpediente));
+        if (e.getCliente() == null || !e.getCliente().getIdCliente().equals(idCliente)) {
+            throw new ResourceNotFoundException("Expediente no encontrado o no pertenece a su empresa");
+        }
+        return ExpedienteResponseDTO.builder()
+                .idExpediente(e.getIdExpediente())
+                .codigoExpediente(e.getCodigoExpediente())
+                .numeroDam(e.getNumeroDam())
+                .canalSunat(e.getCanalSunat())
+                .clienteRazonSocial(e.getCliente() != null ? e.getCliente().getRazonSocial() : null)
+                .clienteNumeroDocumento(e.getCliente() != null ? e.getCliente().getNumeroDocumento() : null)
+                .mercanciaNombre(e.getMercancia() != null ? e.getMercancia().getNombre()
+                        : (e.getCotizacion() != null && e.getCotizacion().getMercancia() != null ? e.getCotizacion().getMercancia().getNombre() : null))
+                .agenteAduaneroNombre(e.getAgenteAduanero() != null ? e.getAgenteAduanero().getNombreCompleto() : null)
+                .receptorConformidadNombre(e.getReceptorConformidadNombre())
+                .receptorConformidadDni(e.getReceptorConformidadDni())
+                .informeConformidadTexto(e.getInformeConformidadTexto())
+                .fechaInformeConformidad(e.getFechaInformeConformidad())
+                .build();
     }
 
     @Override
@@ -435,7 +623,9 @@ public class PortalServiceImpl implements IPortalService {
                 BigDecimal saldoConsolidado = saldoCot.add(liqUsd);
 
                 if (saldoConsolidado.compareTo(BigDecimal.ZERO) > 0) {
-                    BigDecimal sugerido = saldoConsolidado.divide(new BigDecimal("2"), 2, RoundingMode.HALF_UP);
+                    BigDecimal sugerido = abonadoCot.compareTo(BigDecimal.ZERO) == 0
+                            ? saldoConsolidado.multiply(new BigDecimal("0.35")).setScale(2, RoundingMode.HALF_UP)
+                            : saldoConsolidado;
                     lista.add(PortalObligacionPagoDTO.builder()
                             .tipoObligacion("EXPEDIENTE_HEREDADO")
                             .idReferencia(exp.getIdExpediente())
@@ -457,8 +647,15 @@ public class PortalServiceImpl implements IPortalService {
                             .build());
                 }
             } else {
+                boolean aceptadaPorCliente = (c.getObservaciones() != null && c.getObservaciones().contains("Aceptada formalmente por el cliente"))
+                        || (c.getEstadoPago() != null && !"SIN_PAGO".equalsIgnoreCase(c.getEstadoPago()) && !"PENDIENTE".equalsIgnoreCase(c.getEstadoPago()));
+                if (!aceptadaPorCliente && abonadoCot.compareTo(BigDecimal.ZERO) <= 0) {
+                    continue;
+                }
                 if (saldoCot.compareTo(BigDecimal.ZERO) > 0) {
-                    BigDecimal sugerido = saldoCot.divide(new BigDecimal("2"), 2, RoundingMode.HALF_UP);
+                    BigDecimal sugerido = abonadoCot.compareTo(BigDecimal.ZERO) == 0
+                            ? totalCot.multiply(new BigDecimal("0.35")).setScale(2, RoundingMode.HALF_UP).min(saldoCot)
+                            : saldoCot;
                     lista.add(PortalObligacionPagoDTO.builder()
                             .tipoObligacion("ANTICIPO_COTIZACION")
                             .idReferencia(c.getIdCotizacion())
@@ -585,6 +782,22 @@ public class PortalServiceImpl implements IPortalService {
         String codigoPago = generarCodigoPagoCotizacion();
         BigDecimal tipoCambio = new BigDecimal("3.7500");
         BigDecimal montoUsd = dto.getMontoAbonado();
+
+        BigDecimal totalCotizado = cotizacion.getTotalCotizado() != null ? cotizacion.getTotalCotizado() : BigDecimal.ZERO;
+        BigDecimal abonadoActual = cotizacion.getTotalAbonado() != null ? cotizacion.getTotalAbonado() : BigDecimal.ZERO;
+        BigDecimal saldoActual = cotizacion.getSaldoPendiente() != null
+                ? cotizacion.getSaldoPendiente()
+                : totalCotizado.subtract(abonadoActual).max(BigDecimal.ZERO);
+
+        if (abonadoActual.compareTo(BigDecimal.ZERO) == 0
+                && totalCotizado.compareTo(BigDecimal.ZERO) > 0
+                && montoUsd.compareTo(saldoActual) < 0) {
+            BigDecimal minimo30 = totalCotizado.multiply(new BigDecimal("0.30")).setScale(2, RoundingMode.HALF_UP);
+            if (montoUsd.compareTo(minimo30) <= 0) {
+                throw new BadRequestException("El anticipo inicial debe ser mayor al 30% del total cotizado ($ " + minimo30 + " USD) o cubrir el 100% del saldo.");
+            }
+        }
+
         BigDecimal montoEquivalentePen = montoUsd.multiply(tipoCambio).setScale(2, RoundingMode.HALF_UP);
 
         DocumentoAdjunto comprobante = null;
@@ -750,7 +963,10 @@ public class PortalServiceImpl implements IPortalService {
                 ? controlAlmacenRepository.findByExpediente_IdExpediente(e.getIdExpediente()).orElse(null)
                 : null;
         DespachoTransporte tra = e.getIdExpediente() != null
-                ? despachoTransporteRepository.findByExpediente_IdExpediente(e.getIdExpediente()).orElse(null)
+                ? despachoTransporteRepository
+                        .findFirstByExpediente_IdExpedienteAndEstadoTransporteNotOrderByIdDespachoTransporteDesc(
+                                e.getIdExpediente(), EstadoTransporte.CANCELADO)
+                        .orElse(null)
                 : null;
         return mapToPortalExpediente(e, alm, tra);
     }
@@ -759,11 +975,28 @@ public class PortalServiceImpl implements IPortalService {
         var merc = e.getMercancia() != null ? e.getMercancia() : (e.getCotizacion() != null ? e.getCotizacion().getMercancia() : null);
         var tc = e.getTipoCarga() != null ? e.getTipoCarga() : (e.getCotizacion() != null ? e.getCotizacion().getTipoCarga() : null);
 
+        List<ExpedienteEventoDTO> eventos = (expedienteEventoRepository != null && e.getIdExpediente() != null)
+                ? expedienteEventoRepository.findByExpediente_IdExpedienteOrderByFechaEventoAscIdEventoAsc(e.getIdExpediente())
+                        .stream()
+                        .map(ev -> ExpedienteEventoDTO.builder()
+                                .idEvento(ev.getIdEvento())
+                                .codigoEstado(ev.getCodigoEstado())
+                                .titulo(ev.getTitulo())
+                                .descripcion(ev.getDescripcion())
+                                .regimen(ev.getRegimen())
+                                .usuarioNombre(ev.getUsuarioNombre())
+                                .fechaEvento(ev.getFechaEvento())
+                                .build())
+                        .toList()
+                : List.of();
+
         PortalExpedienteDTO.PortalExpedienteDTOBuilder builder = PortalExpedienteDTO.builder()
                 .idExpediente(e.getIdExpediente())
                 .codigoExpediente(e.getCodigoExpediente())
                 .idCotizacion(e.getCotizacion() != null ? e.getCotizacion().getIdCotizacion() : null)
                 .codigoCotizacion(e.getCotizacion() != null ? e.getCotizacion().getCodigoCotizacion() : null)
+                .regimenAduanero(e.getCotizacion() != null ? e.getCotizacion().getRegimenAduanero() : null)
+                .servicioTransporte(e.getCotizacion() != null ? e.getCotizacion().getServicioTransporte() : null)
                 .idCliente(e.getCliente() != null ? e.getCliente().getIdCliente() : null)
                 .razonSocialCliente(e.getCliente() != null ? e.getCliente().getRazonSocial() : null)
                 .rucCliente(e.getCliente() != null ? e.getCliente().getNumeroDocumento() : null)
@@ -772,18 +1005,46 @@ public class PortalServiceImpl implements IPortalService {
                 .nombreMercancia(merc != null ? merc.getNombre() : null)
                 .idTipoCarga(tc != null ? tc.getIdTipoCarga() : null)
                 .nombreTipoCarga(tc != null ? tc.getNombre() : null)
+                .idAgenteAduanero(e.getAgenteAduanero() != null ? e.getAgenteAduanero().getIdUsuario() : null)
                 .agenteAduaneroNombre(e.getAgenteAduanero() != null ? e.getAgenteAduanero().getNombreCompleto() : null)
+                .pendienteAsignacionAgente(e.getAgenteAduanero() == null)
+                .contactoExteriorNombre(e.getContactoExteriorNombre())
+                .contactoExteriorTelefono(e.getContactoExteriorTelefono())
+                .contactoExteriorCorreo(e.getContactoExteriorCorreo())
                 .numeroDam(e.getNumeroDam())
                 .canalSunat(e.getCanalSunat() != null ? e.getCanalSunat().name() : null)
                 .fechaAsignacionCanal(e.getFechaAsignacionCanal())
                 .fechaLevanteAutorizacion(e.getFechaLevanteAutorizacion())
                 .detalleInspeccion(e.getDetalleInspeccion())
                 .naveViaje(e.getNaveViaje())
+                .tipoTransporteInternacional(e.getTipoTransporteInternacional())
+                .numeroVuelo(e.getNumeroVuelo())
                 .numeroContenedor(e.getNumeroContenedor())
                 .precintoAduanero(e.getPrecintoAduanero())
                 .fechaZarpeEtd(e.getFechaZarpeEtd())
                 .fechaLlegadaEta(e.getFechaLlegadaEta())
                 .fechaArriboAduana(e.getFechaArriboAduana())
+                .enEsperaTransito(Boolean.TRUE.equals(e.getEnEsperaTransito()))
+                .enRevisionAduana(Boolean.TRUE.equals(e.getEnRevisionAduana()))
+                .idDocumentoConformidadDestino(e.getIdDocumentoConformidadDestino())
+                .verificacionOrigenOk(Boolean.TRUE.equals(e.getVerificacionOrigenOk()))
+                .fechaVerificacionOrigen(e.getFechaVerificacionOrigen())
+                .cuadrillaSolicitada(Boolean.TRUE.equals(e.getCuadrillaSolicitada()))
+                .cuadrillaDetalle(e.getCuadrillaDetalle())
+                .fechaCitaInspeccion(e.getFechaCitaInspeccion())
+                .codigoCitaInspeccion(e.getCodigoCitaInspeccion())
+                .revisionRojoFinalizada(Boolean.TRUE.equals(e.getRevisionRojoFinalizada()))
+                .envioSunatSimuladoOk(Boolean.TRUE.equals(e.getEnvioSunatSimuladoOk()))
+                .codigoTransmisionSunat(e.getCodigoTransmisionSunat())
+                .fechaEnvioSunat(e.getFechaEnvioSunat())
+                .entregadoAlmacenVerde(Boolean.TRUE.equals(e.getEntregadoAlmacenVerde()))
+                .fechaEntregaAlmacenVerde(e.getFechaEntregaAlmacenVerde())
+                .informeConformidadTexto(e.getInformeConformidadTexto())
+                .fechaInformeConformidad(e.getFechaInformeConformidad())
+                .receptorConformidadNombre(e.getReceptorConformidadNombre())
+                .receptorConformidadDni(e.getReceptorConformidadDni())
+                .idDocumentoConformidadInforme(e.getIdDocumentoConformidadInforme())
+                .eventos(eventos)
                 .estadoExpediente(e.getEstadoExpediente() != null ? e.getEstadoExpediente().name() : null)
                 .fechaApertura(e.getFechaApertura())
                 .fechaCierre(e.getFechaCierre())
@@ -807,22 +1068,31 @@ public class PortalServiceImpl implements IPortalService {
             }
         }
 
-        if (tra != null) {
+        if (tra != null && tra.getEstadoTransporte() != EstadoTransporte.CANCELADO) {
             builder.tieneTransporte(true)
                     .codigoTracking(tra.getCodigoTracking())
+                    .tipoTraslado(tra.getTipoTraslado() != null ? tra.getTipoTraslado().name() : null)
+                    .guiaRemisionTransporte(tra.getGuiaRemisionTransporte())
                     .placaTracto(tra.getUnidad() != null ? tra.getUnidad().getPlacaTracto() : null)
                     .conductorNombre(tra.getConductor() != null ? (tra.getConductor().getNombres() + " " + tra.getConductor().getApellidos()) : null)
                     .direccionPartida(tra.getDireccionPartida())
                     .direccionLlegada(tra.getDireccionLlegada())
                     .distritoLlegada(tra.getDistritoLlegada())
                     .fechaProgramadaTransporte(tra.getFechaProgramada())
-                    .estadoTransporte(tra.getEstadoTransporte());
+                    .fechaSalidaRuta(tra.getFechaSalidaRuta())
+                    .fechaEntregaConforme(tra.getFechaEntregaConforme())
+                    .estadoTransporte(tra.getEstadoTransporte() != null ? tra.getEstadoTransporte().name() : null);
         }
 
         return builder.build();
     }
 
     private PortalPagoAnticipoDTO mapToPortalPagoAnticipo(CotizacionPago p) {
+        ComprobanteFactura factura = (comprobanteFacturaRepository != null && p.getIdPago() != null)
+                ? comprobanteFacturaRepository
+                        .findFirstByPagoCotizacion_IdPagoAndEstadoOrderByIdComprobanteDesc(p.getIdPago(), "EMITIDA")
+                        .orElse(null)
+                : null;
         return PortalPagoAnticipoDTO.builder()
                 .idPago(p.getIdPago())
                 .idCotizacion(p.getCotizacion() != null ? p.getCotizacion().getIdCotizacion() : null)
@@ -843,11 +1113,19 @@ public class PortalServiceImpl implements IPortalService {
                 .idDocumentoComprobante(p.getDocumentoComprobante() != null ? p.getDocumentoComprobante().getIdDocumento() : null)
                 .documentoComprobanteNombre(p.getDocumentoComprobante() != null ? p.getDocumentoComprobante().getNombreOriginal() : null)
                 .documentoComprobanteUrl(p.getDocumentoComprobante() != null ? "/api/v1/documentos/" + p.getDocumentoComprobante().getIdDocumento() + "/preview" : null)
+                .idComprobanteFactura(factura != null ? factura.getIdComprobante() : null)
+                .numeroFacturaEmitida(factura != null ? factura.getNumeroCompleto() : null)
+                .tipoComprobanteFactura(factura != null ? factura.getTipoComprobante() : null)
                 .fechaRegistro(p.getFechaRegistro())
                 .build();
     }
 
     private PortalLiquidacionDTO mapToPortalLiquidacion(LiquidacionFinanciera l) {
+        ComprobanteFactura factura = (comprobanteFacturaRepository != null && l.getIdLiquidacion() != null)
+                ? comprobanteFacturaRepository
+                        .findFirstByLiquidacion_IdLiquidacionAndEstadoOrderByIdComprobanteDesc(l.getIdLiquidacion(), "EMITIDA")
+                        .orElse(null)
+                : null;
         return PortalLiquidacionDTO.builder()
                 .idLiquidacion(l.getIdLiquidacion())
                 .codigoLiquidacion(l.getCodigoLiquidacion())
@@ -867,7 +1145,8 @@ public class PortalServiceImpl implements IPortalService {
                 .totalGeneralUsd(l.getTotalGeneralUsd())
                 .tipoCambio(l.getTipoCambio())
                 .estadoPago(l.getEstadoPago())
-                .numeroFactura(l.getNumeroFactura())
+                .numeroFactura(factura != null ? factura.getNumeroCompleto() : l.getNumeroFactura())
+                .idComprobanteFactura(factura != null ? factura.getIdComprobante() : null)
                 .fechaEmision(l.getFechaEmision())
                 .fechaPago(l.getFechaPago())
                 .metodoPago(l.getMetodoPago())

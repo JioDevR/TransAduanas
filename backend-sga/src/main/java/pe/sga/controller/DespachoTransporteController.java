@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import pe.sga.config.SecurityRoles;
 import pe.sga.dto.request.DespachoAsignarRecursosDTO;
 import pe.sga.dto.request.DespachoEntregaDTO;
+import pe.sga.dto.request.DespachoIncidenciaDTO;
 import pe.sga.dto.request.DespachoRutaDTO;
 import pe.sga.dto.request.DespachoTransporteCrearDTO;
 import pe.sga.dto.response.ApiResponseDTO;
@@ -31,16 +32,8 @@ public class DespachoTransporteController {
             @RequestParam(required = false) String estado,
             @RequestParam(required = false) Integer idConductor,
             @RequestParam(required = false) Integer idUnidad) {
-        List<DespachoTransporteResponseDTO> lista;
-        if (estado != null && !estado.trim().isEmpty()) {
-            lista = despachoService.listarPorEstado(estado.trim());
-        } else if (idConductor != null) {
-            lista = despachoService.listarPorConductor(idConductor);
-        } else if (idUnidad != null) {
-            lista = despachoService.listarPorUnidad(idUnidad);
-        } else {
-            lista = despachoService.listarTodos(soloActivos);
-        }
+        List<DespachoTransporteResponseDTO> lista = despachoService.listarConFiltros(
+                soloActivos, estado, idConductor, idUnidad);
         return ResponseEntity.ok(ApiResponseDTO.ok("Lista de despachos de transporte recuperada", lista));
     }
 
@@ -56,38 +49,6 @@ public class DespachoTransporteController {
         return ResponseEntity.ok(ApiResponseDTO.ok(dto));
     }
 
-    @GetMapping("/mi-despacho-activo")
-    @PreAuthorize(SecurityRoles.ACCESS_TRANSPORTE_READ)
-    public ResponseEntity<ApiResponseDTO<DespachoTransporteResponseDTO>> obtenerMiDespachoActivo(
-            @org.springframework.security.core.annotation.AuthenticationPrincipal pe.sga.entity.Usuario usuarioAutenticado) {
-        if (usuarioAutenticado == null) {
-            return ResponseEntity.ok(ApiResponseDTO.ok("Usuario no autenticado", null));
-        }
-        DespachoTransporteResponseDTO dto = despachoService.obtenerDespachoActivoPorUsuario(usuarioAutenticado.getIdUsuario());
-        return ResponseEntity.ok(ApiResponseDTO.ok("Despacho activo del conductor", dto));
-    }
-
-    @GetMapping("/mis-despachos")
-    @PreAuthorize(SecurityRoles.ACCESS_TRANSPORTE_READ)
-    public ResponseEntity<ApiResponseDTO<List<DespachoTransporteResponseDTO>>> listarMisDespachos(
-            @org.springframework.security.core.annotation.AuthenticationPrincipal pe.sga.entity.Usuario usuarioAutenticado) {
-        if (usuarioAutenticado == null) {
-            return ResponseEntity.ok(ApiResponseDTO.ok("Usuario no autenticado", List.of()));
-        }
-        List<DespachoTransporteResponseDTO> lista = despachoService.listarMisDespachos(usuarioAutenticado.getIdUsuario());
-        return ResponseEntity.ok(ApiResponseDTO.ok("Historial de despachos del conductor", lista));
-    }
-
-    @PostMapping("/{id}/incidencia")
-    @PreAuthorize(SecurityRoles.ACCESS_TRANSPORTE_WRITE)
-    public ResponseEntity<ApiResponseDTO<DespachoTransporteResponseDTO>> reportarIncidencia(
-            @PathVariable Integer id,
-            @RequestBody java.util.Map<String, String> body) {
-        String incidencia = body.getOrDefault("incidencia", "Incidencia no detallada");
-        DespachoTransporteResponseDTO actualizado = despachoService.reportarIncidencia(id, incidencia);
-        return ResponseEntity.ok(ApiResponseDTO.ok("Incidencia reportada correctamente", actualizado));
-    }
-
     @GetMapping("/expediente/{idExpediente}")
     public ResponseEntity<ApiResponseDTO<DespachoTransporteResponseDTO>> buscarPorExpediente(@PathVariable Integer idExpediente) {
         DespachoTransporteResponseDTO dto = despachoService.buscarPorExpediente(idExpediente);
@@ -100,6 +61,13 @@ public class DespachoTransporteController {
         DespachoTransporteResponseDTO creado = despachoService.programar(dto);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponseDTO.ok("Despacho de transporte programado exitosamente", creado));
+    }
+
+    @PatchMapping("/{id}/aceptar")
+    @PreAuthorize(SecurityRoles.ACCESS_TRANSPORTE_WRITE)
+    public ResponseEntity<ApiResponseDTO<DespachoTransporteResponseDTO>> aceptarSolicitud(@PathVariable Integer id) {
+        DespachoTransporteResponseDTO actualizado = despachoService.aceptarSolicitud(id);
+        return ResponseEntity.ok(ApiResponseDTO.ok("Solicitud de transporte aceptada por el área de flota", actualizado));
     }
 
     @PatchMapping("/{id}/asignar-recursos")
@@ -127,6 +95,15 @@ public class DespachoTransporteController {
             @Valid @RequestBody DespachoEntregaDTO dto) {
         DespachoTransporteResponseDTO actualizado = despachoService.confirmarEntrega(id, dto);
         return ResponseEntity.ok(ApiResponseDTO.ok("Entrega conforme registrada y unidad liberada", actualizado));
+    }
+
+    @PostMapping("/{id}/incidencia")
+    @PreAuthorize(SecurityRoles.ACCESS_TRANSPORTE_WRITE)
+    public ResponseEntity<ApiResponseDTO<DespachoTransporteResponseDTO>> reportarIncidencia(
+            @PathVariable Integer id,
+            @Valid @RequestBody DespachoIncidenciaDTO dto) {
+        DespachoTransporteResponseDTO actualizado = despachoService.reportarIncidencia(id, dto.getIncidencia());
+        return ResponseEntity.ok(ApiResponseDTO.ok("Incidencia reportada correctamente", actualizado));
     }
 
     @DeleteMapping("/{id}")

@@ -47,6 +47,18 @@
       </div>
 
       <div class="sga-form-actions">
+        <Button
+          v-if="cotizacion"
+          type="button"
+          label="WhatsApp"
+          icon="pi pi-whatsapp"
+          severity="success"
+          outlined
+          size="small"
+          :disabled="processing"
+          @click="$emit('notify-whatsapp', cotizacion)"
+        />
+
         <template v-if="data.isAuditable">
           <Button
             type="button"
@@ -185,7 +197,7 @@ const props = defineProps({
   processing: { type: Boolean, default: false }
 })
 
-defineEmits(['back', 'approve', 'observe', 'reject', 'open-apertura', 'doc-updated'])
+defineEmits(['back', 'approve', 'observe', 'reject', 'open-apertura', 'doc-updated', 'notify-whatsapp'])
 
 const docsCount = ref(0)
 

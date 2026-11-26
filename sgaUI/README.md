@@ -12,6 +12,8 @@ Esta carpeta centraliza el sistema de diseño unificado **`sgaUI`** para servir 
 | [`sga-theme.css`](./sga-theme.css) | Reglas CSS base (base `16px`, escala tipográfica `--sga-text-*`, números tabulares, listados, colas `.sga-queue-buttons`, botones `ConfirmDialog` y elevación). Importa `sga-dashboard.css`, `sga-forms.css` y `sga-responsive.css`. |
 | [`sga-dashboard.css`](./sga-dashboard.css) | Patrón unificado de dashboards operativos (`.sga-dash-header`, `.sga-filters-card`, `.sga-kpis-grid`, `.sga-kpi-card`, `.sga-charts-grid`, `.sga-doughnut-wrap`). |
 | [`sga-forms.css`](./sga-forms.css) | Patrón unificado de formularios `Split-Screen` (`.sga-split-layout`, `.sga-form-header`), stepper horizontal (`.sga-stepper-bar`), campos/etiquetas (`.sga-form-field`, `.sga-form-label`), diálogos (`.sga-dialog-body`, `.sga-dialog-footer`) y banners (`.sga-banner`). |
+| [`sga-dialogs.css`](./sga-dialogs.css) | Estándar unificado de `<Dialog>` nativo de PrimeVue 4 (cabecera, cuerpo, pie `#footer`, `.sga-dialog-context`, `.sga-field-hint` y tarjetas de selección `.sga-choice-list` / `.sga-choice-card`). |
+| [`sga-tracking.css`](./sga-tracking.css) | Patrón de Tracking operativo, ruta logística (`.sga-route-strip`), hitos conectados (`.sga-milestone-track`) y bitácora vertical (`.sga-timeline-feed`). |
 | [`sga-responsive.css`](./sga-responsive.css) | Estándar oficial de responsividad: 4 breakpoints (`1200px`, `900px`, `640px`), grillas seguras (`.sga-grid-2/3/4/auto`), visibilidad condicional y protección anti-zoom en móvil. |
 | [`useResponsive.js`](./useResponsive.js) | Composable reactivo estándar (`useResponsive`, `resolveViewportState`, `SGA_BREAKPOINTS`) sincronizado con los breakpoints CSS para adaptar drawers, modales y lógica de vista. |
 | [`sga-auth.css`](./sga-auth.css) | Estilos reutilizables de pantalla de acceso y seguridad (`.sga-auth-page`, `.sga-auth-card`, `.sga-auth-wrapper--wide`, `.sga-auth-brand`, `.sga-auth-form`, `.sga-auth-entity`, `.sga-auth-checklist`, `.sga-auth-hint`, `.sga-auth-secondary-action` y reglas móviles `<= 640px`). |
@@ -129,6 +131,37 @@ Referencia aplicada en el wizard de cotización comercial (`app-sga/src/features
 * **Layout `Split-Screen` (`.sga-split-layout`, `.sga-split-main`, `.sga-split-aside`):** Rejilla `minmax(0, 1fr) 360px` (`gap: 1.5rem`, colapsa a `1fr` en `<= 1120px`). La columna lateral `sticky` muestra el resumen en vivo con `--font-mono` y `tabular-nums`, sin duplicar los botones de acción del header.
 * **Padding lateral estandarizado:** Todas las tarjetas de contenido (`.sga-card-surface` / pasos del wizard / resumen lateral) usan `--sga-card-padding-y: 1.75rem` y `--sga-card-padding-x: 2rem` (`1.25rem` en `<= 768px`), y los subpaneles internos usan `--sga-subpanel-padding: 1.25rem 1.35rem`, garantizando aire uniforme en esquinas y bordes laterales.
 * **Formularios internos, diálogos y banners:** Etiquetas en micro-mayúsculas (`.sga-form-label` / `.sga-field-label`, `0.6875rem`, peso `700`, `letter-spacing: 0.04em`, `--color-text-muted`), campos en columna (`.sga-form-field`), pies de diálogo (`.sga-dialog-footer`), banners de estado (`.sga-banner` con `.is-info`, `.is-warn`, `.is-danger`, `.is-success`) y controles PrimeVue 4 (`InputText`, `InputNumber`, `Select`, `Textarea`) con `size="small"` y `fluid`.
+
+### Estándar de Diálogo Nativo PrimeVue 4 (`sga-dialogs.css`)
+
+Para todo nuevo modal o migración desde `BaseModal`, usar `<Dialog>` nativo de PrimeVue 4 con `useResponsive().getDialogWidth(...)`:
+
+```vue
+<Dialog
+  :visible="visible"
+  modal
+  :closable="!loading"
+  :dismissableMask="!loading"
+  :style="{ width: getDialogWidth('560px'), maxWidth: '95vw' }"
+  header="Título del Diálogo"
+  @update:visible="(val) => { if (!val && !loading) $emit('close') }"
+>
+  <form id="mi-dialog-form" class="sga-dialog-body" @submit.prevent="onSubmit">
+    <div class="sga-dialog-context">...</div>
+    <div class="sga-form-field">
+      <label class="sga-form-label" for="campo">Etiqueta *</label>
+      <InputText id="campo" size="small" fluid />
+      <span class="sga-field-hint">Ayuda contextual</span>
+    </div>
+  </form>
+  <template #footer>
+    <Button type="button" label="Cancelar" severity="secondary" outlined size="small" />
+    <Button type="submit" form="mi-dialog-form" label="Guardar" icon="pi pi-check" size="small" />
+  </template>
+</Dialog>
+```
+
+Para opciones de selección única en formato tarjeta usar `<RadioButton>` dentro de `.sga-choice-list` > `.sga-choice-card` (`.is-selected` + `.is-success | .is-warn | .is-danger | .is-info`) y `.sga-choice-dot`.
 
 ---
 

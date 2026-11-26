@@ -1,130 +1,175 @@
 <template>
-  <BaseModal
+  <Dialog
     :visible="visible"
-    title="Confirmar Embarque Internacional (Exportación)"
-    :subtitle="`Expediente: ${expediente?.codigoExpediente || ''} — DAM: ${expediente?.numeroDam || 'S/N'}`"
-    icon="pi pi-send"
-    max-width="600px"
-    :error-message="errorMessage"
-    :busy="loading"
-    @close="handleClose"
+    modal
+    :closable="!loading"
+    :dismissableMask="!loading"
+    :style="{ width: getDialogWidth('660px'), maxWidth: '95vw' }"
+    header="Confirmar Embarque Internacional (Zarpe / Despegue)"
+    @update:visible="(val) => { if (!val && !loading) handleClose() }"
   >
-    <form @submit.prevent="handleSubmit" class="form-body">
-      <!-- Info Banner Embarque -->
-      <div class="embarque-info-banner">
-        <i class="pi pi-compass text-lg"></i>
-        <div class="banner-texts">
-          <strong>Confirmación de Carga Estibada y Zarpe de Nave</strong>
-          <p>
-            Habiéndose otorgado el <strong>LEVANTE AUTORIZADO</strong>, se certifica el embarque físico del contenedor o bultos a bordo del buque/aeronave de salida para el inicio del tránsito internacional hacia el país de destino.
+    <form id="confirmar-embarque-exportacion-form" class="sga-dialog-body" @submit.prevent="handleSubmit">
+      <div v-if="expediente" class="sga-dialog-context">
+        <div class="sga-dialog-context-meta">
+          <span class="sga-code-cell font-mono">{{ expediente.codigoExpediente }}</span>
+          <span class="sga-dialog-context-sub">
+            {{ expediente.clienteRazonSocial || 'Exportador asignado' }}
+          </span>
+        </div>
+        <Tag
+          :value="form.tipoTransporteInternacional === 'AEREO' ? 'AÉREO' : 'MARÍTIMO'"
+          severity="info"
+          class="sga-mini-tag"
+          rounded
+        />
+      </div>
+
+      <div class="sga-banner is-info">
+        <i class="pi pi-globe"></i>
+        <div>
+          <strong>Registro Oficial de Zarpe / Salida del País</strong>
+          <p class="embarque-banner-desc">
+            Confirme que la carga fue embarcada exitosamente en la nave o aeronave asignada con destino al exterior.
           </p>
         </div>
       </div>
 
-      <div class="embarque-fields-grid">
-        <div class="field-item">
-          <label for="embarque-tipo">Modalidad de Transporte *</label>
-          <select id="embarque-tipo" v-model="form.tipoTransporteInternacional" class="text-input">
-            <option value="MARITIMO">Marítimo (Buque / Nave)</option>
-            <option value="AEREO">Aéreo (Vuelo / Aerolínea)</option>
-          </select>
+      <div v-if="errorMessage" class="sga-banner is-danger" role="alert">
+        <i class="pi pi-exclamation-triangle"></i>
+        <span>{{ errorMessage }}</span>
+      </div>
+
+      <div class="sga-grid-2">
+        <div class="sga-form-field">
+          <label for="embarque-tipo" class="sga-form-label">Vía de Transporte Internacional *</label>
+          <Select
+            inputId="embarque-tipo"
+            v-model="form.tipoTransporteInternacional"
+            :options="tipoTransporteOptions"
+            optionLabel="label"
+            optionValue="value"
+            size="small"
+            fluid
+          />
         </div>
 
-        <div class="field-item">
-          <label for="embarque-vuelo">N° de Vuelo / Referencia Aérea</label>
+        <div class="sga-form-field">
+          <label for="embarque-vuelo" class="sga-form-label">
+            {{ form.tipoTransporteInternacional === 'AEREO' ? 'N° de Vuelo / Aerolínea *' : 'N° de Viaje / Booking' }}
+          </label>
           <InputText
             id="embarque-vuelo"
             v-model.trim="form.numeroVuelo"
-            placeholder="Ej. LA-2462 / AWB 145-9988"
+            :placeholder="form.tipoTransporteInternacional === 'AEREO' ? 'Ej. LA-2462 / LATAM Cargo' : 'Ej. V.042N / BKG-8812'"
+            :required="form.tipoTransporteInternacional === 'AEREO'"
+            size="small"
             fluid
           />
         </div>
 
-        <div class="field-item full-width">
-          <label for="embarque-nave">Nave / Aerolínea y Número de Viaje *</label>
+        <div class="sga-form-field full-span">
+          <label for="embarque-nave" class="sga-form-label">
+            {{ form.tipoTransporteInternacional === 'AEREO' ? 'Aeropuerto Origen y Nave *' : 'Nombre de Buque / Naviera *' }}
+          </label>
           <InputText
             id="embarque-nave"
             v-model.trim="form.naveViaje"
+            :placeholder="form.tipoTransporteInternacional === 'AEREO' ? 'Ej. Boeing 767-300F (LIM -> MIA)' : 'Ej. MSC ANTWERP / MSC Mediterranean'"
             required
-            placeholder="Ej. MSC CAPELLA / V. 2402W o LATAM CARGO"
+            size="small"
             fluid
           />
         </div>
 
-        <div class="field-item">
-          <label for="embarque-zarpe">Fecha y Hora de Zarpe Real (ETD) *</label>
-          <input
-            id="embarque-zarpe"
+        <div class="sga-form-field">
+          <label for="embarque-etd" class="sga-form-label">Fecha Real de Zarpe / Salida (ETD) *</label>
+          <InputText
+            id="embarque-etd"
             v-model="form.fechaZarpeEtd"
             type="date"
-            class="text-input"
             required
+            size="small"
+            fluid
           />
         </div>
 
-        <div class="field-item">
-          <label for="embarque-eta">ETA Estimado en Puerto Destino *</label>
-          <input
+        <div class="sga-form-field">
+          <label for="embarque-eta" class="sga-form-label">Fecha Estimada Llegada Exterior (ETA)</label>
+          <InputText
             id="embarque-eta"
             v-model="form.fechaEstimadaLlegadaExterior"
             type="date"
-            class="text-input"
-            required
-          />
-        </div>
-
-        <div class="field-item full-width">
-          <label for="embarque-puerto">Puerto / Aeropuerto de Destino Exterior *</label>
-          <InputText
-            id="embarque-puerto"
-            v-model.trim="form.puertoDestinoExterior"
-            required
-            placeholder="Ej. Port of Long Beach, USA / Rotterdam, Netherlands"
+            :min="form.fechaZarpeEtd || undefined"
+            size="small"
             fluid
           />
         </div>
 
-        <div class="field-item full-width">
-          <label for="embarque-obs">Detalles de Manifiesto / Observaciones</label>
+        <div class="sga-form-field full-span">
+          <label for="embarque-destino" class="sga-form-label">Puerto / Aeropuerto de Destino en el Exterior *</label>
+          <InputText
+            id="embarque-destino"
+            v-model.trim="form.puertoDestinoExterior"
+            placeholder="Ej. Port of Rotterdam (NL) / Miami Intl Airport (US)"
+            required
+            size="small"
+            fluid
+          />
+        </div>
+
+        <div class="sga-form-field full-span">
+          <label for="embarque-obs" class="sga-form-label">Observaciones de Embarque</label>
           <Textarea
             id="embarque-obs"
             v-model.trim="form.observaciones"
             rows="2"
             autoResize
-            placeholder="BL marítimo matriz emitido a bordo, estiba en cubierta/bodega conforme..."
+            placeholder="Ej. Contenedor estibado en bodega, BL emitido y entregado al exportador..."
+            size="small"
             fluid
           />
         </div>
       </div>
-
-      <div class="modal-actions">
-        <Button
-          type="button"
-          label="Cancelar"
-          severity="secondary"
-          outlined
-          @click="handleClose"
-          :disabled="loading"
-        />
-        <Button
-          type="submit"
-          label="Registrar Embarque Internacional"
-          icon="pi pi-check-circle"
-          :loading="loading"
-        />
-      </div>
     </form>
-  </BaseModal>
+
+    <template #footer>
+      <Button
+        type="button"
+        label="Cancelar"
+        severity="secondary"
+        outlined
+        size="small"
+        :disabled="loading"
+        @click="handleClose"
+      />
+      <Button
+        type="submit"
+        form="confirmar-embarque-exportacion-form"
+        label="Registrar Embarque Internacional"
+        icon="pi pi-check-circle"
+        size="small"
+        :loading="loading"
+      />
+    </template>
+  </Dialog>
 </template>
 
 <script setup>
 import { ref, watch } from 'vue'
 import Button from 'primevue/button'
+import Dialog from 'primevue/dialog'
 import InputText from 'primevue/inputtext'
+import Select from 'primevue/select'
+import Tag from 'primevue/tag'
 import Textarea from 'primevue/textarea'
-import BaseModal from '@/shared/components/BaseModal.vue'
+import { useResponsive } from '@/shared/composables/useResponsive'
 import { expedienteService } from '@/shared/services/expedienteService'
 import { getTodayDateInput } from '@/shared/utils/dateUtils'
+
+const tipoTransporteOptions = [
+  { label: 'Marítimo (Buque / Nave)', value: 'MARITIMO' },
+  { label: 'Aéreo (Vuelo / Aerolínea)', value: 'AEREO' }
+]
 
 const props = defineProps({
   visible: { type: Boolean, default: false },
@@ -132,6 +177,7 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['close', 'saved'])
+const { getDialogWidth } = useResponsive()
 
 const loading = ref(false)
 const errorMessage = ref('')
@@ -157,9 +203,9 @@ const getFutureDateString = (days) => {
 }
 
 watch(
-  () => props.expediente,
-  (exp) => {
-    if (exp) {
+  () => [props.visible, props.expediente],
+  ([vis, exp]) => {
+    if (vis && exp) {
       errorMessage.value = ''
       form.value = {
         tipoTransporteInternacional: exp.tipoTransporteInternacional || (exp.modalidad === 'AEREO' ? 'AEREO' : 'MARITIMO'),
@@ -217,136 +263,13 @@ const handleSubmit = async () => {
 </script>
 
 <style scoped>
-.form-body {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.embarque-info-banner {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  background: var(--color-info-bg);
-  border: 1px solid var(--color-info-border);
-  border-radius: 8px;
-  padding: 12px 14px;
-  color: var(--color-text-main);
-}
-
-.embarque-info-banner i {
-  color: var(--color-info-text);
-  margin-top: 2px;
-}
-
-.banner-texts strong {
-  display: block;
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: var(--color-info-text);
-  margin-bottom: 3px;
-}
-
-.banner-texts p {
-  margin: 0;
+.embarque-banner-desc {
+  margin: 0.2rem 0 0;
   font-size: 0.8rem;
-  line-height: 1.35;
-  color: var(--color-text-muted);
+  line-height: 1.4;
 }
 
-.embarque-fields-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-}
-
-.field-item {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.field-item.full-width {
+.full-span {
   grid-column: 1 / -1;
-}
-
-.field-item label {
-  font-size: 0.75rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--color-text-muted);
-}
-
-.text-input,
-.textarea-input {
-  width: 100%;
-  padding: 8px 12px;
-  background: var(--color-bg-surface);
-  border: 1px solid var(--color-border);
-  border-radius: 6px;
-  color: var(--color-text-main);
-  font-size: 0.85rem;
-  transition: border-color 0.15s ease;
-}
-
-.text-input:focus,
-.textarea-input:focus {
-  outline: none;
-  border-color: var(--color-primary);
-}
-
-.textarea-input {
-  resize: vertical;
-}
-
-.modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  margin-top: 10px;
-  padding-top: 14px;
-  border-top: 1px solid var(--color-border);
-}
-
-.btn-modal-cancel {
-  padding: 8px 16px;
-  background: var(--color-bg-subtle);
-  border: 1px solid var(--color-border);
-  border-radius: 6px;
-  color: var(--color-text-main);
-  font-size: 0.85rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.15s ease;
-}
-
-.btn-modal-cancel:hover:not(:disabled) {
-  background: var(--color-bg-muted);
-}
-
-.btn-modal-save {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 18px;
-  background: var(--color-primary);
-  border: none;
-  border-radius: 6px;
-  color: var(--color-primary-text);
-  font-size: 0.85rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: opacity 0.15s ease;
-}
-
-.btn-modal-save:hover:not(:disabled) {
-  opacity: 0.92;
-}
-
-.btn-modal-save:disabled,
-.btn-modal-cancel:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
 }
 </style>

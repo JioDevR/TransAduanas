@@ -1,12 +1,11 @@
-import { ref, computed, watch } from 'vue'
+import { ref, computed } from 'vue'
 import { portalExpedienteService } from '../services/portalExpedienteService'
 import { portalCotizacionService } from '@/features/cotizaciones/services/portalCotizacionService'
 import { useNotification } from '@/shared/composables/useNotification'
-import { downloadBlob, openBlobInNewTab } from '@/shared/utils/download'
 import { isExportExpediente } from '../utils/expedienteTrackingUtils'
 
 /**
- * Composable de gestión de estado, filtros y bóveda documental para Expedientes B2B.
+ * Composable de gestión de listado, filtros y creación de Expedientes Simples B2B.
  */
 export function usePortalExpedientes() {
   const { showSuccess, showError } = useNotification()
@@ -21,11 +20,6 @@ export function usePortalExpedientes() {
   const filterCanal = ref('TODOS')
   const filterFase = ref('ABIERTOS')
   const sortBy = ref('recientes')
-
-  const selectedExpediente = ref(null)
-  const showDetailModal = ref(false)
-  const documentosExpediente = ref([])
-  const loadingDocs = ref(false)
 
   const abiertosCount = computed(() =>
     expedientes.value.filter(e => e.estadoExpediente !== 'CERRADO' && e.estadoExpediente !== 'ANULADO').length
@@ -143,87 +137,12 @@ export function usePortalExpedientes() {
         showSuccess(`Expediente simple ${result?.codigoExpediente || ''} creado. Gestión Aduanera asignará su agente.`, 'Expediente Creado')
       }
       await cargarExpedientes()
-      if (selectedExpediente.value?.idExpediente && result?.idExpediente === selectedExpediente.value.idExpediente) {
-        selectedExpediente.value = result
-      }
       return result
     } catch (err) {
       showError(err.response?.data?.message || 'No se pudo guardar el expediente.')
       return null
     } finally {
       savingSimple.value = false
-    }
-  }
-
-  async function handleVerInformeConformidad(exp) {
-    if (!exp?.idExpediente) return
-    try {
-      const blob = await portalExpedienteService.descargarInformeConformidadPdf(exp.idExpediente, { download: false })
-      openBlobInNewTab(blob, 'application/pdf')
-    } catch {
-      showError('No se pudo abrir el Informe de Conformidad de Entrega')
-    }
-  }
-
-  async function handleDescargarInformeConformidad(exp) {
-    if (!exp?.idExpediente) return
-    try {
-      const blob = await portalExpedienteService.descargarInformeConformidadPdf(exp.idExpediente, { download: true })
-      downloadBlob(blob, `informe-conformidad-${exp.codigoExpediente}.pdf`, 'application/pdf')
-    } catch {
-      showError('No se pudo descargar el Informe de Conformidad de Entrega')
-    }
-  }
-
-  function abrirDetalle(exp) {
-    selectedExpediente.value = exp
-    showDetailModal.value = true
-  }
-
-  function cerrarDetalle() {
-    showDetailModal.value = false
-  }
-
-  watch(
-    () => selectedExpediente.value?.idExpediente,
-    async (newId) => {
-      if (newId) {
-        await cargarDocumentos(newId)
-      } else {
-        documentosExpediente.value = []
-      }
-    }
-  )
-
-  async function cargarDocumentos(idExpediente) {
-    loadingDocs.value = true
-    try {
-      const docs = await portalExpedienteService.listarDocumentosExpediente(idExpediente)
-      documentosExpediente.value = docs || []
-    } catch (err) {
-      console.debug('Error al listar documentos del expediente:', err)
-      documentosExpediente.value = []
-    } finally {
-      loadingDocs.value = false
-    }
-  }
-
-  async function handleDescargar(doc) {
-    try {
-      const blob = await portalExpedienteService.descargarDocumento(doc.idDocumento)
-      downloadBlob(blob, doc.nombreOriginal || `documento-${doc.idDocumento}.pdf`, doc.formatoMime || 'application/pdf')
-      showSuccess(`Descargando ${doc.nombreOriginal || 'documento'}`, 'Bóveda Digital')
-    } catch {
-      showError('Error al descargar el documento del servidor')
-    }
-  }
-
-  async function handlePrevisualizar(doc) {
-    try {
-      const blob = await portalExpedienteService.previsualizarDocumento(doc.idDocumento)
-      openBlobInNewTab(blob, doc.formatoMime || 'application/pdf')
-    } catch {
-      showError('Error al previsualizar el documento en el navegador')
     }
   }
 
@@ -242,18 +161,8 @@ export function usePortalExpedientes() {
     todosCount,
     hasActiveFilters,
     expedientesFiltrados,
-    selectedExpediente,
-    showDetailModal,
-    documentosExpediente,
-    loadingDocs,
     resetFilters,
     cargarExpedientes,
-    guardarExpedienteSimple,
-    abrirDetalle,
-    cerrarDetalle,
-    handleDescargar,
-    handlePrevisualizar,
-    handleVerInformeConformidad,
-    handleDescargarInformeConformidad
+    guardarExpedienteSimple
   }
 }

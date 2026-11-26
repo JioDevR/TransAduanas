@@ -1,75 +1,119 @@
 <template>
-  <BaseModal
+  <Dialog
     :visible="visible"
-    title="Redactar Informe de Conformidad de Entrega al Cliente"
-    :subtitle="`Expediente: ${expediente?.codigoExpediente || ''} — ${expediente?.clienteRazonSocial || ''}`"
-    icon="pi pi-file-check"
-    max-width="580px"
-    :error-message="errorMessage"
-    :busy="loading"
-    @close="handleClose"
+    modal
+    :closable="!loading"
+    :dismissableMask="!loading"
+    :style="{ width: getDialogWidth('580px'), maxWidth: '95vw' }"
+    header="Emitir Informe de Conformidad de Entrega"
+    @update:visible="(val) => { if (!val && !loading) handleClose() }"
   >
-    <form class="form-body" @submit.prevent="handleSubmit">
-      <div class="two-col">
-        <div class="field-item">
-          <label for="conf-receptor">Nombre del Receptor Conforme *</label>
+    <form id="informe-conformidad-form" class="sga-dialog-body" @submit.prevent="handleSubmit">
+      <div v-if="expediente" class="sga-dialog-context">
+        <div class="sga-dialog-context-meta">
+          <span class="sga-code-cell font-mono">{{ expediente.codigoExpediente }}</span>
+          <span v-if="expediente.clienteRazonSocial" class="sga-dialog-context-sub">
+            {{ expediente.clienteRazonSocial }}
+          </span>
+        </div>
+        <Tag
+          :value="expediente.numeroDam ? `DAM ${expediente.numeroDam}` : 'Conformidad'"
+          severity="info"
+          class="font-mono sga-mini-tag"
+          rounded
+        />
+      </div>
+
+      <div v-if="errorMessage" class="sga-banner is-danger" role="alert">
+        <i class="pi pi-exclamation-triangle"></i>
+        <span>{{ errorMessage }}</span>
+      </div>
+
+      <div class="sga-grid-2">
+        <div class="sga-form-field">
+          <label for="conf-receptor" class="sga-form-label">Nombre del Receptor Conforme *</label>
           <InputText
             id="conf-receptor"
             v-model.trim="form.receptorNombre"
             required
             placeholder="Ej. Carlos Mendoza (Jefe de Almacén)"
+            size="small"
             fluid
           />
         </div>
 
-        <div class="field-item">
-          <label for="conf-dni">DNI / Documento</label>
+        <div class="sga-form-field">
+          <label for="conf-dni" class="sga-form-label">DNI / Documento</label>
           <InputText
             id="conf-dni"
             v-model.trim="form.receptorDni"
             placeholder="Ej. 42918273"
+            class="font-mono"
+            size="small"
             fluid
           />
         </div>
       </div>
 
-      <div class="field-item">
-        <label for="conf-fecha">Fecha y Hora de Entrega Conforme *</label>
-        <input
+      <div class="sga-form-field">
+        <label for="conf-fecha" class="sga-form-label">Fecha y Hora de Entrega Conforme *</label>
+        <InputText
           id="conf-fecha"
           v-model="form.fechaEntrega"
           type="datetime-local"
-          class="text-input"
+          class="font-mono"
           required
-        />
-      </div>
-
-      <div class="field-item">
-        <label for="conf-detalle">Redacción del Informe de Conformidad *</label>
-        <Textarea
-          id="conf-detalle"
-          v-model.trim="form.detalleConformidad"
-          rows="4"
-          required
-          placeholder="Se deja constancia de la entrega total y conforme de la mercancía en las instalaciones del cliente, verificando precintos y bultos sin daños..."
+          size="small"
           fluid
         />
       </div>
 
-      <div class="modal-actions">
-        <Button type="button" label="Cancelar" severity="secondary" outlined @click="handleClose" :disabled="loading" />
-        <Button type="submit" label="Emitir Informe de Conformidad" icon="pi pi-check" severity="success" :loading="loading" />
+      <div class="sga-form-field">
+        <label for="conf-detalle" class="sga-form-label">Redacción del Informe de Conformidad *</label>
+        <Textarea
+          id="conf-detalle"
+          v-model.trim="form.detalleConformidad"
+          rows="4"
+          autoResize
+          required
+          placeholder="Se deja constancia de la entrega total y conforme de la mercancía en las instalaciones del cliente, verificando precintos y bultos sin daños..."
+          size="small"
+          fluid
+        />
       </div>
     </form>
-  </BaseModal>
+
+    <template #footer>
+      <Button
+        type="button"
+        label="Cancelar"
+        severity="secondary"
+        outlined
+        size="small"
+        :disabled="loading"
+        @click="handleClose"
+      />
+      <Button
+        type="submit"
+        form="informe-conformidad-form"
+        label="Emitir Informe de Conformidad"
+        icon="pi pi-check"
+        severity="success"
+        size="small"
+        :loading="loading"
+      />
+    </template>
+  </Dialog>
 </template>
 
 <script setup>
 import { ref, watch } from 'vue'
 import Button from 'primevue/button'
+import Dialog from 'primevue/dialog'
 import InputText from 'primevue/inputtext'
+import Tag from 'primevue/tag'
 import Textarea from 'primevue/textarea'
-import BaseModal from '@/shared/components/BaseModal.vue'
+import { useResponsive } from '@/shared/composables/useResponsive'
 import { expedienteService } from '@/shared/services/expedienteService'
 import { getNowDateTimeInput, toLocalDateTimePayload } from '@/shared/utils/dateUtils'
 
@@ -79,6 +123,7 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['close', 'saved'])
+const { getDialogWidth } = useResponsive()
 
 const loading = ref(false)
 const errorMessage = ref('')
@@ -131,39 +176,3 @@ const handleSubmit = async () => {
   }
 }
 </script>
-
-<style scoped>
-.form-body {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-.two-col {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.85rem;
-}
-.field-item {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-}
-.field-item label {
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: var(--color-text-main);
-}
-.text-input {
-  width: 100%;
-  padding: 0.5rem 0.65rem;
-  border: 1px solid var(--color-border);
-  border-radius: 6px;
-  background: var(--color-bg-surface);
-  color: var(--color-text-main);
-}
-.modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.65rem;
-}
-</style>

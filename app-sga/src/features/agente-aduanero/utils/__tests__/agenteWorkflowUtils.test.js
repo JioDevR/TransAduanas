@@ -12,6 +12,8 @@ import {
   isRetiroDirectoRegistrado,
   belongsToAgentePhase,
   getAccionesPermitidasAgente,
+  buildAgenteChecklistHitos,
+  getSiguienteAccionAgente,
   extractTerminalBitacora
 } from '../agenteWorkflowUtils'
 
@@ -145,5 +147,52 @@ describe('agenteWorkflowUtils', () => {
     })
     expect(exportPendiente.puedeMarcarRevisionAduana).toBe(true)
     expect(exportPendiente.puedeMarcarEsperaTransito).toBe(true)
+  })
+
+  it('filtra fase cerrados y construye hitos secuenciales + siguiente acción para Importación y Exportación', () => {
+    expect(belongsToAgentePhase({ estadoExpediente: 'CERRADO' }, 'cerrados')).toBe(true)
+    expect(belongsToAgentePhase({ estadoExpediente: 'ASIGNADO' }, 'cerrados')).toBe(false)
+
+    // Importación recién asignada -> Siguiente acción: Registrar Envío de Origen Exitoso
+    const expImpRecienAsignado = {
+      regimenAduanero: 'IMPORTACION_DEFINITIVA',
+      estadoExpediente: 'ASIGNADO',
+      canalSunat: 'PENDIENTE'
+    }
+    const hitosImp1 = buildAgenteChecklistHitos(expImpRecienAsignado)
+    expect(hitosImp1).toHaveLength(5)
+    expect(hitosImp1[0].status).toBe('current')
+    expect(getSiguienteAccionAgente(expImpRecienAsignado)).toMatchObject({
+      event: 'salida-origen',
+      label: 'Registrar Envío de Origen Exitoso'
+    })
+
+    // Importación arribada esperando canal SUNAT
+    const expEsperandoCanal = {
+      regimenAduanero: 'IMPORTACION_DEFINITIVA',
+      estadoExpediente: 'EN_TRAMITE',
+      canalSunat: 'PENDIENTE',
+      fechaArriboAduana: '2026-11-22T10:00:00'
+    }
+    expect(getSiguienteAccionAgente(expEsperandoCanal)).toMatchObject({
+      event: null,
+      isWaiting: true,
+      label: 'Esperando Canal SUNAT'
+    })
+
+    // Exportación con levante pendiente de embarque
+    const expExportLevante = {
+      regimenAduanero: 'EXPORTACION_DEFINITIVA',
+      estadoExpediente: 'LEVANTE_AUTORIZADO',
+      canalSunat: 'VERDE',
+      fechaArriboAduana: '2026-11-20T09:00:00',
+      fechaLevanteAutorizacion: '2026-11-21T10:00:00'
+    }
+    const hitosExp = buildAgenteChecklistHitos(expExportLevante)
+    expect(hitosExp).toHaveLength(4)
+    expect(getSiguienteAccionAgente(expExportLevante)).toMatchObject({
+      event: 'embarque',
+      label: 'Confirmar Vuelo / Embarque'
+    })
   })
 })

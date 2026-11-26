@@ -104,13 +104,14 @@ public class ExpedienteServiceImpl implements IExpedienteService {
 
     private void notificarCliente(Expediente exp, String titulo, String mensaje, String tipo) {
         if (exp == null || exp.getCliente() == null) return;
+        String enlace = exp.getIdExpediente() != null ? "/expedientes/" + exp.getIdExpediente() : "/expedientes";
         notificacionClienteRepository.save(NotificacionCliente.builder()
                 .cliente(exp.getCliente())
                 .titulo(titulo)
                 .mensaje(mensaje)
                 .tipo(tipo)
                 .leido(false)
-                .enlace("/expedientes")
+                .enlace(enlace)
                 .fechaCreacion(LocalDateTime.now())
                 .build());
     }
@@ -235,6 +236,7 @@ public class ExpedienteServiceImpl implements IExpedienteService {
 
         // Notificaciones al cliente B2B (Diagrama BPMN: "Not. expediente creado" & "Not. agente asignado")
         if (guardado.getCliente() != null) {
+            String enlaceExp = "/expedientes/" + guardado.getIdExpediente();
             // 1. Notificación: Expediente creado
             NotificacionCliente notifExp = NotificacionCliente.builder()
                     .cliente(guardado.getCliente())
@@ -244,7 +246,7 @@ public class ExpedienteServiceImpl implements IExpedienteService {
                             + ". Puede realizar seguimiento continuo de los hitos aduaneros en la sección de Expedientes.")
                     .tipo("DAM")
                     .leido(false)
-                    .enlace("/expedientes")
+                    .enlace(enlaceExp)
                     .fechaCreacion(LocalDateTime.now())
                     .build();
             notificacionClienteRepository.save(notifExp);
@@ -261,7 +263,7 @@ public class ExpedienteServiceImpl implements IExpedienteService {
                             + " para liderar la numeración de DAM, aforo e inspección ante SUNAT.")
                     .tipo("DAM")
                     .leido(false)
-                    .enlace("/expedientes")
+                    .enlace(enlaceExp)
                     .fechaCreacion(LocalDateTime.now())
                     .build();
             notificacionClienteRepository.save(notifAgente);
@@ -348,7 +350,7 @@ public class ExpedienteServiceImpl implements IExpedienteService {
                             + ". Su despacho se encuentra en travesía internacional rumbo a Perú.")
                     .tipo("DAM")
                     .leido(false)
-                    .enlace("/expedientes")
+                    .enlace("/expedientes/" + guardado.getIdExpediente())
                     .fechaCreacion(LocalDateTime.now())
                     .build();
             notificacionClienteRepository.save(notif);
@@ -530,7 +532,7 @@ public class ExpedienteServiceImpl implements IExpedienteService {
                             + expediente.getCodigoExpediente() + ". El área de Flota asignará la unidad para traslado al almacén temporal aduanero.")
                     .tipo("TRANSPORTE")
                     .leido(false)
-                    .enlace("/expedientes")
+                    .enlace("/expedientes/" + expediente.getIdExpediente())
                     .fechaCreacion(LocalDateTime.now())
                     .build();
             notificacionClienteRepository.save(notif);
@@ -584,7 +586,7 @@ public class ExpedienteServiceImpl implements IExpedienteService {
                             + ") para inicio de trámite y asignación de canal de control SUNAT.")
                     .tipo("DAM")
                     .leido(false)
-                    .enlace("/expedientes")
+                    .enlace("/expedientes/" + guardado.getIdExpediente())
                     .fechaCreacion(LocalDateTime.now())
                     .build();
             notificacionClienteRepository.save(notif);
@@ -667,7 +669,7 @@ public class ExpedienteServiceImpl implements IExpedienteService {
                             + ". Se encuentra en tránsito marítimo/aéreo internacional.")
                     .tipo("DAM")
                     .leido(false)
-                    .enlace("/expedientes")
+                    .enlace("/expedientes/" + guardado.getIdExpediente())
                     .fechaCreacion(LocalDateTime.now())
                     .build();
             notificacionClienteRepository.save(notif);
@@ -716,7 +718,7 @@ public class ExpedienteServiceImpl implements IExpedienteService {
                             + ". El expediente se encuentra listo para liquidación y cierre.")
                     .tipo("DAM")
                     .leido(false)
-                    .enlace("/expedientes")
+                    .enlace("/expedientes/" + guardado.getIdExpediente())
                     .fechaCreacion(LocalDateTime.now())
                     .build();
             notificacionClienteRepository.save(notif);
@@ -769,7 +771,7 @@ public class ExpedienteServiceImpl implements IExpedienteService {
                             + expediente.getCodigoExpediente() + ". El área de Flota y Transporte programará la unidad y conductor asignado.")
                     .tipo("TRANSPORTE")
                     .leido(false)
-                    .enlace("/expedientes")
+                    .enlace("/expedientes/" + expediente.getIdExpediente())
                     .fechaCreacion(LocalDateTime.now())
                     .build();
             notificacionClienteRepository.save(notif);
@@ -852,7 +854,7 @@ public class ExpedienteServiceImpl implements IExpedienteService {
                             + cerrado.getCodigoExpediente() + ". ¡Gracias por confiar en TransAduanas!")
                     .tipo("DAM")
                     .leido(false)
-                    .enlace("/expedientes")
+                    .enlace("/expedientes/" + cerrado.getIdExpediente())
                     .fechaCreacion(LocalDateTime.now())
                     .build();
             notificacionClienteRepository.save(notif);

@@ -302,7 +302,7 @@ public class DespachoTransporteServiceImpl implements IDespachoTransporteService
                     .mensaje("Su despacho " + dt.getCodigoTracking() + " del expediente " + expCode + " ha iniciado ruta hacia el destino programado.")
                     .tipo("TRANSPORTE")
                     .leido(false)
-                    .enlace("/expedientes")
+                    .enlace(dt.getExpediente().getIdExpediente() != null ? "/expedientes/" + dt.getExpediente().getIdExpediente() : "/expedientes")
                     .fechaCreacion(LocalDateTime.now())
                     .build();
             notificacionClienteRepository.save(notif);
@@ -376,7 +376,7 @@ public class DespachoTransporteServiceImpl implements IDespachoTransporteService
                     .mensaje("Su carga del expediente " + expCode + " ha sido entregada conforme en destino a receptor: " + receptor + ".")
                     .tipo("TRANSPORTE")
                     .leido(false)
-                    .enlace("/expedientes")
+                    .enlace(dt.getExpediente().getIdExpediente() != null ? "/expedientes/" + dt.getExpediente().getIdExpediente() : "/expedientes")
                     .fechaCreacion(LocalDateTime.now())
                     .build();
             notificacionClienteRepository.save(notif);

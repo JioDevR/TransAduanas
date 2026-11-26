@@ -207,10 +207,8 @@ const MODULE_TITLES = {
     default: 'Agente Aduanero',
     sub: {
       dashboard: 'Dashboard Operativo del Agente Aduanero',
-      todos: 'Expedientes Aduaneros Asignados',
-      transito: 'Control de Tránsito Internacional y Arribo',
-      inspeccion: 'Aforo y Diligencias ante SUNAT',
-      levante: 'Levante Autorizado y Despacho Final'
+      expedientes: 'Expedientes Asignados (Consulta)',
+      gestion: 'Gestión Operativa de Expedientes'
     },
     getSub: () => navigationStore.agenteAduaneroSubOption
   },

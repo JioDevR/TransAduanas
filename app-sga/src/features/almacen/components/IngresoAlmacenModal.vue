@@ -1,19 +1,44 @@
 <template>
-  <BaseModal
+  <Dialog
     :visible="visible"
-    title="Registro de Ingreso a Depósito Temporal (Balanza VGM)"
-    subtitle="Control de pesaje verificado SOLAS, precinto y ubicación de carga aduanera"
-    icon="pi pi-box"
-    max-width="700px"
-    :error-message="errorMessage"
-    :busy="loading"
-    @close="handleClose"
+    modal
+    :closable="!loading"
+    :dismissableMask="!loading"
+    :style="{ width: getDialogWidth('700px'), maxWidth: '95vw' }"
+    header="Registro de Ingreso a Depósito Temporal (Balanza VGM)"
+    @update:visible="(val) => { if (!val && !loading) handleClose() }"
   >
-    <form @submit.prevent="handleSubmit" class="form-body">
-      <div class="form-grid">
-        <!-- Expediente Aduanero -->
-        <div class="field-item">
-          <label for="alm-expediente">Expediente Aduanero Vinculado *</label>
+    <form id="ingreso-almacen-form" class="sga-dialog-body" @submit.prevent="handleSubmit">
+      <div v-if="expediente" class="sga-dialog-context">
+        <div class="sga-dialog-context-meta">
+          <span class="sga-code-cell font-mono">{{ expediente.codigoExpediente }}</span>
+          <span class="sga-dialog-context-sub">
+            {{ expediente.clienteRazonSocial || 'Cliente asignado' }}
+          </span>
+        </div>
+        <Tag
+          :value="`Canal ${expediente.canalSunat || 'PENDIENTE'}`"
+          :severity="expediente.canalSunat === 'ROJO' ? 'danger' : (expediente.canalSunat === 'NARANJA' ? 'warn' : 'success')"
+          class="sga-mini-tag"
+          rounded
+        />
+      </div>
+
+      <div class="sga-banner is-info">
+        <i class="pi pi-box"></i>
+        <span>
+          Control de pesaje verificado SOLAS (Balanza VGM), verificación de precinto y ubicación de bahía en depósito temporal.
+        </span>
+      </div>
+
+      <div v-if="errorMessage" class="sga-banner is-danger" role="alert">
+        <i class="pi pi-exclamation-triangle"></i>
+        <span>{{ errorMessage }}</span>
+      </div>
+
+      <div class="sga-grid-2">
+        <div class="sga-form-field">
+          <label for="alm-expediente" class="sga-form-label">Expediente Aduanero Vinculado *</label>
           <Select
             inputId="alm-expediente"
             v-model="form.idExpediente"
@@ -22,14 +47,14 @@
             optionValue="value"
             filter
             placeholder="Seleccione Expediente..."
+            size="small"
             fluid
           />
-          <span class="field-hint">Expediente aduanero al que corresponde la carga</span>
+          <span class="sga-field-hint">Expediente aduanero al que corresponde la carga</span>
         </div>
 
-        <!-- Sede / Depósito Temporal -->
-        <div class="field-item">
-          <label for="alm-sede">Sede / Depósito Autorizado *</label>
+        <div class="sga-form-field">
+          <label for="alm-sede" class="sga-form-label">Sede / Depósito Autorizado *</label>
           <Select
             inputId="alm-sede"
             v-model="form.idSedeDeposito"
@@ -38,13 +63,13 @@
             optionValue="value"
             filter
             placeholder="Seleccione Terminal/Depósito..."
+            size="small"
             fluid
           />
         </div>
 
-        <!-- Ticket de Balanza VGM -->
-        <div class="field-item">
-          <label for="alm-ticket">Ticket de Pesaje Balanza VGM *</label>
+        <div class="sga-form-field">
+          <label for="alm-ticket" class="sga-form-label">Ticket de Pesaje Balanza VGM *</label>
           <InputText
             id="alm-ticket"
             v-model.trim="form.ticketBalanzaVgm"
@@ -52,27 +77,27 @@
             class="font-mono"
             required
             maxlength="30"
+            size="small"
             fluid
           />
-          <span class="field-hint">Certificado VGM conforme al convenio SOLAS</span>
+          <span class="sga-field-hint">Certificado VGM conforme al convenio SOLAS</span>
         </div>
 
-        <!-- Tipo de Ingreso -->
-        <div class="field-item">
-          <label for="alm-tipo-ingreso">Modalidad de Ingreso *</label>
+        <div class="sga-form-field">
+          <label for="alm-tipo-ingreso" class="sga-form-label">Modalidad de Ingreso *</label>
           <Select
             inputId="alm-tipo-ingreso"
             v-model="form.tipoIngreso"
             :options="tipoIngresoOptions"
             optionLabel="label"
             optionValue="value"
+            size="small"
             fluid
           />
         </div>
 
-        <!-- Peso Bruto Registrado (kg) -->
-        <div class="field-item">
-          <label for="alm-peso-bruto">Peso Bruto Registrado (kg) *</label>
+        <div class="sga-form-field">
+          <label for="alm-peso-bruto" class="sga-form-label">Peso Bruto Registrado (kg) *</label>
           <InputNumber
             inputId="alm-peso-bruto"
             v-model="form.pesoBrutoRegistradoKg"
@@ -81,13 +106,13 @@
             :maxFractionDigits="2"
             suffix=" kg"
             placeholder="Ej. 24500.00"
+            size="small"
             fluid
           />
         </div>
 
-        <!-- Peso Tara (kg) -->
-        <div class="field-item">
-          <label for="alm-peso-tara">Peso Tara Contenedor (kg)</label>
+        <div class="sga-form-field">
+          <label for="alm-peso-tara" class="sga-form-label">Peso Tara Contenedor (kg)</label>
           <InputNumber
             inputId="alm-peso-tara"
             v-model="form.pesoTaraRegistradoKg"
@@ -96,105 +121,111 @@
             :maxFractionDigits="2"
             suffix=" kg"
             placeholder="Ej. 3850.00"
+            size="small"
             fluid
           />
         </div>
 
-        <!-- Cantidad de Bultos -->
-        <div class="field-item">
-          <label for="alm-bultos">Cantidad de Bultos / Pallets *</label>
+        <div class="sga-form-field">
+          <label for="alm-bultos" class="sga-form-label">Cantidad de Bultos / Pallets *</label>
           <InputNumber
             inputId="alm-bultos"
             v-model="form.cantidadBultos"
             :min="1"
             :useGrouping="false"
             placeholder="Ej. 540"
+            size="small"
             fluid
           />
         </div>
 
-        <!-- Ubicación en Bahía / Almacén -->
-        <div class="field-item">
-          <label for="alm-bahia">Ubicación de Bahía / Patio</label>
+        <div class="sga-form-field">
+          <label for="alm-bahia" class="sga-form-label">Ubicación de Bahía / Patio</label>
           <InputText
             id="alm-bahia"
             v-model.trim="form.ubicacionBahia"
             placeholder="Ej. BAHIA-D4 / RACK-12"
             class="uppercase font-mono"
             maxlength="30"
+            size="small"
             fluid
           />
         </div>
 
-        <!-- Días Libres de Almacenaje -->
-        <div class="field-item">
-          <label for="alm-dias-libres">Días Libres de Almacenaje (Terminal)</label>
+        <div class="sga-form-field">
+          <label for="alm-dias-libres" class="sga-form-label">Días Libres de Almacenaje (Terminal)</label>
           <InputNumber
             inputId="alm-dias-libres"
             v-model="form.diasLibresAlmacenaje"
             :min="1"
             :max="30"
             :useGrouping="false"
+            size="small"
             fluid
           />
-          <span class="field-hint">Días sin sobrestadía antes de generar sobrecostos</span>
+          <span class="sga-field-hint">Días sin sobrestadía antes de generar sobrecostos</span>
         </div>
 
-        <!-- Precinto Verificado -->
-        <div class="field-item">
-          <label for="alm-precinto">¿Precinto Verificado Físicamente?</label>
+        <div class="sga-form-field">
+          <label for="alm-precinto" class="sga-form-label">¿Precinto Verificado Físicamente?</label>
           <Select
             inputId="alm-precinto"
             v-model="form.precintoVerificado"
             :options="precintoOptions"
             optionLabel="label"
             optionValue="value"
+            size="small"
             fluid
           />
         </div>
 
-        <!-- Observaciones -->
-        <div class="field-item full-width">
-          <label for="alm-obs">Observaciones del Depósito</label>
+        <div class="sga-form-field full-span">
+          <label for="alm-obs" class="sga-form-label">Observaciones del Depósito</label>
           <Textarea
             id="alm-obs"
             v-model.trim="form.observaciones"
             rows="2"
             autoResize
             placeholder="Anotaciones de estado físico del contenedor o embalaje..."
+            size="small"
             fluid
           />
         </div>
       </div>
-
-      <div class="modal-actions">
-        <Button
-          type="button"
-          label="Cancelar"
-          severity="secondary"
-          outlined
-          @click="handleClose"
-          :disabled="loading"
-        />
-        <Button
-          type="submit"
-          label="Registrar Ingreso VGM"
-          icon="pi pi-check"
-          :loading="loading"
-        />
-      </div>
     </form>
-  </BaseModal>
+
+    <template #footer>
+      <Button
+        type="button"
+        label="Cancelar"
+        severity="secondary"
+        outlined
+        size="small"
+        :disabled="loading"
+        @click="handleClose"
+      />
+      <Button
+        type="submit"
+        form="ingreso-almacen-form"
+        label="Registrar Ingreso VGM"
+        icon="pi pi-check"
+        size="small"
+        :loading="loading"
+      />
+    </template>
+  </Dialog>
 </template>
 
 <script setup>
 import { ref, computed, watch } from 'vue'
 import Button from 'primevue/button'
-import InputText from 'primevue/inputtext'
+import Dialog from 'primevue/dialog'
 import InputNumber from 'primevue/inputnumber'
+import InputText from 'primevue/inputtext'
 import Select from 'primevue/select'
+import Tag from 'primevue/tag'
 import Textarea from 'primevue/textarea'
-import BaseModal from '@/shared/components/BaseModal.vue'
+import { useResponsive } from '@/shared/composables/useResponsive'
 import { almacenService } from '../services/almacenService'
 import { expedienteService } from '@/shared/services/expedienteService'
 import { sedeService } from '@/features/admin/sedes/services/sedeService'
@@ -221,6 +252,7 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['close', 'saved'])
+const { getDialogWidth } = useResponsive()
 
 const loading = ref(false)
 const errorMessage = ref('')
@@ -294,6 +326,7 @@ watch(
 )
 
 const handleClose = () => {
+  errorMessage.value = ''
   emit('close')
 }
 
@@ -338,15 +371,7 @@ const handleSubmit = async () => {
   text-transform: uppercase;
 }
 
-.textarea-input {
-  width: 100%;
-  padding: 0.625rem 0.875rem;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md, 8px);
-  background: var(--color-bg-surface);
-  color: var(--color-text-main);
-  font-family: inherit;
-  font-size: 0.875rem;
-  resize: vertical;
+.full-span {
+  grid-column: 1 / -1;
 }
 </style>

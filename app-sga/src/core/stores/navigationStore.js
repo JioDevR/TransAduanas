@@ -140,7 +140,12 @@ export const useNavigationStore = defineStore('navigation', {
     },
 
     setAgenteAduaneroSubOption(option) {
-      const target = option === 'expedientes' ? 'todos' : option
+      let target = option || 'dashboard'
+      if (['todos', 'expedientes', 'transito', 'inspeccion', 'levante', 'cerrados'].includes(target)) {
+        target = 'expedientes'
+      } else if (target !== 'gestion' && target !== 'dashboard') {
+        target = 'dashboard'
+      }
       if (this.agenteAduaneroSubOption === target) return
       this.agenteAduaneroSubOption = target
       this.navTick++

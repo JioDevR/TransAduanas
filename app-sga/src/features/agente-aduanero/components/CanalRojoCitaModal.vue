@@ -1,74 +1,118 @@
 <template>
-  <BaseModal
+  <Dialog
     :visible="visible"
-    title="Canal ROJO — Solicitar Cuadrilla y Registrar Cita de Aforo"
-    :subtitle="`Expediente: ${expediente?.codigoExpediente || ''} — DAM: ${expediente?.numeroDam || 'S/N'}`"
-    icon="pi pi-users"
-    max-width="560px"
-    :error-message="errorMessage"
-    :busy="loading"
-    @close="handleClose"
+    modal
+    :closable="!loading"
+    :dismissableMask="!loading"
+    :style="{ width: getDialogWidth('560px'), maxWidth: '95vw' }"
+    header="Canal ROJO — Cuadrilla y Cita de Aforo"
+    @update:visible="(val) => { if (!val && !loading) handleClose() }"
   >
-    <form class="form-body" @submit.prevent="handleSubmit">
-      <div class="field-item">
-        <label for="rojo-cuadrilla">Cuadrilla / Personal de Inspección Física *</label>
+    <form id="canal-rojo-form" class="sga-dialog-body" @submit.prevent="handleSubmit">
+      <div v-if="expediente" class="sga-dialog-context">
+        <div class="sga-dialog-context-meta">
+          <span class="sga-code-cell font-mono">{{ expediente.codigoExpediente }}</span>
+          <span v-if="expediente.clienteRazonSocial" class="sga-dialog-context-sub">
+            {{ expediente.clienteRazonSocial }}
+          </span>
+        </div>
+        <Tag
+          :value="expediente.numeroDam ? `DAM ${expediente.numeroDam}` : 'DAM S/N'"
+          severity="danger"
+          class="font-mono sga-mini-tag"
+          rounded
+        />
+      </div>
+
+      <div v-if="errorMessage" class="sga-banner is-danger" role="alert">
+        <i class="pi pi-exclamation-triangle"></i>
+        <span>{{ errorMessage }}</span>
+      </div>
+
+      <div class="sga-form-field">
+        <label for="rojo-cuadrilla" class="sga-form-label">Cuadrilla / Personal de Inspección Física *</label>
         <InputText
           id="rojo-cuadrilla"
           v-model.trim="form.cuadrillaDetalle"
           required
           placeholder="Ej. Cuadrilla B-04 (3 estibadores + inspector de aforo)"
+          size="small"
           fluid
         />
       </div>
 
-      <div class="two-col">
-        <div class="field-item">
-          <label for="rojo-fecha">Fecha y Hora de Cita SUNAT *</label>
-          <input
+      <div class="sga-grid-2">
+        <div class="sga-form-field">
+          <label for="rojo-fecha" class="sga-form-label">Fecha y Hora de Cita SUNAT *</label>
+          <InputText
             id="rojo-fecha"
             v-model="form.fechaCitaInspeccion"
             type="datetime-local"
-            class="text-input"
+            class="font-mono"
             required
+            size="small"
+            fluid
           />
         </div>
 
-        <div class="field-item">
-          <label for="rojo-codigo">Código / Ticket de Cita (Opcional)</label>
+        <div class="sga-form-field">
+          <label for="rojo-codigo" class="sga-form-label">Código / Ticket de Cita (Opcional)</label>
           <InputText
             id="rojo-codigo"
             v-model.trim="form.codigoCitaInspeccion"
             placeholder="Ej. CITA-AFORO-9021"
+            class="font-mono uppercase"
+            size="small"
             fluid
           />
         </div>
       </div>
 
-      <div class="field-item">
-        <label for="rojo-obs">Observaciones de Programación</label>
+      <div class="sga-form-field">
+        <label for="rojo-obs" class="sga-form-label">Observaciones de Programación</label>
         <Textarea
           id="rojo-obs"
           v-model.trim="form.observaciones"
           rows="2"
+          autoResize
           placeholder="Zona de reconocimiento físico en almacén temporal..."
+          size="small"
           fluid
         />
       </div>
-
-      <div class="modal-actions">
-        <Button type="button" label="Cancelar" severity="secondary" outlined @click="handleClose" :disabled="loading" />
-        <Button type="submit" label="Solicitar Cuadrilla y Registrar Cita" icon="pi pi-calendar-plus" severity="danger" :loading="loading" />
-      </div>
     </form>
-  </BaseModal>
+
+    <template #footer>
+      <Button
+        type="button"
+        label="Cancelar"
+        severity="secondary"
+        outlined
+        size="small"
+        :disabled="loading"
+        @click="handleClose"
+      />
+      <Button
+        type="submit"
+        form="canal-rojo-form"
+        label="Solicitar Cuadrilla y Registrar Cita"
+        icon="pi pi-calendar-plus"
+        severity="danger"
+        size="small"
+        :loading="loading"
+      />
+    </template>
+  </Dialog>
 </template>
 
 <script setup>
 import { ref, watch } from 'vue'
 import Button from 'primevue/button'
+import Dialog from 'primevue/dialog'
 import InputText from 'primevue/inputtext'
+import Tag from 'primevue/tag'
 import Textarea from 'primevue/textarea'
-import BaseModal from '@/shared/components/BaseModal.vue'
+import { useResponsive } from '@/shared/composables/useResponsive'
 import { expedienteService } from '@/shared/services/expedienteService'
 import { getNowDateTimeInput, toLocalDateTimePayload } from '@/shared/utils/dateUtils'
 
@@ -78,6 +122,7 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['close', 'saved'])
+const { getDialogWidth } = useResponsive()
 
 const loading = ref(false)
 const errorMessage = ref('')
@@ -130,37 +175,7 @@ const handleSubmit = async () => {
 </script>
 
 <style scoped>
-.form-body {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-.two-col {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.85rem;
-}
-.field-item {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-}
-.field-item label {
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: var(--color-text-main);
-}
-.text-input {
-  width: 100%;
-  padding: 0.5rem 0.65rem;
-  border: 1px solid var(--color-border);
-  border-radius: 6px;
-  background: var(--color-bg-surface);
-  color: var(--color-text-main);
-}
-.modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.65rem;
+.uppercase {
+  text-transform: uppercase;
 }
 </style>

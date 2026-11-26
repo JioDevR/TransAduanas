@@ -309,7 +309,7 @@ public class DespachoTransporteServiceTest {
         ArgumentCaptor<NotificacionCliente> notifCaptor = ArgumentCaptor.forClass(NotificacionCliente.class);
         verify(notificacionClienteRepo, times(1)).save(notifCaptor.capture());
         assertEquals("TRANSPORTE", notifCaptor.getValue().getTipo());
-        assertEquals("/expedientes", notifCaptor.getValue().getEnlace());
+        assertEquals("/expedientes/10", notifCaptor.getValue().getEnlace());
     }
 
     @Test
@@ -388,7 +388,7 @@ public class DespachoTransporteServiceTest {
         ArgumentCaptor<NotificacionCliente> notifCaptor = ArgumentCaptor.forClass(NotificacionCliente.class);
         verify(notificacionClienteRepo, times(1)).save(notifCaptor.capture());
         assertEquals("TRANSPORTE", notifCaptor.getValue().getTipo());
-        assertEquals("/expedientes", notifCaptor.getValue().getEnlace());
+        assertEquals("/expedientes/10", notifCaptor.getValue().getEnlace());
     }
 
     @Test

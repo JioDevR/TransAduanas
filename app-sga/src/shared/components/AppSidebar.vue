@@ -217,10 +217,8 @@ const currentNavItems = computed(() => {
       })
     return [
       { key: 'dashboard', label: 'Dashboard Operativo', match: ['dashboard'], onClick: go('dashboard') },
-      { key: 'todos', label: 'Expedientes', match: ['todos'], onClick: go('todos') },
-      { key: 'transito', label: 'En Tránsito / Arribo', match: ['transito'], onClick: go('transito') },
-      { key: 'inspeccion', label: 'Aforo & Diligencia SUNAT', match: ['inspeccion'], onClick: go('inspeccion') },
-      { key: 'levante', label: 'Con Levante & Despacho', match: ['levante'], onClick: go('levante') }
+      { key: 'expedientes', label: 'Expedientes Asignados', match: ['expedientes'], onClick: go('expedientes') },
+      { key: 'gestion', label: 'Gestión de Expedientes', match: ['gestion'], onClick: go('gestion') }
     ]
   }
 

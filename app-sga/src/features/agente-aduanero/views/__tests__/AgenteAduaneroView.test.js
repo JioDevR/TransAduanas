@@ -10,10 +10,9 @@ import AgenteAduaneroView from '../AgenteAduaneroView.vue'
 import AgenteDashboardPanel from '../../components/AgenteDashboardPanel.vue'
 import AgenteBandejaPanel from '../../components/AgenteBandejaPanel.vue'
 import AgenteExpedientesCanvasGrid from '../../components/AgenteExpedientesCanvasGrid.vue'
-import AgenteExpedientesTable from '../../components/AgenteExpedientesTable.vue'
 import AgenteAccionesCell from '../../components/AgenteAccionesCell.vue'
 import AgenteExpedienteInformeView from '../../components/AgenteExpedienteInformeView.vue'
-import AgenteOperacionTransitoView from '../../components/AgenteOperacionTransitoView.vue'
+import TransitoOperacionModal from '../../components/TransitoOperacionModal.vue'
 import { useAuthStore } from '@/features/auth/stores/authStore'
 import { useNavigationStore } from '@/core/stores/navigationStore'
 
@@ -59,7 +58,18 @@ async function renderComponent(comp, props = {}) {
   return renderToString(app)
 }
 
-describe('Módulo Agente Aduanero - Sub-opciones, Informe y Tránsito sgaUI', () => {
+describe('Módulo Agente Aduanero - 3 Sub-opciones (Dashboard, Asignados Solo Lectura, Gestión)', () => {
+  const sampleExpImportAsignado = {
+    idExpediente: 10,
+    codigoExpediente: 'EXP-2026-0010',
+    codigoCotizacion: 'COT-2026-0010',
+    regimenAduanero: 'IMPORTACION_DEFINITIVA',
+    estadoExpediente: 'ASIGNADO',
+    canalSunat: 'PENDIENTE',
+    clienteRazonSocial: 'Textiles Pacífico SAC',
+    clienteNumeroDocumento: '20444555666'
+  }
+
   const sampleExpImport = {
     idExpediente: 1,
     codigoExpediente: 'EXP-2026-0001',
@@ -100,69 +110,103 @@ describe('Módulo Agente Aduanero - Sub-opciones, Informe y Tránsito sgaUI', ()
     expect(html).not.toContain('Panel de Control del Agente Aduanero')
   })
 
-  it('renderiza AgenteBandejaPanel con las 4 colas operativas y SgaListShell', async () => {
-    for (const tab of ['todos', 'transito', 'inspeccion', 'levante']) {
-      const html = await renderComponent(AgenteBandejaPanel, {
-        expedientes: [sampleExpImport, sampleExpExportEmbarcado],
-        kpiCounts: { todos: 2, transito: 1, inspeccion: 0, levante: 1 },
-        activeTab: tab
-      })
-      expect(html).toContain('sga-list-panel')
-      expect(html).toContain('Tránsito / Arribo')
-      expect(html).toContain('Aforo SUNAT')
-      expect(html).toContain('Levante &amp; Despacho')
-    }
-  })
-
-  it('renderiza AgenteAccionesCell con Entrega Exterior cuando Exportación tiene [EMBARQUE CONFIRMADO]', async () => {
-    const html = await renderComponent(AgenteAccionesCell, {
-      expediente: sampleExpExportEmbarcado,
-      activeTab: 'levante'
+  it('renderiza AgenteBandejaPanel en modo readonly (solo Canvas, sin toggle de Tabla)', async () => {
+    const html = await renderComponent(AgenteBandejaPanel, {
+      mode: 'readonly',
+      expedientes: [sampleExpImport, sampleExpExportEmbarcado],
+      kpiCounts: { todos: 2, transito: 1, inspeccion: 0, levante: 1, cerrados: 0 },
+      phaseFilter: 'todos'
     })
-    expect(html).toContain('Entrega Exterior')
-    expect(html).not.toContain('Confirmar Embarque')
+    expect(html).toContain('Solo Lectura · Canvas')
+    expect(html).toContain('Ver Ficha')
+    expect(html).toContain('Cerrados')
+    expect(html).not.toContain('Cambiar modo de vista')
+    expect(html).not.toContain('>Gestionar<')
   })
 
-  it('renderiza AgenteExpedientesCanvasGrid mostrando Esperando Canal cuando canalSunat es PENDIENTE y ya arribó', async () => {
-    const html = await renderComponent(AgenteExpedientesCanvasGrid, {
+  it('renderiza AgenteBandejaPanel en modo manage (Canvas simplificado, sin Cerrados, con botón Gestionar)', async () => {
+    const html = await renderComponent(AgenteBandejaPanel, {
+      mode: 'manage',
+      expedientes: [sampleExpImportAsignado],
+      kpiCounts: { todos: 1, transito: 1, inspeccion: 0, levante: 0, cerrados: 0 },
+      phaseFilter: 'todos'
+    })
+    expect(html).toContain('Operación de Hitos')
+    expect(html).toContain('SIGUIENTE HITO')
+    expect(html).toContain('Registrar Envío de Origen Exitoso')
+    expect(html).toContain('Gestionar')
+    expect(html).not.toContain('Cambiar modo de vista')
+    expect(html).not.toContain('>Cerrados<')
+  })
+
+  it('AgenteAccionesCell distingue correctamente modo readonly y modo manage', async () => {
+    const htmlReadonly = await renderComponent(AgenteAccionesCell, {
+      expediente: sampleExpImportAsignado,
+      mode: 'readonly'
+    })
+    expect(htmlReadonly).toContain('Ver Ficha')
+    expect(htmlReadonly).not.toContain('Gestionar')
+
+    const htmlManage = await renderComponent(AgenteAccionesCell, {
+      expediente: sampleExpImportAsignado,
+      mode: 'manage'
+    })
+    expect(htmlManage).toContain('Gestionar')
+    expect(htmlManage).not.toContain('Ver Ficha')
+  })
+
+  it('renderiza AgenteExpedientesCanvasGrid adaptado a readonly y manage', async () => {
+    const htmlReadonly = await renderComponent(AgenteExpedientesCanvasGrid, {
       expedientes: [sampleExpImport],
-      activeTab: 'transito'
+      mode: 'readonly'
     })
-    expect(html).toContain('Esperando Canal')
-    expect(html).toContain('Canal Pendiente')
+    expect(htmlReadonly).toContain('agente-mini-stepper')
+    expect(htmlReadonly).toContain('Ver Ficha')
+
+    const htmlManage = await renderComponent(AgenteExpedientesCanvasGrid, {
+      expedientes: [sampleExpImport],
+      mode: 'manage'
+    })
+    expect(htmlManage).toContain('Esperando Canal SUNAT')
+    expect(htmlManage).toContain('Gestionar')
   })
 
-  it('renderiza AgenteExpedienteInformeView con terminal extraído de bitácora y sin campos fantasma', async () => {
-    const html = await renderComponent(AgenteExpedienteInformeView, {
-      expediente: sampleExpImport
+  it('AgenteExpedienteInformeView separa Ficha del Expediente (readonly) de Flujo Operativo (gestión)', async () => {
+    const htmlReadonly = await renderComponent(AgenteExpedienteInformeView, {
+      expediente: sampleExpImportAsignado,
+      readonly: true
     })
-    expect(html).toContain('DP World Callao')
-    expect(html).toContain('EXP-2026-0001')
-    expect(html).not.toContain('Especialista SUNAT Asignado')
+    expect(htmlReadonly).toContain('Cliente &amp; Operación Comercial')
+    expect(htmlReadonly).toContain('Ir a Gestionar')
+    expect(htmlReadonly).not.toContain('Flujo Operativo del Despacho')
+    expect(htmlReadonly).not.toContain('Registrar Hito Manual')
+
+    const htmlManage = await renderComponent(AgenteExpedienteInformeView, {
+      expediente: sampleExpImportAsignado,
+      readonly: false,
+      openExpedientes: [sampleExpImportAsignado, sampleExpImport]
+    })
+    expect(htmlManage).toContain('Flujo Operativo')
+    expect(htmlManage).toContain('Ficha del Expediente')
+    expect(htmlManage).toContain('Flujo Operativo del Despacho')
+    expect(htmlManage).toContain('Registrar Envío de Origen Exitoso')
+    expect(htmlManage).toContain('Reflejo en vivo Portal B2B')
   })
 
-  it('renderiza AgenteOperacionTransitoView detectando régimen EXPORTACION correctamente', async () => {
-    const html = await renderComponent(AgenteOperacionTransitoView, {
-      expediente: sampleExpExportEmbarcado,
-      initialMode: 'transito'
-    })
-    expect(html).toContain('20111222333')
-    expect(html).toContain('Datos de Tránsito')
-    expect(html).not.toContain('1. Salida Origen')
-    expect(html).not.toContain('bulto(s)')
+  it('exporta TransitoOperacionModal correctamente', () => {
+    expect(TransitoOperacionModal).toBeDefined()
+    expect(typeof TransitoOperacionModal).toBe('object')
   })
 
-  it('AgenteAduaneroView soporta todas las sub-opciones por query param y limpia vista full-screen', async () => {
+  it('AgenteAduaneroView soporta ?tab=gestion y normaliza ?tab=inspeccion a expedientes', async () => {
+    mockRoute.query = { tab: 'gestion' }
+    const htmlGestion = await renderComponent(AgenteAduaneroView)
+    expect(htmlGestion).toContain('Operación de Hitos')
+    expect(useNavigationStore().agenteAduaneroSubOption).toBe('gestion')
+
     mockRoute.query = { tab: 'inspeccion' }
-    const html = await renderComponent(AgenteAduaneroView)
-    expect(html).toContain('sga-list-panel')
-
-    const navStore = useNavigationStore()
-    expect(navStore.agenteAduaneroSubOption).toBe('inspeccion')
-  })
-
-  it('exporta AgenteExpedientesTable correctamente', () => {
-    expect(AgenteExpedientesTable).toBeDefined()
-    expect(typeof AgenteExpedientesTable).toBe('object')
+    const htmlReadonly = await renderComponent(AgenteAduaneroView)
+    expect(htmlReadonly).toContain('Solo Lectura · Canvas')
+    expect(useNavigationStore().agenteAduaneroSubOption).toBe('expedientes')
   })
 })

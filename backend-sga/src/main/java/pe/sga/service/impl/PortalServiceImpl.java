@@ -469,7 +469,7 @@ public class PortalServiceImpl implements IPortalService {
                 "Su expediente " + guardado.getCodigoExpediente()
                         + " fue generado correctamente. Gestión Aduanera asignará un Agente Aduanero a la brevedad.",
                 "DAM",
-                "/expedientes");
+                "/expedientes/" + guardado.getIdExpediente());
 
         auditar("CREAR_EXPEDIENTE_SIMPLE_PORTAL", "EXPEDIENTE", guardado.getIdExpediente(),
                 "Expediente simple " + guardado.getCodigoExpediente() + " creado desde Portal B2B");

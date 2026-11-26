@@ -114,20 +114,26 @@ describe('navigationStore', () => {
     expect(store.gestionAduaneraSubOption).toBe(DEFAULT_MODULE_SUB_OPTION['gestion-aduanera'])
   })
 
-  it('gestiona las 5 sub-opciones de agente-aduanero y normaliza alias expedientes -> todos', () => {
+  it('gestiona las 3 sub-opciones de agente-aduanero (dashboard, expedientes, gestion) normalizando alias de fase', () => {
     const store = useNavigationStore()
     expect(store.agenteAduaneroSubOption).toBe('dashboard')
 
     store.setAgenteAduaneroSubOption('expedientes')
-    expect(store.agenteAduaneroSubOption).toBe('todos')
+    expect(store.agenteAduaneroSubOption).toBe('expedientes')
+
+    store.setAgenteAduaneroSubOption('gestion')
+    expect(store.agenteAduaneroSubOption).toBe('gestion')
+
+    store.setAgenteAduaneroSubOption('todos')
+    expect(store.agenteAduaneroSubOption).toBe('expedientes')
 
     store.setAgenteAduaneroSubOption('transito')
-    expect(store.agenteAduaneroSubOption).toBe('transito')
+    expect(store.agenteAduaneroSubOption).toBe('expedientes')
 
     store.setAgenteAduaneroSubOption('inspeccion')
-    expect(store.agenteAduaneroSubOption).toBe('inspeccion')
+    expect(store.agenteAduaneroSubOption).toBe('expedientes')
 
     store.setAgenteAduaneroSubOption('levante')
-    expect(store.agenteAduaneroSubOption).toBe('levante')
+    expect(store.agenteAduaneroSubOption).toBe('expedientes')
   })
 })

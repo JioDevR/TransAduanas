@@ -1,13 +1,17 @@
 <template>
   <div class="agente-portal-view fade-in">
-    <!-- CASO 0A: INFORME DETALLADO A PANTALLA COMPLETA -->
+    <!-- ESTACIÓN DE CONTROL DE HITOS / FICHA DEL EXPEDIENTE -->
     <AgenteExpedienteInformeView
       v-if="selectedExpedienteParaInforme"
       :expediente="selectedExpedienteParaInforme"
+      :readonly="informeReadonlyMode"
+      :open-expedientes="openExpedientes"
       @back="cerrarInformeCompleto"
-      @salida-origen="openSalidaOrigenView"
-      @arribo-destino="openArriboDestinoView"
-      @transito="openTransitoView"
+      @switch-to-manage="handleSwitchToManage"
+      @select-expediente="openInformeGestion"
+      @salida-origen="openSalidaOrigenModal"
+      @arribo-destino="openArriboDestinoModal"
+      @transito="openTransitoModal"
       @diligencia="openDiligenciaModal"
       @solicitar-transporte="openSolicitudTransporteModal"
       @retiro-directo="openRetiroDirectoModal"
@@ -29,35 +33,28 @@
       @documentos="openDocumentosExpediente"
     />
 
-    <!-- CASO 0B: VISTA OPERATIVA DE TRÁNSITO / SALIDA / ARRIBO -->
-    <AgenteOperacionTransitoView
-      v-else-if="selectedExpedienteParaOperacionTransito"
-      :expediente="selectedExpedienteParaOperacionTransito"
-      :initial-mode="transitoOperacionMode"
-      @back="cerrarOperacionTransito"
-      @saved="onOperacionTransitoSaved"
-    />
-
-    <!-- CASO A: DASHBOARD OPERATIVO DEL AGENTE -->
+    <!-- VISTA 01: DASHBOARD OPERATIVO DEL AGENTE -->
     <AgenteDashboardPanel
-      v-else-if="activeTab === 'dashboard'"
+      v-else-if="activeView === 'dashboard'"
       :expedientes="expedientes"
       :selectedAgenteId="selectedAgenteId"
       :agentesList="agentesList"
       :esSupervisorOAdmin="esSupervisorOAdmin"
       :loading="loading"
-      @navigate="handleTabChange"
-      @inspect="openInformeCompleto"
+      @navigate="handleNavigateFromDashboard"
+      @inspect="handleSwitchToManage"
       @refresh="loadData"
       @update:selectedAgenteId="selectedAgenteId = $event"
     />
 
-    <!-- CASO B: BANDEJA UNIFICADA sgaUI (todos | transito | inspeccion | levante) -->
+    <!-- VISTA 02: EXPEDIENTES ASIGNADOS (SOLO LECTURA · CANVAS) -->
+    <!-- VISTA 03: GESTIÓN DE EXPEDIENTES (CANVAS SIMPLIFICADO + HITOS POR EXPEDIENTE) -->
     <AgenteBandejaPanel
       v-else
+      :mode="activeView === 'gestion' ? 'manage' : 'readonly'"
       :expedientes="filteredExpedientes"
-      :kpiCounts="kpiCounts"
-      :activeTab="activeTab"
+      :kpiCounts="activeView === 'gestion' ? gestionKpiCounts : kpiCounts"
+      v-model:phaseFilter="phaseFilter"
       v-model:searchQuery="searchQuery"
       v-model:filterRegimen="filterRegimen"
       v-model:filterCanal="filterCanal"
@@ -67,32 +64,19 @@
       :esSupervisorOAdmin="esSupervisorOAdmin"
       :hasActiveFilters="hasActiveFilters"
       :loading="loading"
-      @select-tab="handleTabChange"
       @reset-filters="resetFilters"
       @refresh="loadData"
-      @detalle="openInformeCompleto"
-      @salida-origen="openSalidaOrigenView"
-      @arribo-destino="openArriboDestinoView"
-      @transito="openTransitoView"
-      @diligencia="openDiligenciaModal"
-      @solicitar-transporte="openSolicitudTransporteModal"
-      @retiro-directo="openRetiroDirectoModal"
-      @ingreso-almacen="openIngresoAlmacenModal"
-      @recojo-exportacion="openRecojoExportacionModal"
-      @ingreso-origen="openIngresoOrigenModal"
-      @embarque="openEmbarqueModal"
-      @recepcion-exterior="openRecepcionExteriorModal"
-      @verificacion-origen="handleVerificacionOrigen"
-      @cuadrilla-rojo="openCuadrillaRojoModal"
-      @finalizar-rojo="handleFinalizarRojo"
-      @enviar-sunat="openSunatNaranjaModal"
-      @entregado-almacen-verde="handleEntregadoAlmacenVerde"
-      @informe-conformidad="openInformeConformidadModal"
-      @descargar-informe="handleDescargarInforme"
-      @marcar-estado="handleMarcarEstadoRapido"
-      @marcar-estado-custom="openMarcarEstadoModal"
-      @finalizar-expediente="openFinalizarModal"
+      @detalle="handleOpenFromBandeja"
       @documentos="openDocumentosExpediente"
+    />
+
+    <!-- MODAL UNIFICADO DE SALIDA DE ORIGEN / TRÁNSITO / ARRIBO -->
+    <TransitoOperacionModal
+      :visible="showTransitoModal"
+      :expediente="selectedExpedienteParaAccion"
+      :initial-mode="transitoOperacionMode"
+      @close="showTransitoModal = false"
+      @saved="onOperacionTransitoSaved"
     />
 
     <!-- MODALES OPERATIVOS (IMPORTACIÓN Y COMUNES) -->
@@ -186,19 +170,52 @@
       v-model:visible="showMarcarEstadoModal"
       modal
       header="Registrar Estado y Marca de Tiempo"
-      :style="{ width: '480px', maxWidth: '95vw' }"
+      :style="{ width: getDialogWidth('500px'), maxWidth: '95vw' }"
     >
-      <div class="sga-form-field">
-        <label for="manual-estado-titulo" class="sga-form-label">Estado / Hito *</label>
-        <InputText id="manual-estado-titulo" v-model.trim="manualEstadoForm.titulo" placeholder="Ej. Revisión Aduana / En Espera de Tránsito" size="small" fluid />
-      </div>
-      <div class="sga-form-field" style="margin-top: 0.75rem;">
-        <label for="manual-estado-desc" class="sga-form-label">Detalle / Observación</label>
-        <Textarea id="manual-estado-desc" v-model.trim="manualEstadoForm.descripcion" rows="3" size="small" fluid />
-      </div>
+      <form id="marcar-estado-form" class="sga-dialog-body" @submit.prevent="submitMarcarEstadoCustom">
+        <div v-if="selectedExpediente" class="sga-dialog-context">
+          <div class="sga-dialog-context-meta">
+            <span class="sga-code-cell font-mono">{{ selectedExpediente.codigoExpediente }}</span>
+            <span class="sga-dialog-context-sub">
+              {{ selectedExpediente.clienteRazonSocial || 'Expediente aduanero' }}
+            </span>
+          </div>
+          <Tag
+            :value="selectedExpediente.estadoExpediente || 'EN_PROCESO'"
+            severity="info"
+            class="sga-mini-tag"
+            rounded
+          />
+        </div>
+
+        <div class="sga-form-field">
+          <label for="manual-estado-titulo" class="sga-form-label">Estado / Hito *</label>
+          <InputText
+            id="manual-estado-titulo"
+            v-model.trim="manualEstadoForm.titulo"
+            placeholder="Ej. Revisión Aduana / En Espera de Tránsito"
+            required
+            size="small"
+            fluid
+          />
+        </div>
+
+        <div class="sga-form-field">
+          <label for="manual-estado-desc" class="sga-form-label">Detalle / Observación</label>
+          <Textarea
+            id="manual-estado-desc"
+            v-model.trim="manualEstadoForm.descripcion"
+            rows="3"
+            autoResize
+            placeholder="Describa la actualización operativa o marca de tiempo a registrar..."
+            size="small"
+            fluid
+          />
+        </div>
+      </form>
       <template #footer>
         <Button type="button" label="Cancelar" severity="secondary" outlined size="small" @click="showMarcarEstadoModal = false" />
-        <Button type="button" label="Guardar Marca" icon="pi pi-check" size="small" :disabled="!manualEstadoForm.titulo" @click="submitMarcarEstadoCustom" />
+        <Button type="submit" form="marcar-estado-form" label="Guardar Marca" icon="pi pi-check" size="small" :disabled="!manualEstadoForm.titulo" />
       </template>
     </Dialog>
 
@@ -215,13 +232,15 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import Button from 'primevue/button'
 import Dialog from 'primevue/dialog'
 import InputText from 'primevue/inputtext'
+import Tag from 'primevue/tag'
 import Textarea from 'primevue/textarea'
 import { useNotification } from '@/shared/composables/useNotification'
+import { useResponsive } from '@/shared/composables/useResponsive'
 import { useNavigationStore } from '@/core/stores/navigationStore'
 import { expedienteService } from '@/shared/services/expedienteService'
 import { downloadBlob } from '@/shared/utils/download'
@@ -230,7 +249,7 @@ import { useAgenteBandeja } from '../composables/useAgenteBandeja'
 import AgenteDashboardPanel from '../components/AgenteDashboardPanel.vue'
 import AgenteBandejaPanel from '../components/AgenteBandejaPanel.vue'
 import AgenteExpedienteInformeView from '../components/AgenteExpedienteInformeView.vue'
-import AgenteOperacionTransitoView from '../components/AgenteOperacionTransitoView.vue'
+import TransitoOperacionModal from '../components/TransitoOperacionModal.vue'
 import CanalRojoCitaModal from '../components/CanalRojoCitaModal.vue'
 import CanalNaranjaSunatModal from '../components/CanalNaranjaSunatModal.vue'
 import InformeConformidadModal from '../components/InformeConformidadModal.vue'
@@ -246,24 +265,24 @@ import RecepcionDestinoExteriorModal from '@/features/aduanas/components/Recepci
 import CierreExpedienteModal from '@/features/aduanas/components/CierreExpedienteModal.vue'
 import DocumentosManagerModal from '@/shared/components/DocumentosManagerModal.vue'
 
-const VALID_TABS = ['dashboard', 'todos', 'expedientes', 'transito', 'inspeccion', 'levante']
+const VALID_QUERY_TABS = ['dashboard', 'expedientes', 'gestion', 'todos', 'transito', 'inspeccion', 'levante', 'cerrados']
 
 const route = useRoute()
 const router = useRouter()
 const navigationStore = useNavigationStore()
 const { showSuccess, showError } = useNotification()
+const { getDialogWidth } = useResponsive()
 
 const selectedExpedienteParaInforme = ref(null)
-const selectedExpedienteParaOperacionTransito = ref(null)
-const transitoOperacionMode = ref('salida')
-const previoEstabaEnInforme = ref(false)
 
 const {
   loading,
   errorMessage,
   expedientes,
+  openExpedientes,
   agentesList,
-  activeTab,
+  activeView,
+  phaseFilter,
   filterRegimen,
   filterCanal,
   searchQuery,
@@ -273,14 +292,19 @@ const {
   hasActiveFilters,
   resetFilters,
   kpiCounts,
+  gestionKpiCounts,
   filteredExpedientes,
   loadAgentes,
   loadData,
-  cambiarTab
+  cambiarVista
 } = useAgenteBandeja()
+
+const informeReadonlyMode = computed(() => activeView.value !== 'gestion')
 
 const selectedExpedienteParaAccion = ref(null)
 
+const showTransitoModal = ref(false)
+const transitoOperacionMode = ref('salida')
 const showDiligenciaModal = ref(false)
 const showSolicitudTransporteModal = ref(false)
 const showRetiroDirectoModal = ref(false)
@@ -301,13 +325,20 @@ const selectedDocEntidadId = ref(null)
 const selectedDocCodigoEntidad = ref('')
 const selectedDocTituloEntidad = ref('')
 
-const clearFullScreenViews = () => {
-  selectedExpedienteParaInforme.value = null
-  selectedExpedienteParaOperacionTransito.value = null
-  previoEstabaEnInforme.value = false
+const handleOpenFromBandeja = (exp) => {
+  selectedExpedienteParaInforme.value = exp
 }
 
-const openInformeCompleto = (exp) => {
+const openInformeGestion = (exp) => {
+  selectedExpedienteParaInforme.value = exp
+}
+
+const handleSwitchToManage = (exp) => {
+  cambiarVista('gestion')
+  navigationStore.setAgenteAduaneroSubOption('gestion')
+  if (route.query.tab !== 'gestion') {
+    router.push({ path: '/agente-aduanero', query: { tab: 'gestion' } })
+  }
   selectedExpedienteParaInforme.value = exp
 }
 
@@ -335,65 +366,47 @@ const refreshAndSync = async (actualizado = null) => {
   }
 }
 
-const handleTabChange = (tabKey) => {
-  clearFullScreenViews()
-  const canonical = tabKey === 'expedientes' ? 'todos' : tabKey
-  cambiarTab(canonical)
-  navigationStore.setAgenteAduaneroSubOption(canonical)
-  if (route.query.tab !== canonical) {
+const handleNavigateFromDashboard = (target) => {
+  selectedExpedienteParaInforme.value = null
+  cambiarVista(target)
+  const navOpt = target === 'dashboard' ? 'dashboard' : (target === 'gestion' ? 'gestion' : 'expedientes')
+  navigationStore.setAgenteAduaneroSubOption(navOpt)
+  const targetQueryTab = target === 'todos' ? 'expedientes' : target
+  if (route.query.tab !== targetQueryTab) {
     router.push({
       path: '/agente-aduanero',
-      query: canonical === 'dashboard' ? {} : { tab: canonical }
+      query: target === 'dashboard' ? {} : { tab: targetQueryTab }
     })
   }
 }
 
-const openSalidaOrigenView = (exp) => {
-  previoEstabaEnInforme.value = Boolean(selectedExpedienteParaInforme.value)
-  selectedExpedienteParaInforme.value = null
-  selectedExpedienteParaOperacionTransito.value = exp
+const openSalidaOrigenModal = (exp) => {
+  selectedExpedienteParaAccion.value = exp
   transitoOperacionMode.value = 'salida'
+  showTransitoModal.value = true
 }
 
-const openArriboDestinoView = (exp) => {
-  previoEstabaEnInforme.value = Boolean(selectedExpedienteParaInforme.value)
-  selectedExpedienteParaInforme.value = null
-  selectedExpedienteParaOperacionTransito.value = exp
+const openArriboDestinoModal = (exp) => {
+  selectedExpedienteParaAccion.value = exp
   transitoOperacionMode.value = 'arribo'
+  showTransitoModal.value = true
 }
 
-const openTransitoView = (exp) => {
-  previoEstabaEnInforme.value = Boolean(selectedExpedienteParaInforme.value)
-  selectedExpedienteParaInforme.value = null
-  selectedExpedienteParaOperacionTransito.value = exp
+const openTransitoModal = (exp) => {
+  selectedExpedienteParaAccion.value = exp
   transitoOperacionMode.value = 'transito'
+  showTransitoModal.value = true
 }
 
-const cerrarOperacionTransito = () => {
-  const exp = selectedExpedienteParaOperacionTransito.value
-  selectedExpedienteParaOperacionTransito.value = null
-  if (previoEstabaEnInforme.value && exp) {
-    selectedExpedienteParaInforme.value = exp
-  }
-  previoEstabaEnInforme.value = false
-}
-
-const onOperacionTransitoSaved = async (actualizado) => {
-  const exp = actualizado || selectedExpedienteParaOperacionTransito.value
-  selectedExpedienteParaOperacionTransito.value = null
-
-  if (previoEstabaEnInforme.value && exp) {
-    selectedExpedienteParaInforme.value = exp
-  }
-  previoEstabaEnInforme.value = false
-
-  if (transitoOperacionMode.value === 'salida') {
+const onOperacionTransitoSaved = async ({ mode, data: actualizado }) => {
+  showTransitoModal.value = false
+  if (mode === 'salida') {
     showSuccess(
-      `Salida de origen confirmada para ${actualizado?.codigoExpediente || 'el despacho'}. Expediente en tránsito internacional.`
+      `Salida de origen confirmada para ${actualizado?.codigoExpediente || 'el despacho'}. Ya visible en Tracking Portal B2B.`
     )
-  } else if (transitoOperacionMode.value === 'arribo') {
+  } else if (mode === 'arribo') {
     showSuccess(
-      `Arribo a puerto de destino confirmado para ${actualizado?.codigoExpediente || 'el expediente'}. Habilitado para asignación de Canal SUNAT.`
+      `Arribo a puerto de destino confirmado para ${actualizado?.codigoExpediente || 'el expediente'}. Habilitado para Canal SUNAT.`
     )
   } else {
     showSuccess(`Tránsito y datos de embarque actualizados para ${actualizado?.codigoExpediente || 'el expediente'}.`)
@@ -635,13 +648,13 @@ watch(selectedAgenteId, () => {
 watch(
   () => route.query.tab,
   (newTab) => {
-    clearFullScreenViews()
-    if (newTab && VALID_TABS.includes(newTab)) {
-      const canonical = newTab === 'expedientes' ? 'todos' : newTab
-      cambiarTab(canonical)
-      navigationStore.setAgenteAduaneroSubOption(canonical)
-    } else if (!newTab) {
-      cambiarTab('dashboard')
+    selectedExpedienteParaInforme.value = null
+    if (newTab && VALID_QUERY_TABS.includes(newTab)) {
+      cambiarVista(newTab)
+      const navOpt = newTab === 'dashboard' ? 'dashboard' : (newTab === 'gestion' ? 'gestion' : 'expedientes')
+      navigationStore.setAgenteAduaneroSubOption(navOpt)
+    } else {
+      cambiarVista('dashboard')
       navigationStore.setAgenteAduaneroSubOption('dashboard')
     }
   },
@@ -651,12 +664,13 @@ watch(
 watch(
   () => [navigationStore.agenteAduaneroSubOption, navigationStore.navTick],
   ([newSub]) => {
-    clearFullScreenViews()
-    if (newSub && VALID_TABS.includes(newSub)) {
-      const canonical = newSub === 'expedientes' ? 'todos' : newSub
-      if (activeTab.value !== canonical) {
-        cambiarTab(canonical)
-      }
+    selectedExpedienteParaInforme.value = null
+    if (newSub === 'dashboard') {
+      if (activeView.value !== 'dashboard') cambiarVista('dashboard')
+    } else if (newSub === 'gestion') {
+      if (activeView.value !== 'gestion') cambiarVista('gestion')
+    } else if (newSub) {
+      if (activeView.value !== 'expedientes') cambiarVista('expedientes')
     }
   }
 )

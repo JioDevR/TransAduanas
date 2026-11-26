@@ -180,8 +180,9 @@
           <template #body="{ data: exp }">
             <Button
               type="button"
-              label="Tracking"
-              icon="pi pi-eye"
+              label="Ver Tracking"
+              icon="pi pi-arrow-right"
+              iconPos="right"
               severity="secondary"
               outlined
               size="small"
@@ -211,20 +212,6 @@
       </template>
     </SgaListShell>
 
-    <!-- Modal de Tracking DAM y Bóveda Documental -->
-    <ExpedienteTrackingModal
-      :visible="showDetailModal"
-      :expediente="selectedExpediente"
-      :documentos="documentosExpediente"
-      :loading-docs="loadingDocs"
-      @close="cerrarDetalle"
-      @preview-doc="handlePrevisualizar"
-      @download-doc="handleDescargar"
-      @edit-client-data="abrirModalExpedienteSimple"
-      @preview-informe="handleVerInformeConformidad"
-      @download-informe="handleDescargarInformeConformidad"
-    />
-
     <!-- Modal de Generación de Expediente Simple / Completar Datos -->
     <ExpedienteSimpleModal
       :visible="showSimpleModal"
@@ -239,6 +226,7 @@
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import Button from 'primevue/button'
 import Column from 'primevue/column'
 import DataTable from 'primevue/datatable'
@@ -250,7 +238,6 @@ import Tag from 'primevue/tag'
 import SgaListShell from '@/shared/components/SgaListShell.vue'
 import BasePagination from '@/shared/components/BasePagination.vue'
 import ExpedientesB2BCanvasGrid from '../components/ExpedientesB2BCanvasGrid.vue'
-import ExpedienteTrackingModal from '../components/ExpedienteTrackingModal.vue'
 import ExpedienteSimpleModal from '../components/ExpedienteSimpleModal.vue'
 import { usePortalExpedientes } from '../composables/usePortalExpedientes'
 import { formatDate } from '@/shared/utils/formatters'
@@ -259,6 +246,8 @@ import {
   getExpedientePhase,
   getCanalMeta
 } from '../utils/expedienteTrackingUtils'
+
+const router = useRouter()
 
 const viewMode = ref('canvas')
 const currentPage = ref(1)
@@ -278,23 +267,18 @@ const {
   todosCount,
   hasActiveFilters,
   expedientesFiltrados,
-  selectedExpediente,
-  showDetailModal,
-  documentosExpediente,
-  loadingDocs,
   resetFilters,
   cargarExpedientes,
-  guardarExpedienteSimple,
-  abrirDetalle,
-  cerrarDetalle,
-  handleDescargar,
-  handlePrevisualizar,
-  handleVerInformeConformidad,
-  handleDescargarInformeConformidad
+  guardarExpedienteSimple
 } = usePortalExpedientes()
 
 const showSimpleModal = ref(false)
 const expedienteParaEditarDatos = ref(null)
+
+function abrirDetalle(exp) {
+  if (!exp?.idExpediente) return
+  router.push(`/expedientes/${exp.idExpediente}`)
+}
 
 function abrirModalExpedienteSimple(exp = null) {
   expedienteParaEditarDatos.value = exp || null

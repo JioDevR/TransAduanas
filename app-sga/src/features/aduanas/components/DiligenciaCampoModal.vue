@@ -1,31 +1,52 @@
 <template>
-  <BaseModal
+  <Dialog
     :visible="visible"
-    title="Registrar Intervención / Diligencia de Campo (SUNAT)"
-    :subtitle="`Expediente: ${expediente?.codigoExpediente || ''} — DAM: ${expediente?.numeroDam || 'Pendiente'} — Canal: ${expediente?.canalSunat || ''}`"
-    icon="pi pi-search-plus"
-    max-width="600px"
-    :error-message="errorMessage"
-    :busy="loading"
-    @close="handleClose"
+    modal
+    :closable="!loading"
+    :dismissableMask="!loading"
+    :style="{ width: getDialogWidth('600px'), maxWidth: '95vw' }"
+    header="Registrar Intervención / Diligencia de Campo (SUNAT)"
+    @update:visible="(val) => { if (!val && !loading) handleClose() }"
   >
-    <form @submit.prevent="handleSubmit" class="form-body">
-      <!-- Banner Informativo según Canal SUNAT -->
-      <div :class="['canal-badge-banner', (expediente?.canalSunat || 'ROJO').toLowerCase()]">
-        <i class="pi pi-exclamation-circle text-lg"></i>
-        <div class="banner-texts">
-          <strong>{{ expediente?.canalSunat === 'ROJO' ? 'Canal ROJO: Reconocimiento Físico Obligatorio' : 'Canal NARANJA: Revisión Documentaria' }}</strong>
-          <p v-if="expediente?.canalSunat === 'ROJO'">
-            Diligencia presencial en depósito temporal con el Especialista SUNAT. Verificación de bultos, marcas, precintos y aforo físico de mercancías.
-          </p>
-          <p v-else>
-            Cotejo documentario ante SUNAT de factura comercial, BL/guía aérea, packing list y autorizaciones sectoriales.
+    <form id="diligencia-campo-form" class="sga-dialog-body" @submit.prevent="handleSubmit">
+      <div v-if="expediente" class="sga-dialog-context">
+        <div class="sga-dialog-context-meta">
+          <span class="sga-code-cell font-mono">{{ expediente.codigoExpediente }}</span>
+          <span class="sga-dialog-context-sub font-mono">
+            DAM: {{ expediente.numeroDam || 'Pendiente' }}
+          </span>
+        </div>
+        <Tag
+          :value="`Canal ${expediente.canalSunat || 'PENDIENTE'}`"
+          :severity="expediente.canalSunat === 'ROJO' ? 'danger' : (expediente.canalSunat === 'NARANJA' ? 'warn' : 'success')"
+          class="sga-mini-tag"
+          rounded
+        />
+      </div>
+
+      <div :class="['sga-banner', expediente?.canalSunat === 'ROJO' ? 'is-danger' : 'is-warn']">
+        <i class="pi pi-exclamation-circle"></i>
+        <div>
+          <strong>
+            {{ expediente?.canalSunat === 'ROJO' ? 'Canal ROJO: Reconocimiento Físico Obligatorio' : 'Canal NARANJA: Revisión Documentaria' }}
+          </strong>
+          <p class="diligencia-banner-desc">
+            {{
+              expediente?.canalSunat === 'ROJO'
+                ? 'Diligencia presencial en depósito temporal con el Especialista SUNAT. Verificación de bultos, marcas, precintos y aforo físico.'
+                : 'Cotejo documentario ante SUNAT de factura comercial, BL/guía aérea, packing list y autorizaciones sectoriales.'
+            }}
           </p>
         </div>
       </div>
 
-      <div class="field-item">
-        <label for="diligencia-detalle">Acta y Detalle de la Diligencia Aduanera *</label>
+      <div v-if="errorMessage" class="sga-banner is-danger" role="alert">
+        <i class="pi pi-exclamation-triangle"></i>
+        <span>{{ errorMessage }}</span>
+      </div>
+
+      <div class="sga-form-field">
+        <label for="diligencia-detalle" class="sga-form-label">Acta y Detalle de la Diligencia Aduanera *</label>
         <Textarea
           id="diligencia-detalle"
           v-model.trim="form.detalleInspeccion"
@@ -33,48 +54,57 @@
           autoResize
           placeholder="Ej. Reconocimiento físico concluido a satisfacción con Especialista SUNAT. Precinto PE-SUNAT intacto, bultos cotejados sin discrepancias..."
           required
+          size="small"
           fluid
         />
-        <span class="field-hint">Ingrese los hallazgos técnicos, número de acta de aforo o dictamen del especialista SUNAT</span>
+        <span class="sga-field-hint">
+          Ingrese los hallazgos técnicos, número de acta de aforo o dictamen del especialista SUNAT
+        </span>
       </div>
 
-      <div class="field-item">
-        <label for="diligencia-obs">Observaciones Adicionales / Incidencias</label>
+      <div class="sga-form-field">
+        <label for="diligencia-obs" class="sga-form-label">Observaciones Adicionales / Incidencias</label>
         <Textarea
           id="diligencia-obs"
           v-model.trim="form.observaciones"
           rows="2"
           autoResize
           placeholder="Sin incidencias aduaneras / Cumple con regulaciones vigentes..."
+          size="small"
           fluid
         />
       </div>
-
-      <div class="modal-actions">
-        <Button
-          type="button"
-          label="Cancelar"
-          severity="secondary"
-          outlined
-          @click="handleClose"
-          :disabled="loading"
-        />
-        <Button
-          type="submit"
-          label="Registrar Diligencia Superada"
-          icon="pi pi-check"
-          :loading="loading"
-        />
-      </div>
     </form>
-  </BaseModal>
+
+    <template #footer>
+      <Button
+        type="button"
+        label="Cancelar"
+        severity="secondary"
+        outlined
+        size="small"
+        :disabled="loading"
+        @click="handleClose"
+      />
+      <Button
+        type="submit"
+        form="diligencia-campo-form"
+        label="Registrar Diligencia Superada"
+        icon="pi pi-check"
+        size="small"
+        :loading="loading"
+      />
+    </template>
+  </Dialog>
 </template>
 
 <script setup>
 import { ref, watch } from 'vue'
 import Button from 'primevue/button'
+import Dialog from 'primevue/dialog'
+import Tag from 'primevue/tag'
 import Textarea from 'primevue/textarea'
-import BaseModal from '@/shared/components/BaseModal.vue'
+import { useResponsive } from '@/shared/composables/useResponsive'
 import { expedienteService } from '../services/expedienteService'
 
 const props = defineProps({
@@ -83,6 +113,7 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['close', 'saved'])
+const { getDialogWidth } = useResponsive()
 
 const loading = ref(false)
 const errorMessage = ref('')
@@ -93,9 +124,10 @@ const form = ref({
 })
 
 watch(
-  () => props.expediente,
-  (exp) => {
-    if (exp) {
+  () => [props.visible, props.expediente],
+  ([vis, exp]) => {
+    if (vis && exp) {
+      errorMessage.value = ''
       form.value = {
         detalleInspeccion: exp.detalleInspeccion || '',
         observaciones: ''
@@ -133,137 +165,9 @@ const handleSubmit = async () => {
 </script>
 
 <style scoped>
-.form-body {
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-  padding: 0.5rem 0;
-}
-
-.canal-badge-banner {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.85rem;
-  padding: 0.85rem 1rem;
-  border-radius: 6px;
-}
-
-.canal-badge-banner.rojo {
-  background: var(--color-danger-bg);
-  border: 1px solid var(--color-danger-border);
-  color: var(--color-danger-text);
-}
-
-.canal-badge-banner.naranja {
-  background: var(--color-warning-bg);
-  border: 1px solid var(--color-warning-border);
-  color: var(--color-warning-text);
-}
-
-.canal-badge-banner.verde {
-  background: var(--color-success-bg);
-  border: 1px solid var(--color-success-border);
-  color: var(--color-success-text);
-}
-
-.banner-texts strong {
-  display: block;
-  font-size: 0.85rem;
-  margin-bottom: 0.2rem;
-}
-
-.banner-texts p {
-  margin: 0;
-  font-size: 0.775rem;
-  opacity: 0.9;
-  line-height: 1.35;
-}
-
-.field-item {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-}
-
-.field-item label {
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: var(--color-text-main);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.field-hint {
-  font-size: 0.725rem;
-  color: var(--color-text-muted);
-}
-
-.textarea-input {
-  width: 100%;
-  padding: 0.65rem 0.85rem;
-  border: 1px solid var(--color-border);
-  border-radius: 4px;
-  background: var(--color-bg-subtle);
-  color: var(--color-text-main);
-  font-size: 0.875rem;
-  resize: vertical;
-  transition: all 0.2s ease;
-}
-
-.textarea-input:focus {
-  outline: none;
-  border-color: var(--color-primary);
-  background: var(--color-bg-surface);
-  box-shadow: 0 0 0 2px rgba(53, 47, 42, 0.15);
-}
-
-.modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.75rem;
-  padding-top: 1rem;
-  border-top: 1px solid var(--color-border-subtle);
-}
-
-.btn-modal-cancel {
-  padding: 0.6rem 1.2rem;
-  background: transparent;
-  border: 1px solid var(--color-border);
-  color: var(--color-text-main);
-  border-radius: 4px;
-  font-size: 0.875rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.btn-modal-cancel:hover:not(:disabled) {
-  background: var(--color-bg-subtle);
-}
-
-.btn-modal-save {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.6rem 1.25rem;
-  background: var(--color-primary);
-  border: 1px solid var(--color-primary);
-  color: var(--color-primary-text);
-  border-radius: 4px;
-  font-size: 0.875rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.btn-modal-save:hover:not(:disabled) {
-  background: var(--color-primary-hover);
-  border-color: var(--color-primary-hover);
-}
-
-.btn-modal-save:disabled,
-.btn-modal-cancel:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+.diligencia-banner-desc {
+  margin: 0.2rem 0 0;
+  font-size: 0.8rem;
+  line-height: 1.4;
 }
 </style>

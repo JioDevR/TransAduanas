@@ -2,7 +2,9 @@ import { ref, computed } from 'vue'
 import { useAuthStore } from '@/features/auth/stores/authStore'
 import { expedienteService } from '@/shared/services/expedienteService'
 import { userService } from '@/features/admin/users/services/userService'
-import { belongsToAgentePhase } from '../utils/agenteWorkflowUtils'
+import { belongsToAgentePhase, isExpedienteCerrado } from '../utils/agenteWorkflowUtils'
+
+const PHASE_FILTERS = ['todos', 'transito', 'inspeccion', 'levante', 'cerrados']
 
 export function useAgenteBandeja() {
   const authStore = useAuthStore()
@@ -12,8 +14,9 @@ export function useAgenteBandeja() {
   const expedientes = ref([])
   const agentesList = ref([])
 
-  // Pestaña activa ('dashboard' | 'todos' | 'transito' | 'inspeccion' | 'levante')
-  const activeTab = ref('dashboard')
+  // Vista activa en sidebar ('dashboard' | 'expedientes' | 'gestion') y filtro de fase interno
+  const activeView = ref('dashboard')
+  const phaseFilter = ref('todos')
 
   // Filtros reactivos
   const filterRegimen = ref('')
@@ -60,8 +63,35 @@ export function useAgenteBandeja() {
     }
   }
 
+  const openExpedientes = computed(() =>
+    (expedientes.value || []).filter((exp) => !isExpedienteCerrado(exp))
+  )
+
   const kpiCounts = computed(() => {
     const list = expedientes.value || []
+    let transito = 0
+    let inspeccion = 0
+    let levante = 0
+    let cerrados = 0
+
+    for (const exp of list) {
+      if (belongsToAgentePhase(exp, 'transito')) transito++
+      if (belongsToAgentePhase(exp, 'inspeccion')) inspeccion++
+      if (belongsToAgentePhase(exp, 'levante')) levante++
+      if (belongsToAgentePhase(exp, 'cerrados')) cerrados++
+    }
+
+    return {
+      todos: list.length,
+      transito,
+      inspeccion,
+      levante,
+      cerrados
+    }
+  })
+
+  const gestionKpiCounts = computed(() => {
+    const list = openExpedientes.value
     let transito = 0
     let inspeccion = 0
     let levante = 0
@@ -76,7 +106,8 @@ export function useAgenteBandeja() {
       todos: list.length,
       transito,
       inspeccion,
-      levante
+      levante,
+      cerrados: 0
     }
   })
 
@@ -100,10 +131,11 @@ export function useAgenteBandeja() {
     const q = searchQuery.value?.toLowerCase().trim()
     const regimen = filterRegimen.value
     const canal = filterCanal.value
-    const tab = activeTab.value
+    const phase = phaseFilter.value
+    const baseList = activeView.value === 'gestion' ? openExpedientes.value : (expedientes.value || [])
 
-    const list = (expedientes.value || []).filter((exp) => {
-      if (tab !== 'dashboard' && !belongsToAgentePhase(exp, tab)) {
+    const list = baseList.filter((exp) => {
+      if (!belongsToAgentePhase(exp, phase)) {
         return false
       }
 
@@ -154,16 +186,36 @@ export function useAgenteBandeja() {
     return sorted
   })
 
-  const cambiarTab = (tabKey) => {
-    activeTab.value = tabKey === 'expedientes' ? 'todos' : (tabKey || 'dashboard')
+  const cambiarVista = (target) => {
+    if (!target || target === 'dashboard') {
+      activeView.value = 'dashboard'
+      return
+    }
+    if (target === 'gestion') {
+      activeView.value = 'gestion'
+      if (phaseFilter.value === 'cerrados') {
+        phaseFilter.value = 'todos'
+      }
+      return
+    }
+    activeView.value = 'expedientes'
+    if (target === 'expedientes') {
+      phaseFilter.value = 'todos'
+    } else if (PHASE_FILTERS.includes(target)) {
+      phaseFilter.value = target
+    } else {
+      phaseFilter.value = 'todos'
+    }
   }
 
   return {
     loading,
     errorMessage,
     expedientes,
+    openExpedientes,
     agentesList,
-    activeTab,
+    activeView,
+    phaseFilter,
     filterRegimen,
     filterCanal,
     searchQuery,
@@ -173,9 +225,10 @@ export function useAgenteBandeja() {
     hasActiveFilters,
     resetFilters,
     kpiCounts,
+    gestionKpiCounts,
     filteredExpedientes,
     loadAgentes,
     loadData,
-    cambiarTab
+    cambiarVista
   }
 }

@@ -1,0 +1,899 @@
+{
+  "uid": "transaduanas-monitoreo",
+  "title": "TransAduanas Monitoreo",
+  "tags": [
+    "transaduanas",
+    "monitoreo"
+  ],
+  "timezone": "America/Lima",
+  "schemaVersion": 39,
+  "version": 3,
+  "editable": false,
+  "time": {
+    "from": "now-15m",
+    "to": "now"
+  },
+  "refresh": "5s",
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Recoleccion del backend",
+      "description": "1 = Prometheus puede leer las metricas. No equivale a validar todas las funciones del negocio.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "transaduanas-prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "up{job=\"transaduanas-backend\"}",
+          "legendFormat": "Recoleccion del backend",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "transaduanas-prometheus"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "area",
+        "textMode": "auto"
+      }
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Solicitudes acumuladas",
+      "description": "",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "transaduanas-prometheus"
+      },
+      "gridPos": {
+        "x": 6,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(http_server_requests_seconds_count{job=\"transaduanas-backend\",uri!~\"/actuator.*\"})",
+          "legendFormat": "Solicitudes acumuladas",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "transaduanas-prometheus"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "area",
+        "textMode": "auto"
+      }
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Tasa de solicitudes",
+      "description": "",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "transaduanas-prometheus"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate(http_server_requests_seconds_count{job=\"transaduanas-backend\",uri!~\"/actuator.*\"}[5m]))",
+          "legendFormat": "Tasa de solicitudes",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "transaduanas-prometheus"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "area",
+        "textMode": "auto"
+      }
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Errores HTTP 5xx",
+      "description": "",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "transaduanas-prometheus"
+      },
+      "gridPos": {
+        "x": 18,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "100 * ((sum(rate(http_server_requests_seconds_count{job=\"transaduanas-backend\",uri!~\"/actuator.*\",status=~\"5..\"}[5m])) or vector(0)) / clamp_min(sum(rate(http_server_requests_seconds_count{job=\"transaduanas-backend\",uri!~\"/actuator.*\"}[5m])), 0.0001))",
+          "legendFormat": "Errores HTTP 5xx",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "transaduanas-prometheus"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "area",
+        "textMode": "auto"
+      }
+    },
+    {
+      "id": 5,
+      "type": "timeseries",
+      "title": "Latencia p50 p95 p99 del backend",
+      "description": "Percentiles aproximados del histograma de la aplicacion. No son tiempos del cliente ni los percentiles exactos nearest-rank de los CSV.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "transaduanas-prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 4,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "histogram_quantile(0.5, sum by (le) (rate(http_server_requests_seconds_bucket{job=\"transaduanas-backend\",uri!~\"/actuator.*\"}[5m])))",
+          "legendFormat": "p50",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "transaduanas-prometheus"
+          }
+        },
+        {
+          "refId": "B",
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(http_server_requests_seconds_bucket{job=\"transaduanas-backend\",uri!~\"/actuator.*\"}[5m])))",
+          "legendFormat": "p95",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "transaduanas-prometheus"
+          }
+        },
+        {
+          "refId": "C",
+          "expr": "histogram_quantile(0.99, sum by (le) (rate(http_server_requests_seconds_bucket{job=\"transaduanas-backend\",uri!~\"/actuator.*\"}[5m])))",
+          "legendFormat": "p99",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "transaduanas-prometheus"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      }
+    },
+    {
+      "id": 6,
+      "type": "timeseries",
+      "title": "Solicitudes por endpoint",
+      "description": "",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "transaduanas-prometheus"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 4,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (uri) (rate(http_server_requests_seconds_count{job=\"transaduanas-backend\",uri!~\"/actuator.*\"}[5m]))",
+          "legendFormat": "{{uri}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "transaduanas-prometheus"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      }
+    },
+    {
+      "id": 7,
+      "type": "timeseries",
+      "title": "Memoria usada por la JVM",
+      "description": "",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "transaduanas-prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 12,
+        "w": 8,
+        "h": 7
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (area) (jvm_memory_used_bytes{job=\"transaduanas-backend\"})",
+          "legendFormat": "{{area}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "transaduanas-prometheus"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      }
+    },
+    {
+      "id": 8,
+      "type": "timeseries",
+      "title": "CPU del host y del proceso",
+      "description": "",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "transaduanas-prometheus"
+      },
+      "gridPos": {
+        "x": 8,
+        "y": 12,
+        "w": 8,
+        "h": 7
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "system_cpu_usage{job=\"transaduanas-backend\"}",
+          "legendFormat": "Host",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "transaduanas-prometheus"
+          }
+        },
+        {
+          "refId": "B",
+          "expr": "process_cpu_usage{job=\"transaduanas-backend\"}",
+          "legendFormat": "Java",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "transaduanas-prometheus"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      }
+    },
+    {
+      "id": 9,
+      "type": "timeseries",
+      "title": "Tiempo consumido en GC",
+      "description": "",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "transaduanas-prometheus"
+      },
+      "gridPos": {
+        "x": 16,
+        "y": 12,
+        "w": 8,
+        "h": 7
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate(jvm_gc_pause_seconds_sum{job=\"transaduanas-backend\"}[5m]))",
+          "legendFormat": "Tiempo consumido en GC",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "transaduanas-prometheus"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      }
+    },
+    {
+      "id": 10,
+      "type": "timeseries",
+      "title": "Conexiones MySQL del pool",
+      "description": "Conexiones activas del pool del backend; no es un exporter completo de MySQL.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "transaduanas-prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 19,
+        "w": 8,
+        "h": 7
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (pool) (hikaricp_connections_active{job=\"transaduanas-backend\"})",
+          "legendFormat": "{{pool}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "transaduanas-prometheus"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      }
+    },
+    {
+      "id": 11,
+      "type": "timeseries",
+      "title": "Hilos vivos de Java",
+      "description": "",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "transaduanas-prometheus"
+      },
+      "gridPos": {
+        "x": 8,
+        "y": 19,
+        "w": 8,
+        "h": 7
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "jvm_threads_live_threads{job=\"transaduanas-backend\"}",
+          "legendFormat": "Hilos vivos de Java",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "transaduanas-prometheus"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      }
+    },
+    {
+      "id": 12,
+      "type": "timeseries",
+      "title": "Alertas Prometheus activas",
+      "description": "Sin series significa que no hay reglas en estado firing; no se configuraron destinatarios externos.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "transaduanas-prometheus"
+      },
+      "gridPos": {
+        "x": 16,
+        "y": 19,
+        "w": 8,
+        "h": 7
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "ALERTS{alertstate=\"firing\"}",
+          "legendFormat": "{{alertname}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "transaduanas-prometheus"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      }
+    },
+    {
+      "id": 13,
+      "title": "Disponibilidad de paginas y API",
+      "type": "timeseries",
+      "description": "Sondeos locales Blackbox. Las series con entorno=m11-aislado corresponden solo al laboratorio de M11; aplicacion corresponde a los puertos habituales.",
+      "gridPos": {
+        "x": 0,
+        "y": 26,
+        "w": 24,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "transaduanas-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "probe_success{job=\"transaduanas-http\"}",
+          "legendFormat": "{{servicio}} / {{entorno}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "transaduanas-prometheus"
+          }
+        }
+      ]
+    },
+    {
+      "id": 14,
+      "title": "Estado HTTP de paginas y API",
+      "type": "timeseries",
+      "description": "Sondeos locales Blackbox. Las series con entorno=m11-aislado corresponden solo al laboratorio de M11; aplicacion corresponde a los puertos habituales.",
+      "gridPos": {
+        "x": 0,
+        "y": 34,
+        "w": 24,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "transaduanas-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "probe_http_status_code{job=\"transaduanas-http\"}",
+          "legendFormat": "{{servicio}} / {{entorno}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "transaduanas-prometheus"
+          }
+        }
+      ]
+    },
+    {
+      "id": 15,
+      "title": "Duracion del sondeo HTTP",
+      "type": "timeseries",
+      "description": "Sondeos locales Blackbox. Las series con entorno=m11-aislado corresponden solo al laboratorio de M11; aplicacion corresponde a los puertos habituales.",
+      "gridPos": {
+        "x": 0,
+        "y": 42,
+        "w": 24,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "transaduanas-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "probe_duration_seconds{job=\"transaduanas-http\"}",
+          "legendFormat": "{{servicio}} / {{entorno}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "transaduanas-prometheus"
+          }
+        }
+      ]
+    },
+    {
+      "id": 16,
+      "title": "Ingesta de logs por segundo",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 0,
+        "y": 50,
+        "w": 24,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "transaduanas-prometheus"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate(loki_distributor_lines_received_total{job=\"transaduanas-loki\"}[1m]))",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "transaduanas-prometheus"
+          }
+        }
+      ]
+    },
+    {
+      "id": 17,
+      "title": "Recolector y receptor de logs",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 0,
+        "y": 58,
+        "w": 24,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "transaduanas-prometheus"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "up{job=~\"transaduanas-(alloy|loki)\"}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "transaduanas-prometheus"
+          }
+        }
+      ]
+    },
+    {
+      "id": 18,
+      "title": "Logs del backend y Nginx",
+      "type": "logs",
+      "gridPos": {
+        "x": 0,
+        "y": 66,
+        "w": 24,
+        "h": 8
+      },
+      "datasource": {
+        "type": "loki",
+        "uid": "transaduanas-loki"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "{job=\"transaduanas-logs\"}",
+          "datasource": {
+            "type": "loki",
+            "uid": "transaduanas-loki"
+          }
+        }
+      ]
+    }
+  ],
+  "description": "Metricas reales de Spring Boot Actuator/Micrometer recolectadas cada cinco segundos por Prometheus. Laboratorio local."
+}

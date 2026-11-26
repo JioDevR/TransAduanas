@@ -10,7 +10,7 @@
     </parent>
     <groupId>pe.sga</groupId>
     <artifactId>sga-backend</artifactId>
-    <version>0.5.1</version>
+    <version>0.5.5</version>
     <name>sga-backend</name>
     <description>API Backend Sistema SGA</description>
 
@@ -20,6 +20,15 @@
     </properties>
 
     <dependencies>
+        <!-- Metricas de aplicacion y JVM para las pruebas de monitoreo -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-registry-prometheus</artifactId>
+        </dependency>
         <!-- Dependencias exclusivas de las pruebas automatizadas -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

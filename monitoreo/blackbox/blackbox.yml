@@ -1,0 +1,21 @@
+modules:
+  pagina:
+    prober: http
+    timeout: 3s
+    http:
+      method: GET
+      valid_status_codes: [200]
+      preferred_ip_protocol: ip4
+      headers:
+        User-Agent: TransAduanas-Monitoreo-HTTP
+      fail_if_body_not_matches_regexp: ['(?i)<html']
+  api:
+    prober: http
+    timeout: 3s
+    http:
+      method: GET
+      valid_status_codes: [200]
+      preferred_ip_protocol: ip4
+      headers:
+        User-Agent: TransAduanas-Monitoreo-HTTP
+      fail_if_body_not_matches_regexp: ['"success"\s*:\s*true']

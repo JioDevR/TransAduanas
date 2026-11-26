@@ -1,0 +1,18 @@
+logging {
+  level = "info"
+  destination = "stderr"
+}
+loki.source.file "transaduanas" {
+  targets = [
+    { __path__ = "C:/Users/asus/Music/TransAduanas-desplegado/logs/sga-backend.log", job = "transaduanas-logs", service_name = "sga-backend" },
+    { __path__ = "C:/Users/asus/Downloads/nginx-1.31.8/nginx-1.31.8/logs/access.log", job = "transaduanas-logs", service_name = "nginx" },
+  ]
+  tail_from_end = true
+  forward_to = [loki.write.local.receiver]
+}
+loki.write "local" {
+  endpoint {
+    url = "http://127.0.0.1:3100/loki/api/v1/push"
+    batch_wait = "1s"
+  }
+}

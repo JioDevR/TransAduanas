@@ -50,6 +50,12 @@ const routes = [
         meta: { title: 'Expedientes & Tracking DAM — Portal TransAduanas' }
       },
       {
+        path: 'expedientes/:id',
+        name: 'ExpedienteTrackingDetalle',
+        component: () => import('@/features/expedientes/views/ExpedienteTrackingDetailView.vue'),
+        meta: { title: 'Tracking de Expediente — Portal TransAduanas' }
+      },
+      {
         path: 'pagos',
         name: 'Pagos',
         component: () => import('@/features/pagos/views/CobrosPagosView.vue'),

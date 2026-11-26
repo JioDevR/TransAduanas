@@ -25,12 +25,20 @@ public class CatalogoMercancia {
     @Column(name = "nombre", nullable = false, length = 150)
     private String nombre;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_categoria")
+    private CatalogoCategoriaMercancia categoriaEntity;
+
     @Column(name = "categoria", nullable = false, length = 80)
     private String categoria;
 
     @Column(name = "requiere_permiso", nullable = false)
     @Builder.Default
     private Boolean requierePermiso = false;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_entidad_reguladora")
+    private CatalogoEntidadReguladora entidadReguladoraEntity;
 
     @Column(name = "entidad_reguladora", length = 80)
     private String entidadReguladora;

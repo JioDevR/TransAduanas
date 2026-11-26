@@ -36,7 +36,7 @@
           <h3 class="sga-chart-title">Activos vs Inactivos por Dominio</h3>
         </div>
         <Tag
-          :value="`${metrics.totalCapacidadToneladas} Ton. flota`"
+          :value="`${totalActivos} habilitados`"
           severity="info"
           class="sga-mono"
           rounded
@@ -83,12 +83,15 @@ const totalRegistros = computed(
     (props.metrics.mercanciasCount || 0)
 )
 
-const hasAnyDomainData = computed(
+const totalActivos = computed(
   () =>
-    totalRegistros.value > 0 ||
-    (props.metrics.unidadesCount || 0) > 0 ||
-    (props.metrics.conductoresCount || 0) > 0
+    (props.metrics.sedesOperativasCount || 0) +
+    (props.metrics.puertosActivosCount || 0) +
+    (props.metrics.cargasActivasCount || 0) +
+    (props.metrics.mercanciasActivasCount || 0)
 )
+
+const hasAnyDomainData = computed(() => totalRegistros.value > 0)
 
 const palette = computed(() =>
   isDark.value

@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { computeGerenciaDashboardMetrics } from '../gerenciaMetricsUtils'
 
 describe('gerenciaMetricsUtils', () => {
-  it('calcula métricas ejecutivas reales de los 4 catálogos maestros y flota transversal', () => {
+  it('calcula métricas ejecutivas reales de los 4 catálogos maestros', () => {
     const metrics = computeGerenciaDashboardMetrics({
       sedes: [
         { idSede: 1, estado: 'OPERATIVO', distrito: 'Callao' },
@@ -22,15 +22,6 @@ describe('gerenciaMetricsUtils', () => {
         { idMercancia: 1, estado: 'ACTIVO', requierePermiso: true, arancelBasePct: 6 },
         { idMercancia: 2, estado: 'ACTIVO', requierePermiso: false, arancelBasePct: 0 },
         { idMercancia: 3, estado: 'INACTIVO', requierePermiso: false, arancelBasePct: 11 }
-      ],
-      unidades: [
-        { idUnidad: 1, estadoOperativo: 'DISPONIBLE', capacidadCargaKg: 25000 },
-        { idUnidad: 2, estadoOperativo: 'EN_RUTA', capacidadCargaKg: 15000 },
-        { idUnidad: 3, estadoOperativo: 'MANTENIMIENTO', capacidadCargaKg: 10000 }
-      ],
-      conductores: [
-        { idConductor: 1, estadoOperativo: 'DISPONIBLE' },
-        { idConductor: 2, estadoOperativo: 'EN_SERVICIO' }
       ]
     })
 
@@ -50,21 +41,14 @@ describe('gerenciaMetricsUtils', () => {
     expect(metrics.mercanciasActivasCount).toBe(2)
     expect(metrics.mercanciasVuceCount).toBe(1)
 
-    expect(metrics.unidadesCount).toBe(3)
-    expect(metrics.flotaOperativaCount).toBe(2)
-    expect(metrics.totalCapacidadToneladas).toBe(50)
-    expect(metrics.conductoresCount).toBe(2)
-    expect(metrics.conductoresDisponiblesCount).toBe(1)
-
     expect(metrics.coberturaChartData.datasets[0].data).toEqual([3, 3, 2, 3])
-    expect(metrics.disponibilidadChartData.datasets[0].data).toEqual([2, 2, 1, 2, 2, 1])
+    expect(metrics.disponibilidadChartData.datasets[0].data).toEqual([2, 2, 1, 2])
   })
 
   it('soporta entradas vacías o nulas sin lanzar errores', () => {
     const metrics = computeGerenciaDashboardMetrics({})
     expect(metrics.sedesCount).toBe(0)
     expect(metrics.mercanciasCount).toBe(0)
-    expect(metrics.totalCapacidadToneladas).toBe(0)
     expect(metrics.coberturaChartData.datasets[0].data).toEqual([0, 0, 0, 0])
   })
 })

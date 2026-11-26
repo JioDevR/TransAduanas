@@ -111,7 +111,7 @@ export function computeExpedienteStats(expedientes = []) {
       conLevante += 1
     }
 
-    if (exp?.tieneTransporte && exp?.estadoTransporte && exp.estadoTransporte !== 'ENTREGADO' && exp.estadoTransporte !== 'CANCELADO') {
+    if (exp?.tieneTransporte && est !== 'CERRADO' && est !== 'ANULADO') {
       enTransporte += 1
     }
 

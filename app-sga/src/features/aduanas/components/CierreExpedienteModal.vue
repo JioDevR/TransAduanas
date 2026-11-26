@@ -1,33 +1,51 @@
 <template>
-  <BaseModal
+  <Dialog
     :visible="visible"
-    title="Revisión de Conformidad y Cierre Final de Expediente"
-    :subtitle="`Expediente: ${expediente?.codigoExpediente || ''} — DAM: ${expediente?.numeroDam || 'S/N'}`"
-    icon="pi pi-check-circle"
-    max-width="600px"
-    :error-message="errorMessage"
-    :busy="loading"
-    @close="handleClose"
+    modal
+    :closable="!loading"
+    :dismissableMask="!loading"
+    :style="{ width: getDialogWidth('600px'), maxWidth: '95vw' }"
+    header="Revisión de Conformidad y Cierre Final de Expediente"
+    @update:visible="(val) => { if (!val && !loading) handleClose() }"
   >
-    <form @submit.prevent="handleSubmit" class="form-body">
-      <!-- Checklist de Verificación de Cierre -->
+    <form id="cierre-expediente-form" class="sga-dialog-body" @submit.prevent="handleSubmit">
+      <div v-if="expediente" class="sga-dialog-context">
+        <div class="sga-dialog-context-meta">
+          <span class="sga-code-cell font-mono">{{ expediente.codigoExpediente }}</span>
+          <span class="sga-dialog-context-sub font-mono">
+            DAM: {{ expediente.numeroDam || 'S/N' }}
+          </span>
+        </div>
+        <Tag
+          :value="isExportacion ? 'Exportación' : 'Importación'"
+          :severity="isExportacion ? 'success' : 'info'"
+          class="sga-mini-tag"
+          rounded
+        />
+      </div>
+
+      <div v-if="errorMessage" class="sga-banner is-danger" role="alert">
+        <i class="pi pi-exclamation-triangle"></i>
+        <span>{{ errorMessage }}</span>
+      </div>
+
       <div class="cierre-checklist-card">
         <h4 class="checklist-title">
           {{ isExportacion ? 'Checklist de Cierre de Despacho de Exportación' : 'Checklist de Cierre de Despacho de Importación' }}
         </h4>
-        
-        <!-- Checklist 1: Levante Aduanero -->
+
         <div class="check-row">
-          <i :class="['pi text-sm', expediente?.fechaLevanteAutorizacion ? 'pi-check-circle text-success' : 'pi-times-circle text-danger']"></i>
+          <i :class="['pi check-icon', expediente?.fechaLevanteAutorizacion ? 'pi-check-circle text-success' : 'pi-times-circle text-danger']"></i>
           <div class="check-info">
             <span class="check-label">{{ isExportacion ? 'Levante Aduanero de Exportación Autorizado' : 'Levante Aduanero Autorizado' }}</span>
-            <span class="check-sub font-mono">{{ expediente?.fechaLevanteAutorizacion ? `Concedido el ${formatDate(expediente.fechaLevanteAutorizacion)}` : 'Pendiente de autorización' }}</span>
+            <span class="check-sub font-mono">
+              {{ expediente?.fechaLevanteAutorizacion ? `Concedido el ${formatDate(expediente.fechaLevanteAutorizacion)}` : 'Pendiente de autorización' }}
+            </span>
           </div>
         </div>
 
-        <!-- Checklist 2: Embarque o Entrega Terrestre -->
         <div v-if="isExportacion" class="check-row">
-          <i :class="['pi text-sm', embarqueExportacionVerificado ? 'pi-check-circle text-success' : 'pi-exclamation-triangle text-warning']"></i>
+          <i :class="['pi check-icon', embarqueExportacionVerificado ? 'pi-check-circle text-success' : 'pi-exclamation-triangle text-warning']"></i>
           <div class="check-info">
             <span class="check-label">Embarque Internacional a Bordo de Nave</span>
             <span class="check-sub">
@@ -36,11 +54,11 @@
           </div>
         </div>
         <div v-else class="check-row">
-          <i :class="['pi text-sm', entregaVerificada ? 'pi-check-circle text-success' : 'pi-exclamation-triangle text-warning']"></i>
+          <i :class="['pi check-icon', entregaVerificada ? 'pi-check-circle text-success' : 'pi-exclamation-triangle text-warning']"></i>
           <div class="check-info">
             <span class="check-label">Entrega de Carga Verificada</span>
             <span v-if="expediente?.servicioTransporte" class="check-sub">
-              Transporte SGA: Tracking <span class="font-mono">{{ expediente?.codigoTrackingTransporte || '—' }}</span> ({{ expediente?.estadoTransporte || 'PENDIENTE' }})
+              Transporte SGA (Externo): {{ expediente?.transporteSolicitado ? 'Solicitud registrada' : 'Pendiente de registro' }}
             </span>
             <span v-else class="check-sub">
               Retiro por el Cliente en Terminal Extraportuario
@@ -48,9 +66,8 @@
           </div>
         </div>
 
-        <!-- Checklist 3: Legajo y Liquidación -->
         <div class="check-row">
-          <i class="pi pi-check-circle text-success text-sm"></i>
+          <i class="pi pi-check-circle text-success check-icon"></i>
           <div class="check-info">
             <span class="check-label">{{ isExportacion ? 'Legajo Digital de Exportación & Regularización' : 'Tributos y Liquidación Aduanera' }}</span>
             <span class="check-sub">{{ isExportacion ? 'DAM de exportación regularizada y legajo archivado conforme' : 'Tributos cancelados ante SUNAT conforme' }}</span>
@@ -58,8 +75,8 @@
         </div>
       </div>
 
-      <div class="field-item">
-        <label for="cierre-obs">Acta de Conformidad / Observaciones de Cierre Definitivo *</label>
+      <div class="sga-form-field">
+        <label for="cierre-obs" class="sga-form-label">Acta de Conformidad / Observaciones de Cierre Definitivo *</label>
         <Textarea
           id="cierre-obs"
           v-model.trim="form.observacionesCierre"
@@ -67,36 +84,44 @@
           autoResize
           placeholder="Ej. Se revisaron conformidades de levante aduanero, entrega a satisfacción y archivo de legajo digital del despacho. Expediente cerrado y archivado conforme."
           required
+          size="small"
           fluid
         />
-        <span class="field-hint">Esta acción cambiará el estado del expediente a CERRADO y notificará formalmente al cliente.</span>
-      </div>
-
-      <div class="modal-actions">
-        <Button
-          type="button"
-          label="Cancelar"
-          severity="secondary"
-          outlined
-          @click="handleClose"
-          :disabled="loading"
-        />
-        <Button
-          type="submit"
-          label="Confirmar Cierre de Expediente"
-          icon="pi pi-lock"
-          :loading="loading"
-        />
+        <span class="sga-field-hint">
+          Esta acción cambiará el estado del expediente a CERRADO y notificará formalmente al cliente.
+        </span>
       </div>
     </form>
-  </BaseModal>
+
+    <template #footer>
+      <Button
+        type="button"
+        label="Cancelar"
+        severity="secondary"
+        outlined
+        size="small"
+        :disabled="loading"
+        @click="handleClose"
+      />
+      <Button
+        type="submit"
+        form="cierre-expediente-form"
+        label="Confirmar Cierre de Expediente"
+        icon="pi pi-lock"
+        size="small"
+        :loading="loading"
+      />
+    </template>
+  </Dialog>
 </template>
 
 <script setup>
 import { ref, computed, watch } from 'vue'
 import Button from 'primevue/button'
+import Dialog from 'primevue/dialog'
+import Tag from 'primevue/tag'
 import Textarea from 'primevue/textarea'
-import BaseModal from '@/shared/components/BaseModal.vue'
+import { useResponsive } from '@/shared/composables/useResponsive'
 import { expedienteService } from '../services/expedienteService'
 
 const props = defineProps({
@@ -105,12 +130,15 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['close', 'saved'])
+const { getDialogWidth } = useResponsive()
 
 const loading = ref(false)
 const errorMessage = ref('')
 
+const defaultObs = 'Conformidad técnica y liquidación aduanera verificada. Despacho concluido y archivado formalmente.'
+
 const form = ref({
-  observacionesCierre: 'Conformidad técnica y liquidación aduanera verificada. Despacho concluido y archivado formalmente.'
+  observacionesCierre: defaultObs
 })
 
 const isExportacion = computed(() => {
@@ -132,17 +160,17 @@ const embarqueExportacionVerificado = computed(() => {
 const entregaVerificada = computed(() => {
   if (!props.expediente) return false
   if (props.expediente.servicioTransporte) {
-    return props.expediente.estadoTransporte === 'ENTREGADO'
+    return Boolean(props.expediente.transporteSolicitado)
   }
-  // Si no requirió transporte interno, se asume retiro en terminal
   return true
 })
 
 watch(
-  () => props.expediente,
-  (exp) => {
-    if (exp) {
-      form.value.observacionesCierre = 'Conformidad técnica y liquidación aduanera verificada. Despacho concluido y archivado formalmente.'
+  () => [props.visible, props.expediente],
+  ([vis, exp]) => {
+    if (vis && exp) {
+      errorMessage.value = ''
+      form.value.observacionesCierre = defaultObs
     }
   },
   { immediate: true }
@@ -186,58 +214,35 @@ const handleSubmit = async () => {
 </script>
 
 <style scoped>
-.form-body {
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-  padding: 0.5rem 0;
-}
-
 .cierre-checklist-card {
+  background: var(--color-bg-subtle);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md, 10px);
+  padding: 0.9rem 1rem;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
-  padding: 1rem;
-  background: var(--color-bg-subtle);
-  border: 1px solid var(--color-border);
-  border-radius: 6px;
+  gap: 0.7rem;
 }
 
 .checklist-title {
-  margin: 0 0 0.25rem 0;
-  font-size: 0.8rem;
+  margin: 0 0 0.1rem;
+  font-size: 0.72rem;
   font-weight: 700;
-  color: var(--color-text-main);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
+  color: var(--color-text-muted);
 }
 
 .check-row {
   display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.35rem 0;
-  border-bottom: 1px dashed var(--color-border-subtle);
+  align-items: flex-start;
+  gap: 0.65rem;
 }
 
-.check-row:last-child {
-  border-bottom: none;
-}
-
-.check-info {
-  display: flex;
-  flex-direction: column;
-}
-
-.check-label {
-  font-size: 0.825rem;
-  font-weight: 600;
-  color: var(--color-text-main);
-}
-
-.check-sub {
-  font-size: 0.75rem;
-  color: var(--color-text-muted);
+.check-icon {
+  margin-top: 0.15rem;
+  font-size: 0.9rem;
+  flex-shrink: 0;
 }
 
 .text-success {
@@ -249,93 +254,23 @@ const handleSubmit = async () => {
 }
 
 .text-warning {
-  color: var(--color-warning-text);
+  color: var(--color-warn-text);
 }
 
-.field-item {
+.check-info {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  gap: 0.12rem;
 }
 
-.field-item label {
-  font-size: 0.75rem;
-  font-weight: 700;
+.check-label {
+  font-size: 0.82rem;
+  font-weight: 600;
   color: var(--color-text-main);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
 }
 
-.field-hint {
-  font-size: 0.725rem;
+.check-sub {
+  font-size: 0.76rem;
   color: var(--color-text-muted);
-}
-
-.textarea-input {
-  width: 100%;
-  padding: 0.65rem 0.85rem;
-  border: 1px solid var(--color-border);
-  border-radius: 4px;
-  background: var(--color-bg-subtle);
-  color: var(--color-text-main);
-  font-size: 0.875rem;
-  resize: vertical;
-  transition: all 0.2s ease;
-}
-
-.textarea-input:focus {
-  outline: none;
-  border-color: var(--color-primary);
-  background: var(--color-bg-surface);
-  box-shadow: 0 0 0 2px rgba(53, 47, 42, 0.15);
-}
-
-.modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.75rem;
-  padding-top: 1rem;
-  border-top: 1px solid var(--color-border-subtle);
-}
-
-.btn-modal-cancel {
-  padding: 0.6rem 1.2rem;
-  background: transparent;
-  border: 1px solid var(--color-border);
-  color: var(--color-text-main);
-  border-radius: 4px;
-  font-size: 0.875rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.btn-modal-cancel:hover:not(:disabled) {
-  background: var(--color-bg-subtle);
-}
-
-.btn-modal-save {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.6rem 1.25rem;
-  background: var(--color-success-bg);
-  border: 1px solid var(--color-success-border);
-  color: var(--color-success-text);
-  border-radius: 4px;
-  font-size: 0.875rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.btn-modal-save:hover:not(:disabled) {
-  filter: brightness(0.95);
-}
-
-.btn-modal-save:disabled,
-.btn-modal-cancel:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
 }
 </style>

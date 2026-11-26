@@ -51,10 +51,16 @@ public class DocumentoServiceImpl implements IDocumentoService {
     private final LiquidacionFinancieraRepository liquidacionFinancieraRepository;
 
     private IAuditoriaService auditoriaService;
+    private CatalogoResolucionService catalogoResolucionService;
 
     @Autowired(required = false)
     public void setAuditoriaService(IAuditoriaService auditoriaService) {
         this.auditoriaService = auditoriaService;
+    }
+
+    @Autowired(required = false)
+    public void setCatalogoResolucionService(CatalogoResolucionService catalogoResolucionService) {
+        this.catalogoResolucionService = catalogoResolucionService;
     }
 
     private void auditar(String accion, Integer idDocumento, String detalle) {
@@ -144,6 +150,9 @@ public class DocumentoServiceImpl implements IDocumentoService {
                     .activo(true)
                     .build();
 
+            if (catalogoResolucionService != null) {
+                catalogoResolucionService.enriquecerDocumento(doc);
+            }
             DocumentoAdjunto guardado = documentoRepository.save(doc);
             resultados.add(toDTO(guardado));
             auditar("SUBIR_DOCUMENTO", guardado.getIdDocumento(),

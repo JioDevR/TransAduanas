@@ -15,7 +15,6 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import pe.sga.controller.AuthController;
-import pe.sga.controller.DespachoTransporteController;
 import pe.sga.controller.RolController;
 import pe.sga.dto.response.UsuarioResponseDTO;
 import pe.sga.entity.Cliente;
@@ -25,16 +24,13 @@ import pe.sga.entity.enums.RolUsuario;
 import pe.sga.exception.GlobalExceptionHandler;
 import pe.sga.repository.UsuarioClienteRepository;
 import pe.sga.repository.UsuarioRepository;
-import pe.sga.service.IDespachoTransporteService;
 import pe.sga.service.IRolService;
 import pe.sga.service.IUsuarioService;
 
-import java.util.List;
 import java.util.Optional;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -56,7 +52,6 @@ public class SecurityConfigTest {
             JwtTokenProvider.class,
             JwtAuthenticationFilter.class,
             AuthController.class,
-            DespachoTransporteController.class,
             RolController.class,
             GlobalExceptionHandler.class
     })
@@ -82,11 +77,6 @@ public class SecurityConfigTest {
         }
 
         @Bean
-        IDespachoTransporteService despachoTransporteService() {
-            return mock(IDespachoTransporteService.class);
-        }
-
-        @Bean
         IRolService rolService() {
             return mock(IRolService.class);
         }
@@ -109,9 +99,6 @@ public class SecurityConfigTest {
 
     @Autowired
     private IUsuarioService usuarioService;
-
-    @Autowired
-    private IDespachoTransporteService despachoTransporteService;
 
     private MockMvc mockMvc;
 
@@ -187,47 +174,6 @@ public class SecurityConfigTest {
         mockMvc.perform(get("/api/v1/auth/me")
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isForbidden());
-    }
-
-    @Test
-    void despachoMisDespachos_rolSinPermisoTransporte_retorna403() throws Exception {
-        Usuario comercial = Usuario.builder()
-                .idUsuario(9)
-                .username("comercial")
-                .rol(RolUsuario.AGENTE_COMERCIAL)
-                .correoInstitucional("comercial@transaduanas.pe")
-                .estadoActivo(true)
-                .build();
-
-        when(usuarioRepository.findByUsername("comercial")).thenReturn(Optional.of(comercial));
-        String token = tokenProvider.generateToken(comercial);
-
-        mockMvc.perform(get("/api/v1/transporte/despachos")
-                        .header("Authorization", "Bearer " + token))
-                .andExpect(status().isForbidden());
-
-        mockMvc.perform(delete("/api/v1/transporte/despachos/1")
-                        .header("Authorization", "Bearer " + token))
-                .andExpect(status().isForbidden());
-    }
-
-    @Test
-    void transporteEndpoints_supervisorTransporte_retorna200() throws Exception {
-        Usuario supervisor = Usuario.builder()
-                .idUsuario(12)
-                .username("sup.transporte")
-                .rol(RolUsuario.SUPERVISOR_TRANSPORTE)
-                .correoInstitucional("sup@transaduanas.pe")
-                .estadoActivo(true)
-                .build();
-
-        when(usuarioRepository.findByUsername("sup.transporte")).thenReturn(Optional.of(supervisor));
-        when(despachoTransporteService.listarConFiltros(false, null, null, null)).thenReturn(List.of());
-        String token = tokenProvider.generateToken(supervisor);
-
-        mockMvc.perform(get("/api/v1/transporte/despachos")
-                        .header("Authorization", "Bearer " + token))
-                .andExpect(status().isOk());
     }
 
     @Test

@@ -49,11 +49,27 @@ public class CotizacionPago {
     @Column(name = "monto_equivalente_pen", nullable = false, precision = 12, scale = 2)
     private BigDecimal montoEquivalentePen;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_metodo_pago")
+    private CatalogoMetodoPago metodoPagoEntity;
+
     @Column(name = "metodo_pago", nullable = false, length = 50)
     private String metodoPago;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_banco_origen")
+    private CatalogoBanco bancoOrigenEntity;
+
     @Column(name = "banco_origen", length = 80)
     private String bancoOrigen;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_banco_destino")
+    private CatalogoBanco bancoDestinoEntity;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_cuenta_recaudadora")
+    private CatalogoCuentaRecaudadora cuentaRecaudadora;
 
     @Column(name = "banco_destino", nullable = false, length = 80)
     private String bancoDestino;

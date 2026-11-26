@@ -140,6 +140,58 @@ export const catalogoService = {
       responseType: 'blob'
     })
     return response.data
+  },
+
+  // ==========================================
+  // CATÁLOGOS NORMALIZADOS (BANCOS, PAGOS, CATEGORÍAS, UBIGEO)
+  // ==========================================
+  async getBancos(uso) {
+    const response = await apiClient.get('/catalogos/bancos', {
+      params: uso ? { uso } : {}
+    })
+    return response.data?.data ?? response.data
+  },
+
+  async getCuentasRecaudadoras(uso = 'SGA', moneda) {
+    const params = {}
+    if (uso) params.uso = uso
+    if (moneda) params.moneda = moneda
+    const response = await apiClient.get('/catalogos/cuentas-recaudadoras', { params })
+    return response.data?.data ?? response.data
+  },
+
+  async getMetodosPago(uso) {
+    const response = await apiClient.get('/catalogos/metodos-pago', {
+      params: uso ? { uso } : {}
+    })
+    return response.data?.data ?? response.data
+  },
+
+  async getCategoriasMercancia() {
+    const response = await apiClient.get('/catalogos/categorias-mercancia')
+    return response.data?.data ?? response.data
+  },
+
+  async getEntidadesReguladoras() {
+    const response = await apiClient.get('/catalogos/entidades-reguladoras')
+    return response.data?.data ?? response.data
+  },
+
+  async getMotivosObservacion(modulo = 'ABONO') {
+    const response = await apiClient.get('/catalogos/motivos-observacion', {
+      params: modulo ? { modulo } : {}
+    })
+    return response.data?.data ?? response.data
+  },
+
+  async getCategoriasDocumento() {
+    const response = await apiClient.get('/catalogos/categorias-documento')
+    return response.data?.data ?? response.data
+  },
+
+  async getUbigeo() {
+    const response = await apiClient.get('/catalogos/ubigeo')
+    return response.data?.data ?? response.data
   }
 }
 

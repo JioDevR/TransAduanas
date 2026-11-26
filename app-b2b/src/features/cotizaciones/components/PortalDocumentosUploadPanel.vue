@@ -22,7 +22,7 @@
         <div class="control-item">
           <label class="control-label" for="portal-doc-cat">Categoría de Documento *</label>
           <select id="portal-doc-cat" v-model="formCategoria" class="select-input">
-            <option v-for="cat in CATEGORIAS_DOCUMENTO" :key="cat.value" :value="cat.value">
+            <option v-for="cat in categoriasDocumento" :key="cat.value" :value="cat.value">
               {{ cat.label }}
             </option>
           </select>
@@ -288,6 +288,7 @@
 import { ref, watch, onMounted } from 'vue'
 import Tag from 'primevue/tag'
 import { portalCotizacionService } from '../services/portalCotizacionService'
+import { catalogoPublicoService } from '@/shared/services/catalogoPublicoService'
 import { downloadBlob, openBlobInNewTab } from '@/shared/utils/download'
 import { useNotification } from '@/shared/composables/useNotification'
 import { formatBytes, formatDateTime } from '@/shared/utils/formatters'
@@ -351,7 +352,18 @@ watch(
   }
 )
 
-onMounted(() => {
+onMounted(async () => {
+  try {
+    const lista = await catalogoPublicoService.obtenerCategoriasDocumento()
+    if (Array.isArray(lista) && lista.length > 0) {
+      categoriasDocumento.value = lista.map((c) => ({
+        value: c.codigo,
+        label: c.nombre
+      }))
+    }
+  } catch {
+    // Mantiene respaldo local si el catálogo no responde
+  }
   if (props.mode === 'live' && props.idCotizacion) {
     loadDocumentos()
   }
@@ -478,8 +490,10 @@ async function handleDownload(doc) {
   }
 }
 
+const categoriasDocumento = ref(CATEGORIAS_DOCUMENTO)
+
 function getCategoriaLabel(catVal) {
-  const found = CATEGORIAS_DOCUMENTO.find((c) => c.value === catVal)
+  const found = categoriasDocumento.value.find((c) => c.value === catVal)
   return found ? found.label : catVal || 'General'
 }
 

@@ -1,6 +1,6 @@
 <template>
   <div class="agente-informe-view fade-in">
-    <!-- Cabecera contextual (sgaUI: título único en .sga-topbar) -->
+    <!-- Cabecera contextual limpia (sgaUI: título único en .sga-topbar) -->
     <header class="sga-form-header no-print">
       <div class="informe-header-left">
         <Button
@@ -37,239 +37,75 @@
       </div>
 
       <div v-if="expediente" class="sga-form-actions">
-        <template v-if="!acc.isExport">
+        <template v-if="readonly">
           <Button
-            v-if="acc.puedeVerificacionOrigen"
+            v-if="!acc.isCerrado"
             type="button"
-            label="Verificación Origen"
-            icon="pi pi-check-square"
-            severity="info"
-            outlined
+            label="Ir a Gestionar"
+            icon="pi pi-sliders-h"
             size="small"
-            @click="$emit('verificacion-origen', expediente)"
-          />
-          <Button
-            v-if="acc.puedeSalidaOrigen"
-            type="button"
-            label="Salida Origen"
-            icon="pi pi-send"
-            size="small"
-            @click="$emit('salida-origen', expediente)"
-          />
-          <Button
-            v-if="acc.puedeConfirmarArribo"
-            type="button"
-            label="Confirmar Arribo"
-            icon="pi pi-compass"
-            severity="success"
-            size="small"
-            @click="$emit('arribo-destino', expediente)"
-          />
-          <Button
-            v-if="acc.puedeCuadrillaCitaRojo"
-            type="button"
-            label="Cuadrilla / Cita Rojo"
-            icon="pi pi-users"
-            severity="danger"
-            outlined
-            size="small"
-            @click="$emit('cuadrilla-rojo', expediente)"
-          />
-          <Button
-            v-if="acc.puedeFinalizarRojo"
-            type="button"
-            label="Finalizar Revisión Rojo"
-            icon="pi pi-check-circle"
-            severity="danger"
-            size="small"
-            @click="$emit('finalizar-rojo', expediente)"
-          />
-          <Button
-            v-if="acc.puedeEnviarSunatNaranja"
-            type="button"
-            label="Enviar a SUNAT (Naranja)"
-            icon="pi pi-cloud-upload"
-            severity="warn"
-            size="small"
-            @click="$emit('enviar-sunat', expediente)"
-          />
-          <Button
-            v-if="acc.puedeEntregadoAlmacenVerde"
-            type="button"
-            label="Entregado Almacén (Verde)"
-            icon="pi pi-check-square"
-            severity="success"
-            outlined
-            size="small"
-            @click="$emit('entregado-almacen-verde', expediente)"
-          />
-          <Button
-            v-if="acc.puedeDiligencia"
-            type="button"
-            label="Registrar Diligencia"
-            icon="pi pi-search-plus"
-            severity="warn"
-            outlined
-            size="small"
-            @click="$emit('diligencia', expediente)"
-          />
-          <Button
-            v-if="acc.puedeSolicitarTransporte"
-            type="button"
-            label="Solicitar Flota"
-            icon="pi pi-truck"
-            severity="success"
-            size="small"
-            @click="$emit('solicitar-transporte', expediente)"
-          />
-          <Button
-            v-if="acc.puedeRetiroDirecto"
-            type="button"
-            label="Acta Retiro Directo"
-            icon="pi pi-check"
-            severity="secondary"
-            outlined
-            size="small"
-            @click="$emit('retiro-directo', expediente)"
-          />
-          <Button
-            v-if="acc.puedeInformeConformidad"
-            type="button"
-            label="Informe Conformidad"
-            icon="pi pi-file-check"
-            severity="info"
-            size="small"
-            @click="$emit('informe-conformidad', expediente)"
-          />
-          <Button
-            v-if="acc.tieneInformeConformidad"
-            type="button"
-            label="PDF Conformidad"
-            icon="pi pi-file-pdf"
-            severity="secondary"
-            outlined
-            size="small"
-            @click="$emit('descargar-informe', expediente)"
-          />
-          <Button
-            v-if="acc.puedeIngresoAlmacen"
-            type="button"
-            label="Balanza VGM"
-            icon="pi pi-box"
-            severity="secondary"
-            outlined
-            size="small"
-            @click="$emit('ingreso-almacen', expediente)"
+            @click="$emit('switch-to-manage', expediente)"
           />
         </template>
 
         <template v-else>
-          <Button
-            v-if="acc.puedeRecojoExportacion"
-            type="button"
-            label="Solicitar Recojo"
-            icon="pi pi-truck"
+          <SelectButton
+            v-model="activeDetailTab"
+            :options="detailTabOptions"
+            optionLabel="label"
+            optionValue="value"
+            :allowEmpty="false"
             size="small"
-            @click="$emit('recojo-exportacion', expediente)"
+            aria-label="Cambiar vista del expediente"
+          >
+            <template #option="{ option }">
+              <i :class="option.icon"></i>
+              <span>{{ option.label }}</span>
+            </template>
+          </SelectButton>
+
+          <Select
+            v-if="switcherOptions.length > 1"
+            :modelValue="expediente.idExpediente"
+            :options="switcherOptions"
+            optionLabel="label"
+            optionValue="value"
+            size="small"
+            class="informe-exp-switcher"
+            aria-label="Cambiar expediente abierto"
+            @update:modelValue="handleSwitchExpediente"
           />
           <Button
-            v-if="acc.puedeIngresoOrigen"
+            v-if="acc.puedeEditarTransito"
             type="button"
-            label="Ingreso Almacén Central"
-            icon="pi pi-inbox"
+            label="Editar Tránsito"
+            icon="pi pi-globe"
             severity="secondary"
             outlined
             size="small"
-            @click="$emit('ingreso-origen', expediente)"
+            @click="$emit('transito', expediente)"
           />
           <Button
-            v-if="acc.puedeMarcarRevisionAduana"
+            v-if="!acc.isCerrado"
             type="button"
-            label="Revisión Aduana"
-            icon="pi pi-search"
-            severity="info"
+            label="Marcar Estado"
+            icon="pi pi-stopwatch"
+            severity="secondary"
             outlined
             size="small"
-            @click="$emit('marcar-estado', { expediente, codigoEstado: 'REVISION_ADUANA', titulo: 'Revisión Aduana' })"
+            @click="$emit('marcar-estado-custom', expediente)"
           />
           <Button
-            v-if="acc.puedeMarcarEsperaTransito"
             type="button"
-            label="Espera de Tránsito"
-            icon="pi pi-clock"
-            severity="warn"
+            label="Documentos"
+            icon="pi pi-paperclip"
+            severity="secondary"
             outlined
             size="small"
-            @click="$emit('marcar-estado', { expediente, codigoEstado: 'ESPERA_TRANSITO', titulo: 'En Espera de Tránsito' })"
-          />
-          <Button
-            v-if="acc.puedeDiligencia"
-            type="button"
-            label="Registrar Diligencia"
-            icon="pi pi-search-plus"
-            severity="warn"
-            size="small"
-            @click="$emit('diligencia', expediente)"
-          />
-          <Button
-            v-if="acc.puedeEmbarque"
-            type="button"
-            label="Vuelo / Embarque Confirmado"
-            icon="pi pi-send"
-            severity="success"
-            size="small"
-            @click="$emit('embarque', expediente)"
-          />
-          <Button
-            v-else-if="acc.puedeRecepcionExterior"
-            type="button"
-            label="Conformidad Destino"
-            icon="pi pi-check-circle"
-            severity="success"
-            size="small"
-            @click="$emit('recepcion-exterior', expediente)"
+            @click="$emit('documentos', expediente)"
           />
         </template>
 
-        <Button
-          v-if="!acc.isCerrado"
-          type="button"
-          label="Marcar Estado"
-          icon="pi pi-stopwatch"
-          severity="secondary"
-          outlined
-          size="small"
-          @click="$emit('marcar-estado-custom', expediente)"
-        />
-        <Button
-          v-if="acc.puedeFinalizarExpediente"
-          type="button"
-          label="Finalizar Expediente"
-          icon="pi pi-lock"
-          severity="success"
-          size="small"
-          @click="$emit('finalizar-expediente', expediente)"
-        />
-
-        <Button
-          v-if="acc.puedeEditarTransito"
-          type="button"
-          label="Editar Tránsito"
-          icon="pi pi-globe"
-          severity="secondary"
-          outlined
-          size="small"
-          @click="$emit('transito', expediente)"
-        />
-        <Button
-          type="button"
-          label="Documentos"
-          icon="pi pi-paperclip"
-          severity="secondary"
-          outlined
-          size="small"
-          @click="$emit('documentos', expediente)"
-        />
         <Button
           type="button"
           icon="pi pi-print"
@@ -283,64 +119,79 @@
       </div>
     </header>
 
-    <!-- Stepper horizontal de trazabilidad (sga-stepper-bar) -->
-    <div v-if="expediente" class="sga-stepper-bar informe-stepper-6">
-      <div
-        v-for="step in trazabilidadSteps"
-        :key="step.num"
-        :class="['sga-stepper-item', 'is-static', { 'is-completed': step.done, 'is-active': step.active }]"
-      >
-        <span class="sga-step-circle">
-          <i v-if="step.done" class="pi pi-check"></i>
-          <span v-else>{{ step.num }}</span>
-        </span>
-        <span class="sga-step-meta">
-          <span class="sga-step-kicker">{{ step.kicker }}</span>
-          <span class="sga-step-title">{{ step.title }}</span>
-        </span>
-      </div>
-    </div>
-
-    <!-- Workspace Split-Screen (sga-split-layout) -->
+    <!-- Workspace Split-Screen (sgaUI): separa Ficha del Expediente vs Flujo Operativo -->
     <div v-if="expediente" class="sga-split-layout">
       <div class="sga-split-main">
-        <AgenteInformeFichaCards :expediente="expediente" />
+        <!-- VISTA A: FLUJO OPERATIVO DE HITOS (solo en Gestión cuando se selecciona esa vista) -->
+        <AgenteHitosWorkflowCard
+          v-if="!readonly && activeDetailTab === 'flujo'"
+          class="no-print"
+          :expediente="expediente"
+          :readonly="false"
+          @trigger-action="handleWorkflowAction"
+        />
 
-        <!-- Bitácora Cronológica de Estados y Tiempos -->
-        <section class="sga-card-surface" style="margin-top: 1rem;">
-          <div class="sga-table-toolbar">
-            <div>
-              <span class="sga-kicker">MARCACIÓN DE ESTADOS Y TIEMPOS</span>
-              <h3 class="sga-chart-title">Historial Operativo del Expediente ({{ (expediente.eventos || []).length }})</h3>
+        <!-- VISTA B: FICHA E INFORMACIÓN DEL EXPEDIENTE + BITÁCORA -->
+        <template v-else>
+          <AgenteInformeFichaCards :expediente="expediente" />
+
+          <!-- Bitácora Cronológica de Estados y Tiempos (sga-tracking.css) -->
+          <section class="sga-card-surface sga-tracking-card">
+            <div class="sga-tracking-card-head">
+              <div class="sga-tracking-card-title">
+                <span class="sga-tracking-card-icon"><i class="pi pi-history"></i></span>
+                <div>
+                  <span class="sga-kicker">MARCACIÓN DE ESTADOS Y TIEMPOS</span>
+                  <h3 class="sga-tracking-card-heading">
+                    Historial Operativo del Expediente ({{ orderedEventos.length }})
+                  </h3>
+                </div>
+              </div>
+              <Button
+                v-if="!readonly && !acc.isCerrado"
+                type="button"
+                label="Registrar Hito Manual"
+                icon="pi pi-plus"
+                size="small"
+                outlined
+                class="no-print"
+                @click="$emit('marcar-estado-custom', expediente)"
+              />
             </div>
-            <Button
-              v-if="!acc.isCerrado"
-              type="button"
-              label="Registrar Hito Manual"
-              icon="pi pi-plus"
-              size="small"
-              outlined
-              @click="$emit('marcar-estado-custom', expediente)"
-            />
-          </div>
 
-          <div v-if="!expediente.eventos || expediente.eventos.length === 0" class="sga-cell-sub">
-            Aún no se registran eventos estructurados; utilice los botones superiores para marcar estados y tiempos.
-          </div>
+            <div v-if="orderedEventos.length === 0" class="sga-inline-empty">
+              <i class="pi pi-clock"></i>
+              <span>
+                Aún no se registran eventos estructurados; {{ readonly ? 'aparecerán aquí conforme avance la operación.' : 'ejecute los hitos operativos para alimentar la bitácora y el tracking B2B.' }}
+              </span>
+            </div>
 
-          <ul v-else class="eventos-list">
-            <li v-for="ev in expediente.eventos" :key="ev.idEvento" class="evento-item">
-              <div>
-                <strong>{{ ev.titulo }}</strong>
-                <div class="sga-cell-sub">{{ ev.descripcion || ev.codigoEstado }}</div>
-              </div>
-              <div class="evento-meta">
-                <span class="font-mono">{{ formatDateTimeSafe(ev.fechaEvento) }}</span>
-                <span class="sga-cell-sub">{{ ev.usuarioNombre || 'Agente' }}</span>
-              </div>
-            </li>
-          </ul>
-        </section>
+            <ol v-else class="sga-timeline-feed">
+              <li
+                v-for="(ev, idx) in orderedEventos"
+                :key="ev.idEvento || `${ev.codigoEstado}-${idx}`"
+                :class="['sga-timeline-event', { 'is-latest': idx === 0 }]"
+              >
+                <div class="sga-timeline-rail" aria-hidden="true">
+                  <span class="sga-timeline-node is-info">
+                    <i class="pi pi-clock"></i>
+                  </span>
+                </div>
+                <div class="sga-timeline-content">
+                  <div class="sga-timeline-top">
+                    <strong class="sga-timeline-title">{{ ev.titulo }}</strong>
+                    <span class="sga-timeline-time">{{ formatDateTimeSafe(ev.fechaEvento) }}</span>
+                  </div>
+                  <p v-if="ev.descripcion" class="sga-timeline-desc">{{ ev.descripcion }}</p>
+                  <span class="sga-timeline-actor">
+                    <i class="pi pi-user"></i>
+                    <span>{{ ev.usuarioNombre || 'Agente SGA' }}</span>
+                  </span>
+                </div>
+              </li>
+            </ol>
+          </section>
+        </template>
       </div>
 
       <div class="sga-split-aside">
@@ -351,19 +202,15 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import Button from 'primevue/button'
+import Select from 'primevue/select'
+import SelectButton from 'primevue/selectbutton'
 import Tag from 'primevue/tag'
+import AgenteHitosWorkflowCard from './informe/AgenteHitosWorkflowCard.vue'
 import AgenteInformeFichaCards from './informe/AgenteInformeFichaCards.vue'
 import AgenteInformeAside from './informe/AgenteInformeAside.vue'
-import {
-  getAccionesPermitidasAgente,
-  hasZarpeConfirmado,
-  hasArriboConfirmado,
-  hasCanalAsignado,
-  isDiligenciaCompletada,
-  isLevanteAutorizado
-} from '../utils/agenteWorkflowUtils'
+import { getAccionesPermitidasAgente } from '../utils/agenteWorkflowUtils'
 import {
   formatRegimenShort,
   formatEstadoAgente,
@@ -373,11 +220,15 @@ import {
 } from '../utils/agenteFormatters'
 
 const props = defineProps({
-  expediente: { type: Object, default: null }
+  expediente: { type: Object, default: null },
+  readonly: { type: Boolean, default: false },
+  openExpedientes: { type: Array, default: () => [] }
 })
 
-defineEmits([
+const emit = defineEmits([
   'back',
+  'switch-to-manage',
+  'select-expediente',
   'salida-origen',
   'arribo-destino',
   'transito',
@@ -402,6 +253,20 @@ defineEmits([
   'documentos'
 ])
 
+const activeDetailTab = ref(props.readonly ? 'ficha' : 'flujo')
+
+const detailTabOptions = [
+  { label: 'Flujo Operativo', value: 'flujo', icon: 'pi pi-sliders-h' },
+  { label: 'Ficha del Expediente', value: 'ficha', icon: 'pi pi-file' }
+]
+
+watch(
+  () => props.readonly,
+  (isReadonly) => {
+    activeDetailTab.value = isReadonly ? 'ficha' : 'flujo'
+  }
+)
+
 const formatDateTimeSafe = (val) => {
   if (!val) return '—'
   return String(val).replace('T', ' ').slice(0, 16)
@@ -409,25 +274,36 @@ const formatDateTimeSafe = (val) => {
 
 const acc = computed(() => getAccionesPermitidasAgente(props.expediente || {}))
 
-const trazabilidadSteps = computed(() => {
-  const exp = props.expediente
-  if (!exp) return []
+const switcherOptions = computed(() =>
+  (props.openExpedientes || []).map((e) => ({
+    value: e.idExpediente,
+    label: `${e.codigoExpediente} — ${e.clienteRazonSocial || 'Cliente'}`
+  }))
+)
 
-  const zarpe = hasZarpeConfirmado(exp)
-  const arribo = hasArriboConfirmado(exp)
-  const canal = hasCanalAsignado(exp)
-  const diligencia = isDiligenciaCompletada(exp)
-  const levante = isLevanteAutorizado(exp)
+const handleSwitchExpediente = (id) => {
+  const found = (props.openExpedientes || []).find((e) => e.idExpediente === id)
+  if (found) emit('select-expediente', found)
+}
 
-  return [
-    { num: '01', kicker: 'ASIGNACIÓN', title: 'Asignado', done: true, active: !zarpe },
-    { num: '02', kicker: 'ORIGEN', title: acc.value.isExport ? 'En Tránsito' : 'Salida Origen', done: zarpe, active: !zarpe },
-    { num: '03', kicker: 'ADUANA', title: acc.value.isExport ? 'Zona Primaria' : 'Arribo Destino', done: arribo, active: zarpe && !arribo },
-    { num: '04', kicker: 'SUNAT', title: canal ? `Canal ${exp.canalSunat}` : 'Canal SUNAT', done: canal, active: arribo && !canal },
-    { num: '05', kicker: 'AFORO', title: exp.canalSunat === 'VERDE' ? 'Exento (Verde)' : 'Diligencia', done: diligencia, active: canal && !diligencia },
-    { num: '06', kicker: 'LIBERACIÓN', title: 'Levante', done: levante, active: diligencia && !levante }
-  ]
+const orderedEventos = computed(() => {
+  const list = props.expediente?.eventos || []
+  return [...list].sort((a, b) => {
+    const ta = a?.fechaEvento ? new Date(a.fechaEvento).getTime() : 0
+    const tb = b?.fechaEvento ? new Date(b.fechaEvento).getTime() : 0
+    if (tb !== ta) return tb - ta
+    return (Number(b?.idEvento) || 0) - (Number(a?.idEvento) || 0)
+  })
 })
+
+const handleWorkflowAction = ({ event, payload, expediente }) => {
+  if (props.readonly || !event) return
+  if (event === 'marcar-estado' && payload) {
+    emit('marcar-estado', { expediente, ...payload })
+    return
+  }
+  emit(event, expediente)
+}
 
 const imprimirInforme = () => {
   window.print()
@@ -462,57 +338,9 @@ const imprimirInforme = () => {
   flex-wrap: wrap;
 }
 
-.informe-stepper-6 {
-  grid-template-columns: repeat(6, minmax(115px, 1fr));
-}
-
-.sga-stepper-item.is-static {
-  cursor: default;
-}
-
-.sga-stepper-item.is-static:hover {
-  background: transparent;
-}
-
-.eventos-list {
-  list-style: none;
-  margin: 0.75rem 0 0 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
-}
-
-.evento-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 1rem;
-  padding: 0.65rem 0.8rem;
-  border-radius: 8px;
-  border: 1px solid var(--color-border);
-  background: var(--color-bg-subtle);
-}
-
-.evento-meta {
-  text-align: right;
-  display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
-  font-size: 0.78rem;
-  white-space: nowrap;
-}
-
-@media (max-width: 1100px) {
-  .informe-stepper-6 {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 640px) {
-  .informe-stepper-6 {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
+.informe-exp-switcher {
+  min-width: 240px;
+  max-width: 320px;
 }
 
 @media print {

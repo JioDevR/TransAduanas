@@ -5,7 +5,6 @@ import { useNotification } from '@/shared/composables/useNotification'
 import { openBlobInNewTab } from '@/shared/utils/download'
 import sedeService from '@/features/admin/sedes/services/sedeService'
 import catalogoService from '@/features/admin/catalogos/services/catalogoService'
-import { transporteFlotaService } from '@/features/transporte/services/transporteFlotaService'
 import { computeGerenciaDashboardMetrics, unwrapListPayload } from '../utils/gerenciaMetricsUtils'
 
 const PDF_DOWNLOADERS = {
@@ -45,17 +44,13 @@ export function useGerenciaDashboard() {
   const puertosList = ref([])
   const tiposCargaList = ref([])
   const mercanciasList = ref([])
-  const unidadesList = ref([])
-  const conductoresList = ref([])
 
   const metrics = computed(() =>
     computeGerenciaDashboardMetrics({
       sedes: sedesList.value,
       puertos: puertosList.value,
       tiposCarga: tiposCargaList.value,
-      mercancias: mercanciasList.value,
-      unidades: unidadesList.value,
-      conductores: conductoresList.value
+      mercancias: mercanciasList.value
     })
   )
 
@@ -67,17 +62,7 @@ export function useGerenciaDashboard() {
         { key: 'Sedes', target: sedesList, promise: sedeService.getSedes(false) },
         { key: 'Puertos', target: puertosList, promise: catalogoService.getPuertos(false) },
         { key: 'Tipos de Carga', target: tiposCargaList, promise: catalogoService.getTiposCarga(false) },
-        { key: 'Mercancías', target: mercanciasList, promise: catalogoService.getMercancias(false) },
-        {
-          key: 'Flota',
-          target: unidadesList,
-          promise: transporteFlotaService.getUnidades({ soloActivos: false })
-        },
-        {
-          key: 'Conductores',
-          target: conductoresList,
-          promise: transporteFlotaService.getConductores(false)
-        }
+        { key: 'Mercancías', target: mercanciasList, promise: catalogoService.getMercancias(false) }
       ]
 
       const results = await Promise.allSettled(descriptors.map((d) => d.promise))
@@ -109,14 +94,6 @@ export function useGerenciaDashboard() {
   }
 
   const goToSubOption = (option) => {
-    if (option === 'flota' || option === 'conductores') {
-      const targetTab = option === 'flota' ? 'unidades' : 'conductores'
-      navigationStore.setActiveModule('transporte-flota')
-      navigationStore.setTransporteFlotaSubOption(targetTab)
-      router.push(`/transporte-flota?tab=${targetTab}`)
-      return
-    }
-
     const pathMap = {
       dashboard: '/gerencia-general/dashboard',
       sedes: '/gerencia-general/sedes',

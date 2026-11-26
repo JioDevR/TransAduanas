@@ -31,13 +31,6 @@ vi.mock('@/features/admin/catalogos/services/catalogoService', () => ({
   }
 }))
 
-vi.mock('@/features/transporte/services/transporteFlotaService', () => ({
-  transporteFlotaService: {
-    getUnidades: vi.fn().mockResolvedValue([]),
-    getConductores: vi.fn().mockResolvedValue([])
-  }
-}))
-
 import GerenciaDashboardView from '../GerenciaDashboardView.vue'
 import { useAuthStore } from '@/features/auth/stores/authStore'
 
@@ -70,11 +63,11 @@ describe('GerenciaDashboardView (sgaUI)', () => {
     expect(html).not.toContain('<h1')
     expect(html).not.toContain('Dashboard Ejecutivo de Gerencia')
 
-    // Accesos a los 4 maestros reales de Gerencia General + puente a Flota
+    // Accesos a los 4 maestros reales de Gerencia General
     expect(html).toContain('Sedes')
     expect(html).toContain('Puertos &amp; Terminales')
     expect(html).toContain('Tipos de Carga')
     expect(html).toContain('Mercancías &amp; Partidas')
-    expect(html).toContain('Flota y Conductores')
+    expect(html).not.toContain('Flota y Conductores')
   })
 })

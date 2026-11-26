@@ -1,0 +1,1322 @@
+<?xml version="1.0" ?>
+<mxfile host="app.diagrams.net" type="device">
+  <diagram id="SGAdb-Actual-ERD" name="SGAdb - Esquema Actualizado (3FN-6FN)">
+    <mxGraphModel dx="1800" dy="1000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2800" pageHeight="2400" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="a_2" value="auditoria_evento" style="shape=table;startSize=32;container=1;collapsible=1;childLayout=tableLayout;fixedRows=1;rowLines=0;fontStyle=1;align=center;resizeLast=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="2320" y="40" width="340" height="307" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_3" value="[PK] id_evento : bigint" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=1;fontSize=11;" vertex="1" parent="a_2">
+          <mxGeometry y="32" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_4" value="fecha : datetime" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_2">
+          <mxGeometry y="57" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_5" value="usuario_actor : varchar(80)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_2">
+          <mxGeometry y="82" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_6" value="rol_actor? : varchar(50)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_2">
+          <mxGeometry y="107" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_7" value="modulo : varchar(50)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_2">
+          <mxGeometry y="132" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_8" value="accion : varchar(60)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_2">
+          <mxGeometry y="157" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_9" value="entidad? : varchar(60)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_2">
+          <mxGeometry y="182" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_10" value="id_entidad? : varchar(50)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_2">
+          <mxGeometry y="207" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_11" value="detalle? : varchar(500)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_2">
+          <mxGeometry y="232" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_12" value="ip_origen? : varchar(64)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_2">
+          <mxGeometry y="257" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_13" value="resultado : varchar(20)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_2">
+          <mxGeometry y="282" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_14" value="catalogo_banco" style="shape=table;startSize=32;container=1;collapsible=1;childLayout=tableLayout;fixedRows=1;rowLines=0;fontStyle=1;align=center;resizeLast=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="800" y="40" width="340" height="182" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_15" value="[PK] id_banco : int" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=1;fontSize=11;" vertex="1" parent="a_14">
+          <mxGeometry y="32" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_16" value="[UQ] codigo : varchar(40)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_14">
+          <mxGeometry y="57" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_17" value="nombre : varchar(100)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_14">
+          <mxGeometry y="82" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_18" value="aplica_origen : tinyint(1)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_14">
+          <mxGeometry y="107" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_19" value="aplica_destino : tinyint(1)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_14">
+          <mxGeometry y="132" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_20" value="estado : varchar(20)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_14">
+          <mxGeometry y="157" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_21" value="catalogo_categoria_documento" style="shape=table;startSize=32;container=1;collapsible=1;childLayout=tableLayout;fixedRows=1;rowLines=0;fontStyle=1;align=center;resizeLast=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1180" y="240" width="340" height="132" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_22" value="[PK] id_categoria_documento : int" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=1;fontSize=11;" vertex="1" parent="a_21">
+          <mxGeometry y="32" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_23" value="[UQ] codigo : varchar(50)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_21">
+          <mxGeometry y="57" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_24" value="nombre : varchar(120)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_21">
+          <mxGeometry y="82" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_25" value="estado : varchar(20)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_21">
+          <mxGeometry y="107" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_26" value="catalogo_categoria_mercancia" style="shape=table;startSize=32;container=1;collapsible=1;childLayout=tableLayout;fixedRows=1;rowLines=0;fontStyle=1;align=center;resizeLast=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="420" y="40" width="340" height="132" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_27" value="[PK] id_categoria : int" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=1;fontSize=11;" vertex="1" parent="a_26">
+          <mxGeometry y="32" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_28" value="[UQ] codigo : varchar(50)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_26">
+          <mxGeometry y="57" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_29" value="nombre : varchar(80)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_26">
+          <mxGeometry y="82" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_30" value="estado : varchar(20)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_26">
+          <mxGeometry y="107" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_31" value="catalogo_cuenta_recaudadora" style="shape=table;startSize=32;container=1;collapsible=1;childLayout=tableLayout;fixedRows=1;rowLines=0;fontStyle=1;align=center;resizeLast=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="800" y="270" width="340" height="282" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_32" value="[PK] id_cuenta : int" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=1;fontSize=11;" vertex="1" parent="a_31">
+          <mxGeometry y="32" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_33" value="[FK] id_banco : int" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=2;fontSize=11;" vertex="1" parent="a_31">
+          <mxGeometry y="57" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_34" value="[UQ] codigo : varchar(50)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_31">
+          <mxGeometry y="82" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_35" value="nombre : varchar(120)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_31">
+          <mxGeometry y="107" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_36" value="moneda : varchar(5)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_31">
+          <mxGeometry y="132" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_37" value="numero_cuenta : varchar(50)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_31">
+          <mxGeometry y="157" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_38" value="cci? : varchar(50)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_31">
+          <mxGeometry y="182" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_39" value="aplica_portal_b2b : tinyint(1)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_31">
+          <mxGeometry y="207" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_40" value="aplica_sga : tinyint(1)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_31">
+          <mxGeometry y="232" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_41" value="estado : varchar(20)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_31">
+          <mxGeometry y="257" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_42" value="catalogo_departamento" style="shape=table;startSize=32;container=1;collapsible=1;childLayout=tableLayout;fixedRows=1;rowLines=0;fontStyle=1;align=center;resizeLast=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="40" y="40" width="340" height="107" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_43" value="[PK] id_departamento : int" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=1;fontSize=11;" vertex="1" parent="a_42">
+          <mxGeometry y="32" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_44" value="[UQ] nombre : varchar(60)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_42">
+          <mxGeometry y="57" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_45" value="estado : varchar(20)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_42">
+          <mxGeometry y="82" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_46" value="catalogo_entidad_reguladora" style="shape=table;startSize=32;container=1;collapsible=1;childLayout=tableLayout;fixedRows=1;rowLines=0;fontStyle=1;align=center;resizeLast=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="420" y="220" width="340" height="132" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_47" value="[PK] id_entidad : int" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=1;fontSize=11;" vertex="1" parent="a_46">
+          <mxGeometry y="32" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_48" value="[UQ] sigla : varchar(50)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_46">
+          <mxGeometry y="57" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_49" value="nombre : varchar(150)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_46">
+          <mxGeometry y="82" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_50" value="estado : varchar(20)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_46">
+          <mxGeometry y="107" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_51" value="catalogo_mercancia" style="shape=table;startSize=32;container=1;collapsible=1;childLayout=tableLayout;fixedRows=1;rowLines=0;fontStyle=1;align=center;resizeLast=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="420" y="400" width="340" height="282" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_52" value="[PK] id_mercancia : int" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=1;fontSize=11;" vertex="1" parent="a_51">
+          <mxGeometry y="32" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_53" value="[UQ] codigo : varchar(30)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_51">
+          <mxGeometry y="57" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_54" value="nombre : varchar(150)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_51">
+          <mxGeometry y="82" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_55" value="[FK] id_categoria? : int" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=2;fontSize=11;" vertex="1" parent="a_51">
+          <mxGeometry y="107" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_56" value="categoria : varchar(80)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_51">
+          <mxGeometry y="132" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_57" value="requiere_permiso : tinyint(1)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_51">
+          <mxGeometry y="157" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_58" value="[FK] id_entidad_reguladora? : int" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=2;fontSize=11;" vertex="1" parent="a_51">
+          <mxGeometry y="182" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_59" value="entidad_reguladora? : varchar(80)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_51">
+          <mxGeometry y="207" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_60" value="arancel_base_pct : decimal(5,2)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_51">
+          <mxGeometry y="232" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_61" value="estado : varchar(20)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_51">
+          <mxGeometry y="257" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_62" value="catalogo_metodo_pago" style="shape=table;startSize=32;container=1;collapsible=1;childLayout=tableLayout;fixedRows=1;rowLines=0;fontStyle=1;align=center;resizeLast=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="800" y="580" width="340" height="207" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_63" value="[PK] id_metodo_pago : int" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=1;fontSize=11;" vertex="1" parent="a_62">
+          <mxGeometry y="32" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_64" value="[UQ] codigo : varchar(50)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_62">
+          <mxGeometry y="57" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_65" value="nombre : varchar(100)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_62">
+          <mxGeometry y="82" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_66" value="aplica_cotizacion : tinyint(1)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_62">
+          <mxGeometry y="107" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_67" value="aplica_liquidacion : tinyint(1)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_62">
+          <mxGeometry y="132" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_68" value="aplica_portal_b2b : tinyint(1)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_62">
+          <mxGeometry y="157" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_69" value="estado : varchar(20)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_62">
+          <mxGeometry y="182" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_70" value="catalogo_motivo_observacion" style="shape=table;startSize=32;container=1;collapsible=1;childLayout=tableLayout;fixedRows=1;rowLines=0;fontStyle=1;align=center;resizeLast=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1180" y="40" width="340" height="157" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_71" value="[PK] id_motivo : int" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=1;fontSize=11;" vertex="1" parent="a_70">
+          <mxGeometry y="32" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_72" value="[UQ] codigo : varchar(50)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_70">
+          <mxGeometry y="57" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_73" value="descripcion : varchar(200)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_70">
+          <mxGeometry y="82" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_74" value="modulo : varchar(30)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_70">
+          <mxGeometry y="107" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_75" value="estado : varchar(20)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_70">
+          <mxGeometry y="132" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_76" value="catalogo_provincia" style="shape=table;startSize=32;container=1;collapsible=1;childLayout=tableLayout;fixedRows=1;rowLines=0;fontStyle=1;align=center;resizeLast=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="40" y="200" width="340" height="132" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_77" value="[PK] id_provincia : int" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=1;fontSize=11;" vertex="1" parent="a_76">
+          <mxGeometry y="32" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_78" value="[FK] id_departamento : int" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=2;fontSize=11;" vertex="1" parent="a_76">
+          <mxGeometry y="57" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_79" value="nombre : varchar(60)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_76">
+          <mxGeometry y="82" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_80" value="estado : varchar(20)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_76">
+          <mxGeometry y="107" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_81" value="catalogo_puerto" style="shape=table;startSize=32;container=1;collapsible=1;childLayout=tableLayout;fixedRows=1;rowLines=0;fontStyle=1;align=center;resizeLast=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="40" y="380" width="340" height="182" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_82" value="[PK] id_puerto : int" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=1;fontSize=11;" vertex="1" parent="a_81">
+          <mxGeometry y="32" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_83" value="[UQ] codigo_puerto : varchar(20)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_81">
+          <mxGeometry y="57" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_84" value="nombre : varchar(150)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_81">
+          <mxGeometry y="82" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_85" value="pais : varchar(50)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_81">
+          <mxGeometry y="107" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_86" value="tipo : varchar(30)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_81">
+          <mxGeometry y="132" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_87" value="estado : varchar(20)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_81">
+          <mxGeometry y="157" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_88" value="catalogo_tipo_carga" style="shape=table;startSize=32;container=1;collapsible=1;childLayout=tableLayout;fixedRows=1;rowLines=0;fontStyle=1;align=center;resizeLast=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="40" y="620" width="340" height="157" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_89" value="[PK] id_tipo_carga : int" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=1;fontSize=11;" vertex="1" parent="a_88">
+          <mxGeometry y="32" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_90" value="[UQ] codigo : varchar(30)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_88">
+          <mxGeometry y="57" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_91" value="nombre : varchar(100)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_88">
+          <mxGeometry y="82" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_92" value="descripcion? : varchar(255)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_88">
+          <mxGeometry y="107" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_93" value="estado : varchar(20)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_88">
+          <mxGeometry y="132" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_94" value="cliente" style="shape=table;startSize=32;container=1;collapsible=1;childLayout=tableLayout;fixedRows=1;rowLines=0;fontStyle=1;align=center;resizeLast=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="40" y="860" width="340" height="282" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_95" value="[PK] id_cliente : int" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=1;fontSize=11;" vertex="1" parent="a_94">
+          <mxGeometry y="32" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_96" value="tipo_documento : varchar(10)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_94">
+          <mxGeometry y="57" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_97" value="[UQ] numero_documento : varchar(15)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_94">
+          <mxGeometry y="82" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_98" value="razon_social : varchar(150)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_94">
+          <mxGeometry y="107" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_99" value="contacto_representante? : varchar(100)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_94">
+          <mxGeometry y="132" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_100" value="direccion_fiscal? : varchar(200)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_94">
+          <mxGeometry y="157" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_101" value="correo_contacto : varchar(100)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_94">
+          <mxGeometry y="182" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_102" value="telefono_contacto? : varchar(20)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_94">
+          <mxGeometry y="207" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_103" value="estado_cliente : varchar(30)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_94">
+          <mxGeometry y="232" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_104" value="estado_activo : tinyint(1)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_94">
+          <mxGeometry y="257" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_105" value="comprobante_factura" style="shape=table;startSize=32;container=1;collapsible=1;childLayout=tableLayout;fixedRows=1;rowLines=0;fontStyle=1;align=center;resizeLast=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1980" y="560" width="340" height="657" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_106" value="[PK] id_comprobante : int" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=1;fontSize=11;" vertex="1" parent="a_105">
+          <mxGeometry y="32" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_107" value="tipo_comprobante : varchar(20)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_105">
+          <mxGeometry y="57" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_108" value="serie : varchar(10)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_105">
+          <mxGeometry y="82" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_109" value="correlativo : int" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_105">
+          <mxGeometry y="107" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_110" value="[UQ] numero_completo : varchar(25)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_105">
+          <mxGeometry y="132" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_111" value="origen_tipo : varchar(30)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_105">
+          <mxGeometry y="157" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_112" value="[FK] id_pago_cotizacion? : int" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=2;fontSize=11;" vertex="1" parent="a_105">
+          <mxGeometry y="182" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_113" value="[FK] id_liquidacion? : int" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=2;fontSize=11;" vertex="1" parent="a_105">
+          <mxGeometry y="207" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_114" value="[FK] id_cliente : int" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=2;fontSize=11;" vertex="1" parent="a_105">
+          <mxGeometry y="232" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_115" value="cliente_razon_social : varchar(200)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_105">
+          <mxGeometry y="257" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_116" value="cliente_numero_documento : varchar(25)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_105">
+          <mxGeometry y="282" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_117" value="cliente_direccion? : varchar(255)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_105">
+          <mxGeometry y="307" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_118" value="codigo_referencia : varchar(60)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_105">
+          <mxGeometry y="332" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_119" value="concepto : text" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_105">
+          <mxGeometry y="357" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_120" value="moneda : varchar(5)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_105">
+          <mxGeometry y="382" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_121" value="tipo_cambio : decimal(8,4)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_105">
+          <mxGeometry y="407" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_122" value="inafecto : decimal(12,2)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_105">
+          <mxGeometry y="432" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_123" value="subtotal_gravado : decimal(12,2)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_105">
+          <mxGeometry y="457" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_124" value="igv_monto : decimal(12,2)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_105">
+          <mxGeometry y="482" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_125" value="total_comprobante : decimal(12,2)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_105">
+          <mxGeometry y="507" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_126" value="total_equivalente_pen : decimal(12,2)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_105">
+          <mxGeometry y="532" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_127" value="estado : varchar(20)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_105">
+          <mxGeometry y="557" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_128" value="fecha_emision : datetime" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_105">
+          <mxGeometry y="582" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_129" value="[FK] id_usuario_emisor? : int" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=2;fontSize=11;" vertex="1" parent="a_105">
+          <mxGeometry y="607" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_130" value="observaciones? : text" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_105">
+          <mxGeometry y="632" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_131" value="control_almacen" style="shape=table;startSize=32;container=1;collapsible=1;childLayout=tableLayout;fixedRows=1;rowLines=0;fontStyle=1;align=center;resizeLast=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="820" y="1660" width="340" height="457" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_132" value="[PK] id_control_almacen : int" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=1;fontSize=11;" vertex="1" parent="a_131">
+          <mxGeometry y="32" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_133" value="[FK,UQ] id_expediente : int" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=2;fontSize=11;" vertex="1" parent="a_131">
+          <mxGeometry y="57" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_134" value="deposito_temporal : varchar(100)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_131">
+          <mxGeometry y="82" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_135" value="ubicacion_bahia? : varchar(50)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_131">
+          <mxGeometry y="107" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_136" value="tipo_ingreso : varchar(30)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_131">
+          <mxGeometry y="132" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_137" value="finalidad_almacenaje : varchar(30)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_131">
+          <mxGeometry y="157" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_138" value="fecha_ingreso : datetime" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_131">
+          <mxGeometry y="182" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_139" value="dias_libres_almacen : int" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_131">
+          <mxGeometry y="207" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_140" value="fecha_limite_retiro : date" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_131">
+          <mxGeometry y="232" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_141" value="cantidad_bultos : int" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_131">
+          <mxGeometry y="257" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_142" value="peso_bruto_kg : decimal(10,2)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_131">
+          <mxGeometry y="282" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_143" value="ticket_pesaje_vgm? : varchar(50)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_131">
+          <mxGeometry y="307" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_144" value="precinto_conforme : tinyint(1)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_131">
+          <mxGeometry y="332" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_145" value="autorizado_movimiento : tinyint(1)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_131">
+          <mxGeometry y="357" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_146" value="fecha_salida? : datetime" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_131">
+          <mxGeometry y="382" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_147" value="estado_almacen : varchar(30)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_131">
+          <mxGeometry y="407" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_148" value="observaciones? : text" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_131">
+          <mxGeometry y="432" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_149" value="cotizacion" style="shape=table;startSize=32;container=1;collapsible=1;childLayout=tableLayout;fixedRows=1;rowLines=0;fontStyle=1;align=center;resizeLast=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="420" y="760" width="340" height="907" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_150" value="[PK] id_cotizacion : int" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=1;fontSize=11;" vertex="1" parent="a_149">
+          <mxGeometry y="32" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_151" value="[UQ] codigo_cotizacion : varchar(20)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_149">
+          <mxGeometry y="57" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_152" value="[FK] id_cliente : int" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=2;fontSize=11;" vertex="1" parent="a_149">
+          <mxGeometry y="82" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_153" value="[FK] id_usuario_comercial? : int" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=2;fontSize=11;" vertex="1" parent="a_149">
+          <mxGeometry y="107" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_154" value="[FK] id_mercancia? : int" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=2;fontSize=11;" vertex="1" parent="a_149">
+          <mxGeometry y="132" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_155" value="[FK] id_tipo_carga? : int" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=2;fontSize=11;" vertex="1" parent="a_149">
+          <mxGeometry y="157" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_156" value="regimen_aduanero : varchar(50)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_149">
+          <mxGeometry y="182" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_157" value="[FK] id_puerto_envio? : int" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=2;fontSize=11;" vertex="1" parent="a_149">
+          <mxGeometry y="207" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_158" value="[FK] id_puerto_destino? : int" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=2;fontSize=11;" vertex="1" parent="a_149">
+          <mxGeometry y="232" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_159" value="servicio_transporte : tinyint(1)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_149">
+          <mxGeometry y="257" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_160" value="[FK] id_provincia_origen? : int" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=2;fontSize=11;" vertex="1" parent="a_149">
+          <mxGeometry y="282" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_161" value="origen_departamento? : varchar(60)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_149">
+          <mxGeometry y="307" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_162" value="origen_provincia? : varchar(60)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_149">
+          <mxGeometry y="332" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_163" value="[FK] id_provincia_destino? : int" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=2;fontSize=11;" vertex="1" parent="a_149">
+          <mxGeometry y="357" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_164" value="destino_departamento? : varchar(60)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_149">
+          <mxGeometry y="382" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_165" value="destino_provincia? : varchar(60)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_149">
+          <mxGeometry y="407" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_166" value="costo_transporte_interno : decimal(12,2)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_149">
+          <mxGeometry y="432" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_167" value="valor_fob : decimal(12,2)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_149">
+          <mxGeometry y="457" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_168" value="monto_flete : decimal(12,2)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_149">
+          <mxGeometry y="482" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_169" value="monto_seguro_estimado : decimal(12,2)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_149">
+          <mxGeometry y="507" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_170" value="monto_honorarios : decimal(12,2)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_149">
+          <mxGeometry y="532" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_171" value="tasa_advalorem : decimal(5,2)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_149">
+          <mxGeometry y="557" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_172" value="tasa_percepcion : decimal(5,2)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_149">
+          <mxGeometry y="582" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_173" value="monto_tributos : decimal(12,2)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_149">
+          <mxGeometry y="607" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_174" value="total_cotizado : decimal(12,2)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_149">
+          <mxGeometry y="632" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_175" value="validez_dias : int" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_149">
+          <mxGeometry y="657" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_176" value="fecha_emision : date" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_149">
+          <mxGeometry y="682" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_177" value="estado : varchar(20)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_149">
+          <mxGeometry y="707" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_178" value="[FK] id_agente_revisor? : int" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=2;fontSize=11;" vertex="1" parent="a_149">
+          <mxGeometry y="732" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_179" value="fecha_revision? : datetime" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_149">
+          <mxGeometry y="757" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_180" value="motivo_observacion? : text" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_149">
+          <mxGeometry y="782" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_181" value="observaciones? : text" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_149">
+          <mxGeometry y="807" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_182" value="estado_pago : varchar(25)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_149">
+          <mxGeometry y="832" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_183" value="total_abonado : decimal(12,2)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_149">
+          <mxGeometry y="857" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_184" value="saldo_pendiente : decimal(12,2)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_149">
+          <mxGeometry y="882" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_185" value="cotizacion_pago" style="shape=table;startSize=32;container=1;collapsible=1;childLayout=tableLayout;fixedRows=1;rowLines=0;fontStyle=1;align=center;resizeLast=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="820" y="860" width="340" height="632" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_186" value="[PK] id_pago : int" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=1;fontSize=11;" vertex="1" parent="a_185">
+          <mxGeometry y="32" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_187" value="[FK] id_cotizacion : int" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=2;fontSize=11;" vertex="1" parent="a_185">
+          <mxGeometry y="57" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_188" value="[UQ] codigo_pago : varchar(30)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_185">
+          <mxGeometry y="82" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_189" value="tipo_abono : varchar(30)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_185">
+          <mxGeometry y="107" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_190" value="monto_abonado : decimal(12,2)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_185">
+          <mxGeometry y="132" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_191" value="moneda : varchar(5)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_185">
+          <mxGeometry y="157" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_192" value="tipo_cambio : decimal(8,4)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_185">
+          <mxGeometry y="182" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_193" value="monto_equivalente_pen : decimal(12,2)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_185">
+          <mxGeometry y="207" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_194" value="[FK] id_metodo_pago? : int" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=2;fontSize=11;" vertex="1" parent="a_185">
+          <mxGeometry y="232" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_195" value="metodo_pago : varchar(50)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_185">
+          <mxGeometry y="257" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_196" value="[FK] id_banco_origen? : int" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=2;fontSize=11;" vertex="1" parent="a_185">
+          <mxGeometry y="282" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_197" value="banco_origen? : varchar(80)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_185">
+          <mxGeometry y="307" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_198" value="[FK] id_banco_destino? : int" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=2;fontSize=11;" vertex="1" parent="a_185">
+          <mxGeometry y="332" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_199" value="[FK] id_cuenta_recaudadora? : int" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=2;fontSize=11;" vertex="1" parent="a_185">
+          <mxGeometry y="357" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_200" value="banco_destino : varchar(80)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_185">
+          <mxGeometry y="382" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_201" value="numero_operacion : varchar(60)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_185">
+          <mxGeometry y="407" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_202" value="fecha_operacion : date" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_185">
+          <mxGeometry y="432" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_203" value="[FK] id_documento_comprobante? : int" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=2;fontSize=11;" vertex="1" parent="a_185">
+          <mxGeometry y="457" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_204" value="estado_pago : varchar(25)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_185">
+          <mxGeometry y="482" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_205" value="[FK] id_usuario_finanzas? : int" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=2;fontSize=11;" vertex="1" parent="a_185">
+          <mxGeometry y="507" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_206" value="fecha_validacion? : datetime" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_185">
+          <mxGeometry y="532" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_207" value="observacion_finanzas? : text" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_185">
+          <mxGeometry y="557" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_208" value="[FK] id_usuario_registro? : int" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=2;fontSize=11;" vertex="1" parent="a_185">
+          <mxGeometry y="582" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_209" value="fecha_registro : datetime" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_185">
+          <mxGeometry y="607" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_210" value="documento_adjunto" style="shape=table;startSize=32;container=1;collapsible=1;childLayout=tableLayout;fixedRows=1;rowLines=0;fontStyle=1;align=center;resizeLast=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1220" y="560" width="340" height="457" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_211" value="[PK] id_documento : int" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=1;fontSize=11;" vertex="1" parent="a_210">
+          <mxGeometry y="32" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_212" value="nombre_original : varchar(255)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_210">
+          <mxGeometry y="57" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_213" value="[UQ] nombre_almacenado : varchar(255)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_210">
+          <mxGeometry y="82" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_214" value="formato_mime : varchar(120)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_210">
+          <mxGeometry y="107" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_215" value="extension : varchar(20)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_210">
+          <mxGeometry y="132" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_216" value="tamano_bytes : bigint" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_210">
+          <mxGeometry y="157" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_217" value="ruta_almacenamiento : varchar(500)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_210">
+          <mxGeometry y="182" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_218" value="[FK] id_categoria_documento? : int" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=2;fontSize=11;" vertex="1" parent="a_210">
+          <mxGeometry y="207" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_219" value="categoria : varchar(50)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_210">
+          <mxGeometry y="232" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_220" value="descripcion? : varchar(255)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_210">
+          <mxGeometry y="257" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_221" value="entidad_tipo : varchar(40)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_210">
+          <mxGeometry y="282" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_222" value="[FK] id_cotizacion? : int" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=2;fontSize=11;" vertex="1" parent="a_210">
+          <mxGeometry y="307" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_223" value="[FK] id_expediente? : int" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=2;fontSize=11;" vertex="1" parent="a_210">
+          <mxGeometry y="332" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_224" value="[FK] id_cliente? : int" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=2;fontSize=11;" vertex="1" parent="a_210">
+          <mxGeometry y="357" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_225" value="[FK] id_usuario_creador : int" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=2;fontSize=11;" vertex="1" parent="a_210">
+          <mxGeometry y="382" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_226" value="fecha_creacion : datetime" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_210">
+          <mxGeometry y="407" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_227" value="activo : tinyint(1)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_210">
+          <mxGeometry y="432" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_228" value="expediente" style="shape=table;startSize=32;container=1;collapsible=1;childLayout=tableLayout;fixedRows=1;rowLines=0;fontStyle=1;align=center;resizeLast=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="420" y="1660" width="340" height="382" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_229" value="[PK] id_expediente : int" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=1;fontSize=11;" vertex="1" parent="a_228">
+          <mxGeometry y="32" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_230" value="[UQ] codigo_expediente : varchar(20)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_228">
+          <mxGeometry y="57" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_231" value="[FK,UQ] id_cotizacion : int" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=2;fontSize=11;" vertex="1" parent="a_228">
+          <mxGeometry y="82" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_232" value="[FK] id_cliente : int" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=2;fontSize=11;" vertex="1" parent="a_228">
+          <mxGeometry y="107" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_233" value="[FK] id_mercancia? : int" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=2;fontSize=11;" vertex="1" parent="a_228">
+          <mxGeometry y="132" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_234" value="[FK] id_tipo_carga? : int" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=2;fontSize=11;" vertex="1" parent="a_228">
+          <mxGeometry y="157" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_235" value="[FK] id_agente_aduanero? : int" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=2;fontSize=11;" vertex="1" parent="a_228">
+          <mxGeometry y="182" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_236" value="fecha_asignacion? : datetime" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_228">
+          <mxGeometry y="207" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_237" value="en_espera_transito : tinyint(1)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_228">
+          <mxGeometry y="232" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_238" value="en_revision_aduana : tinyint(1)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_228">
+          <mxGeometry y="257" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_239" value="estado_expediente : varchar(30)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_228">
+          <mxGeometry y="282" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_240" value="fecha_apertura : datetime" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_228">
+          <mxGeometry y="307" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_241" value="fecha_cierre? : datetime" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_228">
+          <mxGeometry y="332" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_242" value="observaciones? : text" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_228">
+          <mxGeometry y="357" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_243" value="expediente_canal_sunat" style="shape=table;startSize=32;container=1;collapsible=1;childLayout=tableLayout;fixedRows=1;rowLines=0;fontStyle=1;align=center;resizeLast=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1220" y="1840" width="340" height="207" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_244" value="[PK,FK] id_expediente : int" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=1;fontSize=11;" vertex="1" parent="a_243">
+          <mxGeometry y="32" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_245" value="[UQ] numero_dam? : varchar(30)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_243">
+          <mxGeometry y="57" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_246" value="canal_sunat : varchar(20)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_243">
+          <mxGeometry y="82" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_247" value="fecha_asignacion_canal? : datetime" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_243">
+          <mxGeometry y="107" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_248" value="notificado_agente : tinyint(1)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_243">
+          <mxGeometry y="132" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_249" value="fecha_notificacion? : datetime" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_243">
+          <mxGeometry y="157" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_250" value="fecha_levante_autorizacion? : datetime" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_243">
+          <mxGeometry y="182" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_251" value="expediente_conformidad_entrega" style="shape=table;startSize=32;container=1;collapsible=1;childLayout=tableLayout;fixedRows=1;rowLines=0;fontStyle=1;align=center;resizeLast=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1600" y="1740" width="340" height="257" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_252" value="[PK,FK] id_expediente : int" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=1;fontSize=11;" vertex="1" parent="a_251">
+          <mxGeometry y="32" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_253" value="id_documento_conformidad_destino? : int" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_251">
+          <mxGeometry y="57" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_254" value="entregado_almacen_verde : tinyint(1)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_251">
+          <mxGeometry y="82" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_255" value="fecha_entrega_almacen_verde? : datetime" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_251">
+          <mxGeometry y="107" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_256" value="informe_conformidad_texto? : text" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_251">
+          <mxGeometry y="132" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_257" value="fecha_informe_conformidad? : datetime" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_251">
+          <mxGeometry y="157" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_258" value="receptor_conformidad_nombre? : varchar(150)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_251">
+          <mxGeometry y="182" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_259" value="receptor_conformidad_dni? : varchar(30)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_251">
+          <mxGeometry y="207" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_260" value="id_documento_informe_conformidad? : int" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_251">
+          <mxGeometry y="232" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_261" value="expediente_contacto_exterior" style="shape=table;startSize=32;container=1;collapsible=1;childLayout=tableLayout;fixedRows=1;rowLines=0;fontStyle=1;align=center;resizeLast=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1220" y="1280" width="340" height="182" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_262" value="[PK,FK] id_expediente : int" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=1;fontSize=11;" vertex="1" parent="a_261">
+          <mxGeometry y="32" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_263" value="contacto_exterior_nombre? : varchar(150)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_261">
+          <mxGeometry y="57" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_264" value="contacto_exterior_telefono? : varchar(30)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_261">
+          <mxGeometry y="82" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_265" value="contacto_exterior_correo? : varchar(100)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_261">
+          <mxGeometry y="107" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_266" value="verificacion_origen_ok : tinyint(1)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_261">
+          <mxGeometry y="132" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_267" value="fecha_verificacion_origen? : datetime" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_261">
+          <mxGeometry y="157" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_268" value="expediente_evento" style="shape=table;startSize=32;container=1;collapsible=1;childLayout=tableLayout;fixedRows=1;rowLines=0;fontStyle=1;align=center;resizeLast=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="420" y="2080" width="340" height="257" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_269" value="[PK] id_evento : int" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=1;fontSize=11;" vertex="1" parent="a_268">
+          <mxGeometry y="32" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_270" value="[FK] id_expediente : int" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=2;fontSize=11;" vertex="1" parent="a_268">
+          <mxGeometry y="57" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_271" value="[FK] id_usuario? : int" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=2;fontSize=11;" vertex="1" parent="a_268">
+          <mxGeometry y="82" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_272" value="codigo_estado : varchar(60)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_268">
+          <mxGeometry y="107" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_273" value="titulo : varchar(150)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_268">
+          <mxGeometry y="132" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_274" value="descripcion? : text" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_268">
+          <mxGeometry y="157" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_275" value="regimen? : varchar(30)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_268">
+          <mxGeometry y="182" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_276" value="usuario_nombre? : varchar(150)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_268">
+          <mxGeometry y="207" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_277" value="fecha_evento : datetime" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_268">
+          <mxGeometry y="232" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_278" value="expediente_inspeccion_rojo" style="shape=table;startSize=32;container=1;collapsible=1;childLayout=tableLayout;fixedRows=1;rowLines=0;fontStyle=1;align=center;resizeLast=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1600" y="1280" width="340" height="207" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_279" value="[PK,FK] id_expediente : int" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=1;fontSize=11;" vertex="1" parent="a_278">
+          <mxGeometry y="32" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_280" value="cuadrilla_solicitada : tinyint(1)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_278">
+          <mxGeometry y="57" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_281" value="cuadrilla_detalle? : varchar(200)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_278">
+          <mxGeometry y="82" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_282" value="fecha_cita_inspeccion? : datetime" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_278">
+          <mxGeometry y="107" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_283" value="codigo_cita_inspeccion? : varchar(50)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_278">
+          <mxGeometry y="132" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_284" value="detalle_inspeccion? : text" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_278">
+          <mxGeometry y="157" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_285" value="revision_rojo_finalizada : tinyint(1)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_278">
+          <mxGeometry y="182" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_286" value="expediente_solicitud_transporte" style="shape=table;startSize=32;container=1;collapsible=1;childLayout=tableLayout;fixedRows=1;rowLines=0;fontStyle=1;align=center;resizeLast=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1980" y="1280" width="340" height="282" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_287" value="[PK,FK] id_expediente : int" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=1;fontSize=11;" vertex="1" parent="a_286">
+          <mxGeometry y="32" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_288" value="transporte_solicitado : tinyint(1)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_286">
+          <mxGeometry y="57" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_289" value="transporte_tipo_traslado? : varchar(30)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_286">
+          <mxGeometry y="82" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_290" value="transporte_direccion_partida? : varchar(255)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_286">
+          <mxGeometry y="107" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_291" value="transporte_direccion_llegada? : varchar(255)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_286">
+          <mxGeometry y="132" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_292" value="transporte_distrito_llegada? : varchar(100)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_286">
+          <mxGeometry y="157" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_293" value="transporte_contacto_recepcion? : varchar(100)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_286">
+          <mxGeometry y="182" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_294" value="transporte_fecha_programada? : datetime" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_286">
+          <mxGeometry y="207" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_295" value="transporte_observaciones? : text" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_286">
+          <mxGeometry y="232" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_296" value="transporte_fecha_solicitud? : datetime" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_286">
+          <mxGeometry y="257" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_297" value="expediente_transito_internacional" style="shape=table;startSize=32;container=1;collapsible=1;childLayout=tableLayout;fixedRows=1;rowLines=0;fontStyle=1;align=center;resizeLast=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1220" y="1520" width="340" height="257" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_298" value="[PK,FK] id_expediente : int" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=1;fontSize=11;" vertex="1" parent="a_297">
+          <mxGeometry y="32" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_299" value="fecha_zarpe_etd? : date" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_297">
+          <mxGeometry y="57" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_300" value="fecha_llegada_eta? : date" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_297">
+          <mxGeometry y="82" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_301" value="fecha_arribo_aduana? : datetime" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_297">
+          <mxGeometry y="107" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_302" value="numero_contenedor? : varchar(30)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_297">
+          <mxGeometry y="132" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_303" value="precinto_aduanero? : varchar(50)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_297">
+          <mxGeometry y="157" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_304" value="nave_viaje? : varchar(100)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_297">
+          <mxGeometry y="182" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_305" value="tipo_transporte_internacional? : varchar(30)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_297">
+          <mxGeometry y="207" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_306" value="numero_vuelo? : varchar(60)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_297">
+          <mxGeometry y="232" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_307" value="expediente_transmision_naranja" style="shape=table;startSize=32;container=1;collapsible=1;childLayout=tableLayout;fixedRows=1;rowLines=0;fontStyle=1;align=center;resizeLast=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1600" y="1540" width="340" height="132" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_308" value="[PK,FK] id_expediente : int" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=1;fontSize=11;" vertex="1" parent="a_307">
+          <mxGeometry y="32" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_309" value="envio_sunat_simulado_ok : tinyint(1)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_307">
+          <mxGeometry y="57" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_310" value="codigo_transmision_sunat? : varchar(60)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_307">
+          <mxGeometry y="82" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_311" value="fecha_envio_sunat? : datetime" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_307">
+          <mxGeometry y="107" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_312" value="liquidacion_financiera" style="shape=table;startSize=32;container=1;collapsible=1;childLayout=tableLayout;fixedRows=1;rowLines=0;fontStyle=1;align=center;resizeLast=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1600" y="560" width="340" height="732" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_313" value="[PK] id_liquidacion : int" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=1;fontSize=11;" vertex="1" parent="a_312">
+          <mxGeometry y="32" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_314" value="[UQ] codigo_liquidacion : varchar(30)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_312">
+          <mxGeometry y="57" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_315" value="[FK,UQ] id_expediente : int" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=2;fontSize=11;" vertex="1" parent="a_312">
+          <mxGeometry y="82" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_316" value="[FK] id_usuario_liquidador? : int" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=2;fontSize=11;" vertex="1" parent="a_312">
+          <mxGeometry y="107" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_317" value="total_tributos_sunat : decimal(12,2)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_312">
+          <mxGeometry y="132" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_318" value="gastos_almacen_puerto : decimal(12,2)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_312">
+          <mxGeometry y="157" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_319" value="flete_transporte_local : decimal(12,2)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_312">
+          <mxGeometry y="182" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_320" value="honorarios_agencia : decimal(12,2)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_312">
+          <mxGeometry y="207" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_321" value="subtotal_imponible : decimal(12,2)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_312">
+          <mxGeometry y="232" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_322" value="igv_monto : decimal(12,2)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_312">
+          <mxGeometry y="257" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_323" value="aplica_detraccion : tinyint(1)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_312">
+          <mxGeometry y="282" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_324" value="porcentaje_detraccion : decimal(5,2)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_312">
+          <mxGeometry y="307" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_325" value="monto_detraccion : decimal(12,2)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_312">
+          <mxGeometry y="332" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_326" value="total_general_pen : decimal(12,2)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_312">
+          <mxGeometry y="357" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_327" value="total_general_usd : decimal(12,2)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_312">
+          <mxGeometry y="382" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_328" value="tipo_cambio : decimal(8,4)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_312">
+          <mxGeometry y="407" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_329" value="estado_pago : varchar(20)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_312">
+          <mxGeometry y="432" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_330" value="numero_factura? : varchar(30)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_312">
+          <mxGeometry y="457" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_331" value="[FK] id_documento_factura? : int" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=2;fontSize=11;" vertex="1" parent="a_312">
+          <mxGeometry y="482" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_332" value="[FK] id_metodo_pago? : int" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=2;fontSize=11;" vertex="1" parent="a_312">
+          <mxGeometry y="507" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_333" value="metodo_pago? : varchar(50)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_312">
+          <mxGeometry y="532" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_334" value="[FK] id_banco_destino? : int" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=2;fontSize=11;" vertex="1" parent="a_312">
+          <mxGeometry y="557" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_335" value="banco_destino? : varchar(80)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_312">
+          <mxGeometry y="582" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_336" value="numero_operacion? : varchar(50)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_312">
+          <mxGeometry y="607" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_337" value="[FK] id_documento_voucher? : int" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=2;fontSize=11;" vertex="1" parent="a_312">
+          <mxGeometry y="632" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_338" value="fecha_emision : date" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_312">
+          <mxGeometry y="657" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_339" value="fecha_pago? : datetime" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_312">
+          <mxGeometry y="682" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_340" value="observaciones? : text" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_312">
+          <mxGeometry y="707" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_341" value="notificacion_cliente" style="shape=table;startSize=32;container=1;collapsible=1;childLayout=tableLayout;fixedRows=1;rowLines=0;fontStyle=1;align=center;resizeLast=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1500" width="340" height="232" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_342" value="[PK] id_notificacion : int" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=1;fontSize=11;" vertex="1" parent="a_341">
+          <mxGeometry y="32" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_343" value="[FK] id_cliente : int" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=2;fontSize=11;" vertex="1" parent="a_341">
+          <mxGeometry y="57" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_344" value="titulo : varchar(150)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_341">
+          <mxGeometry y="82" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_345" value="mensaje : text" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_341">
+          <mxGeometry y="107" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_346" value="tipo : varchar(50)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_341">
+          <mxGeometry y="132" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_347" value="leido : tinyint(1)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_341">
+          <mxGeometry y="157" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_348" value="enlace? : varchar(255)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_341">
+          <mxGeometry y="182" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_349" value="fecha_creacion : datetime" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_341">
+          <mxGeometry y="207" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_350" value="sede" style="shape=table;startSize=32;container=1;collapsible=1;childLayout=tableLayout;fixedRows=1;rowLines=0;fontStyle=1;align=center;resizeLast=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1560" y="40" width="340" height="232" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_351" value="[PK] id_sede : int" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=1;fontSize=11;" vertex="1" parent="a_350">
+          <mxGeometry y="32" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_352" value="[UQ] codigo_sede : varchar(50)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_350">
+          <mxGeometry y="57" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_353" value="nombre : varchar(100)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_350">
+          <mxGeometry y="82" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_354" value="tipo : varchar(50)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_350">
+          <mxGeometry y="107" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_355" value="direccion : varchar(255)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_350">
+          <mxGeometry y="132" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_356" value="distrito : varchar(100)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_350">
+          <mxGeometry y="157" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_357" value="telefono? : varchar(50)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_350">
+          <mxGeometry y="182" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_358" value="estado : varchar(50)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_350">
+          <mxGeometry y="207" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_359" value="usuario" style="shape=table;startSize=32;container=1;collapsible=1;childLayout=tableLayout;fixedRows=1;rowLines=0;fontStyle=1;align=center;resizeLast=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1940" y="40" width="340" height="407" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_360" value="[PK] id_usuario : int" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=1;fontSize=11;" vertex="1" parent="a_359">
+          <mxGeometry y="32" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_361" value="rol : varchar(50)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_359">
+          <mxGeometry y="57" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_362" value="[FK] id_sede? : int" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=2;fontSize=11;" vertex="1" parent="a_359">
+          <mxGeometry y="82" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_363" value="[UQ] username : varchar(50)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_359">
+          <mxGeometry y="107" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_364" value="password_hash : varchar(255)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_359">
+          <mxGeometry y="132" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_365" value="nombres : varchar(100)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_359">
+          <mxGeometry y="157" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_366" value="apellidos : varchar(100)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_359">
+          <mxGeometry y="182" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_367" value="[UQ] correo_institucional : varchar(100)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_359">
+          <mxGeometry y="207" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_368" value="tipo_documento : varchar(10)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_359">
+          <mxGeometry y="232" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_369" value="numero_documento? : varchar(20)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_359">
+          <mxGeometry y="257" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_370" value="telefono? : varchar(20)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_359">
+          <mxGeometry y="282" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_371" value="cargo_titulo? : varchar(100)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_359">
+          <mxGeometry y="307" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_372" value="codigo_sunat? : varchar(50)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_359">
+          <mxGeometry y="332" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_373" value="ultimo_acceso? : datetime" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_359">
+          <mxGeometry y="357" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_374" value="estado_activo : tinyint(1)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_359">
+          <mxGeometry y="382" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_375" value="usuario_cliente" style="shape=table;startSize=32;container=1;collapsible=1;childLayout=tableLayout;fixedRows=1;rowLines=0;fontStyle=1;align=center;resizeLast=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1190" width="340" height="257" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_376" value="[PK] id_usuario_cliente : int" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=1;fontSize=11;" vertex="1" parent="a_375">
+          <mxGeometry y="32" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_377" value="[FK,UQ] id_cliente : int" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=2;fontSize=11;" vertex="1" parent="a_375">
+          <mxGeometry y="57" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_378" value="[UQ] username : varchar(100)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_375">
+          <mxGeometry y="82" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_379" value="password_hash : varchar(255)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_375">
+          <mxGeometry y="107" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_380" value="estado_activo : tinyint(1)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_375">
+          <mxGeometry y="132" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_381" value="debe_cambiar_password : tinyint(1)" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_375">
+          <mxGeometry y="157" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_382" value="ultimo_acceso? : datetime" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_375">
+          <mxGeometry y="182" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_383" value="fecha_creacion : datetime" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#fafafa;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_375">
+          <mxGeometry y="207" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_384" value="fecha_actualizacion : datetime" style="shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=1;fillColor=#ffffff;top=0;left=0;bottom=0;right=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;align=left;spacingLeft=8;fontStyle=0;fontSize=11;" vertex="1" parent="a_375">
+          <mxGeometry y="232" width="340" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_385" value="id_banco" style="edgeStyle=entityRelationEdgeStyle;fontSize=10;html=1;endArrow=ERone;startArrow=ERmany;rounded=1;strokeColor=#555555;" edge="1" parent="1" source="a_33" target="a_15">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_386" value="id_categoria" style="edgeStyle=entityRelationEdgeStyle;fontSize=10;html=1;endArrow=ERone;startArrow=ERmany;rounded=1;strokeColor=#555555;" edge="1" parent="1" source="a_55" target="a_27">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_387" value="id_entidad_reguladora" style="edgeStyle=entityRelationEdgeStyle;fontSize=10;html=1;endArrow=ERone;startArrow=ERmany;rounded=1;strokeColor=#555555;" edge="1" parent="1" source="a_58" target="a_47">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_388" value="id_departamento" style="edgeStyle=entityRelationEdgeStyle;fontSize=10;html=1;endArrow=ERone;startArrow=ERmany;rounded=1;strokeColor=#555555;" edge="1" parent="1" source="a_78" target="a_43">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_389" value="id_cliente" style="edgeStyle=entityRelationEdgeStyle;fontSize=10;html=1;endArrow=ERone;startArrow=ERmany;rounded=1;strokeColor=#555555;" edge="1" parent="1" source="a_114" target="a_95">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_390" value="id_liquidacion" style="edgeStyle=entityRelationEdgeStyle;fontSize=10;html=1;endArrow=ERone;startArrow=ERmany;rounded=1;strokeColor=#555555;" edge="1" parent="1" source="a_113" target="a_313">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_391" value="id_pago_cotizacion" style="edgeStyle=entityRelationEdgeStyle;fontSize=10;html=1;endArrow=ERone;startArrow=ERmany;rounded=1;strokeColor=#555555;" edge="1" parent="1" source="a_112" target="a_186">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_392" value="id_usuario_emisor" style="edgeStyle=entityRelationEdgeStyle;fontSize=10;html=1;endArrow=ERone;startArrow=ERmany;rounded=1;strokeColor=#555555;" edge="1" parent="1" source="a_129" target="a_360">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_393" value="id_expediente" style="edgeStyle=entityRelationEdgeStyle;fontSize=10;html=1;endArrow=ERone;startArrow=ERmany;rounded=1;strokeColor=#555555;" edge="1" parent="1" source="a_133" target="a_229">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_394" value="id_cliente" style="edgeStyle=entityRelationEdgeStyle;fontSize=10;html=1;endArrow=ERone;startArrow=ERmany;rounded=1;strokeColor=#555555;" edge="1" parent="1" source="a_152" target="a_95">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_395" value="id_usuario_comercial" style="edgeStyle=entityRelationEdgeStyle;fontSize=10;html=1;endArrow=ERone;startArrow=ERmany;rounded=1;strokeColor=#555555;" edge="1" parent="1" source="a_153" target="a_360">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_396" value="id_mercancia" style="edgeStyle=entityRelationEdgeStyle;fontSize=10;html=1;endArrow=ERone;startArrow=ERmany;rounded=1;strokeColor=#555555;" edge="1" parent="1" source="a_154" target="a_52">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_397" value="id_provincia_destino" style="edgeStyle=entityRelationEdgeStyle;fontSize=10;html=1;endArrow=ERone;startArrow=ERmany;rounded=1;strokeColor=#555555;" edge="1" parent="1" source="a_163" target="a_77">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_398" value="id_provincia_origen" style="edgeStyle=entityRelationEdgeStyle;fontSize=10;html=1;endArrow=ERone;startArrow=ERmany;rounded=1;strokeColor=#555555;" edge="1" parent="1" source="a_160" target="a_77">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_399" value="id_puerto_destino" style="edgeStyle=entityRelationEdgeStyle;fontSize=10;html=1;endArrow=ERone;startArrow=ERmany;rounded=1;strokeColor=#555555;" edge="1" parent="1" source="a_158" target="a_82">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_400" value="id_puerto_envio" style="edgeStyle=entityRelationEdgeStyle;fontSize=10;html=1;endArrow=ERone;startArrow=ERmany;rounded=1;strokeColor=#555555;" edge="1" parent="1" source="a_157" target="a_82">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_401" value="id_agente_revisor" style="edgeStyle=entityRelationEdgeStyle;fontSize=10;html=1;endArrow=ERone;startArrow=ERmany;rounded=1;strokeColor=#555555;" edge="1" parent="1" source="a_178" target="a_360">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_402" value="id_tipo_carga" style="edgeStyle=entityRelationEdgeStyle;fontSize=10;html=1;endArrow=ERone;startArrow=ERmany;rounded=1;strokeColor=#555555;" edge="1" parent="1" source="a_155" target="a_89">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_403" value="id_banco_destino" style="edgeStyle=entityRelationEdgeStyle;fontSize=10;html=1;endArrow=ERone;startArrow=ERmany;rounded=1;strokeColor=#555555;" edge="1" parent="1" source="a_198" target="a_15">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_404" value="id_banco_origen" style="edgeStyle=entityRelationEdgeStyle;fontSize=10;html=1;endArrow=ERone;startArrow=ERmany;rounded=1;strokeColor=#555555;" edge="1" parent="1" source="a_196" target="a_15">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_405" value="id_cotizacion" style="edgeStyle=entityRelationEdgeStyle;fontSize=10;html=1;endArrow=ERone;startArrow=ERmany;rounded=1;strokeColor=#555555;" edge="1" parent="1" source="a_187" target="a_150">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_406" value="id_cuenta_recaudadora" style="edgeStyle=entityRelationEdgeStyle;fontSize=10;html=1;endArrow=ERone;startArrow=ERmany;rounded=1;strokeColor=#555555;" edge="1" parent="1" source="a_199" target="a_32">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_407" value="id_documento_comprobante" style="edgeStyle=entityRelationEdgeStyle;fontSize=10;html=1;endArrow=ERone;startArrow=ERmany;rounded=1;strokeColor=#555555;" edge="1" parent="1" source="a_203" target="a_211">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_408" value="id_metodo_pago" style="edgeStyle=entityRelationEdgeStyle;fontSize=10;html=1;endArrow=ERone;startArrow=ERmany;rounded=1;strokeColor=#555555;" edge="1" parent="1" source="a_194" target="a_63">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_409" value="id_usuario_finanzas" style="edgeStyle=entityRelationEdgeStyle;fontSize=10;html=1;endArrow=ERone;startArrow=ERmany;rounded=1;strokeColor=#555555;" edge="1" parent="1" source="a_205" target="a_360">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_410" value="id_usuario_registro" style="edgeStyle=entityRelationEdgeStyle;fontSize=10;html=1;endArrow=ERone;startArrow=ERmany;rounded=1;strokeColor=#555555;" edge="1" parent="1" source="a_208" target="a_360">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_411" value="id_categoria_documento" style="edgeStyle=entityRelationEdgeStyle;fontSize=10;html=1;endArrow=ERone;startArrow=ERmany;rounded=1;strokeColor=#555555;" edge="1" parent="1" source="a_218" target="a_22">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_412" value="id_cliente" style="edgeStyle=entityRelationEdgeStyle;fontSize=10;html=1;endArrow=ERone;startArrow=ERmany;rounded=1;strokeColor=#555555;" edge="1" parent="1" source="a_224" target="a_95">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_413" value="id_cotizacion" style="edgeStyle=entityRelationEdgeStyle;fontSize=10;html=1;endArrow=ERone;startArrow=ERmany;rounded=1;strokeColor=#555555;" edge="1" parent="1" source="a_222" target="a_150">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_414" value="id_expediente" style="edgeStyle=entityRelationEdgeStyle;fontSize=10;html=1;endArrow=ERone;startArrow=ERmany;rounded=1;strokeColor=#555555;" edge="1" parent="1" source="a_223" target="a_229">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_415" value="id_usuario_creador" style="edgeStyle=entityRelationEdgeStyle;fontSize=10;html=1;endArrow=ERone;startArrow=ERmany;rounded=1;strokeColor=#555555;" edge="1" parent="1" source="a_225" target="a_360">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_416" value="id_agente_aduanero" style="edgeStyle=entityRelationEdgeStyle;fontSize=10;html=1;endArrow=ERone;startArrow=ERmany;rounded=1;strokeColor=#555555;" edge="1" parent="1" source="a_235" target="a_360">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_417" value="id_cliente" style="edgeStyle=entityRelationEdgeStyle;fontSize=10;html=1;endArrow=ERone;startArrow=ERmany;rounded=1;strokeColor=#555555;" edge="1" parent="1" source="a_232" target="a_95">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_418" value="id_cotizacion" style="edgeStyle=entityRelationEdgeStyle;fontSize=10;html=1;endArrow=ERone;startArrow=ERmany;rounded=1;strokeColor=#555555;" edge="1" parent="1" source="a_231" target="a_150">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_419" value="id_mercancia" style="edgeStyle=entityRelationEdgeStyle;fontSize=10;html=1;endArrow=ERone;startArrow=ERmany;rounded=1;strokeColor=#555555;" edge="1" parent="1" source="a_233" target="a_52">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_420" value="id_tipo_carga" style="edgeStyle=entityRelationEdgeStyle;fontSize=10;html=1;endArrow=ERone;startArrow=ERmany;rounded=1;strokeColor=#555555;" edge="1" parent="1" source="a_234" target="a_89">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_421" value="id_expediente" style="edgeStyle=entityRelationEdgeStyle;fontSize=10;html=1;endArrow=ERone;startArrow=ERmany;rounded=1;strokeColor=#555555;" edge="1" parent="1" source="a_244" target="a_229">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_422" value="id_expediente" style="edgeStyle=entityRelationEdgeStyle;fontSize=10;html=1;endArrow=ERone;startArrow=ERmany;rounded=1;strokeColor=#555555;" edge="1" parent="1" source="a_252" target="a_229">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_423" value="id_expediente" style="edgeStyle=entityRelationEdgeStyle;fontSize=10;html=1;endArrow=ERone;startArrow=ERmany;rounded=1;strokeColor=#555555;" edge="1" parent="1" source="a_262" target="a_229">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_424" value="id_expediente" style="edgeStyle=entityRelationEdgeStyle;fontSize=10;html=1;endArrow=ERone;startArrow=ERmany;rounded=1;strokeColor=#555555;" edge="1" parent="1" source="a_270" target="a_229">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_425" value="id_usuario" style="edgeStyle=entityRelationEdgeStyle;fontSize=10;html=1;endArrow=ERone;startArrow=ERmany;rounded=1;strokeColor=#555555;" edge="1" parent="1" source="a_271" target="a_360">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_426" value="id_expediente" style="edgeStyle=entityRelationEdgeStyle;fontSize=10;html=1;endArrow=ERone;startArrow=ERmany;rounded=1;strokeColor=#555555;" edge="1" parent="1" source="a_279" target="a_229">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_427" value="id_expediente" style="edgeStyle=entityRelationEdgeStyle;fontSize=10;html=1;endArrow=ERone;startArrow=ERmany;rounded=1;strokeColor=#555555;" edge="1" parent="1" source="a_287" target="a_229">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_428" value="id_expediente" style="edgeStyle=entityRelationEdgeStyle;fontSize=10;html=1;endArrow=ERone;startArrow=ERmany;rounded=1;strokeColor=#555555;" edge="1" parent="1" source="a_298" target="a_229">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_429" value="id_expediente" style="edgeStyle=entityRelationEdgeStyle;fontSize=10;html=1;endArrow=ERone;startArrow=ERmany;rounded=1;strokeColor=#555555;" edge="1" parent="1" source="a_308" target="a_229">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_430" value="id_banco_destino" style="edgeStyle=entityRelationEdgeStyle;fontSize=10;html=1;endArrow=ERone;startArrow=ERmany;rounded=1;strokeColor=#555555;" edge="1" parent="1" source="a_334" target="a_15">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_431" value="id_documento_factura" style="edgeStyle=entityRelationEdgeStyle;fontSize=10;html=1;endArrow=ERone;startArrow=ERmany;rounded=1;strokeColor=#555555;" edge="1" parent="1" source="a_331" target="a_211">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_432" value="id_documento_voucher" style="edgeStyle=entityRelationEdgeStyle;fontSize=10;html=1;endArrow=ERone;startArrow=ERmany;rounded=1;strokeColor=#555555;" edge="1" parent="1" source="a_337" target="a_211">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_433" value="id_expediente" style="edgeStyle=entityRelationEdgeStyle;fontSize=10;html=1;endArrow=ERone;startArrow=ERmany;rounded=1;strokeColor=#555555;" edge="1" parent="1" source="a_315" target="a_229">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_434" value="id_metodo_pago" style="edgeStyle=entityRelationEdgeStyle;fontSize=10;html=1;endArrow=ERone;startArrow=ERmany;rounded=1;strokeColor=#555555;" edge="1" parent="1" source="a_332" target="a_63">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_435" value="id_usuario_liquidador" style="edgeStyle=entityRelationEdgeStyle;fontSize=10;html=1;endArrow=ERone;startArrow=ERmany;rounded=1;strokeColor=#555555;" edge="1" parent="1" source="a_316" target="a_360">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_436" value="id_cliente" style="edgeStyle=entityRelationEdgeStyle;fontSize=10;html=1;endArrow=ERone;startArrow=ERmany;rounded=1;strokeColor=#555555;" edge="1" parent="1" source="a_343" target="a_95">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_437" value="id_sede" style="edgeStyle=entityRelationEdgeStyle;fontSize=10;html=1;endArrow=ERone;startArrow=ERmany;rounded=1;strokeColor=#555555;" edge="1" parent="1" source="a_362" target="a_351">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_438" value="id_cliente" style="edgeStyle=entityRelationEdgeStyle;fontSize=10;html=1;endArrow=ERone;startArrow=ERmany;rounded=1;strokeColor=#555555;" edge="1" parent="1" source="a_377" target="a_95">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

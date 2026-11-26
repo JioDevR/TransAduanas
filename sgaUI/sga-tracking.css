@@ -1,0 +1,736 @@
+/* ==========================================================================
+   sgaUI — Patrón Unificado de Tracking Operativo, Línea de Ruta y Bitácora
+   Estética Warm Editorial Pro (Soporte automático Claro / .dark-theme)
+   ========================================================================== */
+
+.sga-tracking-view {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  width: 100%;
+  font-family: var(--font-sans);
+}
+
+/* Cabecera breadcrumb / código */
+.sga-tracking-header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.sga-tracking-code-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  padding: 0.28rem 0.65rem;
+  border-radius: var(--radius-pill, 9999px);
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-main);
+}
+
+.sga-copy-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-pill, 9999px);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  padding: 0;
+  transition: background-color var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
+}
+
+.sga-copy-btn:hover {
+  background: var(--color-bg-subtle);
+  border-color: var(--color-border);
+  color: var(--color-text-main);
+}
+
+/* Tarjeta Hero de Tracking */
+.sga-tracking-hero {
+  display: flex;
+  flex-direction: column;
+  gap: 1.35rem;
+}
+
+.sga-tracking-hero-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.sga-tracking-hero-main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+  flex: 1 1 340px;
+}
+
+.sga-tracking-cargo-title {
+  margin: 0;
+  font-size: var(--sga-text-xl, 1.35rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+  color: var(--color-text-main);
+}
+
+.sga-tracking-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.9rem;
+  font-size: var(--sga-text-xs, 0.75rem);
+  color: var(--color-text-muted);
+}
+
+.sga-tracking-meta-sep {
+  color: var(--color-border-strong);
+}
+
+.sga-tracking-hero-status {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.45rem;
+  flex-shrink: 0;
+}
+
+.sga-tracking-tags {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.45rem;
+}
+
+.sga-tracking-progress-summary {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  font-size: var(--sga-text-xs, 0.75rem);
+  color: var(--color-text-muted);
+}
+
+.sga-tracking-progress-pct {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  color: var(--color-text-main);
+}
+
+/* Barra de progreso lineal continua */
+.sga-progress-track {
+  width: 100%;
+  height: 7px;
+  border-radius: var(--radius-pill, 9999px);
+  background: var(--color-bg-subtle);
+  border: 1px solid var(--color-border-subtle);
+  overflow: hidden;
+}
+
+.sga-progress-fill {
+  height: 100%;
+  border-radius: var(--radius-pill, 9999px);
+  background: var(--color-primary);
+  transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sga-progress-fill.is-finished {
+  background: var(--color-success-text);
+}
+
+.sga-progress-fill.is-cancelled {
+  background: var(--color-danger-text);
+}
+
+/* Tira de Ruta Logística (4 nodos) */
+.sga-route-strip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+  padding: 0.9rem 1rem;
+  border-radius: var(--radius-lg, 12px);
+  background: var(--color-bg-subtle);
+  border: 1px solid var(--color-border-subtle);
+}
+
+.sga-route-node {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  min-width: 0;
+  padding-right: 0.5rem;
+}
+
+.sga-route-node:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  top: 14px;
+  right: 0;
+  bottom: 14px;
+  width: 1px;
+  background: var(--color-border);
+}
+
+.sga-route-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-md, 8px);
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-subtle);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+
+.sga-route-node.is-reached .sga-route-icon {
+  background: var(--color-success-bg);
+  border-color: var(--color-success-border);
+  color: var(--color-success-text);
+}
+
+.sga-route-node.is-active .sga-route-icon {
+  background: var(--color-bg-surface);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.sga-route-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.12rem;
+  min-width: 0;
+}
+
+.sga-route-kicker {
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-accent-kicker);
+}
+
+.sga-route-place {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--color-text-main);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sga-route-sub {
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Stepper horizontal conectado de 6 hitos */
+.sga-milestone-track {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 0.5rem;
+  padding-top: 0.25rem;
+}
+
+.sga-milestone-item {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.55rem;
+  min-width: 0;
+  padding: 0.25rem 0.35rem;
+}
+
+.sga-milestone-item:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  top: 19px;
+  left: calc(50% + 18px);
+  width: calc(100% - 36px);
+  height: 2px;
+  background: var(--color-border);
+  z-index: 0;
+}
+
+.sga-milestone-item.is-completed:not(:last-child)::after {
+  background: var(--color-success-text);
+}
+
+.sga-milestone-dot {
+  position: relative;
+  z-index: 1;
+  width: 30px;
+  height: 30px;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 700;
+  background: var(--color-bg-surface);
+  border: 2px solid var(--color-border-strong);
+  color: var(--color-text-subtle);
+  transition: all var(--transition-fast);
+}
+
+.sga-milestone-item.is-completed .sga-milestone-dot {
+  background: var(--color-success-bg);
+  border-color: var(--color-success-text);
+  color: var(--color-success-text);
+}
+
+.sga-milestone-item.is-active .sga-milestone-dot {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--color-primary-text);
+  box-shadow: 0 0 0 4px rgba(212, 130, 82, 0.2);
+}
+
+.dark-theme .sga-milestone-item.is-active .sga-milestone-dot,
+.app-dark .sga-milestone-item.is-active .sga-milestone-dot {
+  box-shadow: 0 0 0 4px rgba(240, 184, 146, 0.2);
+}
+
+.sga-milestone-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.sga-milestone-step {
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--color-text-subtle);
+}
+
+.sga-milestone-item.is-active .sga-milestone-step {
+  color: var(--color-primary);
+}
+
+.sga-milestone-item.is-completed .sga-milestone-step {
+  color: var(--color-success-text);
+}
+
+.sga-milestone-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--color-text-main);
+  line-height: 1.25;
+}
+
+.sga-milestone-item.is-pending .sga-milestone-label {
+  color: var(--color-text-muted);
+  font-weight: 600;
+}
+
+.sga-milestone-detail {
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+/* Cabecera estándar de tarjeta dentro de Tracking */
+.sga-tracking-card {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.sga-tracking-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.sga-tracking-card-title {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-width: 0;
+}
+
+.sga-tracking-card-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-md, 8px);
+  background: var(--color-bg-subtle);
+  border: 1px solid var(--color-border);
+  color: var(--color-accent-kicker);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.sga-tracking-card-heading {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--color-text-main);
+  line-height: 1.25;
+}
+
+.sga-tracking-card-sub {
+  display: block;
+  font-size: 0.74rem;
+  color: var(--color-text-muted);
+}
+
+/* Grilla 2 columnas para bloques operativos (sensible al container .sga-split-main) */
+.sga-ops-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+@container sga-main (max-width: 680px) {
+  .sga-ops-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Lista Key-Value estándar */
+.sga-kv-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.sga-kv-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.85rem;
+  padding: 0.35rem 0;
+  border-bottom: 1px dashed var(--color-border-subtle);
+  font-size: 0.8125rem;
+}
+
+.sga-kv-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.sga-kv-label {
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+}
+
+.sga-kv-val {
+  color: var(--color-text-main);
+  font-weight: 600;
+  text-align: right;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* Feed vertical cronológico (Bitácora de Tracking) */
+.sga-timeline-feed {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.sga-timeline-event {
+  position: relative;
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  gap: 0.85rem;
+  padding-bottom: 1.15rem;
+}
+
+.sga-timeline-event:last-child {
+  padding-bottom: 0;
+}
+
+.sga-timeline-rail {
+  position: relative;
+  display: flex;
+  justify-content: center;
+}
+
+.sga-timeline-event:not(:last-child) .sga-timeline-rail::after {
+  content: '';
+  position: absolute;
+  top: 28px;
+  bottom: -4px;
+  width: 2px;
+  background: var(--color-border);
+}
+
+.sga-timeline-node {
+  width: 28px;
+  height: 28px;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.78rem;
+  background: var(--color-bg-subtle);
+  border: 1px solid var(--color-border-strong);
+  color: var(--color-text-muted);
+  position: relative;
+  z-index: 1;
+}
+
+.sga-timeline-node.is-success {
+  background: var(--color-success-bg);
+  border-color: var(--color-success-border);
+  color: var(--color-success-text);
+}
+
+.sga-timeline-node.is-warn {
+  background: var(--color-warning-bg);
+  border-color: var(--color-warning-border);
+  color: var(--color-warning-text);
+}
+
+.sga-timeline-node.is-danger {
+  background: var(--color-danger-bg);
+  border-color: var(--color-danger-border);
+  color: var(--color-danger-text);
+}
+
+.sga-timeline-node.is-info {
+  background: var(--color-info-bg);
+  border-color: var(--color-info-border);
+  color: var(--color-info-text);
+}
+
+.sga-timeline-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.65rem 0.9rem;
+  border-radius: var(--radius-md, 8px);
+  background: var(--color-bg-subtle);
+  border: 1px solid var(--color-border-subtle);
+  min-width: 0;
+}
+
+.sga-timeline-event.is-latest .sga-timeline-content {
+  background: var(--color-bg-surface);
+  border-color: var(--color-primary);
+}
+
+.sga-timeline-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.sga-timeline-title {
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: var(--color-text-main);
+}
+
+.sga-timeline-time {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.73rem;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.sga-timeline-desc {
+  margin: 0;
+  font-size: 0.79rem;
+  line-height: 1.45;
+  color: var(--color-text-muted);
+  overflow-wrap: anywhere;
+}
+
+.sga-timeline-actor {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--color-accent-kicker);
+  margin-top: 0.1rem;
+}
+
+/* Bóveda Documental compacta (Aside / Principal) */
+.sga-doc-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.sga-doc-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.65rem;
+  padding: 0.65rem 0.75rem;
+  border-radius: var(--radius-md, 8px);
+  background: var(--color-bg-subtle);
+  border: 1px solid var(--color-border-subtle);
+  min-width: 0;
+}
+
+.sga-doc-info {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.sga-doc-icon {
+  font-size: 1.1rem;
+  color: var(--color-accent-kicker);
+  flex-shrink: 0;
+}
+
+.sga-doc-meta {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.sga-doc-name {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sga-doc-sub {
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+}
+
+.sga-doc-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-shrink: 0;
+}
+
+/* Estado vacío inline dentro de tarjetas */
+.sga-inline-empty {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.85rem 1rem;
+  border-radius: var(--radius-md, 8px);
+  background: var(--color-bg-subtle);
+  border: 1px dashed var(--color-border);
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: var(--color-text-muted);
+}
+
+.sga-inline-empty i {
+  font-size: 1rem;
+  color: var(--color-accent-kicker);
+  flex-shrink: 0;
+}
+
+/* Responsividad Tablet / Mobile */
+@media (max-width: 900px) {
+  .sga-route-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .sga-route-node:nth-child(2)::after {
+    display: none;
+  }
+
+  .sga-milestone-track {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .sga-milestone-item {
+    flex-direction: row;
+    align-items: flex-start;
+    text-align: left;
+    gap: 0.85rem;
+    padding: 0.45rem 0;
+  }
+
+  .sga-milestone-item:not(:last-child)::after {
+    top: 38px;
+    left: 14px;
+    bottom: -6px;
+    width: 2px;
+    height: auto;
+  }
+
+  .sga-ops-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .sga-tracking-hero-status {
+    align-items: flex-start;
+  }
+
+  .sga-tracking-tags {
+    justify-content: flex-start;
+  }
+
+  .sga-route-strip {
+    grid-template-columns: 1fr;
+  }
+
+  .sga-route-node::after {
+    display: none;
+  }
+
+  .sga-kv-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.15rem;
+  }
+
+  .sga-kv-val {
+    text-align: left;
+  }
+}

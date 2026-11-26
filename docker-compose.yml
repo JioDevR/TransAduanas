@@ -1,0 +1,95 @@
+services:
+  mysql:
+    image: docker.io/library/mysql:8.4
+    container_name: sga-mysql
+    restart: unless-stopped
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --default-time-zone=-05:00
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?define MYSQL_ROOT_PASSWORD en .env}
+      MYSQL_DATABASE: SGAdb
+      MYSQL_USER: ${DB_USERNAME:?define DB_USERNAME en .env}
+      MYSQL_PASSWORD: ${DB_PASSWORD:?define DB_PASSWORD en .env}
+    ports:
+      - "3306:3306"
+    volumes:
+      - sga-mysql-data:/var/lib/mysql
+      - ./db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./db/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  sga-backend:
+    build:
+      context: ./backend-sga
+    image: transaduanas/sga-backend:latest
+    container_name: sga-backend
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      SERVER_PORT: 8085
+      DB_URL: jdbc:mysql://mysql:3306/SGAdb?useSSL=false&serverTimezone=America/Lima&allowPublicKeyRetrieval=true
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET:?define JWT_SECRET en .env}
+      CORS_ALLOWED_ORIGINS: ${SGA_PUBLIC_URL:-http://localhost:5180},${PORTAL_PUBLIC_URL:-http://localhost:5174}
+      STORAGE_DIR: /app/uploads/documentos
+      JPA_SHOW_SQL: "false"
+    ports:
+      - "8085:8085"
+    volumes:
+      - sga-uploads:/app/uploads/documentos
+      - sga-logs:/app/logs
+
+  app-sga:
+    build:
+      context: .
+      dockerfile: app-sga/Dockerfile
+      args:
+        VITE_API_URL: /api/v1
+        VITE_PORTAL_URL: ${PORTAL_PUBLIC_URL:-http://localhost:5174}
+    image: transaduanas/app-sga:latest
+    container_name: sga-frontend
+    restart: unless-stopped
+    depends_on:
+      - sga-backend
+    ports:
+      - "5180:80"
+
+  app-b2b:
+    build:
+      context: .
+      dockerfile: app-b2b/Dockerfile
+      args:
+        VITE_API_URL: /api/v1
+    image: transaduanas/app-b2b:latest
+    container_name: sga-portal-b2b
+    restart: unless-stopped
+    depends_on:
+      - sga-backend
+    ports:
+      - "5174:80"
+
+  app-landing:
+    build:
+      context: ./app-landing
+      args:
+        VITE_SGA_APP_URL: ${SGA_PUBLIC_URL:-http://localhost:5180}
+        VITE_PORTAL_CLIENTE_URL: ${PORTAL_PUBLIC_URL:-http://localhost:5174}
+    image: transaduanas/app-landing:latest
+    container_name: sga-landing
+    restart: unless-stopped
+    ports:
+      - "5173:80"
+
+volumes:
+  sga-mysql-data:
+  sga-uploads:
+  sga-logs:

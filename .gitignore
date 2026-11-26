@@ -100,14 +100,15 @@ backup*.sql
 # Herramientas de agentes (planes y specs locales)
 # -----------------------------------------------------------------------------
 .superpowers/
-**/superpowers/
 .$Diagrama de procesos.drawio.bkp
-# Archivos locales generados al ejecutar monitoreo
-/evidencias-monitoreo/
-/docs/pruebas/monitoreo/versiones-manual/
-/docs/pruebas/monitoreo/respaldos-ejecutores/
-*.respaldo-*
-/monitoreo/*-ejecucion.lock
+# Resultados y datos privados de las pruebas de mantenimiento
+/evidencias-mantenimiento/
+/datos-mantenimiento/
+/laboratorios-mantenimiento/
 **/__pycache__/
 *.pyc
-**/credenciales-locales.json
+*.pyo
+*.dpapi
+*.aesgcm
+**/CLAVE_RECUPERACION*.txt
+/docs/pruebas/mantenimiento/configuracion.local.*

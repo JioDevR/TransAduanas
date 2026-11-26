@@ -1,0 +1,96 @@
+{
+  "alcance": "Resultados guardados de la instalacion del equipo. No son una nueva ejecucion ni acreditan el estado de otro clon. No contienen SQL, documentos, credenciales ni claves.",
+  "resultados": [
+    {
+      "codigo": "PM01",
+      "estado": "EXITOSO",
+      "criterios_cumplidos": 7,
+      "criterios_totales": 7
+    },
+    {
+      "codigo": "PM02",
+      "estado": "EXITOSO",
+      "criterios_cumplidos": 7,
+      "criterios_totales": 7
+    },
+    {
+      "codigo": "PM03",
+      "estado": "EXITOSO",
+      "criterios_cumplidos": 7,
+      "criterios_totales": 7
+    },
+    {
+      "codigo": "PM04",
+      "estado": "EXITOSO"
+    },
+    {
+      "codigo": "PM05",
+      "estado": "EXITOSO",
+      "criterios_cumplidos": 8,
+      "criterios_totales": 8
+    },
+    {
+      "codigo": "PM06",
+      "estado": "Exitoso",
+      "criterios_cumplidos": 7
+    },
+    {
+      "codigo": "PM07"
+    },
+    {
+      "codigo": "PM08",
+      "estado": "EXITOSO",
+      "criterios_cumplidos": 7,
+      "criterios_totales": 7
+    },
+    {
+      "codigo": "PM09",
+      "estado": "EXITOSO",
+      "criterios_cumplidos": 7,
+      "criterios_totales": 7
+    },
+    {
+      "codigo": "PM10",
+      "estado": "EXITOSO",
+      "criterios_cumplidos": 8,
+      "criterios_totales": 8
+    },
+    {
+      "codigo": "PM11",
+      "estado": "EXITOSO",
+      "criterios_cumplidos": 7,
+      "criterios_totales": 7
+    },
+    {
+      "codigo": "PM12",
+      "estado": "Exitoso",
+      "criterios_cumplidos": 11,
+      "criterios_totales": 11
+    },
+    {
+      "codigo": "PM13",
+      "estado": "Exitoso",
+      "criterios_cumplidos": 10,
+      "criterios_totales": 10
+    },
+    {
+      "codigo": "PM14",
+      "estado": "Exitoso",
+      "criterios_cumplidos": 7,
+      "criterios_totales": 7
+    },
+    {
+      "codigo": "PM15",
+      "estado": "Exitoso",
+      "criterios_cumplidos": 10,
+      "criterios_totales": 10
+    },
+    {
+      "codigo": "PA01",
+      "estado": "Exitoso",
+      "criterios_cumplidos": 12,
+      "criterios_totales": 12
+    }
+  ],
+  "RTO_RPO": "En revision; no se declara SLA."
+}

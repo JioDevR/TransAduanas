@@ -1,0 +1,33 @@
+{
+  "NombreTarea": "PM05 Limpieza de temporales de laboratorio",
+  "IdEjecucion": "a0cf168511044cd8a068d3bdd1b86cfa",
+  "FechaInicio": "2026-11-23T09:56:38.1321897-05:00",
+  "FechaFin": "2026-11-23T09:56:38.4241349-05:00",
+  "DuracionSegundos": 0.2749,
+  "Estado": "Fallo",
+  "CodigoSalida": 1,
+  "RaizLaboratorio": "<laboratorio-de-referencia>\\laboratorio-8ede2b386d0d4c8abcc5309dfe56c990",
+  "DirectorioTemporal": "<laboratorio-de-referencia>\\laboratorio-8ede2b386d0d4c8abcc5309dfe56c990\\temporales",
+  "LimiteUtc": "2026-11-16T14:56:38.3871314Z",
+  "DiasRetencion": 7,
+  "Eliminados": 0,
+  "Simulacion": false,
+  "Eventos": [
+    {
+      "Archivo": "<laboratorio-de-referencia>\\laboratorio-8ede2b386d0d4c8abcc5309dfe56c990\\temporales\\vencido.tmp",
+      "UltimaEscrituraUtc": "2026-11-03T14:56:37.9365924Z",
+      "Motivo": "Temporal vencido",
+      "Accion": "Fallo",
+      "Error": "System.UnauthorizedAccessException"
+    },
+    {
+      "Archivo": "<laboratorio-de-referencia>\\laboratorio-8ede2b386d0d4c8abcc5309dfe56c990\\temporales\\vigente.tmp",
+      "UltimaEscrituraUtc": "2026-11-23T14:56:37.9415921Z",
+      "Motivo": "No vencido",
+      "Accion": "Conservado",
+      "Error": null
+    }
+  ],
+  "Alcance": "Solo .tmp y .temp vencidos del nivel directo de temporales. Sin recorrer documentos, respaldos, uploads ni subcarpetas.",
+  "NotaPublicacion": "Registro historico real. Rutas personales sustituidas; no se ha reproducido el fallo."
+}

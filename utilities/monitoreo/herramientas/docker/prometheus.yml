@@ -1,0 +1,50 @@
+# Variante Docker de ../prometheus/prometheus.yml: los destinos usan los nombres
+# de servicio de la red de Docker Compose en lugar de 127.0.0.1.
+global:
+  scrape_interval: 5s
+  evaluation_interval: 5s
+rule_files:
+  - reglas.yml
+scrape_configs:
+  - job_name: transaduanas-backend
+    metrics_path: /actuator/prometheus
+    scrape_timeout: 4s
+    static_configs:
+      - targets: ['sga-backend:9086']
+        labels:
+          entorno: docker
+
+  - job_name: transaduanas-http
+    metrics_path: /probe
+    scrape_interval: 5s
+    scrape_timeout: 4s
+    static_configs:
+      - targets: ['http://app-landing:80/']
+        labels: {servicio: app-landing, entorno: aplicacion, modulo: pagina}
+      - targets: ['http://app-b2b:80/']
+        labels: {servicio: app-b2b, entorno: aplicacion, modulo: pagina}
+      - targets: ['http://app-sga:80/']
+        labels: {servicio: app-sga, entorno: aplicacion, modulo: pagina}
+      - targets: ['http://app-sga:80/api/v1/catalogos/puertos']
+        labels: {servicio: api-catalogo-puertos, entorno: aplicacion, modulo: api}
+    file_sd_configs:
+      - files: ['objetivos-pruebas.json']
+        refresh_interval: 2s
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [modulo]
+        target_label: __param_module
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackbox:9115
+
+  - job_name: transaduanas-loki
+    scrape_interval: 5s
+    static_configs:
+      - targets: ['loki:3100']
+  - job_name: transaduanas-alloy
+    scrape_interval: 5s
+    static_configs:
+      - targets: ['alloy:12345']

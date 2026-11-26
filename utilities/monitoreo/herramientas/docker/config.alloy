@@ -1,0 +1,52 @@
+// Variante Docker de ../alloy/config.alloy.
+// - Backend: lee sga-backend.log del volumen compartido sga-logs (montado en /var/log/sga).
+// - Frontends (Nginx): lee la salida estandar de los contenedores via docker.sock (solo lectura).
+logging {
+  level  = "info"
+  format = "logfmt"
+}
+
+loki.source.file "backend" {
+  targets = [
+    { __path__ = "/var/log/sga/sga-backend.log", job = "transaduanas-logs", service_name = "sga-backend" },
+  ]
+  tail_from_end = true
+  forward_to    = [loki.write.local.receiver]
+}
+
+discovery.docker "contenedores" {
+  host = "unix:///var/run/docker.sock"
+}
+
+discovery.relabel "nginx" {
+  targets = discovery.docker.contenedores.targets
+
+  rule {
+    source_labels = ["__meta_docker_container_name"]
+    regex         = "/(sga-frontend|sga-portal-b2b|sga-landing)"
+    action        = "keep"
+  }
+  rule {
+    source_labels = ["__meta_docker_container_name"]
+    regex         = "/(.*)"
+    target_label  = "service_name"
+    replacement   = "nginx-$1"
+  }
+  rule {
+    target_label = "job"
+    replacement  = "transaduanas-logs"
+  }
+}
+
+loki.source.docker "nginx" {
+  host       = "unix:///var/run/docker.sock"
+  targets    = discovery.relabel.nginx.output
+  forward_to = [loki.write.local.receiver]
+}
+
+loki.write "local" {
+  endpoint {
+    url        = "http://loki:3100/loki/api/v1/push"
+    batch_wait = "1s"
+  }
+}

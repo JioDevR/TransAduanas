@@ -1,0 +1,103 @@
+# Stack de monitoreo de TransAduanas (Prometheus, Grafana, Loki, Alloy, Blackbox).
+# Se combina con docker-compose.yml:
+#   docker compose -f docker-compose.yml -f docker-compose.monitoreo.yml up -d --build
+# Guia: docs/monitoreo.md
+services:
+  sga-backend:
+    environment:
+      SPRING_PROFILES_ACTIVE: monitoreo
+      # Escucha en la red interna de Docker; el puerto 9086 NO se publica al host.
+      MANAGEMENT_SERVER_ADDRESS: 0.0.0.0
+
+  blackbox:
+    image: docker.io/prom/blackbox-exporter:${BLACKBOX_VERSION:-v0.29.1}
+    container_name: sga-blackbox
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/blackbox/blackbox.yml
+    volumes:
+      - ./utilities/monitoreo/herramientas/blackbox/blackbox.yml:/etc/blackbox/blackbox.yml:ro
+    depends_on:
+      - app-sga
+      - app-b2b
+      - app-landing
+
+  prometheus:
+    image: docker.io/prom/prometheus:${PROMETHEUS_VERSION:-v3.13.5}
+    container_name: sga-prometheus
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=2d
+      - --storage.tsdb.retention.size=256MB
+    ports:
+      - "127.0.0.1:9090:9090"
+    volumes:
+      - ./utilities/monitoreo/herramientas/docker/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./utilities/monitoreo/herramientas/prometheus/reglas.yml:/etc/prometheus/reglas.yml:ro
+      - ./utilities/monitoreo/herramientas/prometheus/objetivos-pruebas.json:/etc/prometheus/objetivos-pruebas.json:ro
+      - sga-prometheus-data:/prometheus
+    depends_on:
+      - sga-backend
+      - blackbox
+      - loki
+      - alloy
+
+  loki:
+    image: docker.io/grafana/loki:${LOKI_VERSION:-3.7.10}
+    container_name: sga-loki
+    restart: unless-stopped
+    command:
+      - -config.file=/etc/loki/loki.yml
+    volumes:
+      - ./utilities/monitoreo/herramientas/docker/loki.yml:/etc/loki/loki.yml:ro
+      - sga-loki-data:/loki
+
+  alloy:
+    image: docker.io/grafana/alloy:${ALLOY_VERSION:-v1.22.0}
+    container_name: sga-alloy
+    restart: unless-stopped
+    user: "0:0"
+    command:
+      - run
+      - --server.http.listen-addr=0.0.0.0:12345
+      - --storage.path=/var/lib/alloy/data
+      - /etc/alloy/config.alloy
+    volumes:
+      - ./utilities/monitoreo/herramientas/docker/config.alloy:/etc/alloy/config.alloy:ro
+      - sga-logs:/var/log/sga:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - sga-alloy-data:/var/lib/alloy/data
+    depends_on:
+      - loki
+      - sga-backend
+
+  grafana:
+    image: docker.io/grafana/grafana-oss:${GRAFANA_VERSION:-13.3.1}
+    container_name: sga-grafana
+    restart: unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?define GRAFANA_ADMIN_PASSWORD en .env}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+      GF_ANALYTICS_REPORTING_ENABLED: "false"
+      GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /var/lib/grafana/dashboards/transaduanas.json
+    ports:
+      - "127.0.0.1:3000:3000"
+    volumes:
+      - ./utilities/monitoreo/herramientas/docker/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./utilities/monitoreo/herramientas/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - sga-grafana-data:/var/lib/grafana
+    depends_on:
+      - prometheus
+      - loki
+
+volumes:
+  sga-prometheus-data:
+  sga-loki-data:
+  sga-alloy-data:
+  sga-grafana-data:

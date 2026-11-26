@@ -43,10 +43,16 @@ public class LiquidacionFinancieraServiceImpl implements ILiquidacionFinancieraS
     private final IDocumentoAdjuntoRepository documentoRepository;
     private IAuditoriaService auditoriaService;
     private IComprobanteFacturaService comprobanteFacturaService;
+    private CatalogoResolucionService catalogoResolucionService;
 
     @Autowired(required = false)
     public void setAuditoriaService(IAuditoriaService auditoriaService) {
         this.auditoriaService = auditoriaService;
+    }
+
+    @Autowired(required = false)
+    public void setCatalogoResolucionService(CatalogoResolucionService catalogoResolucionService) {
+        this.catalogoResolucionService = catalogoResolucionService;
     }
 
     @Autowired(required = false)
@@ -326,6 +332,9 @@ public class LiquidacionFinancieraServiceImpl implements ILiquidacionFinancieraS
             lf.setObservaciones(dto.getObservaciones());
         }
 
+        if (catalogoResolucionService != null) {
+            catalogoResolucionService.enriquecerLiquidacion(lf);
+        }
         LiquidacionFinanciera guardada = liquidacionRepository.save(lf);
         if (comprobanteFacturaService != null) {
             comprobanteFacturaService.emitirAutomaticoPorLiquidacion(guardada, null);

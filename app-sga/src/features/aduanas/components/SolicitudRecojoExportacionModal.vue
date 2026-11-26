@@ -27,9 +27,9 @@
       <div class="sga-banner is-info">
         <i class="pi pi-truck"></i>
         <div>
-          <strong>Orden de Recojo en Planta hacia Zona Primaria</strong>
+          <strong>Solicitud de Recojo en Planta hacia Zona Primaria (Externo)</strong>
           <p class="recojo-banner-desc">
-            Se generará una orden de despacho para que el Supervisor de Transporte asigne unidad, chofer y traslado hacia el terminal de exportación.
+            Registre los datos de recojo en planta y terminal de destino para la coordinación con el operador de transporte externo.
           </p>
         </div>
       </div>
@@ -127,7 +127,7 @@
       <Button
         type="submit"
         form="solicitud-recojo-exportacion-form"
-        label="Enviar Orden de Recojo"
+        label="Registrar Solicitud de Recojo"
         icon="pi pi-send"
         size="small"
         :loading="loading"
@@ -217,7 +217,7 @@ const handleSubmit = async () => {
     handleClose()
   } catch (err) {
     console.error('Error al solicitar recojo en planta:', err)
-    errorMessage.value = err.response?.data?.message || err.message || 'Error al enviar orden de recojo a Flota.'
+    errorMessage.value = err.response?.data?.message || err.message || 'Error al registrar solicitud de recojo externo.'
   } finally {
     loading.value = false
   }

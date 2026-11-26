@@ -42,16 +42,6 @@ export const rolesRoutes = [
     }
   },
   {
-    path: '/transporte-flota',
-    name: 'TransporteFlotaModule',
-    component: () => import('@/features/transporte/views/TransporteFlotaView.vue'),
-    meta: {
-      requiresAuth: true,
-      roles: [ROLES.ADMINISTRADOR_TI, ROLES.GERENTE_GENERAL, ROLES.SUPERVISOR_TRANSPORTE],
-      title: 'Transporte y Flota - SGA'
-    }
-  },
-  {
     path: '/finanzas',
     name: 'FinanzasModule',
     component: () => import('@/features/finanzas/views/FinanzasView.vue'),

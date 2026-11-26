@@ -432,7 +432,7 @@ const openSolicitudTransporteModal = (exp) => {
 
 const onSolicitudTransporteSaved = async (actualizado) => {
   showSolicitudTransporteModal.value = false
-  showSuccess('Solicitud de despacho terrestre enviada a Flota y Transporte exitosamente.')
+  showSuccess('Solicitud de transporte externo registrada exitosamente.')
   await refreshAndSync(actualizado)
 }
 

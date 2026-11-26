@@ -104,6 +104,24 @@ describe('agenteWorkflowUtils', () => {
     expect(acciones.puedeRetiroDirecto).toBe(false)
   })
 
+  it('habilita solicitud de transporte externo solo si servicioTransporte=true y transporteSolicitado=false', () => {
+    const pendiente = getAccionesPermitidasAgente({
+      regimenAduanero: 'IMPORTACION_DEFINITIVA',
+      estadoExpediente: 'LEVANTE_AUTORIZADO',
+      servicioTransporte: true,
+      transporteSolicitado: false
+    })
+    expect(pendiente.puedeSolicitarTransporte).toBe(true)
+
+    const yaSolicitado = getAccionesPermitidasAgente({
+      regimenAduanero: 'IMPORTACION_DEFINITIVA',
+      estadoExpediente: 'LEVANTE_AUTORIZADO',
+      servicioTransporte: true,
+      transporteSolicitado: true
+    })
+    expect(yaSolicitado.puedeSolicitarTransporte).toBe(false)
+  })
+
   it('extrae terminal desde la bitácora de observaciones', () => {
     const obsImport = '[ARRIBO A PUERTO DE DESTINO] Arribo registrado el 20/11/2026 10:00 en terminal: DP World Callao. Detalle: OK'
     expect(extractTerminalBitacora(obsImport)).toBe('DP World Callao')

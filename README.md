@@ -201,19 +201,18 @@ app-sga/src/
                                             │
          ┌───────────────────┬──────────────┼───────────────────┬───────────────────┐
          ▼                   ▼              ▼                   ▼                   ▼
-┌─────────────────┐ ┌─────────────────┐ ┌─────────┐ ┌─────────────────┐ ┌─────────────────┐
-│ AGENTE COMERCIAL│ │ SUPERVISOR ADU. │ │ AGENTE  │ │ SUPERVISOR TRASP│ │    CONTADOR     │
-│ (Cotizaciones)  │ │(Expedientes/DAM)│ │ ADUAN.  │ │(Flota/Despachos)│ │(Finanzas/Cobros)│
-└─────────────────┘ └─────────────────┘ └─────────┘ └─────────────────┘ └─────────────────┘
+┌─────────────────┐ ┌─────────────────┐ ┌─────────┐ ┌─────────────────┐
+│ AGENTE COMERCIAL│ │ SUPERVISOR ADU. │ │ AGENTE  │ │    CONTADOR     │
+│ (Cotizaciones)  │ │(Expedientes/DAM)│ │ ADUAN.  │ │(Finanzas/Cobros)│
+└─────────────────┘ └─────────────────┘ └─────────┘ └─────────────────┘
 ```
 
 1. **`ADMINISTRADOR_TI`:** Gobernanza de cuentas internas, cuentas del Portal B2B, roles, sedes, catálogos y consola de logs del sistema.
-2. **`GERENTE_GENERAL`:** Cuadros de mando ejecutivos, auditoría de flota, conductores y supervisión general.
+2. **`GERENTE_GENERAL`:** Cuadros de mando ejecutivos, sedes, catálogos maestros y supervisión general.
 3. **`AGENTE_COMERCIAL`:** Registro de clientes/prospectos y calculadora de cotizaciones de 4 pasos con flete y ad-valórem.
 4. **`SUPERVISOR_ADUANERO`:** Auditoría de cotizaciones, apertura formal de expedientes y trámite de DAM con canal SUNAT.
-5. **`AGENTE_ADUANERO`:** Control de pesaje balanza VGM en depósito temporal y verificación de levante aduanero.
-6. **`SUPERVISOR_TRANSPORTE`:** Asignación de tractos y choferes MTC, emisión de guías de remisión y tracking en ruta.
-7. **`CONTADOR`:** Validación obligatoria de anticipos pre-expediente, cálculo de detracciones SPOT y liquidación de gastos.
+5. **`AGENTE_ADUANERO`:** Control de pesaje balanza VGM en depósito temporal, verificación de levante aduanero y solicitud de traslado externo.
+6. **`CONTADOR`:** Validación obligatoria de anticipos pre-expediente, cálculo de detracciones SPOT y liquidación de gastos.
 
 ---
 

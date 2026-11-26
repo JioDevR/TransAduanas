@@ -135,21 +135,6 @@ const cards = computed(() => [
     stat2Label: 'Con VUCE',
     stat2Val: props.metrics.mercanciasVuceCount,
     cta: 'Gestionar Partidas'
-  },
-  {
-    key: 'flota',
-    pdfKey: null,
-    index: 'MÓD. 05',
-    badge: 'Puente Flota',
-    severity: 'secondary',
-    icon: 'pi pi-truck',
-    title: 'Flota y Conductores',
-    desc: 'Supervisión transversal del parque automotor MTC, capacidad instalada y choferes.',
-    stat1Label: 'Unidades Op.',
-    stat1Val: `${props.metrics.flotaOperativaCount}/${props.metrics.unidadesCount}`,
-    stat2Label: 'Conductores',
-    stat2Val: `${props.metrics.conductoresDisponiblesCount}/${props.metrics.conductoresCount}`,
-    cta: 'Abrir Módulo Transporte'
   }
 ])
 </script>

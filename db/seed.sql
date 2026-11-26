@@ -14,8 +14,16 @@ SET CHARACTER SET utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
 
 -- Limpieza previa en orden inverso de dependencias para asegurar idempotencia
+DELETE FROM expediente_solicitud_transporte;
+DELETE FROM expediente_conformidad_entrega;
+DELETE FROM expediente_transmision_naranja;
+DELETE FROM expediente_inspeccion_rojo;
+DELETE FROM expediente_canal_sunat;
+DELETE FROM expediente_transito_internacional;
+DELETE FROM expediente_contacto_exterior;
+DELETE FROM expediente_evento;
+DELETE FROM comprobante_factura;
 DELETE FROM liquidacion_financiera;
-DELETE FROM despacho_transporte;
 DELETE FROM control_almacen;
 DELETE FROM documento_adjunto;
 DELETE FROM expediente;
@@ -25,24 +33,37 @@ DELETE FROM notificacion_cliente;
 DELETE FROM usuario_cliente;
 DELETE FROM cliente;
 DELETE FROM usuario WHERE rol != 'ADMINISTRADOR_TI' AND username != 'admin';
-DELETE FROM conductor;
-DELETE FROM unidad_transporte;
 DELETE FROM catalogo_mercancia;
+DELETE FROM catalogo_entidad_reguladora;
+DELETE FROM catalogo_categoria_mercancia;
 DELETE FROM catalogo_tipo_carga;
 DELETE FROM catalogo_puerto;
+DELETE FROM catalogo_cuenta_recaudadora;
+DELETE FROM catalogo_banco;
+DELETE FROM catalogo_metodo_pago;
+DELETE FROM catalogo_motivo_observacion;
+DELETE FROM catalogo_categoria_documento;
+DELETE FROM catalogo_provincia;
+DELETE FROM catalogo_departamento;
 DELETE FROM sede;
 
 ALTER TABLE sede AUTO_INCREMENT = 1;
 ALTER TABLE catalogo_puerto AUTO_INCREMENT = 1;
 ALTER TABLE catalogo_tipo_carga AUTO_INCREMENT = 1;
+ALTER TABLE catalogo_categoria_mercancia AUTO_INCREMENT = 1;
+ALTER TABLE catalogo_entidad_reguladora AUTO_INCREMENT = 1;
 ALTER TABLE catalogo_mercancia AUTO_INCREMENT = 1;
+ALTER TABLE catalogo_banco AUTO_INCREMENT = 1;
+ALTER TABLE catalogo_cuenta_recaudadora AUTO_INCREMENT = 1;
+ALTER TABLE catalogo_metodo_pago AUTO_INCREMENT = 1;
+ALTER TABLE catalogo_motivo_observacion AUTO_INCREMENT = 1;
+ALTER TABLE catalogo_categoria_documento AUTO_INCREMENT = 1;
+ALTER TABLE catalogo_departamento AUTO_INCREMENT = 1;
+ALTER TABLE catalogo_provincia AUTO_INCREMENT = 1;
 ALTER TABLE usuario AUTO_INCREMENT = 2;
 ALTER TABLE notificacion_cliente AUTO_INCREMENT = 1;
 ALTER TABLE usuario_cliente AUTO_INCREMENT = 1;
 ALTER TABLE cliente AUTO_INCREMENT = 1;
-ALTER TABLE conductor AUTO_INCREMENT = 1;
-ALTER TABLE unidad_transporte AUTO_INCREMENT = 1;
-ALTER TABLE despacho_transporte AUTO_INCREMENT = 1;
 
 -- =============================================================================
 -- 1. SEDES DEL SISTEMA (CATÁLOGO MAESTRO DE SEDES Y SUCURSALES)
@@ -254,6 +275,335 @@ INSERT INTO catalogo_mercancia (id_mercancia, codigo, nombre, categoria, requier
     (52, '9403.80.00.00', 'Muebles de madera y ratan para exteriores', 'Hogar', FALSE, NULL, 0.00, 'ACTIVO');
 
 -- =============================================================================
+-- 4B. CATÁLOGOS NORMALIZADOS 3FN (MIGRADOS DEL FRONTEND)
+-- =============================================================================
+INSERT INTO catalogo_categoria_mercancia (codigo, nombre, estado) VALUES
+    ('GENERAL', 'General', 'ACTIVO'),
+    ('TECNOLOGIA', 'Tecnologia', 'ACTIVO'),
+    ('ENTRETENIMIENTO', 'Entretenimiento', 'ACTIVO'),
+    ('VEHICULOS', 'Vehiculos', 'ACTIVO'),
+    ('TRANSPORTE', 'Transporte', 'ACTIVO'),
+    ('JUGUETERIA', 'Jugueteria', 'ACTIVO'),
+    ('CALZADO', 'Calzado', 'ACTIVO'),
+    ('CONFECCIONES', 'Confecciones', 'ACTIVO'),
+    ('TEXTIL', 'Textil', 'ACTIVO'),
+    ('FARMACIA', 'Farmacia', 'ACTIVO'),
+    ('COSMETICA', 'Cosmetica', 'ACTIVO'),
+    ('NUTRICION', 'Nutricion', 'ACTIVO'),
+    ('LICORES', 'Licores', 'ACTIVO'),
+    ('BEBIDAS', 'Bebidas', 'ACTIVO'),
+    ('TABACO', 'Tabaco', 'ACTIVO'),
+    ('ALIMENTOS', 'Alimentos', 'ACTIVO'),
+    ('AGROPECUARIO', 'Agropecuario', 'ACTIVO'),
+    ('ELECTROHOGAR', 'Electrohogar', 'ACTIVO'),
+    ('ELECTRONICA', 'Electronica', 'ACTIVO'),
+    ('HOGAR', 'Hogar', 'ACTIVO'),
+    ('AUTOPARTES', 'Autopartes', 'ACTIVO'),
+    ('SEGURIDAD', 'Seguridad', 'ACTIVO'),
+    ('AGROEXPORTACION', 'Agroexportacion', 'ACTIVO'),
+    ('PESCA', 'Pesca', 'ACTIVO'),
+    ('FERRETERIA', 'Ferreteria', 'ACTIVO'),
+    ('MAQUINARIA', 'Maquinaria', 'ACTIVO'),
+    ('EQUIPAMIENTO', 'Equipamiento', 'ACTIVO'),
+    ('QUIMICOS', 'Quimicos', 'ACTIVO'),
+    ('QUIMICOS_IMO', 'Quimicos / IMO', 'ACTIVO'),
+    ('MADERA', 'Madera', 'ACTIVO');
+
+INSERT INTO catalogo_entidad_reguladora (sigla, nombre, estado) VALUES
+    ('DIGEMID', 'DIGEMID (Medicamentos y Cosméticos)', 'ACTIVO'),
+    ('DIGESA', 'DIGESA (Alimentos y Bebidas)', 'ACTIVO'),
+    ('MINSA / DIGESA', 'MINSA / DIGESA (Salud Pública)', 'ACTIVO'),
+    ('SENASA', 'SENASA (Agro y Animal)', 'ACTIVO'),
+    ('SANIPES', 'SANIPES (Pesca y Acuicultura)', 'ACTIVO'),
+    ('SUCAMEC', 'SUCAMEC (Explosivos y Armas)', 'ACTIVO'),
+    ('SUCAMEC / SUNAT IQBF', 'SUCAMEC / SUNAT IQBF (Insumos Fiscalizados)', 'ACTIVO'),
+    ('PRODUCE', 'PRODUCE (Insumos Químicos)', 'ACTIVO'),
+    ('MTC', 'MTC (Equipos de Telecomunicación)', 'ACTIVO'),
+    ('MTC / CITV', 'MTC / CITV (Vehículos y Revisiones Técnicas)', 'ACTIVO');
+
+UPDATE catalogo_mercancia m
+JOIN catalogo_categoria_mercancia c ON UPPER(TRIM(m.categoria)) = UPPER(TRIM(c.nombre))
+SET m.id_categoria = c.id_categoria;
+
+UPDATE catalogo_mercancia m
+JOIN catalogo_entidad_reguladora e ON UPPER(TRIM(m.entidad_reguladora)) = UPPER(TRIM(e.sigla))
+SET m.id_entidad_reguladora = e.id_entidad
+WHERE m.entidad_reguladora IS NOT NULL;
+
+INSERT INTO catalogo_banco (id_banco, codigo, nombre, aplica_origen, aplica_destino, estado) VALUES
+    (1, 'BCP', 'Banco de Crédito del Perú (BCP)', TRUE, TRUE, 'ACTIVO'),
+    (2, 'BBVA', 'BBVA Perú', TRUE, TRUE, 'ACTIVO'),
+    (3, 'INTERBANK', 'Interbank', TRUE, TRUE, 'ACTIVO'),
+    (4, 'SCOTIABANK', 'Scotiabank Perú', TRUE, TRUE, 'ACTIVO'),
+    (5, 'BANBIF', 'BanBif', TRUE, FALSE, 'ACTIVO'),
+    (6, 'BANCO_PICHINCHA', 'Banco Pichincha', TRUE, FALSE, 'ACTIVO'),
+    (7, 'BANCO_COMERCIO', 'Banco de Comercio', TRUE, FALSE, 'ACTIVO'),
+    (8, 'BANCO_NACION', 'Banco de la Nación (Detracciones)', FALSE, TRUE, 'ACTIVO'),
+    (9, 'TRANSFERENCIA_EXTERIOR', 'Transferencia Internacional / Swift', TRUE, FALSE, 'ACTIVO');
+
+INSERT INTO catalogo_cuenta_recaudadora (id_banco, codigo, nombre, moneda, numero_cuenta, cci, aplica_portal_b2b, aplica_sga, estado) VALUES
+    (1, 'BCP-USD', 'BCP Dólares TransAduanas', 'USD', '191-0023412-1-44', '002-19100023412144-54', TRUE, TRUE, 'ACTIVO'),
+    (1, 'BCP-PEN', 'BCP Soles TransAduanas', 'PEN', '191-0023412-0-43', '002-19100023412043-51', FALSE, TRUE, 'ACTIVO'),
+    (2, 'BBVA-USD', 'BBVA Dólares TransAduanas', 'USD', '0011-0182-0100034567', '011-182-000100034567-22', TRUE, TRUE, 'ACTIVO'),
+    (2, 'BBVA-PEN', 'BBVA Soles TransAduanas', 'PEN', '0011-0182-0100034568', '011-182-000100034568-25', FALSE, TRUE, 'ACTIVO'),
+    (3, 'IBK-USD', 'Interbank Dólares TransAduanas', 'USD', '200-3001245678', '003-200-003001245678-19', TRUE, TRUE, 'ACTIVO'),
+    (4, 'SCOTIA-PEN', 'Scotiabank Soles TransAduanas', 'PEN', '000-4567890', '009-000-000004567890-10', FALSE, TRUE, 'ACTIVO');
+
+INSERT INTO catalogo_metodo_pago (codigo, nombre, aplica_cotizacion, aplica_liquidacion, aplica_portal_b2b, estado) VALUES
+    ('TRANSFERENCIA_BANCARIA', 'Transferencia Bancaria Vía Web/App', TRUE, TRUE, TRUE, 'ACTIVO'),
+    ('TRANSFERENCIA_INTERBANCARIA', 'Transferencia Interbancaria (CCI)', TRUE, TRUE, TRUE, 'ACTIVO'),
+    ('DEPOSITO_EN_VENTANILLA', 'Depósito en Ventanilla / Agente', TRUE, TRUE, TRUE, 'ACTIVO'),
+    ('TRANSFERENCIA_INTERNACIONAL', 'Transferencia Swift Exterior', TRUE, FALSE, TRUE, 'ACTIVO'),
+    ('CHEQUE_GERENCIA', 'Cheque de Gerencia', TRUE, TRUE, FALSE, 'ACTIVO'),
+    ('PAGO_ELECTRONICO', 'Pago Electrónico / Link Digital', TRUE, TRUE, FALSE, 'ACTIVO'),
+    ('CARTA_FIANZA', 'Carta Fianza Bancaria', TRUE, FALSE, FALSE, 'ACTIVO');
+
+INSERT INTO catalogo_motivo_observacion (codigo, descripcion, modulo, estado) VALUES
+    ('VOUCHER_ILEGIBLE', 'Voucher ilegible o incompleto', 'ABONO', 'ACTIVO'),
+    ('MONTO_NO_COINCIDE', 'Monto abonado no coincide con cotización', 'ABONO', 'ACTIVO'),
+    ('OPERACION_NO_FIGURA', 'N° de Operación no figura en extracto bancario', 'ABONO', 'ACTIVO'),
+    ('COMPROBANTE_AJENO', 'Comprobante no corresponde a TransAduanas', 'ABONO', 'ACTIVO'),
+    ('MONEDA_CUENTA_INCORRECTA', 'Moneda o cuenta destino incorrecta', 'ABONO', 'ACTIVO');
+
+INSERT INTO catalogo_categoria_documento (codigo, nombre, estado) VALUES
+    ('GENERAL', 'Documento General / Sustento', 'ACTIVO'),
+    ('FACTURA', 'Factura Comercial', 'ACTIVO'),
+    ('PACKING_LIST', 'Lista de Empaque (Packing List)', 'ACTIVO'),
+    ('TRANSPORTE_BL', 'Documento de Transporte (BL / AWB)', 'ACTIVO'),
+    ('CERTIFICADO', 'Certificado de Origen / Calidad', 'ACTIVO'),
+    ('PERMISO_ESPECIAL', 'Permiso Especial / Registro Regulatorio', 'ACTIVO'),
+    ('IDENTIFICACION', 'Documento de Identificación / RUC', 'ACTIVO');
+
+-- =============================================================================
+-- CATÁLOGO DE UBIGEO PERÚ (25 DEPARTAMENTOS Y 196 PROVINCIAS)
+-- =============================================================================
+INSERT INTO catalogo_departamento (id_departamento, nombre, estado) VALUES
+    (1, 'AMAZONAS', 'ACTIVO'),
+    (2, 'ÁNCASH', 'ACTIVO'),
+    (3, 'APURÍMAC', 'ACTIVO'),
+    (4, 'AREQUIPA', 'ACTIVO'),
+    (5, 'AYACUCHO', 'ACTIVO'),
+    (6, 'CAJAMARCA', 'ACTIVO'),
+    (7, 'CALLAO', 'ACTIVO'),
+    (8, 'CUSCO', 'ACTIVO'),
+    (9, 'HUANCAVELICA', 'ACTIVO'),
+    (10, 'HUÁNUCO', 'ACTIVO'),
+    (11, 'ICA', 'ACTIVO'),
+    (12, 'JUNÍN', 'ACTIVO'),
+    (13, 'LA LIBERTAD', 'ACTIVO'),
+    (14, 'LAMBAYEQUE', 'ACTIVO'),
+    (15, 'LIMA', 'ACTIVO'),
+    (16, 'LORETO', 'ACTIVO'),
+    (17, 'MADRE DE DIOS', 'ACTIVO'),
+    (18, 'MOQUEGUA', 'ACTIVO'),
+    (19, 'PASCO', 'ACTIVO'),
+    (20, 'PIURA', 'ACTIVO'),
+    (21, 'PUNO', 'ACTIVO'),
+    (22, 'SAN MARTÍN', 'ACTIVO'),
+    (23, 'TACNA', 'ACTIVO'),
+    (24, 'TUMBES', 'ACTIVO'),
+    (25, 'UCAYALI', 'ACTIVO');
+
+INSERT INTO catalogo_provincia (id_departamento, nombre, estado) VALUES
+    (1, 'Chachapoyas', 'ACTIVO'),
+    (1, 'Bagua', 'ACTIVO'),
+    (1, 'Bongará', 'ACTIVO'),
+    (1, 'Condorcanqui', 'ACTIVO'),
+    (1, 'Luya', 'ACTIVO'),
+    (1, 'Rodríguez de Mendoza', 'ACTIVO'),
+    (1, 'Utcubamba', 'ACTIVO'),
+    (2, 'Huaraz', 'ACTIVO'),
+    (2, 'Aija', 'ACTIVO'),
+    (2, 'Antonio Raymondi', 'ACTIVO'),
+    (2, 'Asunción', 'ACTIVO'),
+    (2, 'Bolognesi', 'ACTIVO'),
+    (2, 'Carhuaz', 'ACTIVO'),
+    (2, 'Carlos Fermín Fitzcarrald', 'ACTIVO'),
+    (2, 'Casma', 'ACTIVO'),
+    (2, 'Corongo', 'ACTIVO'),
+    (2, 'Huari', 'ACTIVO'),
+    (2, 'Huarmey', 'ACTIVO'),
+    (2, 'Huaylas', 'ACTIVO'),
+    (2, 'Mariscal Luzuriaga', 'ACTIVO'),
+    (2, 'Ocros', 'ACTIVO'),
+    (2, 'Pallasca', 'ACTIVO'),
+    (2, 'Pomabamba', 'ACTIVO'),
+    (2, 'Recuay', 'ACTIVO'),
+    (2, 'Santa (Chimbote)', 'ACTIVO'),
+    (2, 'Sihuas', 'ACTIVO'),
+    (2, 'Yungay', 'ACTIVO'),
+    (3, 'Abancay', 'ACTIVO'),
+    (3, 'Andahuaylas', 'ACTIVO'),
+    (3, 'Antabamba', 'ACTIVO'),
+    (3, 'Aymaraes', 'ACTIVO'),
+    (3, 'Cotabambas', 'ACTIVO'),
+    (3, 'Chincheros', 'ACTIVO'),
+    (3, 'Grau', 'ACTIVO'),
+    (4, 'Arequipa', 'ACTIVO'),
+    (4, 'Camaná', 'ACTIVO'),
+    (4, 'Caravelí', 'ACTIVO'),
+    (4, 'Castilla', 'ACTIVO'),
+    (4, 'Caylloma', 'ACTIVO'),
+    (4, 'Condesuyos', 'ACTIVO'),
+    (4, 'Islay (Mollendo)', 'ACTIVO'),
+    (4, 'La Unión', 'ACTIVO'),
+    (5, 'Huamanga', 'ACTIVO'),
+    (5, 'Cangallo', 'ACTIVO'),
+    (5, 'Huanca Sancos', 'ACTIVO'),
+    (5, 'Huanta', 'ACTIVO'),
+    (5, 'La Mar', 'ACTIVO'),
+    (5, 'Lucanas', 'ACTIVO'),
+    (5, 'Parinacochas', 'ACTIVO'),
+    (5, 'Páucar del Sara Sara', 'ACTIVO'),
+    (5, 'Sucre', 'ACTIVO'),
+    (5, 'Víctor Fajardo', 'ACTIVO'),
+    (5, 'Vilcas Huamán', 'ACTIVO'),
+    (6, 'Cajamarca', 'ACTIVO'),
+    (6, 'Cajabamba', 'ACTIVO'),
+    (6, 'Celendín', 'ACTIVO'),
+    (6, 'Chota', 'ACTIVO'),
+    (6, 'Contumazá', 'ACTIVO'),
+    (6, 'Cutervo', 'ACTIVO'),
+    (6, 'Hualgayoc', 'ACTIVO'),
+    (6, 'Jaén', 'ACTIVO'),
+    (6, 'San Ignacio', 'ACTIVO'),
+    (6, 'San Marcos', 'ACTIVO'),
+    (6, 'San Miguel', 'ACTIVO'),
+    (6, 'San Pablo', 'ACTIVO'),
+    (6, 'Santa Cruz', 'ACTIVO'),
+    (7, 'Callao', 'ACTIVO'),
+    (8, 'Cusco', 'ACTIVO'),
+    (8, 'Acomayo', 'ACTIVO'),
+    (8, 'Anta', 'ACTIVO'),
+    (8, 'Calca', 'ACTIVO'),
+    (8, 'Canas', 'ACTIVO'),
+    (8, 'Canchis', 'ACTIVO'),
+    (8, 'Chumbivilcas', 'ACTIVO'),
+    (8, 'Espinar', 'ACTIVO'),
+    (8, 'La Convención', 'ACTIVO'),
+    (8, 'Paruro', 'ACTIVO'),
+    (8, 'Paucartambo', 'ACTIVO'),
+    (8, 'Quispicanchi', 'ACTIVO'),
+    (8, 'Urubamba', 'ACTIVO'),
+    (9, 'Huancavelica', 'ACTIVO'),
+    (9, 'Acobamba', 'ACTIVO'),
+    (9, 'Angaraes', 'ACTIVO'),
+    (9, 'Castrovirreyna', 'ACTIVO'),
+    (9, 'Churcampa', 'ACTIVO'),
+    (9, 'Huaytará', 'ACTIVO'),
+    (9, 'Tayacaja', 'ACTIVO'),
+    (10, 'Huánuco', 'ACTIVO'),
+    (10, 'Ambo', 'ACTIVO'),
+    (10, 'Dos de Mayo', 'ACTIVO'),
+    (10, 'Huacaybamba', 'ACTIVO'),
+    (10, 'Huamalíes', 'ACTIVO'),
+    (10, 'Leoncio Prado (Tingo María)', 'ACTIVO'),
+    (10, 'Marañón', 'ACTIVO'),
+    (10, 'Pachitea', 'ACTIVO'),
+    (10, 'Puerto Inca', 'ACTIVO'),
+    (10, 'Lauricocha', 'ACTIVO'),
+    (10, 'Yarowilca', 'ACTIVO'),
+    (11, 'Ica', 'ACTIVO'),
+    (11, 'Chincha', 'ACTIVO'),
+    (11, 'Nazca', 'ACTIVO'),
+    (11, 'Palpa', 'ACTIVO'),
+    (11, 'Pisco', 'ACTIVO'),
+    (12, 'Huancayo', 'ACTIVO'),
+    (12, 'Concepción', 'ACTIVO'),
+    (12, 'Chanchamayo', 'ACTIVO'),
+    (12, 'Jauja', 'ACTIVO'),
+    (12, 'Junín', 'ACTIVO'),
+    (12, 'Satipo', 'ACTIVO'),
+    (12, 'Tarma', 'ACTIVO'),
+    (12, 'Yauli (La Oroya)', 'ACTIVO'),
+    (12, 'Chupaca', 'ACTIVO'),
+    (13, 'Trujillo', 'ACTIVO'),
+    (13, 'Ascope', 'ACTIVO'),
+    (13, 'Bolívar', 'ACTIVO'),
+    (13, 'Chepén', 'ACTIVO'),
+    (13, 'Julcán', 'ACTIVO'),
+    (13, 'Otuzco', 'ACTIVO'),
+    (13, 'Pacasmayo', 'ACTIVO'),
+    (13, 'Pataz', 'ACTIVO'),
+    (13, 'Sánchez Carrión', 'ACTIVO'),
+    (13, 'Santiago de Chuco', 'ACTIVO'),
+    (13, 'Gran Chimú', 'ACTIVO'),
+    (13, 'Virú', 'ACTIVO'),
+    (14, 'Chiclayo', 'ACTIVO'),
+    (14, 'Ferreñafe', 'ACTIVO'),
+    (14, 'Lambayeque', 'ACTIVO'),
+    (15, 'Lima (Metropolitana)', 'ACTIVO'),
+    (15, 'Barranca', 'ACTIVO'),
+    (15, 'Cajatambo', 'ACTIVO'),
+    (15, 'Canta', 'ACTIVO'),
+    (15, 'Cañete', 'ACTIVO'),
+    (15, 'Huaral', 'ACTIVO'),
+    (15, 'Huarochirí', 'ACTIVO'),
+    (15, 'Huaura (Huacho)', 'ACTIVO'),
+    (15, 'Oyón', 'ACTIVO'),
+    (15, 'Yauyos', 'ACTIVO'),
+    (16, 'Maynas (Iquitos)', 'ACTIVO'),
+    (16, 'Alto Amazonas (Yurimaguas)', 'ACTIVO'),
+    (16, 'Loreto (Nauta)', 'ACTIVO'),
+    (16, 'Mariscal Ramón Castilla', 'ACTIVO'),
+    (16, 'Requena', 'ACTIVO'),
+    (16, 'Ucayali (Contamana)', 'ACTIVO'),
+    (16, 'Datem del Marañón', 'ACTIVO'),
+    (16, 'Putumayo', 'ACTIVO'),
+    (17, 'Tambopata (Puerto Maldonado)', 'ACTIVO'),
+    (17, 'Manu', 'ACTIVO'),
+    (17, 'Tahuamanu', 'ACTIVO'),
+    (18, 'Mariscal Nieto (Moquegua)', 'ACTIVO'),
+    (18, 'General Sánchez Cerro', 'ACTIVO'),
+    (18, 'Ilo', 'ACTIVO'),
+    (19, 'Pasco (Cerro de Pasco)', 'ACTIVO'),
+    (19, 'Daniel Alcides Carrión', 'ACTIVO'),
+    (19, 'Oxapampa', 'ACTIVO'),
+    (20, 'Piura', 'ACTIVO'),
+    (20, 'Ayabaca', 'ACTIVO'),
+    (20, 'Huancabamba', 'ACTIVO'),
+    (20, 'Morropón (Chulucanas)', 'ACTIVO'),
+    (20, 'Paita', 'ACTIVO'),
+    (20, 'Sullana', 'ACTIVO'),
+    (20, 'Talara', 'ACTIVO'),
+    (20, 'Sechura', 'ACTIVO'),
+    (21, 'Puno', 'ACTIVO'),
+    (21, 'Azángaro', 'ACTIVO'),
+    (21, 'Carabaya', 'ACTIVO'),
+    (21, 'Chucuito', 'ACTIVO'),
+    (21, 'El Collao', 'ACTIVO'),
+    (21, 'Huancané', 'ACTIVO'),
+    (21, 'Lampa', 'ACTIVO'),
+    (21, 'Melgar', 'ACTIVO'),
+    (21, 'Moho', 'ACTIVO'),
+    (21, 'San Antonio de Putina', 'ACTIVO'),
+    (21, 'San Román (Juliaca)', 'ACTIVO'),
+    (21, 'Sandia', 'ACTIVO'),
+    (21, 'Yunguyo', 'ACTIVO'),
+    (22, 'Moyobamba', 'ACTIVO'),
+    (22, 'Bellavista', 'ACTIVO'),
+    (22, 'El Dorado', 'ACTIVO'),
+    (22, 'Huallaga', 'ACTIVO'),
+    (22, 'Lamas', 'ACTIVO'),
+    (22, 'Mariscal Cáceres', 'ACTIVO'),
+    (22, 'Picota', 'ACTIVO'),
+    (22, 'Rioja', 'ACTIVO'),
+    (22, 'San Martín (Tarapoto)', 'ACTIVO'),
+    (22, 'Tocache', 'ACTIVO'),
+    (23, 'Tacna', 'ACTIVO'),
+    (23, 'Candarave', 'ACTIVO'),
+    (23, 'Jorge Basadre', 'ACTIVO'),
+    (23, 'Tarata', 'ACTIVO'),
+    (24, 'Tumbes', 'ACTIVO'),
+    (24, 'Contralmirante Villar (Zorritos)', 'ACTIVO'),
+    (24, 'Zarumilla', 'ACTIVO'),
+    (25, 'Coronel Portillo (Pucallpa)', 'ACTIVO'),
+    (25, 'Atalaya', 'ACTIVO'),
+    (25, 'Padre Abad (Aguaytía)', 'ACTIVO'),
+    (25, 'Purús', 'ACTIVO');
+
+
+-- =============================================================================
 -- 5. USUARIOS DEL SISTEMA (ROLES OPERATIVOS SGA)
 -- =============================================================================
 -- Contraseña para todos los usuarios semilla: Password123!
@@ -309,19 +659,7 @@ INSERT INTO usuario (id_usuario, rol, id_sede, username, password_hash, nombres,
     (50, 'AGENTE_ADUANERO', 6, 'mquispe', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', 'Miriam', 'Quispe Apaza', 'm.quispea@transaduanas.pe', 'DNI', '51901234', '+51 987 556 020', 'Agente Aduanero', 'AGE-020', NOW(), TRUE),
     (51, 'AGENTE_ADUANERO', 6, 'fllanos', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', 'Fernando', 'Llanos Coaguila', 'f.llanos@transaduanas.pe', 'DNI', '52012345', '+51 987 556 021', 'Agente Aduanero', 'AGE-021', NOW(), TRUE),
     (52, 'AGENTE_ADUANERO', 6, 'jchoque', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', 'Juana', 'Choque Huayta', 'j.choque@transaduanas.pe', 'DNI', '52123456', '+51 987 556 022', 'Agente Aduanero', 'AGE-022', NOW(), TRUE),
-    (53, 'AGENTE_ADUANERO', 6, 'aaguilar', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', 'Alex', 'Aguilar Cornejo', 'a.aguilar@transaduanas.pe', 'DNI', '52234567', '+51 987 556 023', 'Agente Aduanero', 'AGE-023', NOW(), TRUE),
-    (54, 'SUPERVISOR_TRANSPORTE', 3, 'transporte', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', 'Raul', 'Cardenas Melendez', 'transporte@transaduanas.pe', 'DNI', '60123456', '+51 987 667 001', 'Supervisor de Transporte', 'TRA-001', NOW(), TRUE),
-    (55, 'SUPERVISOR_TRANSPORTE', 3, 'ebravor', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', 'Enrique', 'Bravo Rojas', 'e.bravo@transaduanas.pe', 'DNI', '60234567', '+51 987 667 002', 'Supervisor de Transporte', 'TRA-002', NOW(), TRUE),
-    (56, 'SUPERVISOR_TRANSPORTE', 3, 'wgalarza', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', 'Wilmer', 'Galarza Silva', 'w.galarza@transaduanas.pe', 'DNI', '60345678', '+51 987 667 003', 'Supervisor de Transporte', 'TRA-003', NOW(), TRUE),
-    (57, 'SUPERVISOR_TRANSPORTE', 3, 'osanchez', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', 'Oscar', 'Sanchez Huamanchumo', 'o.sanchez@transaduanas.pe', 'DNI', '60456789', '+51 987 667 004', 'Supervisor de Transporte', 'TRA-004', NOW(), TRUE),
-    (58, 'SUPERVISOR_TRANSPORTE', 4, 'fparedes', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', 'Felix', 'Paredes Valles', 'f.paredes@transaduanas.pe', 'DNI', '60567890', '+51 987 667 005', 'Supervisor de Transporte', 'TRA-005', NOW(), TRUE),
-    (59, 'SUPERVISOR_TRANSPORTE', 4, 'jcastaneda', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', 'Juan', 'Castaneda Luna', 'j.castaneda@transaduanas.pe', 'DNI', '60678901', '+51 987 667 006', 'Supervisor de Transporte', 'TRA-006', NOW(), TRUE),
-    (60, 'SUPERVISOR_TRANSPORTE', 4, 'mmendozaa', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', 'Mario', 'Mendoza Ayala', 'm.mendozaa@transaduanas.pe', 'DNI', '60789012', '+51 987 667 007', 'Supervisor de Transporte', 'TRA-007', NOW(), TRUE),
-    (61, 'SUPERVISOR_TRANSPORTE', 5, 'wvillegas', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', 'Walter', 'Villegas Bancayan', 'w.villegas@transaduanas.pe', 'DNI', '60890123', '+51 987 667 008', 'Supervisor de Transporte', 'TRA-008', NOW(), TRUE),
-    (62, 'SUPERVISOR_TRANSPORTE', 5, 'gchiroque', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', 'Guillermo', 'Chiroque Pasache', 'g.chiroque@transaduanas.pe', 'DNI', '60901234', '+51 987 667 009', 'Supervisor de Transporte', 'TRA-009', NOW(), TRUE),
-    (63, 'SUPERVISOR_TRANSPORTE', 5, 'anavarro', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', 'Armando', 'Navarro Dioses', 'a.navarro@transaduanas.pe', 'DNI', '61012345', '+51 987 667 010', 'Supervisor de Transporte', 'TRA-010', NOW(), TRUE),
-    (64, 'SUPERVISOR_TRANSPORTE', 6, 'jcalisaya', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', 'Jose', 'Calisaya Pari', 'j.calisaya@transaduanas.pe', 'DNI', '61123456', '+51 987 667 011', 'Supervisor de Transporte', 'TRA-011', NOW(), TRUE),
-    (65, 'SUPERVISOR_TRANSPORTE', 6, 'mquispeq', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', 'Marco', 'Quispe Quispe', 'm.quispeq@transaduanas.pe', 'DNI', '61234567', '+51 987 667 012', 'Supervisor de Transporte', 'TRA-012', NOW(), TRUE);
+    (53, 'AGENTE_ADUANERO', 6, 'aaguilar', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', 'Alex', 'Aguilar Cornejo', 'a.aguilar@transaduanas.pe', 'DNI', '52234567', '+51 987 556 023', 'Agente Aduanero', 'AGE-023', NOW(), TRUE);
 
 -- =============================================================================
 -- 6. CLIENTES DEL SISTEMA (EMPRESAS IMPORTADORAS Y EXPORTADORAS)
@@ -497,57 +835,52 @@ INSERT INTO usuario_cliente (id_usuario_cliente, id_cliente, username, password_
     (80, 80, '20609874126', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', TRUE, FALSE, NULL);
 
 -- =============================================================================
--- PARQUE AUTOMOTOR Y FLOTA DE TRANSPORTE TERRESTRE (MTC)
--- =============================================================================
-INSERT INTO unidad_transporte (id_unidad, placa_tracto, placa_carreta, marca_modelo, ano_fabricacion, tipo_vehiculo, capacidad_carga_kg, soat_vencimiento, citv_vencimiento, kilometraje_actual, estado_operativo, estado_activo, observaciones) VALUES
-    (1, 'V1A-780', 'T1A-981', 'Volvo FH 500 Globetrotter', 2022, 'TRACTO', 32000.00, '2027-08-15', '2027-09-20', 145000, 'EN_RUTA', TRUE, 'Tracto con suspensión neumática y GPS satelital'),
-    (2, 'V2B-890', 'T2B-982', 'Scania R500 V8 Streamline', 2021, 'TRACTO', 32000.00, '2027-04-10', '2027-05-12', 198000, 'DISPONIBLE', TRUE, 'Asignado a rutas interprovinciales'),
-    (3, 'V3C-910', NULL, 'International ProStar 450', 2020, 'TRACTO', 30000.00, DATE_ADD(CURRENT_DATE, INTERVAL 15 DAY), DATE_ADD(CURRENT_DATE, INTERVAL 45 DAY), 220000, 'DISPONIBLE', TRUE, 'Alerta preventiva: SOAT próximo a vencer en 15 días'),
-    (4, 'P4A-983', NULL, 'Randon Plataforma 3 Ejes', 2022, 'PLATAFORMA', 34000.00, '2027-11-30', '2027-12-15', 85000, 'DISPONIBLE', TRUE, 'Plataforma para contenedores 20ft y 40ft con piñas de seguridad'),
-    (5, 'P5B-984', NULL, 'Tremac Semirremolque Baranda Rebatible', 2023, 'PLATAFORMA', 32000.00, '2028-02-28', '2028-03-15', 62000, 'DISPONIBLE', TRUE, 'Plataforma con barandas desmontables para carga suelta'),
-    (6, 'F4D-550', NULL, 'Scania P360 Furgon Refrigerado ThermoKing', 2023, 'FURGON', 22000.00, '2027-10-18', '2027-11-10', 85000, 'DISPONIBLE', TRUE, 'Furgón reefer bi-temperatura certificado Senasa'),
-    (7, 'F5E-660', NULL, 'Hino 500 Series Furgon Seco', 2022, 'FURGON', 18000.00, '2027-06-25', '2027-07-30', 110000, 'DISPONIBLE', TRUE, 'Furgón cerrado con rampa hidráulica de 2.5T'),
-    (8, 'B7G-110', NULL, 'Isuzu Forward 12T Baranda Alta', 2021, 'CAMION_BARANDA', 12000.00, '2027-09-05', '2027-10-01', 130000, 'DISPONIBLE', TRUE, 'Camión baranda para reparto urbano y consolidado');
-
--- =============================================================================
--- CONDUCTORES PROFESIONALES DE TRANSPORTE (MTC)
--- =============================================================================
-INSERT INTO conductor (id_conductor, nombres, apellidos, numero_documento, telefono, tipo_licencia, numero_licencia, fecha_vencimiento_licencia, estado_operativo, estado_activo, observaciones) VALUES
-    (1, 'Raul', 'Cardenas Melendez', '60123456', '+51 987 667 001', 'A-IIIc', 'Q60123456', '2028-05-15', 'EN_RUTA', TRUE, 'Conductor master con certificación MATPEL y 15 años de experiencia'),
-    (2, 'Enrique', 'Bravo Rojas', '60234567', '+51 987 667 002', 'A-IIIc', 'Q60234567', '2027-12-10', 'DISPONIBLE', TRUE, 'Especialista en tractos de alto tonelaje Callao-Sur'),
-    (3, 'Wilmer', 'Galarza Silva', '60345678', '+51 987 667 003', 'A-IIIb', 'Q60345678', DATE_ADD(CURRENT_DATE, INTERVAL 20 DAY), 'DISPONIBLE', TRUE, 'Alerta preventiva: Brevete profesional próximo a revalidar'),
-    (4, 'Oscar', 'Sanchez Huamanchumo', '60456789', '+51 987 667 004', 'A-IIIc', 'Q60456789', '2028-03-22', 'DISPONIBLE', TRUE, 'Operador de furgón refrigerado y control de cadena de frío'),
-    (5, 'Felix', 'Paredes Valles', '60567890', '+51 987 667 005', 'A-IIIc', 'Q60567890', '2027-09-30', 'DISPONIBLE', TRUE, 'Rutas interprovinciales y puertos norte (Paita / Salaverry)'),
-    (6, 'Juan', 'Castaneda Luna', '60678901', '+51 987 667 006', 'A-IIIb', 'Q60678901', '2028-01-14', 'DISPONIBLE', TRUE, 'Distribución local en parques industriales de Lima');
-
--- =============================================================================
--- COTIZACIONES, PAGOS Y EXPEDIENTES OPERATIVOS CON TRANSPORTE VINCULADO
+-- COTIZACIONES, PAGOS Y EXPEDIENTES OPERATIVOS CON TRANSPORTE EXTERNO
 -- =============================================================================
 INSERT INTO cotizacion (id_cotizacion, codigo_cotizacion, id_cliente, id_usuario_comercial, id_mercancia, id_tipo_carga, regimen_aduanero, id_puerto_envio, id_puerto_destino, servicio_transporte, origen_departamento, origen_provincia, destino_departamento, destino_provincia, costo_transporte_interno, valor_fob, monto_flete, monto_seguro_estimado, monto_honorarios, tasa_advalorem, tasa_percepcion, monto_tributos, total_cotizado, validez_dias, fecha_emision, estado, estado_pago, total_abonado, saldo_pendiente) VALUES
     (1, 'COT-2026-0001', 1, 12, 34, 3, 'EXPORTACION_DEFINITIVA', 1, 12, TRUE, 'La Libertad', 'Virú', 'Callao', 'Callao', 1450.00, 48000.00, 3200.00, 450.00, 650.00, 0.00, 0.00, 0.00, 53750.00, 15, '2026-11-01', 'APROBADA', 'PAGADO_TOTAL', 53750.00, 0.00),
     (2, 'COT-2026-0002', 2, 12, 36, 3, 'EXPORTACION_DEFINITIVA', 1, 12, TRUE, 'La Libertad', 'Trujillo', 'Callao', 'Callao', 1350.00, 52000.00, 3400.00, 500.00, 700.00, 0.00, 0.00, 0.00, 57950.00, 15, '2026-11-02', 'APROBADA', 'PAGADO_TOTAL', 57950.00, 0.00),
-    (3, 'COT-2026-0003', 21, 12, 1, 1, 'IMPORTACION_DEFINITIVA', 12, 1, TRUE, 'Callao', 'Callao', 'Lima', 'San Isidro', 850.00, 95000.00, 4200.00, 950.00, 1100.00, 0.00, 3.50, 18500.00, 120600.00, 15, '2026-11-03', 'APROBADA', 'PAGADO_TOTAL', 120600.00, 0.00),
-    (4, 'COT-2026-0004', 22, 12, 5, 1, 'IMPORTACION_DEFINITIVA', 12, 1, TRUE, 'Callao', 'Callao', 'Lima', 'Lurín', 1100.00, 72000.00, 3800.00, 720.00, 900.00, 0.00, 3.50, 14200.00, 92720.00, 15, '2026-11-04', 'APROBADA', 'PAGADO_TOTAL', 92720.00, 0.00);
+    (3, 'COT-2026-0003', 21, 12, 1, 1, 'IMPORTACION_DEFINITIVA', 12, 1, TRUE, 'Callao', 'Callao', 'Lima', 'Lima (Metropolitana)', 850.00, 95000.00, 4200.00, 950.00, 1100.00, 0.00, 3.50, 18500.00, 120600.00, 15, '2026-11-03', 'APROBADA', 'PAGADO_TOTAL', 120600.00, 0.00),
+    (4, 'COT-2026-0004', 22, 12, 5, 1, 'IMPORTACION_DEFINITIVA', 12, 1, TRUE, 'Callao', 'Callao', 'Lima', 'Lima (Metropolitana)', 1100.00, 72000.00, 3800.00, 720.00, 900.00, 0.00, 3.50, 14200.00, 92720.00, 15, '2026-11-04', 'APROBADA', 'PAGADO_TOTAL', 92720.00, 0.00);
 
-INSERT INTO cotizacion_pago (id_pago, id_cotizacion, codigo_pago, tipo_abono, monto_abonado, moneda, tipo_cambio, monto_equivalente_pen, metodo_pago, banco_origen, banco_destino, numero_operacion, fecha_operacion, id_documento_comprobante, estado_pago, id_usuario_finanzas, fecha_validacion, observacion_finanzas, id_usuario_registro, fecha_registro) VALUES
-    (1, 1, 'PAG-COT-2026-0001', 'PAGO_TOTAL', 53750.00, 'USD', 3.7500, 201562.50, 'TRANSFERENCIA_BANCARIA', 'BCP', 'BCP Corporativo', 'OP-2026-1001', '2026-11-01', NULL, 'APROBADO', 7, '2026-11-01 16:30:00', 'Abono total verificado en extracto bancario. Habilitado para apertura de expediente.', 12, '2026-11-01 14:00:00'),
-    (2, 2, 'PAG-COT-2026-0002', 'PAGO_TOTAL', 57950.00, 'USD', 3.7500, 217312.50, 'TRANSFERENCIA_BANCARIA', 'BBVA Perú', 'BBVA Corporativo', 'OP-2026-1002', '2026-11-02', NULL, 'APROBADO', 7, '2026-11-02 15:00:00', 'Abono total verificado en extracto bancario. Habilitado para apertura de expediente.', 12, '2026-11-02 12:30:00'),
-    (3, 3, 'PAG-COT-2026-0003', 'PAGO_TOTAL', 120600.00, 'USD', 3.7500, 452250.00, 'TRANSFERENCIA_BANCARIA', 'Scotiabank', 'BCP Corporativo', 'OP-2026-1003', '2026-11-03', NULL, 'APROBADO', 7, '2026-11-03 17:15:00', 'Abono total verificado en extracto bancario. Habilitado para apertura de expediente.', 12, '2026-11-03 14:20:00'),
-    (4, 4, 'PAG-COT-2026-0004', 'PAGO_TOTAL', 92720.00, 'USD', 3.7500, 347700.00, 'TRANSFERENCIA_BANCARIA', 'Interbank', 'BBVA Corporativo', 'OP-2026-1004', '2026-11-04', NULL, 'APROBADO', 7, '2026-11-04 16:45:00', 'Abono total verificado en extracto bancario. Habilitado para apertura de expediente.', 12, '2026-11-04 13:40:00');
+INSERT INTO cotizacion_pago (id_pago, id_cotizacion, codigo_pago, tipo_abono, monto_abonado, moneda, tipo_cambio, monto_equivalente_pen, id_metodo_pago, metodo_pago, id_banco_origen, banco_origen, id_banco_destino, id_cuenta_recaudadora, banco_destino, numero_operacion, fecha_operacion, id_documento_comprobante, estado_pago, id_usuario_finanzas, fecha_validacion, observacion_finanzas, id_usuario_registro, fecha_registro) VALUES
+    (1, 1, 'PAG-COT-2026-0001', 'PAGO_TOTAL', 53750.00, 'USD', 3.7500, 201562.50, 1, 'TRANSFERENCIA_BANCARIA', 1, 'BCP', 1, 1, 'BCP Corporativo', 'OP-2026-1001', '2026-11-01', NULL, 'APROBADO', 7, '2026-11-01 16:30:00', 'Abono total verificado en extracto bancario. Habilitado para apertura de expediente.', 12, '2026-11-01 14:00:00'),
+    (2, 2, 'PAG-COT-2026-0002', 'PAGO_TOTAL', 57950.00, 'USD', 3.7500, 217312.50, 1, 'TRANSFERENCIA_BANCARIA', 2, 'BBVA Perú', 2, 3, 'BBVA Corporativo', 'OP-2026-1002', '2026-11-02', NULL, 'APROBADO', 7, '2026-11-02 15:00:00', 'Abono total verificado en extracto bancario. Habilitado para apertura de expediente.', 12, '2026-11-02 12:30:00'),
+    (3, 3, 'PAG-COT-2026-0003', 'PAGO_TOTAL', 120600.00, 'USD', 3.7500, 452250.00, 1, 'TRANSFERENCIA_BANCARIA', 4, 'Scotiabank', 1, 1, 'BCP Corporativo', 'OP-2026-1003', '2026-11-03', NULL, 'APROBADO', 7, '2026-11-03 17:15:00', 'Abono total verificado en extracto bancario. Habilitado para apertura de expediente.', 12, '2026-11-03 14:20:00'),
+    (4, 4, 'PAG-COT-2026-0004', 'PAGO_TOTAL', 92720.00, 'USD', 3.7500, 347700.00, 1, 'TRANSFERENCIA_BANCARIA', 3, 'Interbank', 2, 3, 'BBVA Corporativo', 'OP-2026-1004', '2026-11-04', NULL, 'APROBADO', 7, '2026-11-04 16:45:00', 'Abono total verificado en extracto bancario. Habilitado para apertura de expediente.', 12, '2026-11-04 13:40:00');
 
-INSERT INTO expediente (id_expediente, codigo_expediente, id_cotizacion, id_cliente, id_mercancia, id_tipo_carga, id_agente_aduanero, fecha_asignacion, numero_dam, canal_sunat, numero_contenedor, precinto_aduanero, estado_expediente, fecha_apertura) VALUES
-    (1, 'EXP-2026-0001', 1, 1, 34, 3, 32, '2026-11-02 09:00:00', '118-2026-10-001234', 'VERDE', 'MSCU9876543', 'SUNAT-09871', 'LEVANTE_AUTORIZADO', '2026-11-02 09:00:00'),
-    (2, 'EXP-2026-0002', 2, 2, 36, 3, 32, '2026-11-03 10:30:00', '118-2026-10-001235', 'VERDE', 'TGHU1234567', 'SUNAT-09872', 'LEVANTE_AUTORIZADO', '2026-11-03 10:30:00'),
-    (3, 'EXP-2026-0003', 3, 21, 1, 1, 32, '2026-11-04 11:15:00', '118-2026-10-001236', 'VERDE', 'CMAU5566778', 'SUNAT-09873', 'LEVANTE_AUTORIZADO', '2026-11-04 11:15:00'),
-    (4, 'EXP-2026-0004', 4, 22, 5, 1, 32, '2026-11-05 14:00:00', '118-2026-10-001237', 'VERDE', 'EGLV9988776', 'SUNAT-09874', 'CERRADO', '2026-11-05 14:00:00');
+UPDATE cotizacion c
+JOIN catalogo_departamento d ON UPPER(TRIM(d.nombre)) = UPPER(TRIM(c.origen_departamento))
+JOIN catalogo_provincia p ON p.id_departamento = d.id_departamento AND UPPER(TRIM(p.nombre)) = UPPER(TRIM(c.origen_provincia))
+SET c.id_provincia_origen = p.id_provincia;
 
--- =============================================================================
--- DESPACHOS DE TRANSPORTE TERRESTRE (MUESTRA OPERATIVA 4 ESTADOS)
--- =============================================================================
-INSERT INTO despacho_transporte (id_despacho_transporte, id_expediente, codigo_tracking, tipo_traslado, id_conductor, id_unidad, guia_remision_transporte, direccion_partida, direccion_llegada, distrito_llegada, contacto_recepcion, receptor_nombre, receptor_dni, fecha_programada, fecha_salida_ruta, fecha_entrega_conforme, estado_transporte, detalle_incidencia, observaciones) VALUES
-    (1, 1, 'TRK-2026-0001', 'RECOJO_EXPORTACION', NULL, NULL, NULL, 'Almacén Central Camposol, Panamericana Norte Km 497, Chao', 'Terminal Portuario Muelle Sur (DP World), Callao', 'Callao', 'Ing. Javier Morales (+51 944 112 233)', NULL, NULL, DATE_ADD(NOW(), INTERVAL 1 DAY), NULL, NULL, 'PENDIENTE_ASIGNACION', NULL, 'Pendiente asignación de tracto refrigerado para recojo de exportación en planta y traslado a zona primaria Callao'),
-    (2, 2, 'TRK-2026-0002', 'RECOJO_EXPORTACION', 2, 2, 'GRT-001-000142', 'Planta Agroindustrial Danper, Mz L Lote 5, Trujillo', 'Terminal Portuario Muelle Sur (DP World), Callao', 'Callao', 'Sr. Carlos Benites (+51 944 223 344)', NULL, NULL, DATE_ADD(NOW(), INTERVAL 2 DAY), NULL, NULL, 'PROGRAMADO', NULL, 'Programado para recojo de contenedor refrigerado en planta Trujillo con destino al puerto del Callao'),
-    (3, 3, 'TRK-2026-0003', 'ENTREGA_IMPORTACION', 1, 1, 'GRT-001-000140', 'Depósito Aduanero DP World Callao', 'Centro de Distribución Samsung, Av. Elmer Faucett 3450', 'Callao', 'Lic. Patricia Vega (+51 988 554 433)', NULL, NULL, NOW(), DATE_SUB(NOW(), INTERVAL 2 HOUR), NULL, 'EN_RUTA', 'Tránsito fluido por Av. Néstor Gambetta', 'Despacho con escolta de seguridad satelital'),
-    (4, 4, 'TRK-2026-0004', 'ENTREGA_IMPORTACION', 4, 6, 'GRT-001-000138', 'Depósito Aduanero APM Terminals Callao', 'Almacén Central LG Electronics, Panamericana Sur Km 29.5', 'Lurín', 'Ing. Roberto Huamán (+51 977 665 544)', 'Roberto Huamán Cárdenas', '44889911', DATE_SUB(NOW(), INTERVAL 1 DAY), DATE_SUB(NOW(), INTERVAL 1 DAY), DATE_SUB(NOW(), INTERVAL 18 HOUR), 'ENTREGADO', 'Entrega conforme sin observaciones', 'GRE-T firmada electrónicamente y precintos verificados');
+UPDATE cotizacion c
+JOIN catalogo_departamento d ON UPPER(TRIM(d.nombre)) = UPPER(TRIM(c.destino_departamento))
+JOIN catalogo_provincia p ON p.id_departamento = d.id_departamento AND UPPER(TRIM(p.nombre)) = UPPER(TRIM(c.destino_provincia))
+SET c.id_provincia_destino = p.id_provincia;
+
+INSERT INTO expediente (id_expediente, codigo_expediente, id_cotizacion, id_cliente, id_mercancia, id_tipo_carga, id_agente_aduanero, fecha_asignacion, en_espera_transito, en_revision_aduana, estado_expediente, fecha_apertura) VALUES
+    (1, 'EXP-2026-0001', 1, 1, 34, 3, 32, '2026-11-02 09:00:00', FALSE, FALSE, 'LEVANTE_AUTORIZADO', '2026-11-02 09:00:00'),
+    (2, 'EXP-2026-0002', 2, 2, 36, 3, 32, '2026-11-03 10:30:00', FALSE, FALSE, 'LEVANTE_AUTORIZADO', '2026-11-03 10:30:00'),
+    (3, 'EXP-2026-0003', 3, 21, 1, 1, 32, '2026-11-04 11:15:00', FALSE, FALSE, 'LEVANTE_AUTORIZADO', '2026-11-04 11:15:00'),
+    (4, 'EXP-2026-0004', 4, 22, 5, 1, 32, '2026-11-05 14:00:00', FALSE, FALSE, 'CERRADO', '2026-11-05 14:00:00');
+
+INSERT INTO expediente_transito_internacional (id_expediente, numero_contenedor, precinto_aduanero) VALUES
+    (1, 'MSCU9876543', 'SUNAT-09871'),
+    (2, 'TGHU1234567', 'SUNAT-09872'),
+    (3, 'CMAU5566778', 'SUNAT-09873'),
+    (4, 'EGLV9988776', 'SUNAT-09874');
+
+INSERT INTO expediente_canal_sunat (id_expediente, numero_dam, canal_sunat, notificado_agente) VALUES
+    (1, '118-2026-10-001234', 'VERDE', FALSE),
+    (2, '118-2026-10-001235', 'VERDE', FALSE),
+    (3, '118-2026-10-001236', 'VERDE', FALSE),
+    (4, '118-2026-10-001237', 'VERDE', FALSE);
+
+INSERT INTO expediente_solicitud_transporte (id_expediente, transporte_solicitado, transporte_tipo_traslado, transporte_direccion_partida, transporte_direccion_llegada, transporte_distrito_llegada, transporte_contacto_recepcion, transporte_fecha_programada, transporte_observaciones, transporte_fecha_solicitud) VALUES
+    (1, TRUE, 'RECOJO_EXPORTACION', 'Almacén Central Camposol, Panamericana Norte Km 497, Chao', 'Terminal Portuario Muelle Sur (DP World), Callao', 'Callao', 'Ing. Javier Morales (+51 944 112 233)', DATE_ADD(NOW(), INTERVAL 1 DAY), 'Solicitud de transporte externo para recojo de exportación en planta', NOW()),
+    (2, TRUE, 'RECOJO_EXPORTACION', 'Planta Agroindustrial Danper, Mz L Lote 5, Trujillo', 'Terminal Portuario Muelle Sur (DP World), Callao', 'Callao', 'Sr. Carlos Benites (+51 944 223 344)', DATE_ADD(NOW(), INTERVAL 2 DAY), 'Programado con operador externo para recojo de contenedor refrigerado', NOW()),
+    (3, TRUE, 'ENTREGA_IMPORTACION', 'Depósito Aduanero DP World Callao', 'Centro de Distribución Samsung, Av. Elmer Faucett 3450', 'Callao', 'Lic. Patricia Vega (+51 988 554 433)', NOW(), 'Coordinación de entrega con operador de transporte externo', NOW()),
+    (4, TRUE, 'ENTREGA_IMPORTACION', 'Depósito Aduanero APM Terminals Callao', 'Almacén Central LG Electronics, Panamericana Sur Km 29.5', 'Lurín', 'Ing. Roberto Huamán (+51 977 665 544)', DATE_SUB(NOW(), INTERVAL 1 DAY), 'Traslado externo coordinado y expediente cerrado conforme', DATE_SUB(NOW(), INTERVAL 1 DAY));
 
 SET FOREIGN_KEY_CHECKS = 1;

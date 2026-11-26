@@ -23,7 +23,6 @@ import pe.sga.entity.NotificacionCliente;
 import pe.sga.entity.Usuario;
 import pe.sga.entity.enums.EstadoCotizacion;
 import pe.sga.entity.enums.EstadoExpediente;
-import pe.sga.entity.enums.EstadoTransporte;
 import pe.sga.entity.enums.RolUsuario;
 import pe.sga.exception.BadRequestException;
 import pe.sga.repository.*;
@@ -50,7 +49,6 @@ public class PortalServiceImplTest {
     @Mock private CotizacionPagoRepository cotizacionPagoRepository;
     @Mock private LiquidacionFinancieraRepository liquidacionFinancieraRepository;
     @Mock private ControlAlmacenRepository controlAlmacenRepository;
-    @Mock private DespachoTransporteRepository despachoTransporteRepository;
     @Mock private CatalogoMercanciaRepository mercanciaRepository;
     @Mock private CatalogoTipoCargaRepository tipoCargaRepository;
     @Mock private CatalogoPuertoRepository puertoRepository;
@@ -212,12 +210,37 @@ public class PortalServiceImplTest {
 
         when(expedienteRepository.findById(88)).thenReturn(Optional.of(exp));
         when(controlAlmacenRepository.findByExpediente_IdExpediente(88)).thenReturn(Optional.empty());
-        when(despachoTransporteRepository.findFirstByExpediente_IdExpedienteAndEstadoTransporteNotOrderByIdDespachoTransporteDesc(88, EstadoTransporte.CANCELADO))
-                .thenReturn(Optional.empty());
 
         PortalExpedienteDTO res = portalService.buscarExpedientePorId(10, 88);
         assertEquals("EXPORTACION_DEFINITIVA", res.getRegimenAduanero());
         assertEquals(Boolean.TRUE, res.getServicioTransporte());
+        assertEquals(Boolean.FALSE, res.getTieneTransporte());
+    }
+
+    @Test
+    void buscarExpedientePorId_incluyeSolicitudTransporteExternoCuandoFueRegistrada() {
+        cotizacion.setServicioTransporte(true);
+        Expediente exp = Expediente.builder()
+                .idExpediente(89)
+                .codigoExpediente("EXP-2026-0089")
+                .cliente(cliente)
+                .cotizacion(cotizacion)
+                .estadoExpediente(EstadoExpediente.LEVANTE_AUTORIZADO)
+                .transporteSolicitado(true)
+                .transporteTipoTraslado("ENTREGA_IMPORTACION")
+                .transporteDireccionPartida("DP World Callao")
+                .transporteDireccionLlegada("Av. Industrial 500")
+                .transporteDistritoLlegada("Ate")
+                .build();
+
+        when(expedienteRepository.findById(89)).thenReturn(Optional.of(exp));
+        when(controlAlmacenRepository.findByExpediente_IdExpediente(89)).thenReturn(Optional.empty());
+
+        PortalExpedienteDTO res = portalService.buscarExpedientePorId(10, 89);
+        assertEquals(Boolean.TRUE, res.getTieneTransporte());
+        assertEquals("SOLICITADO", res.getEstadoTransporte());
+        assertEquals("Av. Industrial 500", res.getDireccionLlegada());
+        assertEquals("Ate", res.getDistritoLlegada());
     }
 
     @Test
@@ -235,8 +258,6 @@ public class PortalServiceImplTest {
             return ex;
         });
         when(controlAlmacenRepository.findByExpediente_IdExpediente(99)).thenReturn(Optional.empty());
-        when(despachoTransporteRepository.findFirstByExpediente_IdExpedienteAndEstadoTransporteNotOrderByIdDespachoTransporteDesc(99, EstadoTransporte.CANCELADO))
-                .thenReturn(Optional.empty());
 
         PortalExpedienteSimpleDTO req = PortalExpedienteSimpleDTO.builder()
                 .idCotizacion(55)

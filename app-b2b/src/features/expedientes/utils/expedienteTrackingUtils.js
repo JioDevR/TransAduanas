@@ -146,7 +146,7 @@ export function buildTimelineSteps(exp) {
       {
         num: 1,
         label: 'Expediente & Recojo',
-        detail: exp.tieneTransporte ? (exp.estadoTransporte || 'Transporte activo') : 'Ingreso directo',
+        detail: exp.tieneTransporte ? 'Solicitud externa registrada' : 'Ingreso directo',
         completed: true,
         active: false
       },
@@ -277,7 +277,7 @@ export function buildRouteSummary(exp) {
         key: 'origin',
         kicker: 'PLANTA / RECOJO',
         place: exp.direccionPartida || 'Planta exportadora',
-        sub: exp.tieneTransporte ? (exp.estadoTransporte || 'PROGRAMADO') : 'Ingreso directo a terminal',
+        sub: exp.tieneTransporte ? (exp.estadoTransporte || 'SOLICITADO') : 'Ingreso directo a terminal',
         icon: 'pi pi-map-marker',
         status: arribado ? 'reached' : 'active'
       },
@@ -345,11 +345,9 @@ export function buildRouteSummary(exp) {
       place: exp.distritoLlegada || exp.direccionLlegada || 'Planta del cliente',
       sub: cerrado
         ? `Cierre ${formatDate(exp.fechaCierre)}`
-        : (exp.fechaEntregaConforme
-          ? `Entregado ${formatDate(exp.fechaEntregaConforme)}`
-          : (exp.tieneTransporte ? (exp.estadoTransporte || 'PROGRAMADO') : 'Despacho final')),
+        : (exp.tieneTransporte ? (exp.estadoTransporte || 'SOLICITADO') : 'Despacho final'),
       icon: 'pi pi-map-marker',
-      status: cerrado || exp.fechaEntregaConforme ? 'reached' : (levante ? 'active' : 'pending')
+      status: cerrado ? 'reached' : (levante ? 'active' : 'pending')
     }
   ]
 }

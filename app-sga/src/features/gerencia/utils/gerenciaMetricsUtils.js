@@ -14,8 +14,6 @@ export function computeGerenciaDashboardMetrics(sources = {}) {
   const puertos = unwrapListPayload(sources.puertos)
   const tiposCarga = unwrapListPayload(sources.tiposCarga)
   const mercancias = unwrapListPayload(sources.mercancias)
-  const unidades = unwrapListPayload(sources.unidades)
-  const conductores = unwrapListPayload(sources.conductores)
 
   const sedesCount = sedes.length
   const sedesOperativasCount = sedes.filter((s) => s.estado === 'OPERATIVO').length
@@ -35,21 +33,6 @@ export function computeGerenciaDashboardMetrics(sources = {}) {
   const mercanciasActivasCount = mercancias.filter((m) => m.estado === 'ACTIVO').length
   const mercanciasVuceCount = mercancias.filter((m) => Boolean(m.requierePermiso)).length
 
-  const unidadesCount = unidades.length
-  const flotaOperativaCount = unidades.filter(
-    (u) => u.estadoOperativo === 'DISPONIBLE' || u.estadoOperativo === 'EN_RUTA'
-  ).length
-  const flotaTallerCount = unidades.filter(
-    (u) => u.estadoOperativo === 'MANTENIMIENTO' || u.estadoOperativo === 'FUERA_DE_SERVICIO'
-  ).length
-  const totalKg = unidades.reduce((acc, u) => acc + (Number(u.capacidadCargaKg) || 0), 0)
-  const totalCapacidadToneladas = Math.round(totalKg / 1000)
-
-  const conductoresCount = conductores.length
-  const conductoresDisponiblesCount = conductores.filter(
-    (c) => c.estadoOperativo === 'DISPONIBLE'
-  ).length
-
   const coberturaChartData = {
     labels: ['Sedes Territoriales', 'Puertos & Terminales', 'Tipos de Carga', 'Partidas Arancelarias'],
     datasets: [
@@ -65,22 +48,18 @@ export function computeGerenciaDashboardMetrics(sources = {}) {
     sedesCount,
     puertosCount,
     cargasCount,
-    mercanciasCount,
-    unidadesCount,
-    conductoresCount
+    mercanciasCount
   ]
   const activeByDomain = [
     sedesOperativasCount,
     puertosActivosCount,
     cargasActivasCount,
-    mercanciasActivasCount,
-    flotaOperativaCount,
-    conductoresDisponiblesCount
+    mercanciasActivasCount
   ]
   const inactiveByDomain = totalByDomain.map((tot, i) => Math.max(0, tot - activeByDomain[i]))
 
   const disponibilidadChartData = {
-    labels: ['Sedes', 'Puertos', 'Tipos Carga', 'Mercancías', 'Flota', 'Conductores'],
+    labels: ['Sedes', 'Puertos', 'Tipos Carga', 'Mercancías'],
     datasets: [
       {
         label: 'Habilitados / Operativos',
@@ -112,12 +91,6 @@ export function computeGerenciaDashboardMetrics(sources = {}) {
     mercanciasCount,
     mercanciasActivasCount,
     mercanciasVuceCount,
-    unidadesCount,
-    flotaOperativaCount,
-    flotaTallerCount,
-    totalCapacidadToneladas,
-    conductoresCount,
-    conductoresDisponiblesCount,
     coberturaChartData,
     disponibilidadChartData
   }

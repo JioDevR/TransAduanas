@@ -212,16 +212,6 @@ const MODULE_TITLES = {
     },
     getSub: () => navigationStore.agenteAduaneroSubOption
   },
-  'transporte-flota': {
-    default: 'Transporte y Flota',
-    sub: {
-      dashboard: 'Dashboard Operativo de Transporte & Flota',
-      despachos: 'Monitoreo Global de Despachos',
-      unidades: 'Parque Automotor & Flota de Transporte',
-      conductores: 'Directorio de Conductores Acreditados MTC'
-    },
-    getSub: () => navigationStore.transporteFlotaSubOption
-  },
   finanzas: {
     default: 'Finanzas',
     sub: {

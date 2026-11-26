@@ -98,18 +98,15 @@ public class PortalExpedienteDTO {
     private BigDecimal pesoBrutoKg;
     private String estadoAlmacen;
 
-    // Datos de Transporte y Despacho Local
+    // Datos de Transporte Externo (Solicitud registrada)
     private Boolean tieneTransporte;
-    private String codigoTracking;
     private String tipoTraslado;
-    private String guiaRemisionTransporte;
-    private String placaTracto;
-    private String conductorNombre;
     private String direccionPartida;
     private String direccionLlegada;
     private String distritoLlegada;
+    private String contactoRecepcionTransporte;
     private LocalDateTime fechaProgramadaTransporte;
-    private LocalDateTime fechaSalidaRuta;
-    private LocalDateTime fechaEntregaConforme;
+    private String observacionesTransporte;
+    private LocalDateTime fechaSolicitudTransporte;
     private String estadoTransporte;
 }

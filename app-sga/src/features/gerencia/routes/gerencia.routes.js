@@ -62,14 +62,6 @@ export const gerenciaRoutes = [
   {
     path: '/gerencia-general/resumen',
     redirect: '/gerencia-general/dashboard'
-  },
-  {
-    path: '/gerencia-general/flota',
-    redirect: { path: '/transporte-flota', query: { tab: 'unidades' } }
-  },
-  {
-    path: '/gerencia-general/conductores',
-    redirect: { path: '/transporte-flota', query: { tab: 'conductores' } }
   }
 ]
 

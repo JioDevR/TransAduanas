@@ -103,7 +103,7 @@ export function getAccionesPermitidasAgente(exp = {}) {
     !isCerrado &&
     isExport &&
     Boolean(exp.servicioTransporte) &&
-    !exp.idDespachoTransporte &&
+    !exp.transporteSolicitado &&
     (exp.estadoExpediente === 'ASIGNADO' || exp.estadoExpediente === 'EN_TRAMITE')
 
   const puedeIngresoOrigen =
@@ -117,7 +117,7 @@ export function getAccionesPermitidasAgente(exp = {}) {
     (exp.canalSunat === 'ROJO' || exp.canalSunat === 'NARANJA' || exp.estadoExpediente === 'INSPECCION')
 
   const puedeSolicitarTransporte =
-    !isCerrado && !isExport && hasLevante && Boolean(exp.servicioTransporte) && !exp.idDespachoTransporte
+    !isCerrado && !isExport && hasLevante && Boolean(exp.servicioTransporte) && !exp.transporteSolicitado
 
   const puedeRetiroDirecto =
     !isCerrado && !isExport && hasLevante && !exp.servicioTransporte && !isRetiroDirectoRegistrado(exp)
@@ -335,7 +335,7 @@ export function buildAgenteChecklistHitos(exp = {}) {
   }
 
   const despachoRealizado =
-    Boolean(exp.idDespachoTransporte) ||
+    Boolean(exp.transporteSolicitado) ||
     isRetiroDirectoRegistrado(exp) ||
     Boolean(exp.entregadoAlmacenVerde)
 
@@ -344,12 +344,12 @@ export function buildAgenteChecklistHitos(exp = {}) {
   if (acc.puedeEntregadoAlmacenVerde) {
     hito4Action = { event: 'entregado-almacen-verde', label: 'Entregado Almacén (Verde)', icon: 'pi pi-check-square', severity: 'success' }
   } else if (acc.puedeSolicitarTransporte) {
-    hito4Action = { event: 'solicitar-transporte', label: 'Solicitar Flota SGA', icon: 'pi pi-truck', severity: 'success' }
+    hito4Action = { event: 'solicitar-transporte', label: 'Registrar Transporte Externo', icon: 'pi pi-truck', severity: 'success' }
   } else if (acc.puedeRetiroDirecto) {
     hito4Action = { event: 'retiro-directo', label: 'Acta Retiro Directo', icon: 'pi pi-check', severity: 'secondary' }
   }
   if (acc.puedeSolicitarTransporte && hito4Action?.event !== 'solicitar-transporte') {
-    hito4Secondary.push({ event: 'solicitar-transporte', label: 'Solicitar Flota SGA', icon: 'pi pi-truck', severity: 'success' })
+    hito4Secondary.push({ event: 'solicitar-transporte', label: 'Registrar Transporte Externo', icon: 'pi pi-truck', severity: 'success' })
   }
   if (acc.puedeRetiroDirecto && hito4Action?.event !== 'retiro-directo') {
     hito4Secondary.push({ event: 'retiro-directo', label: 'Acta Retiro Directo', icon: 'pi pi-check', severity: 'secondary' })
@@ -435,9 +435,9 @@ export function buildAgenteChecklistHitos(exp = {}) {
       description: despachoRealizado || isCerrado
         ? 'Despacho local o retiro en almacén gestionado.'
         : (hasLevante
-          ? (exp.servicioTransporte ? 'Solicite flota SGA para entrega en planta.' : 'Registre el acta de retiro directo del cliente.')
+          ? (exp.servicioTransporte ? 'Registre los datos de solicitud para traslado con transporte externo.' : 'Registre el acta de retiro directo del cliente.')
           : 'Disponible tras obtener el levante aduanero.'),
-      b2bEffect: 'Muestra código de traslado, unidad/conductor y estado de última milla en Portal B2B.',
+      b2bEffect: 'Muestra los datos de la solicitud de traslado externo en Portal B2B.',
       status: despachoRealizado || isCerrado ? 'completed' : (hasLevante ? 'current' : 'pending'),
       date: exp.fechaEntregaAlmacenVerde || null,
       action: hito4Action,

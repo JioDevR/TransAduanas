@@ -158,13 +158,13 @@
             <span class="sga-tracking-card-icon"><i class="pi pi-truck"></i></span>
             <div>
               <h3 class="sga-tracking-card-heading">Transporte Local & Última Milla</h3>
-              <span class="sga-tracking-card-sub">Traslado terrestre y entrega conforme</span>
+              <span class="sga-tracking-card-sub">Solicitud de traslado terrestre externo</span>
             </div>
           </div>
           <Tag
             v-if="expediente.tieneTransporte"
-            :value="expediente.estadoTransporte || 'PROGRAMADO'"
-            :severity="expediente.fechaEntregaConforme ? 'success' : 'info'"
+            :value="expediente.estadoTransporte || 'SOLICITADO'"
+            severity="info"
             class="sga-mini-tag"
             rounded
           />
@@ -172,20 +172,10 @@
 
         <template v-if="expediente.tieneTransporte">
           <div class="sga-kv-list">
-            <div class="sga-kv-row">
-              <span class="sga-kv-label">Código de Traslado</span>
-              <span class="sga-kv-val sga-mono">{{ expediente.codigoTracking || 'DSP-ACTIVO' }}</span>
-            </div>
-            <div v-if="expediente.guiaRemisionTransporte" class="sga-kv-row">
-              <span class="sga-kv-label">Guía de Remisión</span>
-              <span class="sga-kv-val sga-mono">{{ expediente.guiaRemisionTransporte }}</span>
-            </div>
-            <div v-if="expediente.placaTracto || expediente.conductorNombre" class="sga-kv-row">
-              <span class="sga-kv-label">Unidad / Conductor</span>
+            <div v-if="expediente.tipoTraslado" class="sga-kv-row">
+              <span class="sga-kv-label">Modalidad</span>
               <span class="sga-kv-val">
-                <span v-if="expediente.placaTracto" class="sga-mono">{{ expediente.placaTracto }}</span>
-                <template v-if="expediente.placaTracto && expediente.conductorNombre"> • </template>
-                <span v-if="expediente.conductorNombre">{{ expediente.conductorNombre }}</span>
+                {{ expediente.tipoTraslado === 'RECOJO_EXPORTACION' ? 'Recojo en Planta (Exportación)' : 'Entrega a Destino (Importación)' }}
               </span>
             </div>
             <div v-if="expediente.direccionPartida" class="sga-kv-row">
@@ -199,27 +189,33 @@
                 <template v-if="expediente.distritoLlegada"> ({{ expediente.distritoLlegada }})</template>
               </span>
             </div>
+            <div v-if="expediente.contactoRecepcionTransporte" class="sga-kv-row">
+              <span class="sga-kv-label">Contacto Recepción</span>
+              <span class="sga-kv-val">{{ expediente.contactoRecepcionTransporte }}</span>
+            </div>
             <div v-if="expediente.fechaProgramadaTransporte" class="sga-kv-row">
               <span class="sga-kv-label">Fecha Programada</span>
               <span class="sga-kv-val sga-mono">{{ formatDateTime(expediente.fechaProgramadaTransporte) }}</span>
             </div>
-            <div v-if="expediente.fechaSalidaRuta" class="sga-kv-row">
-              <span class="sga-kv-label">Salida en Ruta</span>
-              <span class="sga-kv-val sga-mono">{{ formatDateTime(expediente.fechaSalidaRuta) }}</span>
-            </div>
-            <div v-if="expediente.fechaEntregaConforme" class="sga-kv-row">
-              <span class="sga-kv-label">Entrega Conforme</span>
-              <span class="sga-kv-val sga-mono sga-text-success">
-                {{ formatDateTime(expediente.fechaEntregaConforme) }}
-              </span>
+            <div v-if="expediente.observacionesTransporte" class="sga-kv-row">
+              <span class="sga-kv-label">Instrucciones</span>
+              <span class="sga-kv-val">{{ expediente.observacionesTransporte }}</span>
             </div>
           </div>
+          <p class="sga-inline-empty" style="margin-top: 0.75rem;">
+            <i class="pi pi-info-circle"></i>
+            <span>Coordinación operativa gestionada con operador de transporte externo.</span>
+          </p>
         </template>
 
         <div v-else class="sga-inline-empty">
           <i class="pi pi-truck"></i>
           <span>
-            Coordinación de flota terrestre o retiro en terminal pendiente de programación una vez validado el levante aduanero.
+            {{
+              expediente.servicioTransporte
+                ? 'Servicio de transporte contratado; solicitud externa pendiente de registro tras el levante aduanero.'
+                : 'Modalidad de retiro o ingreso directo por cuenta del cliente.'
+            }}
           </span>
         </div>
       </article>

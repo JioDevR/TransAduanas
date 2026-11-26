@@ -90,7 +90,7 @@
           <span class="sga-form-label">Motivos Frecuentes</span>
           <div class="sga-chips-row">
             <Button
-              v-for="m in MOTIVOS_OBSERVACION_ABONO"
+              v-for="m in motivosObservacionOptions"
               :key="m.value"
               type="button"
               :label="m.label"
@@ -145,18 +145,35 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, ref, onMounted } from 'vue'
 import Button from 'primevue/button'
 import Checkbox from 'primevue/checkbox'
 import Dialog from 'primevue/dialog'
 import Textarea from 'primevue/textarea'
 import { useResponsive } from '@/shared/composables/useResponsive'
+import { catalogoService } from '@/features/admin/catalogos/services/catalogoService'
 import {
   MOTIVOS_OBSERVACION_ABONO,
   formatPen,
   formatUsd,
   formatTipoAbono
 } from '../../utils/finanzasFormatters'
+
+const motivosObservacionOptions = ref(MOTIVOS_OBSERVACION_ABONO)
+
+onMounted(async () => {
+  try {
+    const lista = await catalogoService.getMotivosObservacion('ABONO')
+    if (Array.isArray(lista) && lista.length > 0) {
+      motivosObservacionOptions.value = lista.map((m) => ({
+        label: m.descripcion,
+        value: m.descripcion
+      }))
+    }
+  } catch {
+    // Mantiene respaldo local si el catálogo no responde
+  }
+})
 
 const props = defineProps({
   visible: { type: Boolean, default: false },

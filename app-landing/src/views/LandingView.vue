@@ -136,12 +136,12 @@
               <div class="portal-badge">Personal Operativo</div>
               <h3 class="portal-title">Sistema de Gestión Aduanera (SGA)</h3>
               <p class="portal-desc">
-                Módulo integral para personal interno: liquidaciones aduaneras, DAMs SUNAT, gestión de almacenes temporales, asignación de transporte y contabilidad.
+                Módulo integral para personal interno: liquidaciones aduaneras, DAMs SUNAT, gestión de almacenes temporales, coordinación logística y contabilidad.
               </p>
               <ul class="portal-features">
                 <li><i class="pi pi-check-circle"></i> Trámite documentario SUNAT</li>
                 <li><i class="pi pi-check-circle"></i> Control de patios y almacén</li>
-                <li><i class="pi pi-check-circle"></i> Despacho y flota de transporte</li>
+                <li><i class="pi pi-check-circle"></i> Solicitud de traslado externo</li>
               </ul>
               <a :href="sgaAppUrl" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-portal">
                 <span>Ingresar al SGA</span>
@@ -216,14 +216,14 @@ const portalClienteUrl = import.meta.env.VITE_PORTAL_CLIENTE_URL || 'http://loca
 const empresa = {
   nombre: 'TransAduanas',
   descripcion:
-    'Digitaliza y sincroniza las operaciones comerciales, contables, aduaneras, de almacén y de transporte de carga, con trazabilidad documental de extremo a extremo y control por roles.'
+    'Digitaliza y sincroniza las operaciones comerciales, contables, aduaneras y de almacén, con trazabilidad documental de extremo a extremo y control por roles.'
 }
 
 const anio = new Date().getFullYear()
 
 const facts = [
-  { value: '8', label: 'módulos operativos integrados' },
-  { value: 'SUNAT · MTC', label: 'normativa y validaciones oficiales' },
+  { value: '6', label: 'módulos operativos integrados' },
+  { value: 'SUNAT', label: 'normativa y validaciones oficiales' },
   { value: '100%', label: 'trazabilidad documental y física' }
 ]
 
@@ -236,7 +236,7 @@ const modulos = [
   {
     icono: 'pi pi-chart-line',
     titulo: 'Gerencia General',
-    descripcion: 'Dashboard ejecutivo, métricas operativas de sedes, catálogos y flota de transporte.'
+    descripcion: 'Dashboard ejecutivo, métricas operativas de sedes y catálogos maestros.'
   },
   {
     icono: 'pi pi-briefcase',
@@ -251,12 +251,7 @@ const modulos = [
   {
     icono: 'pi pi-box',
     titulo: 'Agente Aduanero',
-    descripcion: 'Control de depósito temporal, verificación de aforo (Verde, Naranja, Rojo) y autorización de levante.'
-  },
-  {
-    icono: 'pi pi-truck',
-    titulo: 'Transporte y Flota',
-    descripcion: 'Planificación de rutas, programación de despachos, asignación de unidades y choferes con SOAT/CITV.'
+    descripcion: 'Control de depósito temporal, verificación de aforo (Verde, Naranja, Rojo), autorización de levante y solicitud de traslado externo.'
   },
   {
     icono: 'pi pi-wallet',
@@ -279,8 +274,8 @@ const pasos = [
     descripcion: 'Se numera la DAM, se asigna el canal aduanero (Verde/Naranja/Rojo) y se gestiona el levante autorizado.'
   },
   {
-    titulo: 'Transporte y Entrega',
-    descripcion: 'Se asigna la unidad y conductor, se genera la guía de remisión y se realiza la entrega conforme en almacén de destino.'
+    titulo: 'Entrega y Conformidad',
+    descripcion: 'Se registra la solicitud de transporte externo (si aplica) o retiro directo, se emite el informe de conformidad y se cierra el expediente.'
   }
 ]
 

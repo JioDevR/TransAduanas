@@ -64,9 +64,6 @@ describe('navigationStore', () => {
 
     store.setActiveModule('supervision')
     expect(store.activeModule).toBe('gestion-aduanera')
-
-    store.setActiveModule('transporte')
-    expect(store.activeModule).toBe('transporte-flota')
   })
 
   it('debe disparar la acción de finanzas e incrementar navTick', () => {
@@ -76,30 +73,6 @@ describe('navigationStore', () => {
     store.triggerFinanzasAction('registrar-anticipo')
     expect(store.finanzasActionTrigger).toBe('registrar-anticipo')
     expect(store.navTick).toBe(1)
-  })
-
-  it('gestiona las 4 sub-opciones canónicas de transporte-flota con valor por defecto dashboard', () => {
-    const store = useNavigationStore()
-    expect(store.transporteFlotaSubOption).toBe('dashboard')
-
-    store.setTransporteFlotaSubOption('despachos')
-    expect(store.transporteFlotaSubOption).toBe('despachos')
-
-    store.setTransporteFlotaSubOption('unidades')
-    expect(store.transporteFlotaSubOption).toBe('unidades')
-
-    store.setTransporteFlotaSubOption('conductores')
-    expect(store.transporteFlotaSubOption).toBe('conductores')
-
-    // Alias retrocompatibles redirigen a despachos
-    store.setTransporteFlotaSubOption('cabina')
-    expect(store.transporteFlotaSubOption).toBe('despachos')
-
-    store.setTransporteFlotaSubOption('camion')
-    expect(store.transporteFlotaSubOption).toBe('despachos')
-
-    store.setTransporteFlotaSubOption('viajes')
-    expect(store.transporteFlotaSubOption).toBe('despachos')
   })
 
   it('restaura cada módulo a su primera vista estándar con resetModuleToDefaultView', () => {

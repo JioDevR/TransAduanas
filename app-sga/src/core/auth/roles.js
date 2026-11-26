@@ -7,7 +7,6 @@ export const ROLES = {
   AGENTE_COMERCIAL: 'AGENTE_COMERCIAL',
   SUPERVISOR_ADUANERO: 'SUPERVISOR_ADUANERO',
   AGENTE_ADUANERO: 'AGENTE_ADUANERO',
-  SUPERVISOR_TRANSPORTE: 'SUPERVISOR_TRANSPORTE',
   CONTADOR: 'CONTADOR'
 }
 
@@ -17,7 +16,6 @@ export const ROLE_LABELS = {
   [ROLES.AGENTE_COMERCIAL]: 'Agente Comercial',
   [ROLES.SUPERVISOR_ADUANERO]: 'Supervisor Aduanero',
   [ROLES.AGENTE_ADUANERO]: 'Agente Aduanero',
-  [ROLES.SUPERVISOR_TRANSPORTE]: 'Supervisor de Transporte',
   [ROLES.CONTADOR]: 'Contador'
 }
 
@@ -27,7 +25,6 @@ export const ROLE_MODULE_MAP = {
   [ROLES.AGENTE_COMERCIAL]: 'comercial',
   [ROLES.SUPERVISOR_ADUANERO]: 'gestion-aduanera',
   [ROLES.AGENTE_ADUANERO]: 'agente-aduanero',
-  [ROLES.SUPERVISOR_TRANSPORTE]: 'transporte-flota',
   [ROLES.CONTADOR]: 'finanzas'
 }
 
@@ -37,7 +34,6 @@ export const ROLE_HOME_PATH = {
   [ROLES.AGENTE_COMERCIAL]: '/recepcion-comercial',
   [ROLES.SUPERVISOR_ADUANERO]: '/gestion-aduanera',
   [ROLES.AGENTE_ADUANERO]: '/agente-aduanero',
-  [ROLES.SUPERVISOR_TRANSPORTE]: '/transporte-flota',
   [ROLES.CONTADOR]: '/finanzas'
 }
 
@@ -51,6 +47,5 @@ export const ROLE_OPTIONS = [
   { value: ROLES.AGENTE_COMERCIAL, label: ROLE_LABELS[ROLES.AGENTE_COMERCIAL] },
   { value: ROLES.SUPERVISOR_ADUANERO, label: ROLE_LABELS[ROLES.SUPERVISOR_ADUANERO] },
   { value: ROLES.AGENTE_ADUANERO, label: ROLE_LABELS[ROLES.AGENTE_ADUANERO] },
-  { value: ROLES.SUPERVISOR_TRANSPORTE, label: ROLE_LABELS[ROLES.SUPERVISOR_TRANSPORTE] },
   { value: ROLES.CONTADOR, label: ROLE_LABELS[ROLES.CONTADOR] }
 ]

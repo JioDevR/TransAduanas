@@ -30,7 +30,7 @@
           <Select
             inputId="f-cobro-metodo"
             v-model="pagoForm.metodoPago"
-            :options="METODOS_PAGO_LIQUIDACION"
+            :options="metodosPagoOptions"
             optionLabel="label"
             optionValue="value"
             size="small"
@@ -43,7 +43,7 @@
           <Select
             inputId="f-cobro-banco"
             v-model="pagoForm.bancoDestino"
-            :options="BANCOS_DESTINO_LIQUIDACION"
+            :options="bancosDestinoOptions"
             optionLabel="label"
             optionValue="value"
             size="small"
@@ -163,18 +163,39 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import Button from 'primevue/button'
 import Dialog from 'primevue/dialog'
 import InputText from 'primevue/inputtext'
 import Select from 'primevue/select'
 import Textarea from 'primevue/textarea'
 import { useResponsive } from '@/shared/composables/useResponsive'
+import { catalogoService } from '@/features/admin/catalogos/services/catalogoService'
 import {
   METODOS_PAGO_LIQUIDACION,
   BANCOS_DESTINO_LIQUIDACION,
   formatPen
 } from '../../utils/finanzasFormatters'
+
+const metodosPagoOptions = ref(METODOS_PAGO_LIQUIDACION)
+const bancosDestinoOptions = ref(BANCOS_DESTINO_LIQUIDACION)
+
+onMounted(async () => {
+  try {
+    const [metodosRes, bancosRes] = await Promise.allSettled([
+      catalogoService.getMetodosPago('LIQUIDACION'),
+      catalogoService.getBancos('DESTINO')
+    ])
+    if (metodosRes.status === 'fulfilled' && Array.isArray(metodosRes.value) && metodosRes.value.length > 0) {
+      metodosPagoOptions.value = metodosRes.value.map((m) => ({ label: m.nombre, value: m.codigo }))
+    }
+    if (bancosRes.status === 'fulfilled' && Array.isArray(bancosRes.value) && bancosRes.value.length > 0) {
+      bancosDestinoOptions.value = bancosRes.value.map((b) => ({ label: b.nombre, value: b.codigo }))
+    }
+  } catch {
+    // Respaldo local en caso de fallo de red
+  }
+})
 
 defineProps({
   visible: { type: Boolean, default: false },

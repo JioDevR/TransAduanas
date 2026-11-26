@@ -52,14 +52,11 @@ const mockExpedienteImportacion = {
   fechaLimiteRetiro: '2026-11-26',
   estadoAlmacen: 'CUSTODIA',
   tieneTransporte: true,
-  codigoTracking: 'TRK-2026-881',
-  guiaRemisionTransporte: 'T001-000412',
-  placaTracto: 'ABC-901',
-  conductorNombre: 'Luis Paredes',
+  tipoTraslado: 'ENTREGA_IMPORTACION',
   direccionPartida: 'Terminal Portuario Callao',
   direccionLlegada: 'Av. Nicolás Ayllón 3200',
   distritoLlegada: 'Ate',
-  estadoTransporte: 'PROGRAMADO',
+  estadoTransporte: 'SOLICITADO',
   contactoExteriorNombre: 'Shanghai Textile Machinery',
   contactoExteriorCorreo: 'ops@shanghaitex.cn',
   estadoExpediente: 'INSPECCION',
@@ -158,8 +155,8 @@ describe('ExpedienteTrackingDetailView & Subcomponentes sgaUI', () => {
     const htmlGrid = await renderToString(appGrid)
     expect(htmlGrid).toContain('Control Aduanero &amp; SUNAT')
     expect(htmlGrid).toContain('DP World Callao')
-    expect(htmlGrid).toContain('TRK-2026-881')
-    expect(htmlGrid).toContain('T001-000412')
+    expect(htmlGrid).toContain('SOLICITADO')
+    expect(htmlGrid).toContain('Av. Nicolás Ayllón 3200')
     expect(htmlGrid).toContain('Informe de Conformidad al Cliente')
 
     const appAside = createSSRApp({

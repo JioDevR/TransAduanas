@@ -339,18 +339,26 @@ const handleSubmit = async () => {
 
   loading.value = true
   try {
+    const sedeSeleccionada = sedesList.value.find((s) => s.idSede === form.value.idSedeDeposito)
+    const expSeleccionado = expedientesList.value.find((e) => e.idExpediente === form.value.idExpediente) || props.expediente
+    const esExportacion = String(expSeleccionado?.regimenAduanero || '').toUpperCase().includes('EXPORTACION')
+    const taraNota = Number(form.value.pesoTaraRegistradoKg) > 0
+      ? `Peso tara: ${Number(form.value.pesoTaraRegistradoKg).toFixed(2)} kg.`
+      : ''
+    const obsCombinada = [taraNota, form.value.observaciones?.trim()].filter(Boolean).join(' ')
+
     const payload = {
       idExpediente: form.value.idExpediente,
-      idSedeDeposito: form.value.idSedeDeposito,
-      ticketBalanzaVgm: form.value.ticketBalanzaVgm,
-      pesoBrutoRegistradoKg: Number(form.value.pesoBrutoRegistradoKg),
-      pesoTaraRegistradoKg: Number(form.value.pesoTaraRegistradoKg || 0),
-      cantidadBultos: Number(form.value.cantidadBultos),
-      ubicacionBahia: form.value.ubicacionBahia || null,
+      depositoTemporal: sedeSeleccionada?.nombre || `Sede #${form.value.idSedeDeposito}`,
+      ubicacionBahia: form.value.ubicacionBahia || 'Patio General',
       tipoIngreso: form.value.tipoIngreso,
-      precintoVerificado: form.value.precintoVerificado,
-      diasLibresAlmacenaje: Number(form.value.diasLibresAlmacenaje || 7),
-      observaciones: form.value.observaciones || null
+      finalidadAlmacenaje: esExportacion ? 'EMBARQUE_EXPORTACION' : 'INGRESO_IMPORTACION',
+      diasLibresAlmacen: Number(form.value.diasLibresAlmacenaje || 15),
+      cantidadBultos: Number(form.value.cantidadBultos || 1),
+      pesoBrutoKg: Number(form.value.pesoBrutoRegistradoKg),
+      ticketPesajeVgm: form.value.ticketBalanzaVgm,
+      precintoConforme: Boolean(form.value.precintoVerificado),
+      observaciones: obsCombinada || null
     }
 
     const resultado = await almacenService.createIngresoAlmacen(payload)

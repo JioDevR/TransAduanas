@@ -23,6 +23,10 @@ public class ExpedienteEvento {
     @JoinColumn(name = "id_expediente", nullable = false)
     private Expediente expediente;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_usuario")
+    private Usuario usuario;
+
     @Column(name = "codigo_estado", nullable = false, length = 60)
     private String codigoEstado;
 

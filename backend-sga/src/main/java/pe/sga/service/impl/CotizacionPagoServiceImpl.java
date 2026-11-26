@@ -48,10 +48,16 @@ public class CotizacionPagoServiceImpl implements ICotizacionPagoService {
     private IAuditoriaService auditoriaService;
     private IComprobanteFacturaService comprobanteFacturaService;
     private ComprobanteFacturaRepository comprobanteFacturaRepository;
+    private CatalogoResolucionService catalogoResolucionService;
 
     @Autowired(required = false)
     public void setAuditoriaService(IAuditoriaService auditoriaService) {
         this.auditoriaService = auditoriaService;
+    }
+
+    @Autowired(required = false)
+    public void setCatalogoResolucionService(CatalogoResolucionService catalogoResolucionService) {
+        this.catalogoResolucionService = catalogoResolucionService;
     }
 
     @Autowired(required = false)
@@ -127,6 +133,9 @@ public class CotizacionPagoServiceImpl implements ICotizacionPagoService {
                 .fechaRegistro(LocalDateTime.now())
                 .build();
 
+        if (catalogoResolucionService != null) {
+            catalogoResolucionService.enriquecerPagoCotizacion(pago);
+        }
         CotizacionPago guardado = cotizacionPagoRepository.save(pago);
 
         // Si la cotización no tiene pago confirmado, se actualiza a PENDIENTE_REVISION

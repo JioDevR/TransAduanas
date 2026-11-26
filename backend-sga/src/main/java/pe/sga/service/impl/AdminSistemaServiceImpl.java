@@ -215,19 +215,17 @@ public class AdminSistemaServiceImpl implements IAdminSistemaService {
             case AGENTE_COMERCIAL -> "Prospección de clientes, cotizaciones, registro de pagos iniciales y reportes.";
             case SUPERVISOR_ADUANERO -> "Revisión técnica, aprobación aduanera, apertura de expedientes y supervisión.";
             case AGENTE_ADUANERO -> "Gestión operativa de expedientes, canales SUNAT, diligencias e inspecciones.";
-            case SUPERVISOR_TRANSPORTE -> "Gestión de flota, conductores, despachos locales y seguimiento de rutas.";
             case CONTADOR -> "Validación financiera, conciliación de pagos y liquidaciones finales.";
         };
     }
 
     private List<String> modulosPorRol(RolUsuario rol) {
         return switch (rol) {
-            case ADMINISTRADOR_TI -> List.of("Administración TI", "Gerencia General", "Comercial", "Gestión Aduanera", "Agente Aduanero", "Transporte y Flota", "Finanzas");
-            case GERENTE_GENERAL -> List.of("Gerencia General", "Administración TI (Lectura)", "Comercial", "Gestión Aduanera", "Agente Aduanero", "Transporte y Flota", "Finanzas");
+            case ADMINISTRADOR_TI -> List.of("Administración TI", "Gerencia General", "Comercial", "Gestión Aduanera", "Agente Aduanero", "Finanzas");
+            case GERENTE_GENERAL -> List.of("Gerencia General", "Administración TI (Lectura)", "Comercial", "Gestión Aduanera", "Agente Aduanero", "Finanzas");
             case AGENTE_COMERCIAL -> List.of("Recepción Comercial");
             case SUPERVISOR_ADUANERO -> List.of("Gestión Aduanera", "Agente Aduanero");
             case AGENTE_ADUANERO -> List.of("Agente Aduanero", "Gestión Aduanera");
-            case SUPERVISOR_TRANSPORTE -> List.of("Transporte y Flota");
             case CONTADOR -> List.of("Finanzas");
         };
     }
@@ -239,7 +237,6 @@ public class AdminSistemaServiceImpl implements IAdminSistemaService {
             case AGENTE_COMERCIAL -> List.of("CRUD Clientes", "CRUD Cotizaciones", "Registro Pagos Iniciales");
             case SUPERVISOR_ADUANERO -> List.of("Aprobación Cotizaciones", "Apertura Expedientes", "Control Almacén", "Liquidaciones");
             case AGENTE_ADUANERO -> List.of("Aprobación Cotizaciones", "Gestión Expedientes", "Control Almacén");
-            case SUPERVISOR_TRANSPORTE -> List.of("CRUD Flota y Conductores", "CRUD Despachos", "Seguimiento Ruta");
             case CONTADOR -> List.of("Validación Pagos", "CRUD Liquidaciones Financieras", "Conciliación");
         };
     }

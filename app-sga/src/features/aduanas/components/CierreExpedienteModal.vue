@@ -58,7 +58,7 @@
           <div class="check-info">
             <span class="check-label">Entrega de Carga Verificada</span>
             <span v-if="expediente?.servicioTransporte" class="check-sub">
-              Transporte SGA: Tracking <span class="font-mono">{{ expediente?.codigoTrackingTransporte || '—' }}</span> ({{ expediente?.estadoTransporte || 'PENDIENTE' }})
+              Transporte SGA (Externo): {{ expediente?.transporteSolicitado ? 'Solicitud registrada' : 'Pendiente de registro' }}
             </span>
             <span v-else class="check-sub">
               Retiro por el Cliente en Terminal Extraportuario
@@ -160,7 +160,7 @@ const embarqueExportacionVerificado = computed(() => {
 const entregaVerificada = computed(() => {
   if (!props.expediente) return false
   if (props.expediente.servicioTransporte) {
-    return props.expediente.estadoTransporte === 'ENTREGADO'
+    return Boolean(props.expediente.transporteSolicitado)
   }
   return true
 })

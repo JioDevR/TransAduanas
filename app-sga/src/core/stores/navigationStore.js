@@ -11,17 +11,16 @@ export const DEFAULT_MODULE_SUB_OPTION = {
   comercial: 'dashboard',
   'gestion-aduanera': 'dashboard',
   'agente-aduanero': 'dashboard',
-  'transporte-flota': 'dashboard',
   finanzas: 'dashboard'
 }
 
 export const useNavigationStore = defineStore('navigation', {
   state: () => ({
-    // Módulo activo: 'administracion-ti' | 'gerencia-general' | 'comercial' | 'gestion-aduanera' | 'agente-aduanero' | 'transporte-flota' | 'finanzas'
+    // Módulo activo: 'administracion-ti' | 'gerencia-general' | 'comercial' | 'gestion-aduanera' | 'agente-aduanero' | 'finanzas'
     activeModule: 'administracion-ti',
     // Sub-opciones en Administración TI: 'dashboard' | 'users' | 'portal-users' | 'auditoria' | 'almacenamiento' | 'about'
     administracionTiSubOption: 'dashboard',
-    // Sub-opciones en Gerencia General: 'dashboard' | 'sedes' | 'puertos' | 'tipos-carga' | 'mercancias' | 'flota' | 'conductores'
+    // Sub-opciones en Gerencia General: 'dashboard' | 'sedes' | 'puertos' | 'tipos-carga' | 'mercancias'
     gerenciaGeneralSubOption: 'dashboard',
     // Sub-opciones en Recepción Comercial: 'dashboard' | 'cotizaciones' | 'solicitudes' | 'clientes'
     comercialSubOption: 'dashboard',
@@ -29,8 +28,6 @@ export const useNavigationStore = defineStore('navigation', {
     gestionAduaneraSubOption: 'dashboard',
     // Sub-opciones en Agente Aduanero: 'dashboard' | 'todos' | 'transito' | 'inspeccion' | 'levante'
     agenteAduaneroSubOption: 'dashboard',
-    // Sub-opciones en Transporte y Flota: 'dashboard' | 'despachos' | 'unidades' | 'conductores'
-    transporteFlotaSubOption: 'dashboard',
     // Sub-opciones en Finanzas: 'dashboard' | 'pre-expedientes' | 'liquidaciones' | 'conciliacion'
     finanzasSubOption: 'dashboard',
     // Disparadores de acciones modales directas
@@ -61,7 +58,6 @@ export const useNavigationStore = defineStore('navigation', {
         'comercial': 'Recepción Comercial',
         'gestion-aduanera': 'Gestión Aduanera',
         'agente-aduanero': 'Agente Aduanero',
-        'transporte-flota': 'Transporte y Flota',
         'finanzas': 'Finanzas'
       }
       return titles[this.currentModule] || 'Operaciones'
@@ -73,7 +69,6 @@ export const useNavigationStore = defineStore('navigation', {
     ventasSubOption: (state) => state.comercialSubOption,
     supervisionSubOption: (state) => state.gestionAduaneraSubOption,
     aduanasSubOption: (state) => state.agenteAduaneroSubOption,
-    transporteSubOption: (state) => state.transporteFlotaSubOption,
     liquidadorSubOption: (state) => state.gestionAduaneraSubOption,
     ventasActionTrigger: (state) => state.comercialActionTrigger,
     adminActionTrigger: (state) => state.administracionTiActionTrigger
@@ -89,8 +84,7 @@ export const useNavigationStore = defineStore('navigation', {
         supervision: 'gestion-aduanera',
         liquidador: 'gestion-aduanera',
         aduanas: 'agente-aduanero',
-        logistica: 'agente-aduanero',
-        transporte: 'transporte-flota'
+        logistica: 'agente-aduanero'
       }
       const target = mapping[moduleName] || moduleName
       if (this.activeModule === target) return
@@ -154,20 +148,6 @@ export const useNavigationStore = defineStore('navigation', {
       this.setAgenteAduaneroSubOption(option)
     },
 
-    setTransporteFlotaSubOption(option) {
-      let canon = option
-      if (option === 'cabina' || option === 'camion' || option === 'viajes') {
-        canon = 'despachos'
-      }
-
-      if (this.transporteFlotaSubOption === canon) return
-      this.transporteFlotaSubOption = canon
-      this.navTick++
-    },
-    setTransporteSubOption(option) {
-      this.setTransporteFlotaSubOption(option)
-    },
-
     setFinanzasSubOption(option) {
       if (this.finanzasSubOption === option && !this.finanzasActionTrigger) return
       this.finanzasSubOption = option
@@ -210,7 +190,6 @@ export const useNavigationStore = defineStore('navigation', {
         comercial: (v) => this.setComercialSubOption(v),
         'gestion-aduanera': (v) => this.setGestionAduaneraSubOption(v),
         'agente-aduanero': (v) => this.setAgenteAduaneroSubOption(v),
-        'transporte-flota': (v) => this.setTransporteFlotaSubOption(v),
         finanzas: (v) => this.setFinanzasSubOption(v)
       }
       setters[target]?.(defaultOpt)

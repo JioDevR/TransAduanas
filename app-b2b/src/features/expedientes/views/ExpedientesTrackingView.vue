@@ -163,7 +163,7 @@
                 {{ exp.diasRestantesAlmacen }}d libres almacén
               </span>
               <span v-if="exp.tieneTransporte" class="sga-cell-sub">
-                Transporte: {{ exp.estadoTransporte || 'PROGRAMADO' }}
+                Transporte externo: {{ exp.estadoTransporte || 'SOLICITADO' }}
               </span>
               <span v-if="!exp.tieneAlmacen && !exp.tieneTransporte" class="sga-text-muted">—</span>
             </div>

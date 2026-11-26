@@ -108,8 +108,7 @@ const MODULE_OPTIONS = [
   { value: 'comercial', label: '02 Recepción Comercial' },
   { value: 'gestion-aduanera', label: '03 Gestión Aduanera' },
   { value: 'agente-aduanero', label: '04 Agente Aduanero' },
-  { value: 'transporte-flota', label: '05 Transporte y Flota' },
-  { value: 'finanzas', label: '06 Finanzas' }
+  { value: 'finanzas', label: '05 Finanzas' }
 ]
 
 const MODULE_META = {
@@ -118,8 +117,7 @@ const MODULE_META = {
   comercial: { code: '02', title: 'RECEPCIÓN COMERCIAL' },
   'gestion-aduanera': { code: '03', title: 'GESTIÓN ADUANERA' },
   'agente-aduanero': { code: '04', title: 'AGENTE ADUANERO' },
-  'transporte-flota': { code: '05', title: 'TRANSPORTE Y FLOTA' },
-  finanzas: { code: '06', title: 'FINANZAS' }
+  finanzas: { code: '05', title: 'FINANZAS' }
 }
 
 const activeModuleShortTitle = computed(() => MODULE_META[navigationStore.currentModule]?.title || 'OPERACIONES')
@@ -222,16 +220,6 @@ const currentNavItems = computed(() => {
     ]
   }
 
-  if (mod === 'transporte-flota') {
-    const go = (sub) => () => selectSub('transporte-flota', navigationStore.setTransporteFlotaSubOption, sub, { path: '/transporte-flota', query: { tab: sub } })
-    return [
-      { key: 'dashboard', label: 'Dashboard Operativo', match: ['dashboard'], onClick: go('dashboard') },
-      { key: 'despachos', label: 'Monitoreo & Despachos', match: ['despachos'], onClick: go('despachos') },
-      { key: 'unidades', label: 'Parque de Flota', match: ['unidades'], onClick: go('unidades') },
-      { key: 'conductores', label: 'Directorio Conductores', match: ['conductores'], onClick: go('conductores') }
-    ]
-  }
-
   if (mod === 'finanzas') {
     const go = (sub) => () => selectSub('finanzas', navigationStore.setFinanzasSubOption, sub, { path: '/finanzas', query: { tab: sub } })
     return [
@@ -254,7 +242,6 @@ const activeSubOptionByModule = computed(() => {
     comercial: navigationStore.comercialSubOption,
     'gestion-aduanera': navigationStore.gestionAduaneraSubOption,
     'agente-aduanero': navigationStore.agenteAduaneroSubOption,
-    'transporte-flota': navigationStore.transporteFlotaSubOption,
     finanzas: navigationStore.finanzasSubOption
   }
   return map[navigationStore.currentModule] || ''

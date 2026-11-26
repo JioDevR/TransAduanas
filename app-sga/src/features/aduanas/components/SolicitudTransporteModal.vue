@@ -28,9 +28,9 @@
       <div class="sga-banner is-success">
         <i class="pi pi-truck"></i>
         <div>
-          <strong>Handoff Operativo a Supervisor de Transporte y Flota</strong>
+          <strong>Registro de Solicitud de Transporte Externo</strong>
           <p class="transporte-banner-desc">
-            Al registrar la solicitud, el Área de Flota recibirá la orden de retiro y asignará unidad y chofer para el despacho.
+            Complete los datos de origen, destino y programación. La asignación de unidad y chofer se gestiona externamente fuera del SGA.
           </p>
         </div>
       </div>
@@ -128,7 +128,7 @@
       <Button
         type="submit"
         form="solicitud-transporte-form"
-        label="Enviar Solicitud a Transporte"
+        label="Registrar Solicitud de Transporte"
         icon="pi pi-send"
         size="small"
         :loading="loading"

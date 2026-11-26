@@ -16,7 +16,6 @@ import pe.sga.entity.*;
 import pe.sga.entity.enums.EstadoCotizacion;
 import pe.sga.entity.enums.EstadoExpediente;
 import pe.sga.entity.enums.EstadoPagoCotizacion;
-import pe.sga.entity.enums.EstadoTransporte;
 import pe.sga.entity.enums.RolUsuario;
 import pe.sga.entity.enums.TipoAbonoCotizacion;
 import pe.sga.exception.BadRequestException;
@@ -50,7 +49,6 @@ public class PortalServiceImpl implements IPortalService {
     private final CotizacionPagoRepository cotizacionPagoRepository;
     private final LiquidacionFinancieraRepository liquidacionFinancieraRepository;
     private final ControlAlmacenRepository controlAlmacenRepository;
-    private final DespachoTransporteRepository despachoTransporteRepository;
     private final CatalogoMercanciaRepository mercanciaRepository;
     private final CatalogoTipoCargaRepository tipoCargaRepository;
     private final CatalogoPuertoRepository puertoRepository;
@@ -62,10 +60,16 @@ public class PortalServiceImpl implements IPortalService {
     private IAuditoriaService auditoriaService;
     private ComprobanteFacturaRepository comprobanteFacturaRepository;
     private ExpedienteEventoRepository expedienteEventoRepository;
+    private CatalogoResolucionService catalogoResolucionService;
 
     @Autowired(required = false)
     public void setExpedienteEventoRepository(ExpedienteEventoRepository expedienteEventoRepository) {
         this.expedienteEventoRepository = expedienteEventoRepository;
+    }
+
+    @Autowired(required = false)
+    public void setCatalogoResolucionService(CatalogoResolucionService catalogoResolucionService) {
+        this.catalogoResolucionService = catalogoResolucionService;
     }
 
     @Autowired(required = false)
@@ -275,6 +279,9 @@ public class PortalServiceImpl implements IPortalService {
                 .observaciones(obs)
                 .build();
 
+        if (catalogoResolucionService != null) {
+            catalogoResolucionService.enriquecerCotizacion(cotizacion);
+        }
         Cotizacion guardada = cotizacionRepository.save(cotizacion);
         log.info("Nueva cotización {} solicitada por cliente ID {}", codigoCotizacion, idCliente);
         auditar("SOLICITAR_COTIZACION_PORTAL", "COTIZACION", guardada.getIdCotizacion(),
@@ -313,6 +320,9 @@ public class PortalServiceImpl implements IPortalService {
         cotizacion.setSaldoPendiente(saldo.compareTo(BigDecimal.ZERO) < 0 ? BigDecimal.ZERO : saldo);
 
         cotizacion.setObservaciones((cotizacion.getObservaciones() != null ? cotizacion.getObservaciones() + " | " : "") + "Aceptada formalmente por el cliente vía Portal B2B el " + LocalDateTime.now());
+        if (catalogoResolucionService != null) {
+            catalogoResolucionService.enriquecerCotizacion(cotizacion);
+        }
         Cotizacion guardada = cotizacionRepository.save(cotizacion);
         auditar("ACEPTAR_COTIZACION_PORTAL", "COTIZACION", guardada.getIdCotizacion(),
                 "Cotización " + guardada.getCodigoCotizacion() + " aceptada por cliente en Portal B2B");
@@ -354,6 +364,9 @@ public class PortalServiceImpl implements IPortalService {
 
         cotizacion.setObservaciones((cotizacion.getObservaciones() != null ? cotizacion.getObservaciones() + " | " : "")
                 + "Respuesta cliente B2B (" + cotizacion.getEstado().name() + ") el " + LocalDateTime.now() + ": " + motivo);
+        if (catalogoResolucionService != null) {
+            catalogoResolucionService.enriquecerCotizacion(cotizacion);
+        }
         Cotizacion guardada = cotizacionRepository.save(cotizacion);
         auditar("RECHAZAR_COTIZACION_PORTAL", "COTIZACION", guardada.getIdCotizacion(),
                 "Cotización " + guardada.getCodigoCotizacion() + " marcada como " + guardada.getEstado().name() + " por el cliente");
@@ -372,14 +385,9 @@ public class PortalServiceImpl implements IPortalService {
         Map<Integer, ControlAlmacen> almacenMap = controlAlmacenRepository.findByExpediente_IdExpedienteIn(idsExp).stream()
                 .filter(a -> a.getExpediente() != null)
                 .collect(Collectors.toMap(a -> a.getExpediente().getIdExpediente(), Function.identity(), (a, b) -> a));
-        Map<Integer, DespachoTransporte> transporteMap = despachoTransporteRepository
-                .findByExpediente_IdExpedienteInAndEstadoTransporteNot(idsExp, EstadoTransporte.CANCELADO)
-                .stream()
-                .filter(t -> t.getExpediente() != null)
-                .collect(Collectors.toMap(t -> t.getExpediente().getIdExpediente(), Function.identity(), (a, b) -> a));
 
         return expedientes.stream()
-                .map(e -> mapToPortalExpediente(e, almacenMap.get(e.getIdExpediente()), transporteMap.get(e.getIdExpediente())))
+                .map(e -> mapToPortalExpediente(e, almacenMap.get(e.getIdExpediente())))
                 .toList();
     }
 
@@ -834,6 +842,9 @@ public class PortalServiceImpl implements IPortalService {
                 .observacionFinanzas(dto.getObservaciones())
                 .build();
 
+        if (catalogoResolucionService != null) {
+            catalogoResolucionService.enriquecerPagoCotizacion(pago);
+        }
         CotizacionPago guardado = cotizacionPagoRepository.save(pago);
 
         if (!"ADELANTO_APROBADO".equals(cotizacion.getEstadoPago()) && !"PAGADO_TOTAL".equals(cotizacion.getEstadoPago())) {
@@ -890,6 +901,9 @@ public class PortalServiceImpl implements IPortalService {
                 + (dto.getObservaciones() != null && !dto.getObservaciones().isBlank() ? ": " + dto.getObservaciones().trim() : "");
         pago.setObservacionFinanzas(notaSubsanacion);
 
+        if (catalogoResolucionService != null) {
+            catalogoResolucionService.enriquecerPagoCotizacion(pago);
+        }
         CotizacionPago guardado = cotizacionPagoRepository.save(pago);
 
         if (!"ADELANTO_APROBADO".equals(cotizacion.getEstadoPago()) && !"PAGADO_TOTAL".equals(cotizacion.getEstadoPago())) {
@@ -962,16 +976,10 @@ public class PortalServiceImpl implements IPortalService {
         ControlAlmacen alm = e.getIdExpediente() != null
                 ? controlAlmacenRepository.findByExpediente_IdExpediente(e.getIdExpediente()).orElse(null)
                 : null;
-        DespachoTransporte tra = e.getIdExpediente() != null
-                ? despachoTransporteRepository
-                        .findFirstByExpediente_IdExpedienteAndEstadoTransporteNotOrderByIdDespachoTransporteDesc(
-                                e.getIdExpediente(), EstadoTransporte.CANCELADO)
-                        .orElse(null)
-                : null;
-        return mapToPortalExpediente(e, alm, tra);
+        return mapToPortalExpediente(e, alm);
     }
 
-    private PortalExpedienteDTO mapToPortalExpediente(Expediente e, ControlAlmacen alm, DespachoTransporte tra) {
+    private PortalExpedienteDTO mapToPortalExpediente(Expediente e, ControlAlmacen alm) {
         var merc = e.getMercancia() != null ? e.getMercancia() : (e.getCotizacion() != null ? e.getCotizacion().getMercancia() : null);
         var tc = e.getTipoCarga() != null ? e.getTipoCarga() : (e.getCotizacion() != null ? e.getCotizacion().getTipoCarga() : null);
 
@@ -1068,20 +1076,17 @@ public class PortalServiceImpl implements IPortalService {
             }
         }
 
-        if (tra != null && tra.getEstadoTransporte() != EstadoTransporte.CANCELADO) {
+        if (Boolean.TRUE.equals(e.getTransporteSolicitado())) {
             builder.tieneTransporte(true)
-                    .codigoTracking(tra.getCodigoTracking())
-                    .tipoTraslado(tra.getTipoTraslado() != null ? tra.getTipoTraslado().name() : null)
-                    .guiaRemisionTransporte(tra.getGuiaRemisionTransporte())
-                    .placaTracto(tra.getUnidad() != null ? tra.getUnidad().getPlacaTracto() : null)
-                    .conductorNombre(tra.getConductor() != null ? (tra.getConductor().getNombres() + " " + tra.getConductor().getApellidos()) : null)
-                    .direccionPartida(tra.getDireccionPartida())
-                    .direccionLlegada(tra.getDireccionLlegada())
-                    .distritoLlegada(tra.getDistritoLlegada())
-                    .fechaProgramadaTransporte(tra.getFechaProgramada())
-                    .fechaSalidaRuta(tra.getFechaSalidaRuta())
-                    .fechaEntregaConforme(tra.getFechaEntregaConforme())
-                    .estadoTransporte(tra.getEstadoTransporte() != null ? tra.getEstadoTransporte().name() : null);
+                    .tipoTraslado(e.getTransporteTipoTraslado())
+                    .direccionPartida(e.getTransporteDireccionPartida())
+                    .direccionLlegada(e.getTransporteDireccionLlegada())
+                    .distritoLlegada(e.getTransporteDistritoLlegada())
+                    .contactoRecepcionTransporte(e.getTransporteContactoRecepcion())
+                    .fechaProgramadaTransporte(e.getTransporteFechaProgramada())
+                    .observacionesTransporte(e.getTransporteObservaciones())
+                    .fechaSolicitudTransporte(e.getTransporteFechaSolicitud())
+                    .estadoTransporte("SOLICITADO");
         }
 
         return builder.build();

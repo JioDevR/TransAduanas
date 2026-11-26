@@ -91,8 +91,16 @@ public class LiquidacionFinanciera {
     @JoinColumn(name = "id_documento_factura")
     private DocumentoAdjunto documentoFactura;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_metodo_pago")
+    private CatalogoMetodoPago metodoPagoEntity;
+
     @Column(name = "metodo_pago", length = 50)
     private String metodoPago;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_banco_destino")
+    private CatalogoBanco bancoDestinoEntity;
 
     @Column(name = "banco_destino", length = 80)
     private String bancoDestino;

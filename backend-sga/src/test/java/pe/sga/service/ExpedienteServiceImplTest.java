@@ -16,6 +16,7 @@ import pe.sga.dto.request.ExpedienteEventoRequestDTO;
 import pe.sga.dto.request.ExpedienteInformeConformidadDTO;
 import pe.sga.dto.request.ExpedienteRecojoExportacionDTO;
 import pe.sga.dto.request.ExpedienteSalidaOrigenDTO;
+import pe.sga.dto.request.ExpedienteSolicitudTransporteDTO;
 import pe.sga.dto.request.ExpedienteSunatSimuladoDTO;
 import pe.sga.dto.response.ExpedienteResponseDTO;
 import pe.sga.entity.Cliente;
@@ -31,7 +32,6 @@ import pe.sga.exception.BadRequestException;
 import pe.sga.exception.ResourceNotFoundException;
 import pe.sga.repository.CotizacionPagoRepository;
 import pe.sga.repository.CotizacionRepository;
-import pe.sga.repository.DespachoTransporteRepository;
 import pe.sga.repository.ExpedienteRepository;
 import pe.sga.repository.NotificacionClienteRepository;
 import pe.sga.repository.UsuarioRepository;
@@ -61,10 +61,6 @@ class ExpedienteServiceImplTest {
     private CotizacionPagoRepository cotizacionPagoRepository;
     @Mock
     private NotificacionClienteRepository notificacionClienteRepository;
-    @Mock
-    private DespachoTransporteRepository despachoRepository;
-    @Mock
-    private IDespachoTransporteService despachoTransporteService;
 
     @InjectMocks
     private ExpedienteServiceImpl expedienteService;
@@ -103,8 +99,6 @@ class ExpedienteServiceImplTest {
             e.setIdExpediente(77);
             return e;
         });
-        when(despachoRepository.findFirstByExpediente_IdExpedienteAndEstadoTransporteNotOrderByIdDespachoTransporteDesc(
-                eq(77), any())).thenReturn(Optional.empty());
 
         ExpedienteResponseDTO res = expedienteService.crear(dto);
 
@@ -195,8 +189,6 @@ class ExpedienteServiceImplTest {
 
         when(expedienteRepository.findById(15)).thenReturn(Optional.of(exp));
         when(expedienteRepository.save(any(Expediente.class))).thenAnswer(inv -> inv.getArgument(0));
-        when(despachoRepository.findFirstByExpediente_IdExpedienteAndEstadoTransporteNotOrderByIdDespachoTransporteDesc(
-                eq(15), any())).thenReturn(Optional.empty());
 
         ExpedienteResponseDTO res = expedienteService.confirmarSalidaOrigen(15, dto);
 
@@ -230,8 +222,6 @@ class ExpedienteServiceImplTest {
 
         when(expedienteRepository.findById(30)).thenReturn(Optional.of(expRojo));
         when(expedienteRepository.save(any(Expediente.class))).thenAnswer(inv -> inv.getArgument(0));
-        when(despachoRepository.findFirstByExpediente_IdExpedienteAndEstadoTransporteNotOrderByIdDespachoTransporteDesc(
-                eq(30), any())).thenReturn(Optional.empty());
 
         ExpedienteResponseDTO conCita = expedienteService.solicitarCuadrillaYCitaRojo(30,
                 ExpedienteCuadrillaCitaDTO.builder()
@@ -253,8 +243,6 @@ class ExpedienteServiceImplTest {
                 .estadoExpediente(EstadoExpediente.INSPECCION)
                 .build();
         when(expedienteRepository.findById(31)).thenReturn(Optional.of(expNaranja));
-        when(despachoRepository.findFirstByExpediente_IdExpedienteAndEstadoTransporteNotOrderByIdDespachoTransporteDesc(
-                eq(31), any())).thenReturn(Optional.empty());
 
         ExpedienteResponseDTO sunat = expedienteService.enviarDocumentosSunatSimulado(31,
                 ExpedienteSunatSimuladoDTO.builder().documentosIncluidos("Factura + BL").build(), "Agente 1");
@@ -269,8 +257,6 @@ class ExpedienteServiceImplTest {
                 .estadoExpediente(EstadoExpediente.LEVANTE_AUTORIZADO)
                 .build();
         when(expedienteRepository.findById(32)).thenReturn(Optional.of(expVerde));
-        when(despachoRepository.findFirstByExpediente_IdExpedienteAndEstadoTransporteNotOrderByIdDespachoTransporteDesc(
-                eq(32), any())).thenReturn(Optional.empty());
 
         ExpedienteResponseDTO verde = expedienteService.marcarEntregadoAlmacenVerde(32, "Entregado en almacén", "Agente 1");
         assertTrue(verde.getEntregadoAlmacenVerde());
@@ -301,8 +287,6 @@ class ExpedienteServiceImplTest {
         when(expedienteRepository.findById(40)).thenReturn(Optional.of(exp));
         when(usuarioRepository.findById(9)).thenReturn(Optional.of(agente));
         when(expedienteRepository.save(any(Expediente.class))).thenAnswer(inv -> inv.getArgument(0));
-        when(despachoRepository.findFirstByExpediente_IdExpedienteAndEstadoTransporteNotOrderByIdDespachoTransporteDesc(
-                eq(40), any())).thenReturn(Optional.empty());
 
         ExpedienteResponseDTO asignado = expedienteService.asignarAgente(40,
                 ExpedienteAsignarAgenteDTO.builder().idAgenteAduanero(9).build(), "Supervisor");
@@ -317,5 +301,39 @@ class ExpedienteServiceImplTest {
                         .direccionRecojoPlanta("Av Industrial 100")
                         .almacenDestinoTerminal("DPW")
                         .build()));
+    }
+
+    @Test
+    @DisplayName("Solicitud de transporte externo rellena los campos en expediente y permite cierre directo")
+    void solicitarTransporteExterno_yCerrarSinDespachoInterno_funcionanCorrectamente() {
+        Cotizacion conTrans = Cotizacion.builder().idCotizacion(8).servicioTransporte(true).build();
+        Expediente exp = Expediente.builder()
+                .idExpediente(50)
+                .codigoExpediente("EXP-2026-0050")
+                .cotizacion(conTrans)
+                .estadoExpediente(EstadoExpediente.LEVANTE_AUTORIZADO)
+                .build();
+
+        when(expedienteRepository.findById(50)).thenReturn(Optional.of(exp));
+        when(expedienteRepository.save(any(Expediente.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        ExpedienteSolicitudTransporteDTO req = ExpedienteSolicitudTransporteDTO.builder()
+                .direccionPartida("DP World Callao")
+                .direccionLlegada("Av. Argentina 2850")
+                .distritoLlegada("Callao")
+                .contactoRecepcion("Ing. Carlos Rojas")
+                .fechaProgramada(java.time.LocalDateTime.now().plusDays(1))
+                .observaciones("Plataforma 40ft")
+                .build();
+
+        ExpedienteResponseDTO solicitado = expedienteService.solicitarTransporte(50, req);
+        assertTrue(solicitado.getTransporteSolicitado());
+        assertEquals("ENTREGA_IMPORTACION", solicitado.getTransporteTipoTraslado());
+        assertEquals("Av. Argentina 2850", solicitado.getTransporteDireccionLlegada());
+
+        assertThrows(BadRequestException.class, () -> expedienteService.solicitarTransporte(50, req));
+
+        ExpedienteResponseDTO cerrado = expedienteService.cerrar(50, null);
+        assertEquals(EstadoExpediente.CERRADO, cerrado.getEstadoExpediente());
     }
 }

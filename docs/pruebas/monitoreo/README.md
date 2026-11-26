@@ -1,3 +1,13 @@
+# Pruebas de monitoreo de TransAduanas
+
+## Revisión del 26 de noviembre de 2026
+
+El manual Word y PDF contiene los comandos actuales y las herramientas de M01 a M15. Sus páginas de pruebas se conservan; la página 21 explica las correcciones antes de repetir.
+
+Se corrigió la preparación del contador de M04, se añadieron comprobaciones de CPU a M09 y M14 y se adaptó M10 al almacenamiento configurado por el lanzador protegido. Consultar [LEEME-ENTREGA.md](LEEME-ENTREGA.md) para el alcance de las verificaciones y los requisitos de instalación.
+
+Las notas siguientes conservan el desarrollo y las incidencias originales del laboratorio. Los estados históricos o pendientes allí descritos no sustituyen el resultado de una ejecución nueva.
+
 # Prueba 1 de monitoreo Ingesta y búsqueda de logs
 
 Se ejecutaron dos rondas de diez consultas GET de lectura al catálogo de puertos, con un segundo de separación entre consultas.

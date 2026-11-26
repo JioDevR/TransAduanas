@@ -133,17 +133,73 @@ def grafana_values():
     'El dashboard general usa una ventana de 5 minutos y todas las rutas: sus valores absolutos pueden diferir.\n'
     'No se usa increase(...[1m]) como contador exacto porque incluye extrapolacion.\n', encoding='utf-8')
 
+# Preparacion fuera de las 60 consultas medidas. Tras reiniciar Java la serie
+# HTTP de esta ruta puede no existir hasta recibir su primera consulta.
+preparation = {'ConsultaPreparacion': False, 'Endpoint': endpoint, 'Intentos': []}
+
+def baseline_not_ready(reason):
+    preparation['Motivo'] = reason
+    (out / 'preparacion-linea-base.json').write_text(
+        json.dumps(preparation, ensure_ascii=False, indent=2), encoding='utf-8')
+    message = 'M04 no ejecutada: ' + reason + ' No se iniciaron las 60 consultas medidas.'
+    (out / 'resultado.json').write_text(json.dumps({
+        'CodigoPrueba': 'M04', 'Estado': 'NO_EJECUTADA', 'Identificador': marker,
+        'Resultado': message, 'Fase': 'Preparacion de linea base',
+        'SolicitudesMedidas': 0, 'InicioLima': created.isoformat(),
+    }, ensure_ascii=False, indent=2), encoding='utf-8')
+    (out / 'resultado.txt').write_text(message + '\n', encoding='utf-8')
+    raise SystemExit(message)
+
 native_before, text_before = raw_metrics()
-for _ in range(10):
-    prom_before = prom(counter_expr)
-    if prom_before == native_before:
+has_counter = any(
+    line.startswith('http_server_requests_seconds_count{') and
+    f'uri="{endpoint}"' in line and 'method="GET"' in line and 'status="200"' in line
+    for line in text_before.splitlines())
+if not has_counter:
+    preparation['ConsultaPreparacion'] = True
+    preparation['IdentificadorConsulta'] = 'PREPARACION-M04-' + __import__('uuid').uuid4().hex
+    try:
+        prep_url = 'http://127.0.0.1:5180' + endpoint + '?' + urllib.parse.urlencode({
+            'monitoreo': preparation['IdentificadorConsulta'], 'consulta': 0})
+        prep_request = urllib.request.Request(prep_url, headers={
+            'User-Agent': 'TransAduanas-M04-Preparacion'})
+        with urllib.request.urlopen(prep_request, timeout=10) as reply:
+            preparation['HTTPPreparacion'] = reply.status
+            if reply.status != 200 or json.load(reply).get('success') is not True:
+                baseline_not_ready('La consulta de preparacion no respondio correctamente.')
+    except (OSError, ValueError) as exc:
+        baseline_not_ready('No se pudo preparar el contador: ' + type(exc).__name__ + '.')
+    print('M04: una consulta de preparacion para crear el contador; no forma parte de las 60 medidas.', flush=True)
+
+print('M04: esperando la misma linea base en backend, Prometheus y Grafana (hasta 30 s).', flush=True)
+deadline = time.monotonic() + 30
+stable_baselines = 0
+last_baseline = None
+while True:
+    attempt = {}
+    try:
+        native_before, text_before = raw_metrics()
+        prom_before = prom(counter_expr)
+        graf_before, graf_reply_before = grafana_values()
+        target_up = prom('up{job="transaduanas-backend"}')
+        attempt = {'Backend': native_before, 'Prometheus': prom_before,
+                   'Grafana': graf_before.get('CONTADOR'), 'TargetUP': target_up}
+        aligned = (target_up == 1 and prom_before is not None and
+                   prom_before == native_before == graf_before.get('CONTADOR'))
+        stable_baselines = stable_baselines + 1 if aligned and last_baseline == native_before else (1 if aligned else 0)
+        last_baseline = native_before
+    except (OSError, ValueError, KeyError) as exc:
+        attempt['Error'] = type(exc).__name__
+        stable_baselines = 0
+    preparation['Intentos'].append(attempt)
+    if stable_baselines >= 2:
         break
+    if time.monotonic() >= deadline:
+        baseline_not_ready('La recoleccion no se sincronizo; revisar preparacion-linea-base.json y el target de Prometheus.')
     time.sleep(1)
-graf_before, graf_reply_before = grafana_values()
-if prom_before != native_before or graf_before.get('CONTADOR') != native_before:
-    raise RuntimeError('La linea base de recoleccion no esta sincronizada; no se inicia la carga.')
-if prom('up{job="transaduanas-backend"}') != 1:
-    raise RuntimeError('El target no esta UP; no se inicia la carga.')
+preparation['Estado'] = 'LISTA'
+(out / 'preparacion-linea-base.json').write_text(
+    json.dumps(preparation, ensure_ascii=False, indent=2), encoding='utf-8')
 initial_offset = backend_log.stat().st_size
 start = datetime.now(tz)
 t0 = time.perf_counter()

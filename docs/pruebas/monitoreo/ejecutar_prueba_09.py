@@ -95,6 +95,29 @@ def native_cpu():
         if line.startswith('process_cpu_time_ns_total{'):return float(line.rsplit(' ',1)[1])/1e9,text
     raise RuntimeError('No esta disponible el tiempo CPU nativo.')
 
+# Comprobar las mediciones antes de iniciar las 60 consultas.
+cpu_preparacion=[]
+for attempt in range(10):
+    _,raw=native_cpu()
+    values={}
+    for metric in ('system_cpu_usage','process_cpu_usage'):
+        rows=[line for line in raw.splitlines() if line.startswith(metric+'{')]
+        values[metric]=float(rows[0].rsplit(' ',1)[1]) if rows else None
+    when=time.time()-1
+    collected={key:prom(expressions[key],when) for key in ('CPUHOST','CPUJAVA','UP')}
+    cpu_preparacion.append({'Nativas':values,'Prometheus':collected})
+    if (all(isinstance(v,(int,float)) and math.isfinite(v) and 0<=v<=1 for v in values.values())
+            and all(isinstance(collected[k],(int,float)) and math.isfinite(collected[k]) and 0<=collected[k]<=100 for k in ('CPUHOST','CPUJAVA'))
+            and collected['UP']==1):
+        break
+    time.sleep(2)
+else:
+    (out/'preparacion-cpu.json').write_text(json.dumps(cpu_preparacion,indent=2),encoding='utf-8')
+    reason='M09 no ejecutada: metricas de CPU no disponibles. Revisar permiso de lectura de contadores del servicio y reiniciarlo; no se iniciaron las 60 consultas.'
+    (out/'resultado.json').write_text(json.dumps({'CodigoPrueba':'M09','Estado':'NO_EJECUTADA','Identificador':marker,'Resultado':reason,'Fase':'Preparacion','InicioLima':created.isoformat()},ensure_ascii=False,indent=2),encoding='utf-8')
+    if handle:kernel.CloseHandle(handle)
+    raise SystemExit(reason)
+(out/'preparacion-cpu.json').write_text(json.dumps(cpu_preparacion,indent=2),encoding='utf-8')
 initial=windows()
 if initial['RAMTotalBytes']!=baseline['TotalVisibleBytes']:raise RuntimeError('La memoria total Windows no coincide en las lecturas previas; revisar preparacion.')
 (out/'criterios-previos.txt').write_text(

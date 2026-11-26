@@ -4,6 +4,7 @@ from contenido_didactico import D
 from contenido_breve import B
 from resultados_y_muestras import E
 from herramientas_por_prueba import H
+from actualizar_manual_monitoreo import actualizar_manual
 from docx import Document
 from docx.shared import Inches, Pt, RGBColor
 from docx.oxml import OxmlElement
@@ -274,6 +275,7 @@ doc.core_properties.title='Manual de pruebas de monitoreo de TransAduanas'
 doc.core_properties.subject='Procedimientos y evidencias de las quince pruebas de monitoreo'
 doc.core_properties.author='Equipo del proyecto TransAduanas'
 OUT.mkdir(parents=True,exist_ok=True)
+commands.extend(actualizar_manual(doc))
 doc.save(OUT/'Manual_pruebas_monitoreo_TransAduanas.docx')
 (OUT/'Comandos_manual_monitoreo_TransAduanas.txt').write_text(
  'COMANDOS DEL MANUAL DE MONITOREO DE TRANSADUANAS\n'

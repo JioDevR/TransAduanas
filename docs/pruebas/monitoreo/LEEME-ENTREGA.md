@@ -37,6 +37,24 @@ Esta rama incorpora la instrumentación de monitoreo sobre el código actual de 
 
 ## Validación de la rama
 
+### Mejoras del 26 de noviembre
+
+- M04 crea su contador cuando falta y espera una línea base común. La consulta de preparación tiene un identificador diferente y queda fuera de las 60 consultas medidas. Si no se sincroniza, guarda `NO_EJECUTADA`.
+- M09 comprueba que las métricas nativas y recolectadas de CPU sean válidas antes de comenzar sus 60 consultas.
+- M10 obtiene la ruta de almacenamiento tanto del XML anterior como de la configuración protegida del lanzador. `leer_almacenamiento_backend.py` devuelve únicamente esa ruta; no imprime ni guarda las credenciales.
+- M14 impide empezar con CPU no disponible y detiene la carga si las mediciones dejan de ser válidas. Se mantienen el 85 % y los cinco minutos originales.
+- El manual Word y PDF incluye estos cambios y los comandos del permiso de lectura de contadores en la página 21. Las quince pruebas siguen en sus páginas originales.
+
+Durante la revisión del laboratorio se repitieron M01, M02, M03, M05 y M09 con resultado exitoso. M04 también se corrigió y repitió con éxito. De M10 se comprobó la lectura real del almacenamiento protegido y de M14 la preparación sin carga. No se volvieron a ejecutar los escenarios completos restantes; los resultados del informe siguen siendo históricos.
+
+Para validar de forma aislada las comprobaciones de preparación, desde esta carpeta:
+
+```powershell
+python .\verificar_preparacion.py
+```
+
+Estas comprobaciones no arrancan servidores ni generan carga y no se contabilizan como ejecuciones de M01 a M15.
+
 El 26 de noviembre de 2026 se compiló el backend con Java 21 y se ejecutó:
 
 ```powershell

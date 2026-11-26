@@ -31,9 +31,15 @@ tz=timezone(timedelta(hours=-5));created=datetime.now(tz)
 marker='M10-'+created.strftime('%Y%m%d-%H%M%S')+'-'+uuid.uuid4().hex[:6]
 out=root/'evidencias-monitoreo'/marker;out.mkdir(parents=True,exist_ok=False)
 shutil.copy2(__file__,out/Path(__file__).name)
-config=ET.parse(Path.home()/'Music/TransAduanas-herramientas/winsw/TransAduanasBackend.xml').getroot()
-storage=Path(next(e.attrib['value'] for e in config.findall('env') if e.attrib.get('name')=='STORAGE_DIR')).resolve()
-del config
+from leer_almacenamiento_backend import leer_almacenamiento_backend
+try:
+    storage,storage_source=leer_almacenamiento_backend(Path.home()/'Music/TransAduanas-herramientas/winsw/TransAduanasBackend.xml')
+except (OSError,ValueError,RuntimeError,subprocess.TimeoutExpired):
+    reason='M10 no ejecutada: no se pudo identificar la ruta de almacenamiento de la configuracion actual; no se subieron archivos.'
+    (out/'resultado.json').write_text(json.dumps({'CodigoPrueba':'M10','Estado':'NO_EJECUTADA','Identificador':marker,'Resultado':reason,'Fase':'Preparacion','InicioLima':created.isoformat()},ensure_ascii=False,indent=2),encoding='utf-8')
+    raise SystemExit(reason) from None
+shutil.copy2(Path(__file__).with_name('leer_almacenamiento_backend.py'),out/'leer_almacenamiento_backend.py')
+(out/'origen-almacenamiento.json').write_text(json.dumps({'Directorio':str(storage),'Origen':storage_source},ensure_ascii=False,indent=2),encoding='utf-8')
 if storage.drive.upper()!='C:':raise RuntimeError('El almacenamiento no corresponde al volumen C:; revisar antes de ejecutar.')
 private=json.loads((Path.home()/'Music/TransAduanas-herramientas/monitoreo/credenciales-locales.json').read_text(encoding='utf-8-sig'))
 graf_auth='Basic '+base64.b64encode((private['usuario']+':'+private['password']).encode()).decode();del private

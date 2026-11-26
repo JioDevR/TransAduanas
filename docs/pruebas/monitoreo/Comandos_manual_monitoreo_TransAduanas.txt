@@ -133,3 +133,19 @@ if ($caso) {
   New-Item -Path (Join-Path $caso.FullName "DETENER.txt") `
     -ItemType File -Force
 }
+
+BLOQUE 25
+$grupo = Get-LocalGroup -SID 'S-1-5-32-558'
+$cuenta = 'NT SERVICE\TransAduanasBackend'
+if ((Get-LocalGroupMember -Group $grupo.Name).Name -notcontains $cuenta) {
+    Add-LocalGroupMember -Group $grupo.Name -Member $cuenta
+}
+Restart-Service -Name TransAduanasBackend -ErrorAction Stop
+Get-Service -Name TransAduanasBackend
+
+BLOQUE 26
+$r = Invoke-WebRequest -UseBasicParsing -TimeoutSec 10 -Uri `
+  'http://127.0.0.1:9086/actuator/prometheus'
+$r.Content -split "`n" | Where-Object {
+    $_ -match '^(system_cpu_usage|process_cpu_usage)\{'
+}

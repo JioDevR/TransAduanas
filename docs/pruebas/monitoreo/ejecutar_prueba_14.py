@@ -1,6 +1,6 @@
 from pathlib import Path
 from datetime import datetime,timezone,timedelta
-import argparse,base64,csv,ctypes,hashlib,json,msvcrt,os,re,shutil,subprocess,sys,time,uuid
+import argparse,base64,csv,ctypes,hashlib,json,math,msvcrt,os,re,shutil,subprocess,sys,time,uuid
 from ctypes import wintypes as wt
 import urllib.request,urllib.error,urllib.parse
 
@@ -46,6 +46,17 @@ if initial['MemoriaKB']<1572864:raise RuntimeError('Menos de 1.5 GiB disponibles
 if not 1<=cpus<=32:raise RuntimeError('Topologia CPU no contemplada; no se genera carga.')
 if number('up{job="transaduanas-backend"}')!=1:raise RuntimeError('El backend no esta recolectandose; no se genera carga.')
 if number('system_cpu_count{job="transaduanas-backend"}')!=cpus:raise RuntimeError('No coinciden procesadores Windows y Micrometer.')
+cpu_preparacion=[]
+for attempt in range(10):
+    value=number('system_cpu_usage{job="transaduanas-backend"}')
+    cpu_preparacion.append(value)
+    if isinstance(value,(int,float)) and math.isfinite(value) and 0<=value<=1:break
+    time.sleep(2)
+else:
+    reason='M14 no ejecutada: la metrica de CPU no es valida; no se genera carga. Revisar contadores y permiso del servicio.'
+    (out/'preparacion-cpu.json').write_text(json.dumps(cpu_preparacion),encoding='utf-8')
+    (out/'resultado.json').write_text(json.dumps({'CodigoPrueba':'M14','Estado':'NO_EJECUTADA','Identificador':marker,'Resultado':reason,'Fase':'Preparacion','InicioLima':created.isoformat()},ensure_ascii=False,indent=2),encoding='utf-8')
+    raise SystemExit(reason)
 live=[(5173,'/'),(5174,'/'),(5180,'/'),(5180,'/api/v1/catalogos/puertos')]
 if any(http_status('http://127.0.0.1:'+str(port)+path)!=200 for port,path in live):raise RuntimeError('No hay linea base de disponibilidad; no se genera carga.')
 if not a.autorizar_carga_real_host:
@@ -100,6 +111,8 @@ def wait_phase(phase,timeout,predicate):
     while True:
         if (out/'DETENER.txt').exists():raise RuntimeError('Carga cancelada mediante DETENER.txt.')
         row=snapshot(phase)
+        if any(not isinstance(row[key],(int,float)) or not math.isfinite(row[key]) or not 0<=row[key]<=100 for key in ('CPUWindowsPct','CPUPrometheusPct','CPUGrafanaPct')):
+            raise RuntimeError('La medicion CPU dejo de ser valida; se detiene la carga y se conserva el diagnostico.')
         bad=bad+1 if row['HTTP200']!=4 or row['BackendUP']!=1 else 0
         if bad>=2:raise RuntimeError('Dos muestras de disponibilidad incorrectas; carga detenida automaticamente.')
         if predicate(row):return row
@@ -109,7 +122,7 @@ def wait_phase(phase,timeout,predicate):
 
 (out/'criterios-previos.txt').write_text('M14 completa en el host Windows compartido, expresamente autorizada. CPUHostAlta original >0.85 y for=5m sin modificar.\nCPU real generada por workers de baja prioridad y afinidad por CPU logica; no se falsifican metricas.\nWindows GetSystemTimes y Micrometer/Prometheus/Grafana deben observar CPU elevada; comprobar pending y firing tras al menos 300 s de activeAt.\nAl quitar carga, verificar CPU <=85% y alerta inactiva. Tiempo maximo workers 390 s; tambien salen si termina su proceso padre.\nCancelar con DETENER.txt; detener por disponibilidad incorrecta en dos muestras. Baseline y reglas deben permanecer intactas; no se prueban notificaciones externas.\n',encoding='utf-8')
 try:
-    normal=wait_phase('normal',20,lambda r:r['EstadoAlerta']=='inactive' and r['CPUPrometheusPct'] is not None and r['CPUPrometheusPct']<=85)
+    normal=wait_phase('normal',20,lambda r:r['EstadoAlerta']=='inactive' and r['CPUPrometheusPct'] is not None and 0<=r['CPUPrometheusPct']<=85)
     if normal['EstadoAlerta']!='inactive' or normal['CPUPrometheusPct']>85:raise RuntimeError('Ya existe CPU elevada o alerta; no se inicia el estimulo.')
     for cpu in range(cpus):
         workers.append(subprocess.Popen([sys.executable,str(worker),'--cpu',str(cpu),'--seconds','390','--parent',str(os.getpid())],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,creationflags=subprocess.CREATE_NO_WINDOW|subprocess.BELOW_NORMAL_PRIORITY_CLASS))
@@ -119,7 +132,7 @@ except Exception as exc:
     error=type(exc).__name__+': '+str(exc)
 finally:
     stop_workers()
-    try:recovered=wait_phase('recuperacion',60,lambda r:r['EstadoAlerta']=='inactive' and r['GrafanaFiring']==0 and r['CPUPrometheusPct'] is not None and r['CPUPrometheusPct']<=85)
+    try:recovered=wait_phase('recuperacion',60,lambda r:r['EstadoAlerta']=='inactive' and r['GrafanaFiring']==0 and r['CPUPrometheusPct'] is not None and 0<=r['CPUPrometheusPct']<=85)
     except Exception as exc:error=(error+'; ' if error else '')+type(exc).__name__+': '+str(exc)
 
 final=service_snapshot();(out/'servicios-finales.json').write_text(json.dumps(final,indent=2),encoding='utf-8')

@@ -1,8 +1,13 @@
 # Prometheus y Grafana para TransAduanas
 
+## Preparación actual de las pruebas
+
+Los ejecutores, el manual actualizado y las correcciones de M04, M09, M10 y M14 están en [docs/pruebas/monitoreo](../docs/pruebas/monitoreo/LEEME-ENTREGA.md). Un resultado `NO_EJECUTADA` indica un requisito no cumplido antes de comenzar la medición. Las migraciones entre versiones descritas más abajo corresponden al historial del laboratorio.
+
+
 ## Arquitectura y rutas
 
-TransAduanas 0.5.4 incorpora Spring Boot Actuator y Micrometer Prometheus. El backend publica métricas reales en `http://127.0.0.1:9086/actuator/prometheus`; el puerto de negocio sigue siendo 8086 y sus permisos permanecen activos. El puerto 9086 solo escucha en 127.0.0.1 y expone health/prometheus. No se exponen env, configuración ni secretos.
+TransAduanas 0.5.5 conserva la integración de Spring Boot Actuator y Micrometer Prometheus. El backend publica métricas reales en `http://127.0.0.1:9086/actuator/prometheus`; el puerto de negocio sigue siendo 8086 y sus permisos permanecen activos. El puerto 9086 solo escucha en 127.0.0.1 y expone health/prometheus. No se exponen env, configuración ni secretos.
 
 Prometheus consulta cada cinco segundos y conserva las series localmente, con retención de dos días y límite de 256 MB. Grafana usa esa fuente de datos y un dashboard provisionado desde JSON.
 

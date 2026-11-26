@@ -112,6 +112,8 @@ backup*.sql
 # Archivos locales generados al ejecutar monitoreo
 /evidencias-monitoreo/
 /docs/pruebas/monitoreo/versiones-manual/
+/docs/pruebas/monitoreo/respaldos-ejecutores/
+*.respaldo-*
 /monitoreo/*-ejecucion.lock
 **/__pycache__/
 *.pyc

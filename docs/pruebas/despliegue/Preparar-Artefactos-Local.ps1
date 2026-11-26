@@ -30,11 +30,26 @@ try {
     $transcripcion = $true
     Push-Location -LiteralPath $Proyecto
     $ubicacion = $true
-    & git rev-parse HEAD | Set-Content "$destino\commit.txt" -Encoding UTF8
-    if ($LASTEXITCODE -ne 0) { throw 'No se pudo identificar el commit.' }
-    & git status --short --untracked-files=all | Set-Content "$destino\cambios-locales.txt" -Encoding UTF8
-    if ($LASTEXITCODE -ne 0) { throw 'No se pudo registrar el estado local.' }
-    Write-Output 'Se construye el checkout local, incluidos sus cambios sin commit. Revisar cambios-locales.txt.'
+    if ((Test-Path -LiteralPath (Join-Path $Proyecto '.git')) -and (Get-Command git -ErrorAction SilentlyContinue)) {
+        & git rev-parse HEAD | Set-Content "$destino\commit.txt" -Encoding UTF8
+        if ($LASTEXITCODE -ne 0) { throw 'No se pudo identificar el commit.' }
+        & git status --short --untracked-files=all | Set-Content "$destino\cambios-locales.txt" -Encoding UTF8
+        if ($LASTEXITCODE -ne 0) { throw 'No se pudo registrar el estado local.' }
+    } else {
+        'Copia distribuida sin metadatos Git; no se atribuye un commit.' |
+            Set-Content "$destino\commit.txt" -Encoding UTF8
+        $fuentes = @()
+        foreach ($modulo in @('backend-sga','app-sga','app-b2b','app-landing')) {
+            $fuentes += Get-ChildItem -LiteralPath (Join-Path $Proyecto "$modulo/src") -File -Recurse
+        }
+        $fuentes += Get-Item "$Proyecto\backend-sga\pom.xml"
+        foreach ($app in @('app-sga','app-b2b','app-landing')) {
+            $fuentes += Get-Item "$Proyecto\$app\package.json", "$Proyecto\$app\package-lock.json"
+        }
+        $fuentes | Get-FileHash -Algorithm SHA256 |
+            Export-Csv "$destino\fuentes-sha256.csv" -NoTypeInformation -Encoding UTF8
+    }
+    Write-Output 'Se construyen los archivos locales; revisar procedencia y hashes conservados.'
     java -version
     if ($LASTEXITCODE -ne 0) { throw 'Java no esta disponible.' }
     node --version

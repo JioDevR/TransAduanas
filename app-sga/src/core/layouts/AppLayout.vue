@@ -1,11 +1,32 @@
 <template>
   <div class="sga-shell">
-    <AppSidebar />
+    <div
+      v-if="mobileMenuOpen"
+      class="sga-drawer-backdrop"
+      @click="mobileMenuOpen = false"
+    />
+
+    <AppSidebar
+      :mobile-open="mobileMenuOpen"
+      @close-mobile="mobileMenuOpen = false"
+    />
 
     <div class="sga-main">
       <!-- Topbar Minimalista en una sola línea -->
       <header class="sga-topbar">
-        <h1 class="sga-topbar-title">{{ currentTitle }}</h1>
+        <div class="sga-topbar-left">
+          <button
+            type="button"
+            class="sga-mobile-menu-btn"
+            aria-label="Abrir menú de navegación"
+            :aria-expanded="mobileMenuOpen"
+            @click="mobileMenuOpen = true"
+          >
+            <i class="pi pi-bars"></i>
+          </button>
+
+          <h1 class="sga-topbar-title">{{ currentTitle }}</h1>
+        </div>
 
         <div class="sga-topbar-actions">
           <div
@@ -85,7 +106,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import Button from 'primevue/button'
 import Popover from 'primevue/popover'
@@ -94,6 +115,7 @@ import AppSidebar from '@/shared/components/AppSidebar.vue'
 import { useAuthStore } from '@/features/auth/stores/authStore'
 import { useNavigationStore } from '@/core/stores/navigationStore'
 import { useTheme } from '@/shared/composables/useTheme'
+import { useResponsive } from '@/shared/composables/useResponsive'
 import { ROLE_LABELS } from '@/core/auth/roles'
 import '../../../../sgaUI/sga-shell.css'
 
@@ -102,8 +124,21 @@ const route = useRoute()
 const authStore = useAuthStore()
 const navigationStore = useNavigationStore()
 const { isDark, toggleTheme } = useTheme()
+const { isTabletOrBelow } = useResponsive()
 
+const mobileMenuOpen = ref(false)
 const userPopoverRef = ref(null)
+
+watch(isTabletOrBelow, (tabletDown) => {
+  if (!tabletDown) mobileMenuOpen.value = false
+})
+
+watch(
+  () => route.fullPath,
+  () => {
+    mobileMenuOpen.value = false
+  }
+)
 
 const toggleUserPopover = (event) => {
   userPopoverRef.value?.toggle(event)
@@ -124,12 +159,14 @@ const MODULE_TITLES = {
     default: 'Administración TI',
     sub: {
       dashboard: 'Centro de Control y Monitoreo del Sistema TI',
-      users: 'Gestor y Directorio de Usuarios TI',
+      users: 'Usuarios Internos',
       'create-user': 'Ficha de Registro de Operador',
-      'portal-users': 'Gestión de Usuarios del Portal B2B',
-      'create-portal-user': 'Alta de Usuario del Portal B2B',
-      logs: 'Bitácora y Consola de Logs TI',
-      about: 'Acerca del Sistema SGA'
+      'portal-users': 'Cuentas Corporativas B2B',
+      'create-portal-user': 'Gestión de Usuario Portal B2B',
+      auditoria: 'Registro de Eventos y Seguridad',
+      almacenamiento: 'Almacenamiento y Repositorio Documental',
+      'roles-accesos': 'Almacenamiento y Repositorio Documental',
+      about: 'Ficha Técnica del Sistema SGA'
     },
     getSub: () => navigationStore.administracionTiSubOption
   },
@@ -140,11 +177,9 @@ const MODULE_TITLES = {
       overview: 'Dashboard Ejecutivo y Métricas Generales',
       sedes: 'Gestión Integral de Sedes y Agencias Territoriales',
       puertos: 'Puertos y Terminales Aduaneros',
-      'tipos-carga': 'Tipos de Carga & Contenedores Sugeridos',
+      'tipos-carga': 'Catálogo de Tipos de Carga',
       mercancias: 'Mercancías y Subpartidas Arancelarias',
-      catalogos: 'Puertos y Terminales Aduaneros',
-      flota: 'Parque Automotor & Flota de Transporte',
-      conductores: 'Plantilla de Conductores Acreditados MTC'
+      catalogos: 'Puertos y Terminales Aduaneros'
     },
     getSub: () => navigationStore.gerenciaGeneralSubOption
   },
@@ -168,21 +203,41 @@ const MODULE_TITLES = {
     },
     getSub: () => navigationStore.gestionAduaneraSubOption
   },
-  'agente-aduanero': { default: 'Agente Aduanero' },
+  'agente-aduanero': {
+    default: 'Agente Aduanero',
+    sub: {
+      dashboard: 'Dashboard Operativo del Agente Aduanero',
+      todos: 'Expedientes Aduaneros Asignados',
+      transito: 'Control de Tránsito Internacional y Arribo',
+      inspeccion: 'Aforo y Diligencias ante SUNAT',
+      levante: 'Levante Autorizado y Despacho Final'
+    },
+    getSub: () => navigationStore.agenteAduaneroSubOption
+  },
   'transporte-flota': {
     default: 'Transporte y Flota',
     sub: {
-      cabina: 'Mi Trabajo Actual (Cabina)',
-      camion: 'Camión Asignado',
-      viajes: 'Historial de Mis Viajes',
+      dashboard: 'Dashboard Operativo de Transporte & Flota',
       despachos: 'Monitoreo Global de Despachos',
       unidades: 'Parque Automotor & Flota de Transporte',
-      conductores: 'Plantilla de Conductores Acreditados MTC'
+      conductores: 'Directorio de Conductores Acreditados MTC'
     },
     getSub: () => navigationStore.transporteFlotaSubOption
   },
-  'legal-auditoria': { default: 'Legal y Auditoría' },
-  finanzas: { default: 'Finanzas' }
+  finanzas: {
+    default: 'Finanzas',
+    sub: {
+      dashboard: 'Dashboard Financiero & Tesorería',
+      'abonos-b2b': 'Revisión y Validación de Abonos B2B',
+      'pre-expedientes': 'Pagos Pre-Expedientes (Cotizaciones)',
+      anticipos: 'Pagos Pre-Expedientes (Cotizaciones)',
+      liquidaciones: 'Liquidación Aduanera & Control de Cuentas',
+      'por-liquidar': 'Expedientes Pendientes de Liquidación',
+      conciliacion: 'Facturación & Conciliación Bancaria',
+      facturacion: 'Facturación & Conciliación Bancaria'
+    },
+    getSub: () => navigationStore.finanzasSubOption
+  }
 }
 
 const currentTitle = computed(() => {

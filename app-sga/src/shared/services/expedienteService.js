@@ -176,6 +176,53 @@ export const expedienteService = {
     return response.data.data
   },
 
+  async asignarAgente(id, idAgenteAduanero) {
+    const response = await apiClient.patch(`/expedientes/${id}/asignar-agente`, { idAgenteAduanero })
+    return response.data.data
+  },
+
+  async registrarEventoManual(id, payload) {
+    const response = await apiClient.post(`/expedientes/${id}/eventos`, payload)
+    return response.data.data
+  },
+
+  async confirmarVerificacionOrigen(id, payload = {}) {
+    const response = await apiClient.patch(`/expedientes/${id}/verificacion-origen`, payload)
+    return response.data.data
+  },
+
+  async solicitarCuadrillaYCitaRojo(id, payload) {
+    const response = await apiClient.patch(`/expedientes/${id}/canal-rojo/cuadrilla-cita`, payload)
+    return response.data.data
+  },
+
+  async finalizarRevisionRojo(id, payload = {}) {
+    const response = await apiClient.patch(`/expedientes/${id}/canal-rojo/finalizar-revision`, payload)
+    return response.data.data
+  },
+
+  async enviarSunatSimulado(id, payload = {}) {
+    const response = await apiClient.post(`/expedientes/${id}/canal-naranja/enviar-sunat`, payload)
+    return response.data.data
+  },
+
+  async marcarEntregadoAlmacenVerde(id, payload = {}) {
+    const response = await apiClient.patch(`/expedientes/${id}/canal-verde/entregado-almacen`, payload)
+    return response.data.data
+  },
+
+  async emitirInformeConformidad(id, payload) {
+    const response = await apiClient.post(`/expedientes/${id}/informe-conformidad`, payload)
+    return response.data.data
+  },
+
+  async descargarInformeConformidadPdf(id) {
+    const response = await apiClient.get(`/expedientes/${id}/informe-conformidad/pdf`, {
+      responseType: 'blob'
+    })
+    return response.data
+  },
+
   /**
    * Anulación lógica de expediente aduanero
    * @param {Number} id ID del expediente

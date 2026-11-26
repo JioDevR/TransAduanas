@@ -2,6 +2,10 @@ import { describe, it, expect } from 'vitest'
 import {
   formatUsd,
   formatRegimenShort,
+  formatRegimenFull,
+  getRegimenCode,
+  formatTipoDespacho,
+  formatIsoDate,
   getEstadoCotizacionLabel,
   getEstadoCotizacionSeverity,
   getEstadoPagoLabel,
@@ -9,7 +13,9 @@ import {
   isCotizacionRevisable,
   isCotizacionObservable,
   getCanalSeverity,
-  getExpedienteSeverity
+  getExpedienteSeverity,
+  getEstadoAuditoriaLabel,
+  getEstadoAuditoriaSeverity
 } from '../aduanasFormatters'
 
 describe('aduanasFormatters', () => {
@@ -54,5 +60,18 @@ describe('aduanasFormatters', () => {
     expect(getExpedienteSeverity('ANULADO')).toBe('danger')
     expect(getExpedienteSeverity('CON_CANAL')).toBe('warn')
     expect(getExpedienteSeverity('ASIGNADO')).toBe('info')
+  })
+
+  it('formatea regímenes completos, despacho, fechas y estados unificados de auditoría', () => {
+    expect(formatRegimenFull('EXPORTACION_DEFINITIVA')).toBe('Exportación Definitiva (REG-40)')
+    expect(getRegimenCode('EXPORTACION_DEFINITIVA')).toBe('REG-40')
+    expect(getRegimenCode('ADMISION_TEMPORAL')).toBe('REG-20')
+    expect(formatTipoDespacho('DESPACHO_EXCEPCIONAL')).toBe('DESPACHO EXCEPCIONAL')
+    expect(formatIsoDate('2026-11-24T10:15:00')).toBe('2026-11-24')
+    expect(formatIsoDate(null)).toBe('—')
+
+    expect(getEstadoAuditoriaLabel('LEVANTE_AUTORIZADO')).toBe('Levante Autorizado')
+    expect(getEstadoAuditoriaSeverity('APROBADA')).toBe('success')
+    expect(getEstadoAuditoriaSeverity('CON_CANAL')).toBe('warn')
   })
 })

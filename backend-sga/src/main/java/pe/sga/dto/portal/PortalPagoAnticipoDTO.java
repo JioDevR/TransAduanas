@@ -31,5 +31,8 @@ public class PortalPagoAnticipoDTO {
     private Integer idDocumentoComprobante;
     private String documentoComprobanteUrl;
     private String documentoComprobanteNombre;
+    private Integer idComprobanteFactura;
+    private String numeroFacturaEmitida;
+    private String tipoComprobanteFactura;
     private LocalDateTime fechaRegistro;
 }

@@ -49,8 +49,7 @@ SGA/frontend/
 │   │       │   ├── LiquidacionAduaneraView.vue    # Rol: SUPERVISOR_ADUANERO (/gestion-aduanera/liquidacion)
 │   │       │   ├── AgenteAduaneroView.vue         # Roles: AGENTE_ADUANERO, SUPERVISOR_ADUANERO (/agente-aduanero)
 │   │       │   ├── TransporteFlotaView.vue        # Rol: SUPERVISOR_TRANSPORTE (/transporte-flota)
-│   │       │   ├── FinanzasView.vue               # Rol: CONTADOR (/finanzas)
-│   │       │   └── LegalAuditoriaView.vue         # Rol: ASESOR_LEGAL (/legal-auditoria)
+│   │       │   └── FinanzasView.vue               # Rol: CONTADOR (/finanzas)
 │   │       └── routes/roles.routes.js             # Rutas por rol
 │   │
 │   └── shared/                         # Componentes reutilizables
@@ -72,7 +71,7 @@ SGA/frontend/
 2. **Barra Vertical a la Izquierda (Sidebar)**:
    - Diseño limpio y minimalista.
    - Identificador del sistema (SGA) y badge del rol activo del usuario conectado.
-   - Selector modular y sub-opciones para los 8 roles institucionales (`ADMINISTRADOR_TI`, `GERENTE_GENERAL`, `AGENTE_COMERCIAL`, `SUPERVISOR_ADUANERO`, `AGENTE_ADUANERO`, `SUPERVISOR_TRANSPORTE`, `CONTADOR`, `ASESOR_LEGAL`).
+   - Selector modular y sub-opciones para los 7 roles institucionales (`ADMINISTRADOR_TI`, `GERENTE_GENERAL`, `AGENTE_COMERCIAL`, `SUPERVISOR_ADUANERO`, `AGENTE_ADUANERO`, `SUPERVISOR_TRANSPORTE`, `CONTADOR`).
    - Botón de colapso rápido para optimizar espacio en pantalla.
    - Perfil de usuario en la base y botón para cerrar sesión (`Logout`).
 
@@ -85,7 +84,7 @@ SGA/frontend/
    - **Exportación PDF**: Botón directo para descargar el reporte oficial generado por JasperReports en el backend.
 
 4. **Módulos Operativos por Rol**:
-   - Interfaces operativas completas para los 8 roles institucionales con diseño editorial y responsivo.
+   - Interfaces operativas completas para los 7 roles institucionales con diseño editorial y responsivo.
 
 ---
 

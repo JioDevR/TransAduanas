@@ -142,6 +142,37 @@ export const finanzasService = {
   async registrarPagoCotizacion(idCotizacion, data) {
     const response = await apiClient.post(`/cotizaciones/${idCotizacion}/pagos`, data)
     return response.data.data
+  },
+
+  // ==========================================
+  // FACTURACIÓN ELECTRÓNICA / COMPROBANTES PDF
+  // ==========================================
+  async getFacturas() {
+    const response = await apiClient.get('/finanzas/facturas')
+    return response.data.data
+  },
+
+  async emitirFacturaAbono(idPago) {
+    const response = await apiClient.post(`/finanzas/facturas/emitir-abono/${idPago}`)
+    return response.data.data
+  },
+
+  async emitirFacturaLiquidacion(idLiquidacion) {
+    const response = await apiClient.post(`/finanzas/facturas/emitir-liquidacion/${idLiquidacion}`)
+    return response.data.data
+  },
+
+  async anularFactura(idComprobante) {
+    const response = await apiClient.patch(`/finanzas/facturas/${idComprobante}/anular`)
+    return response.data.data
+  },
+
+  async getFacturaPdfBlob(idComprobante, { download = false } = {}) {
+    const response = await apiClient.get(`/finanzas/facturas/${idComprobante}/pdf`, {
+      params: { download },
+      responseType: 'blob'
+    })
+    return response.data
   }
 }
 

@@ -386,7 +386,7 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['update:modelValue', 'updated'])
+const emit = defineEmits(['update:modelValue', 'updated', 'docs-loaded'])
 
 const authStore = useAuthStore()
 const { showSuccess, showError, showInfo } = useNotification()
@@ -535,8 +535,10 @@ const loadDocumentos = async () => {
 
     const res = await documentoService.getDocumentos(params)
     documentos.value = res || []
+    emit('docs-loaded', documentos.value.length)
   } catch {
     showError('No se pudieron recuperar los documentos adjuntos.')
+    emit('docs-loaded', 0)
   } finally {
     loading.value = false
   }

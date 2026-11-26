@@ -2,6 +2,7 @@ package pe.sga.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -16,6 +17,7 @@ import pe.sga.entity.enums.RolUsuario;
 import pe.sga.exception.BadRequestException;
 import pe.sga.exception.ResourceNotFoundException;
 import pe.sga.repository.*;
+import pe.sga.service.IAuditoriaService;
 import pe.sga.service.ICotizacionService;
 
 import java.math.BigDecimal;
@@ -46,6 +48,19 @@ public class CotizacionServiceImpl implements ICotizacionService {
     private final UsuarioClienteRepository usuarioClienteRepository;
     private final NotificacionClienteRepository notificacionClienteRepository;
     private final PasswordEncoder passwordEncoder;
+    private IAuditoriaService auditoriaService;
+
+    @Autowired(required = false)
+    public void setAuditoriaService(IAuditoriaService auditoriaService) {
+        this.auditoriaService = auditoriaService;
+    }
+
+    private void auditar(String modulo, String accion, Integer idCot, String detalle) {
+        if (auditoriaService != null) {
+            auditoriaService.registrar(modulo, accion, "COTIZACION",
+                    idCot != null ? String.valueOf(idCot) : null, detalle, "EXITO");
+        }
+    }
 
     @Override
     @Transactional(readOnly = true)
@@ -178,6 +193,8 @@ public class CotizacionServiceImpl implements ICotizacionService {
         if (guardada.getEstado() == EstadoCotizacion.APROBADA) {
             autoFormalizarCliente(guardada.getCliente(), guardada);
         }
+        auditar("COMERCIAL", "CREAR_COTIZACION", guardada.getIdCotizacion(),
+                "Cotización " + guardada.getCodigoCotizacion() + " (" + guardada.getEstado() + ") por " + guardada.getTotalCotizado());
 
         return mapToResponse(guardada);
     }
@@ -269,6 +286,8 @@ public class CotizacionServiceImpl implements ICotizacionService {
         if (guardada.getEstado() == EstadoCotizacion.APROBADA) {
             autoFormalizarCliente(guardada.getCliente(), guardada);
         }
+        auditar("COMERCIAL", "ACTUALIZAR_COTIZACION", guardada.getIdCotizacion(),
+                "Edición de cotización " + guardada.getCodigoCotizacion() + " (estado: " + guardada.getEstado() + ")");
 
         return mapToResponse(guardada);
     }
@@ -333,6 +352,36 @@ public class CotizacionServiceImpl implements ICotizacionService {
             }
         }
 
+        auditar("ADUANAS", "REVISAR_COTIZACION_" + guardada.getEstado().name(), guardada.getIdCotizacion(),
+                "Revisión técnica " + guardada.getCodigoCotizacion() + " → " + guardada.getEstado());
+
+        return mapToResponse(guardada);
+    }
+
+    @Override
+    @Transactional
+    public CotizacionResponseDTO enviarAGestionAduanera(Integer id, Usuario usuarioActual) {
+        Cotizacion cotizacion = cotizacionRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Cotización no encontrada con id: " + id));
+
+        validarAccesoCotizacion(cotizacion, usuarioActual, false);
+
+        if (cotizacion.getEstado() != EstadoCotizacion.PENDIENTE && cotizacion.getEstado() != EstadoCotizacion.OBSERVADA) {
+            throw new BadRequestException("Solo se pueden enviar a Gestión Aduanera cotizaciones en estado PENDIENTE u OBSERVADA.");
+        }
+        if (cotizacion.getTotalCotizado() == null || cotizacion.getTotalCotizado().compareTo(BigDecimal.ZERO) <= 0) {
+            throw new BadRequestException("Complete la liquidación económica (mayor a $0.00) antes de enviar a Gestión Aduanera.");
+        }
+
+        cotizacion.setEstado(EstadoCotizacion.EN_REVISION);
+        String nota = "Enviada formalmente a Gestión Aduanera el " + LocalDateTime.now();
+        cotizacion.setObservaciones(cotizacion.getObservaciones() != null
+                ? cotizacion.getObservaciones() + " | " + nota
+                : nota);
+
+        Cotizacion guardada = cotizacionRepository.save(cotizacion);
+        auditar("COMERCIAL", "ENVIAR_A_ADUANAS", guardada.getIdCotizacion(),
+                "Cotización " + guardada.getCodigoCotizacion() + " enviada a Gestión Aduanera (EN_REVISION)");
         return mapToResponse(guardada);
     }
 
@@ -367,6 +416,8 @@ public class CotizacionServiceImpl implements ICotizacionService {
                 }
             }
         }
+        auditar("ADUANAS", "CAMBIAR_ESTADO_COTIZACION", guardada.getIdCotizacion(),
+                "Cotización " + guardada.getCodigoCotizacion() + " → " + guardada.getEstado());
 
         return mapToResponse(guardada);
     }
@@ -417,6 +468,8 @@ public class CotizacionServiceImpl implements ICotizacionService {
         Cotizacion guardada = cotizacionRepository.save(cotizacion);
         log.info("Cotización {} asignada a {} por usuario {}",
                 guardada.getCodigoCotizacion(), asesorDestino.getUsername(), usuarioActual.getUsername());
+        auditar("COMERCIAL", "ASIGNAR_COTIZACION", guardada.getIdCotizacion(),
+                "Cotización " + guardada.getCodigoCotizacion() + " asignada a @" + asesorDestino.getUsername());
         return mapToResponse(guardada);
     }
 
@@ -428,6 +481,7 @@ public class CotizacionServiceImpl implements ICotizacionService {
         validarAccesoCotizacion(cotizacion, usuarioActual, false);
         cotizacion.setEstado(EstadoCotizacion.ANULADA);
         cotizacionRepository.save(cotizacion);
+        auditar("COMERCIAL", "ANULAR_COTIZACION", id, "Anulación de cotización " + cotizacion.getCodigoCotizacion());
     }
 
     @Override
@@ -588,8 +642,12 @@ public class CotizacionServiceImpl implements ICotizacionService {
                 ? Set.of()
                 : usuarioClienteRepository.findClienteIdsWithUsuario(idsClientes);
 
+        Set<Integer> clientesPendientePassSet = idsClientes.isEmpty()
+                ? Set.of()
+                : usuarioClienteRepository.findClienteIdsWithCambioPasswordPendiente(idsClientes);
+
         return cotizaciones.stream()
-                .map(c -> mapToResponse(c, expMap, pagosAprobadosSet, clientesConUsuarioSet))
+                .map(c -> mapToResponse(c, expMap, pagosAprobadosSet, clientesConUsuarioSet, clientesPendientePassSet))
                 .toList();
     }
 
@@ -603,17 +661,24 @@ public class CotizacionServiceImpl implements ICotizacionService {
         boolean pagoAprobado = c.getIdCotizacion() != null
                 && cotizacionPagoRepository.existsByCotizacion_IdCotizacionAndEstadoPago(c.getIdCotizacion(), EstadoPagoCotizacion.APROBADO);
         Set<Integer> pagosSet = (pagoAprobado && c.getIdCotizacion() != null) ? Set.of(c.getIdCotizacion()) : Set.of();
-        boolean tieneUsr = c.getCliente() != null && c.getCliente().getIdCliente() != null
-                && usuarioClienteRepository.findByCliente_IdCliente(c.getCliente().getIdCliente()).isPresent();
-        Set<Integer> clientesSet = (tieneUsr && c.getCliente() != null) ? Set.of(c.getCliente().getIdCliente()) : Set.of();
-        return mapToResponse(c, expMap, pagosSet, clientesSet);
+        Optional<UsuarioCliente> usrOpt = (c.getCliente() != null && c.getCliente().getIdCliente() != null)
+                ? usuarioClienteRepository.findByCliente_IdCliente(c.getCliente().getIdCliente())
+                : Optional.empty();
+        Set<Integer> clientesSet = (usrOpt.isPresent() && c.getCliente() != null)
+                ? Set.of(c.getCliente().getIdCliente())
+                : Set.of();
+        Set<Integer> pendientePassSet = (usrOpt.isPresent() && Boolean.TRUE.equals(usrOpt.get().getDebeCambiarPassword()) && c.getCliente() != null)
+                ? Set.of(c.getCliente().getIdCliente())
+                : Set.of();
+        return mapToResponse(c, expMap, pagosSet, clientesSet, pendientePassSet);
     }
 
     private CotizacionResponseDTO mapToResponse(
             Cotizacion c,
             Map<Integer, Expediente> expMap,
             Set<Integer> pagosAprobadosSet,
-            Set<Integer> clientesConUsuarioSet
+            Set<Integer> clientesConUsuarioSet,
+            Set<Integer> clientesPendientePassSet
     ) {
         boolean tieneExpediente = false;
         Integer idExpediente = null;
@@ -634,6 +699,13 @@ public class CotizacionServiceImpl implements ICotizacionService {
 
         boolean tieneUsuario = c.getCliente() != null && c.getCliente().getIdCliente() != null
                 && clientesConUsuarioSet.contains(c.getCliente().getIdCliente());
+        boolean debeCambiarPass = c.getCliente() != null && c.getCliente().getIdCliente() != null
+                && clientesPendientePassSet.contains(c.getCliente().getIdCliente());
+
+        CatalogoPuerto pe = c.getPuertoEnvio();
+        CatalogoPuerto pd = c.getPuertoDestino();
+        String mod = pe != null && pe.getTipo() != null ? pe.getTipo()
+                : (pd != null && pd.getTipo() != null ? pd.getTipo() : "MARITIMO");
 
         return CotizacionResponseDTO.builder()
                 .idCotizacion(c.getIdCotizacion())
@@ -644,6 +716,7 @@ public class CotizacionServiceImpl implements ICotizacionService {
                 .clienteTelefono(c.getCliente() != null ? c.getCliente().getTelefonoContacto() : null)
                 .clienteCorreo(c.getCliente() != null ? c.getCliente().getCorreoContacto() : null)
                 .clienteTieneUsuario(tieneUsuario)
+                .clienteDebeCambiarPassword(debeCambiarPass)
                 .idUsuarioComercial(c.getUsuarioComercial() != null ? c.getUsuarioComercial().getIdUsuario() : null)
                 .usuarioComercialNombre(c.getUsuarioComercial() != null ? c.getUsuarioComercial().getNombreCompleto() : null)
                 .idMercancia(c.getMercancia() != null ? c.getMercancia().getIdMercancia() : null)
@@ -651,11 +724,19 @@ public class CotizacionServiceImpl implements ICotizacionService {
                 .mercanciaNombre(c.getMercancia() != null ? c.getMercancia().getNombre() : null)
                 .idTipoCarga(c.getTipoCarga() != null ? c.getTipoCarga().getIdTipoCarga() : null)
                 .tipoCargaNombre(c.getTipoCarga() != null ? c.getTipoCarga().getNombre() : null)
+                .tipoCargaDescripcion(c.getTipoCarga() != null ? c.getTipoCarga().getDescripcion() : null)
                 .regimenAduanero(c.getRegimenAduanero())
-                .idPuertoEnvio(c.getPuertoEnvio() != null ? c.getPuertoEnvio().getIdPuerto() : null)
-                .puertoEnvioNombre(c.getPuertoEnvio() != null ? c.getPuertoEnvio().getNombre() : null)
-                .idPuertoDestino(c.getPuertoDestino() != null ? c.getPuertoDestino().getIdPuerto() : null)
-                .puertoDestinoNombre(c.getPuertoDestino() != null ? c.getPuertoDestino().getNombre() : null)
+                .modalidad(mod)
+                .idPuertoEnvio(pe != null ? pe.getIdPuerto() : null)
+                .puertoEnvioNombre(pe != null ? pe.getNombre() : null)
+                .puertoEnvioCodigo(pe != null ? pe.getCodigoPuerto() : null)
+                .puertoEnvioPais(pe != null ? pe.getPais() : null)
+                .puertoEnvioTipo(pe != null ? pe.getTipo() : null)
+                .idPuertoDestino(pd != null ? pd.getIdPuerto() : null)
+                .puertoDestinoNombre(pd != null ? pd.getNombre() : null)
+                .puertoDestinoCodigo(pd != null ? pd.getCodigoPuerto() : null)
+                .puertoDestinoPais(pd != null ? pd.getPais() : null)
+                .puertoDestinoTipo(pd != null ? pd.getTipo() : null)
                 .servicioTransporte(c.getServicioTransporte())
                 .origenDepartamento(c.getOrigenDepartamento())
                 .origenProvincia(c.getOrigenProvincia())

@@ -1,9 +1,9 @@
 <template>
-  <aside :class="['sga-sidebar', { collapsed: isCollapsed }]">
+  <aside :class="['sga-sidebar', { collapsed: isEffectiveCollapsed, 'is-mobile-open': mobileOpen }]">
     <!-- Cabecera de Marca -->
     <div class="sga-sidebar-brand">
       <div class="sga-brand-badge">SGA</div>
-      <div v-if="!isCollapsed" class="sga-brand-info">
+      <div v-if="!isEffectiveCollapsed" class="sga-brand-info">
         <span class="sga-brand-name">TransAduanas</span>
         <span class="sga-brand-tag">SGA</span>
       </div>
@@ -16,6 +16,14 @@
       >
         <i :class="isCollapsed ? 'pi pi-chevron-right' : 'pi pi-chevron-left'"></i>
       </button>
+      <button
+        type="button"
+        class="sga-drawer-close-btn"
+        @click="$emit('close-mobile')"
+        aria-label="Cerrar menú lateral"
+      >
+        <i class="pi pi-times"></i>
+      </button>
     </div>
 
     <!-- Navegación Dinámica según Módulo Activo -->
@@ -25,18 +33,18 @@
           <button
             type="button"
             :class="['sga-nav-btn', { active: isItemActive(item) }]"
-            @click="item.onClick()"
-            :title="isCollapsed ? item.label : ''"
+            @click="handleNavItemClick(item)"
+            :title="isEffectiveCollapsed ? item.label : ''"
           >
             <span class="sga-nav-dot"></span>
-            <span v-if="!isCollapsed" class="sga-nav-label">{{ item.label }}</span>
+            <span v-if="!isEffectiveCollapsed" class="sga-nav-label">{{ item.label }}</span>
           </button>
         </li>
       </ul>
     </nav>
 
     <!-- Gestor de Módulos (al pie del Sidebar) -->
-    <div v-if="!isCollapsed" class="sga-module-card">
+    <div v-if="!isEffectiveCollapsed" class="sga-module-card">
       <div class="sga-module-kicker">
         <span class="sga-pulse-dot"></span>
         <span>{{ authStore.canSwitchModules ? 'GESTOR DE MÓDULOS' : 'MÓDULO ASIGNADO' }}</span>
@@ -67,14 +75,31 @@ import Select from 'primevue/select'
 import { useAuthStore } from '@/features/auth/stores/authStore'
 import { useNavigationStore } from '@/core/stores/navigationStore'
 
+const props = defineProps({
+  mobileOpen: {
+    type: Boolean,
+    default: false
+  }
+})
+
+const emit = defineEmits(['close-mobile'])
+
 const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
 const navigationStore = useNavigationStore()
 
 const isCollapsed = ref(false)
+const isEffectiveCollapsed = computed(() => isCollapsed.value && !props.mobileOpen)
 const toggleCollapse = () => {
   isCollapsed.value = !isCollapsed.value
+}
+
+const handleNavItemClick = (item) => {
+  item.onClick()
+  if (props.mobileOpen) {
+    emit('close-mobile')
+  }
 }
 
 const MODULE_OPTIONS = [
@@ -84,8 +109,7 @@ const MODULE_OPTIONS = [
   { value: 'gestion-aduanera', label: '03 Gestión Aduanera' },
   { value: 'agente-aduanero', label: '04 Agente Aduanero' },
   { value: 'transporte-flota', label: '05 Transporte y Flota' },
-  { value: 'finanzas', label: '06 Finanzas' },
-  { value: 'legal-auditoria', label: '07 Legal y Auditoría' }
+  { value: 'finanzas', label: '06 Finanzas' }
 ]
 
 const MODULE_META = {
@@ -95,8 +119,7 @@ const MODULE_META = {
   'gestion-aduanera': { code: '03', title: 'GESTIÓN ADUANERA' },
   'agente-aduanero': { code: '04', title: 'AGENTE ADUANERO' },
   'transporte-flota': { code: '05', title: 'TRANSPORTE Y FLOTA' },
-  finanzas: { code: '06', title: 'FINANZAS' },
-  'legal-auditoria': { code: '07', title: 'LEGAL Y AUDITORÍA' }
+  finanzas: { code: '06', title: 'FINANZAS' }
 }
 
 const activeModuleShortTitle = computed(() => MODULE_META[navigationStore.currentModule]?.title || 'OPERACIONES')
@@ -143,9 +166,10 @@ const currentNavItems = computed(() => {
     const go = (sub, path) => () => selectSub('administracion-ti', navigationStore.setAdministracionTiSubOption, sub, path)
     return [
       { key: 'dashboard', label: 'Dashboard TI', match: ['dashboard'], onClick: go('dashboard', '/administracion-ti/dashboard') },
-      { key: 'users', label: 'Personal Interno', match: ['users', 'create-user'], onClick: go('users', '/administracion-ti/usuarios') },
-      { key: 'portal-users', label: 'Usuarios Portal', match: ['portal-users', 'create-portal-user'], onClick: go('portal-users', '/administracion-ti/usuarios-portal') },
-      { key: 'logs', label: 'Logs TI', match: ['logs'], onClick: go('logs', '/administracion-ti/logs') },
+      { key: 'users', label: 'Usuarios', match: ['users', 'create-user'], onClick: go('users', '/administracion-ti/usuarios') },
+      { key: 'portal-users', label: 'Usuarios B2B', match: ['portal-users', 'create-portal-user'], onClick: go('portal-users', '/administracion-ti/usuarios-portal') },
+      { key: 'auditoria', label: 'Registro TI', match: ['auditoria'], onClick: go('auditoria', '/administracion-ti/auditoria') },
+      { key: 'almacenamiento', label: 'Almacenamiento', match: ['almacenamiento', 'roles-accesos'], onClick: go('almacenamiento', '/administracion-ti/almacenamiento') },
       { key: 'about', label: 'Acerca de', match: ['about'], onClick: go('about', '/administracion-ti/acerca-de') }
     ]
   }
@@ -205,9 +229,8 @@ const currentNavItems = computed(() => {
     return [
       { key: 'dashboard', label: 'Dashboard Operativo', match: ['dashboard'], onClick: go('dashboard') },
       { key: 'despachos', label: 'Monitoreo & Despachos', match: ['despachos'], onClick: go('despachos') },
-      { key: 'cabina', label: 'Cabina de Ruta', match: ['cabina'], onClick: go('cabina') },
       { key: 'unidades', label: 'Parque de Flota', match: ['unidades'], onClick: go('unidades') },
-      { key: 'conductores', label: 'Directorio Choferes', match: ['conductores'], onClick: go('conductores') }
+      { key: 'conductores', label: 'Directorio Conductores', match: ['conductores'], onClick: go('conductores') }
     ]
   }
 
@@ -223,14 +246,6 @@ const currentNavItems = computed(() => {
     ]
   }
 
-  if (mod === 'legal-auditoria') {
-    const go = (sub) => () => selectSub('legal-auditoria', navigationStore.setLegalAuditoriaSubOption, sub, { path: '/legal-auditoria', query: { tab: sub } })
-    return [
-      { key: 'expedientes', label: 'Expedientes & Recursos', match: ['expedientes'], onClick: go('expedientes') },
-      { key: 'auditorias', label: 'Auditorías SUNAT', match: ['auditorias'], onClick: go('auditorias') }
-    ]
-  }
-
   return []
 })
 
@@ -242,8 +257,7 @@ const activeSubOptionByModule = computed(() => {
     'gestion-aduanera': navigationStore.gestionAduaneraSubOption,
     'agente-aduanero': navigationStore.agenteAduaneroSubOption,
     'transporte-flota': navigationStore.transporteFlotaSubOption,
-    finanzas: navigationStore.finanzasSubOption,
-    'legal-auditoria': navigationStore.legalAuditoriaSubOption
+    finanzas: navigationStore.finanzasSubOption
   }
   return map[navigationStore.currentModule] || ''
 })

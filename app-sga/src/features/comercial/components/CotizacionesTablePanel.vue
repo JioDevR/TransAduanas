@@ -96,13 +96,26 @@
       />
 
       <Button
-        v-if="canNotifyWhatsApp"
         type="button"
+        label="Enviar a Aduanas"
+        icon="pi pi-send"
+        severity="info"
+        outlined
+        size="small"
+        :disabled="!canSendToAduanas"
+        :title="sendToAduanasTitle"
+        @click="$emit('send-aduanas', selectedRow)"
+      />
+
+      <Button
+        type="button"
+        label="WhatsApp"
         icon="pi pi-whatsapp"
         severity="success"
         outlined
         size="small"
-        title="Notificar observaciones por WhatsApp"
+        :disabled="!selectedRow || !canNotifyWhatsApp"
+        :title="whatsAppTitle"
         @click="$emit('notify-whatsapp', selectedRow)"
       />
 
@@ -318,6 +331,7 @@ const emit = defineEmits([
   'correct',
   'open-docs',
   'view-observation',
+  'send-aduanas',
   'notify-whatsapp',
   'delete'
 ])
@@ -403,10 +417,30 @@ const canDeleteSelected = computed(() => {
   return !selectedRow.value.tieneExpediente && selectedRow.value.estado !== 'APROBADA'
 })
 
+const canSendToAduanas = computed(() => {
+  const c = selectedRow.value
+  if (!c) return false
+  return ['PENDIENTE', 'OBSERVADA'].includes(c.estado) && Number(c.totalCotizado || 0) > 0
+})
+
+const sendToAduanasTitle = computed(() => {
+  if (!selectedRow.value) return 'Seleccione una cotización'
+  if (Number(selectedRow.value.totalCotizado || 0) <= 0) return 'Complete la liquidación económica primero'
+  if (!['PENDIENTE', 'OBSERVADA'].includes(selectedRow.value.estado)) return 'La cotización ya fue enviada o procesada'
+  return 'Enviar cotización a Gestión Aduanera para revisión técnica'
+})
+
 const canNotifyWhatsApp = computed(() => {
   const c = selectedRow.value
-  if (!c || !isCotizacionObservada(c) || c.clienteTieneUsuario) return false
-  return Boolean(c.clienteTelefono || props.getClienteTelefono(c.idCliente))
+  if (!c) return false
+  const raw = c.clienteTelefono || props.getClienteTelefono(c.idCliente) || ''
+  return Boolean(String(raw).replace(/[^0-9]/g, ''))
+})
+
+const whatsAppTitle = computed(() => {
+  if (!selectedRow.value) return 'Seleccione una cotización'
+  if (!canNotifyWhatsApp.value) return 'El cliente no tiene teléfono registrado'
+  return 'Enviar resumen de estado por WhatsApp al cliente'
 })
 
 const handleEditSelected = () => {

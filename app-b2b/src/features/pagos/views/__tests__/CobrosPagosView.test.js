@@ -2,7 +2,10 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { createSSRApp, h } from 'vue'
 import { renderToString } from 'vue/server-renderer'
 import { createPinia, setActivePinia } from 'pinia'
+import PrimeVue from 'primevue/config'
 import CobrosPagosView from '../CobrosPagosView.vue'
+import ObservadosBandejaPanel from '../../components/ObservadosBandejaPanel.vue'
+import HistorialVouchersCanvasGrid from '../../components/HistorialVouchersCanvasGrid.vue'
 import { portalPagoService } from '../../services/portalPagoService'
 
 vi.mock('vue-router', () => ({
@@ -31,20 +34,13 @@ vi.mock('@/shared/composables/useNotification', () => ({
   })
 }))
 
-describe('CobrosPagosView Component - Reorganización Opción 1', () => {
+describe('CobrosPagosView Component - Estándar sgaUI', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.clearAllMocks()
   })
 
-  it('renderiza correctamente las 3 pestañas reorganizadas (Cuentas por Pagar, Requieren Corrección, Historial)', async () => {
-    portalPagoService.obtenerResumen.mockResolvedValue({
-      totalCotizadoUsd: 25000,
-      totalAbonadoUsd: 10000,
-      saldoPendienteUsd: 15000,
-      pagosPendientesRevision: 1
-    })
-
+  it('renderiza las 3 secciones y SgaListShell sin widgets KPI duplicados', async () => {
     portalPagoService.listarObligaciones.mockResolvedValue([
       {
         idReferencia: 1,
@@ -91,12 +87,72 @@ describe('CobrosPagosView Component - Reorganización Opción 1', () => {
         return h(CobrosPagosView)
       }
     })
+    app.use(PrimeVue)
 
     const html = await renderToString(app)
-    expect(html).toContain('Cuentas por Pagar (Saldos)')
+    expect(html).toContain('Cuentas por Pagar (0)')
+    expect(html).toContain('Historial de Comprobantes (0)')
+    expect(html).toContain('Registrar Comprobante ($ USD)')
+    expect(html).toContain('Canvas')
+    expect(html).toContain('Tabla')
+    expect(html).not.toContain('TOTAL CONTRATADO / COTIZADO')
+  })
+
+  it('ObservadosBandejaPanel renderiza comprobantes observados y motivo contable', async () => {
+    const app = createSSRApp({
+      render() {
+        return h(ObservadosBandejaPanel, {
+          anticipos: [
+            {
+              idPago: 10,
+              codigoPago: 'PAG-COT-2026-0003',
+              codigoCotizacion: 'COT-2026-0005',
+              montoAbonado: 4000,
+              bancoOrigen: 'BCP',
+              bancoDestino: 'BCP Dolares TransAduanas',
+              numeroOperacion: '001928374',
+              fechaOperacion: '2026-11-10',
+              observacionFinanzas: 'El voucher no es legible'
+            }
+          ]
+        })
+      }
+    })
+    app.use(PrimeVue)
+
+    const html = await renderToString(app)
     expect(html).toContain('Requieren Corrección')
-    expect(html).toContain('Historial de Comprobantes')
-    expect(html).toContain('Anticipos de Cotización')
-    expect(html).toContain('Saldos de Despacho (DAM)')
+    expect(html).toContain('PAG-COT-2026-0003')
+    expect(html).toContain('El voucher no es legible')
+    expect(html).toContain('Subsanar Abono')
+  })
+
+  it('HistorialVouchersCanvasGrid muestra el botón de Factura PDF cuando el abono fue facturado', async () => {
+    const app = createSSRApp({
+      render() {
+        return h(HistorialVouchersCanvasGrid, {
+          anticipos: [
+            {
+              idPago: 22,
+              codigoPago: 'PAG-COT-2026-0022',
+              codigoCotizacion: 'COT-2026-0010',
+              montoAbonado: 1180,
+              bancoOrigen: 'BCP',
+              bancoDestino: 'BCP USD',
+              numeroOperacion: 'OP-881122',
+              fechaOperacion: '2026-11-24',
+              estadoPago: 'APROBADO',
+              idComprobanteFactura: 9,
+              numeroFacturaEmitida: 'F001-000009'
+            }
+          ]
+        })
+      }
+    })
+    app.use(PrimeVue)
+
+    const html = await renderToString(app)
+    expect(html).toContain('PAG-COT-2026-0022')
+    expect(html).toContain('F001-000009')
   })
 })

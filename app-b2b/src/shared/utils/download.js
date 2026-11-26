@@ -32,13 +32,18 @@ export function downloadBlob(data, filename, mimeType = 'application/pdf') {
  * @param {string} mimeType - Tipo MIME del archivo (default: 'application/pdf')
  */
 export function openBlobInNewTab(data, mimeType = 'application/pdf') {
-  if (!data) return
+  if (!data) return false
   const blob = data instanceof Blob ? data : new Blob([data], { type: mimeType })
   const url = window.URL.createObjectURL(blob)
-  window.open(url, '_blank')
+  const opened = window.open(url, '_blank')
+  if (!opened) {
+    window.URL.revokeObjectURL(url)
+    return false
+  }
   setTimeout(() => {
     window.URL.revokeObjectURL(url)
   }, 60000)
+  return true
 }
 
 export default {

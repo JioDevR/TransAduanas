@@ -60,16 +60,6 @@ export const rolesRoutes = [
       roles: [ROLES.ADMINISTRADOR_TI, ROLES.GERENTE_GENERAL, ROLES.CONTADOR],
       title: 'Finanzas - SGA'
     }
-  },
-  {
-    path: '/legal-auditoria',
-    name: 'LegalAuditoriaModule',
-    component: () => import('@/features/legal/views/LegalAuditoriaView.vue'),
-    meta: {
-      requiresAuth: true,
-      roles: [ROLES.ADMINISTRADOR_TI, ROLES.GERENTE_GENERAL, ROLES.ASESOR_LEGAL],
-      title: 'Legal y Auditoría - SGA'
-    }
   }
 ]
 

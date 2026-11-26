@@ -2,18 +2,28 @@ package pe.sga.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import pe.sga.config.SecurityRoles;
 import pe.sga.dto.request.ExpedienteActualizarDTO;
 import pe.sga.dto.request.ExpedienteArriboDestinoDTO;
+import pe.sga.dto.request.ExpedienteAsignarAgenteDTO;
 import pe.sga.dto.request.ExpedienteCanalDTO;
 import pe.sga.dto.request.ExpedienteCerrarDTO;
 import pe.sga.dto.request.ExpedienteCrearDTO;
+import pe.sga.dto.request.ExpedienteCuadrillaCitaDTO;
 import pe.sga.dto.request.ExpedienteDiligenciaDTO;
 import pe.sga.dto.request.ExpedienteEmbarqueExportacionDTO;
+import pe.sga.dto.request.ExpedienteEventoRequestDTO;
+import pe.sga.dto.request.ExpedienteInformeConformidadDTO;
 import pe.sga.dto.request.ExpedienteIngresoOrigenDTO;
 import pe.sga.dto.request.ExpedienteLevanteDTO;
 import pe.sga.dto.request.ExpedienteRecepcionExteriorDTO;
@@ -21,13 +31,18 @@ import pe.sga.dto.request.ExpedienteRecojoExportacionDTO;
 import pe.sga.dto.request.ExpedienteRetiroDirectoDTO;
 import pe.sga.dto.request.ExpedienteSalidaOrigenDTO;
 import pe.sga.dto.request.ExpedienteSolicitudTransporteDTO;
+import pe.sga.dto.request.ExpedienteSunatSimuladoDTO;
 import pe.sga.dto.response.ApiResponseDTO;
 import pe.sga.dto.response.ExpedienteResponseDTO;
+import pe.sga.entity.Usuario;
 import pe.sga.entity.enums.CanalSunat;
 import pe.sga.entity.enums.EstadoExpediente;
 import pe.sga.service.IExpedienteService;
+import pe.sga.service.IReporteJasperService;
 
+import java.io.ByteArrayInputStream;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/expedientes")
@@ -36,6 +51,12 @@ import java.util.List;
 public class ExpedienteController {
 
     private final IExpedienteService expedienteService;
+    private IReporteJasperService reporteJasperService;
+
+    @Autowired(required = false)
+    public void setReporteJasperService(IReporteJasperService reporteJasperService) {
+        this.reporteJasperService = reporteJasperService;
+    }
 
     @GetMapping
     public ResponseEntity<ApiResponseDTO<List<ExpedienteResponseDTO>>> listar(
@@ -200,6 +221,114 @@ public class ExpedienteController {
             @Valid @RequestBody(required = false) ExpedienteCerrarDTO dto) {
         ExpedienteResponseDTO actualizado = expedienteService.cerrar(id, dto);
         return ResponseEntity.ok(ApiResponseDTO.ok("Expediente aduanero cerrado formalmente con conformidad", actualizado));
+    }
+
+    @PatchMapping("/{id}/asignar-agente")
+    @PreAuthorize(SecurityRoles.ACCESS_EXPEDIENTE_ALMACEN_WRITE)
+    public ResponseEntity<ApiResponseDTO<ExpedienteResponseDTO>> asignarAgente(
+            @PathVariable Integer id,
+            @Valid @RequestBody ExpedienteAsignarAgenteDTO dto,
+            @AuthenticationPrincipal Usuario usuarioActual) {
+        String actor = usuarioActual != null ? usuarioActual.getNombreCompleto() : "Gestión Aduanera";
+        ExpedienteResponseDTO actualizado = expedienteService.asignarAgente(id, dto, actor);
+        return ResponseEntity.ok(ApiResponseDTO.ok("Agente aduanero asignado exitosamente al expediente", actualizado));
+    }
+
+    @PostMapping("/{id}/eventos")
+    @PreAuthorize(SecurityRoles.ACCESS_EXPEDIENTE_ALMACEN_WRITE)
+    public ResponseEntity<ApiResponseDTO<ExpedienteResponseDTO>> registrarEventoManual(
+            @PathVariable Integer id,
+            @Valid @RequestBody ExpedienteEventoRequestDTO dto,
+            @AuthenticationPrincipal Usuario usuarioActual) {
+        String actor = usuarioActual != null ? usuarioActual.getNombreCompleto() : "Agente Aduanero";
+        ExpedienteResponseDTO actualizado = expedienteService.registrarEventoManual(id, dto, actor);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponseDTO.ok("Estado y marca de tiempo registrados en el expediente", actualizado));
+    }
+
+    @PatchMapping("/{id}/verificacion-origen")
+    @PreAuthorize(SecurityRoles.ACCESS_EXPEDIENTE_ALMACEN_WRITE)
+    public ResponseEntity<ApiResponseDTO<ExpedienteResponseDTO>> confirmarVerificacionOrigen(
+            @PathVariable Integer id,
+            @RequestBody(required = false) Map<String, String> body,
+            @AuthenticationPrincipal Usuario usuarioActual) {
+        String actor = usuarioActual != null ? usuarioActual.getNombreCompleto() : "Agente Aduanero";
+        String obs = body != null ? body.get("observaciones") : null;
+        ExpedienteResponseDTO actualizado = expedienteService.confirmarVerificacionOrigen(id, obs, actor);
+        return ResponseEntity.ok(ApiResponseDTO.ok("Verificación en origen confirmada", actualizado));
+    }
+
+    @PatchMapping("/{id}/canal-rojo/cuadrilla-cita")
+    @PreAuthorize(SecurityRoles.ACCESS_EXPEDIENTE_ALMACEN_WRITE)
+    public ResponseEntity<ApiResponseDTO<ExpedienteResponseDTO>> solicitarCuadrillaYCitaRojo(
+            @PathVariable Integer id,
+            @Valid @RequestBody ExpedienteCuadrillaCitaDTO dto,
+            @AuthenticationPrincipal Usuario usuarioActual) {
+        String actor = usuarioActual != null ? usuarioActual.getNombreCompleto() : "Agente Aduanero";
+        ExpedienteResponseDTO actualizado = expedienteService.solicitarCuadrillaYCitaRojo(id, dto, actor);
+        return ResponseEntity.ok(ApiResponseDTO.ok("Cuadrilla solicitada y cita de inspección física registrada", actualizado));
+    }
+
+    @PatchMapping("/{id}/canal-rojo/finalizar-revision")
+    @PreAuthorize(SecurityRoles.ACCESS_EXPEDIENTE_ALMACEN_WRITE)
+    public ResponseEntity<ApiResponseDTO<ExpedienteResponseDTO>> finalizarRevisionRojo(
+            @PathVariable Integer id,
+            @Valid @RequestBody(required = false) ExpedienteLevanteDTO dto,
+            @AuthenticationPrincipal Usuario usuarioActual) {
+        String actor = usuarioActual != null ? usuarioActual.getNombreCompleto() : "Agente Aduanero";
+        ExpedienteResponseDTO actualizado = expedienteService.finalizarRevisionRojo(id, dto, actor);
+        return ResponseEntity.ok(ApiResponseDTO.ok("Revisión física de Canal Rojo finalizada y levante autorizado", actualizado));
+    }
+
+    @PostMapping("/{id}/canal-naranja/enviar-sunat")
+    @PreAuthorize(SecurityRoles.ACCESS_EXPEDIENTE_ALMACEN_WRITE)
+    public ResponseEntity<ApiResponseDTO<ExpedienteResponseDTO>> enviarSunatSimulado(
+            @PathVariable Integer id,
+            @Valid @RequestBody(required = false) ExpedienteSunatSimuladoDTO dto,
+            @AuthenticationPrincipal Usuario usuarioActual) {
+        String actor = usuarioActual != null ? usuarioActual.getNombreCompleto() : "Agente Aduanero";
+        ExpedienteResponseDTO actualizado = expedienteService.enviarDocumentosSunatSimulado(id, dto, actor);
+        return ResponseEntity.ok(ApiResponseDTO.ok("Documentos transmitidos a SUNAT (simulado) exitosamente", actualizado));
+    }
+
+    @PatchMapping("/{id}/canal-verde/entregado-almacen")
+    @PreAuthorize(SecurityRoles.ACCESS_EXPEDIENTE_ALMACEN_WRITE)
+    public ResponseEntity<ApiResponseDTO<ExpedienteResponseDTO>> marcarEntregadoAlmacenVerde(
+            @PathVariable Integer id,
+            @RequestBody(required = false) Map<String, String> body,
+            @AuthenticationPrincipal Usuario usuarioActual) {
+        String actor = usuarioActual != null ? usuarioActual.getNombreCompleto() : "Agente Aduanero";
+        String obs = body != null ? body.get("observaciones") : null;
+        ExpedienteResponseDTO actualizado = expedienteService.marcarEntregadoAlmacenVerde(id, obs, actor);
+        return ResponseEntity.ok(ApiResponseDTO.ok("Carga de Canal Verde marcada como entregada en almacén", actualizado));
+    }
+
+    @PostMapping("/{id}/informe-conformidad")
+    @PreAuthorize(SecurityRoles.ACCESS_EXPEDIENTE_ALMACEN_WRITE)
+    public ResponseEntity<ApiResponseDTO<ExpedienteResponseDTO>> emitirInformeConformidad(
+            @PathVariable Integer id,
+            @Valid @RequestBody ExpedienteInformeConformidadDTO dto,
+            @AuthenticationPrincipal Usuario usuarioActual) {
+        String actor = usuarioActual != null ? usuarioActual.getNombreCompleto() : "Agente Aduanero";
+        ExpedienteResponseDTO actualizado = expedienteService.emitirInformeConformidadEntrega(id, dto, actor);
+        return ResponseEntity.ok(ApiResponseDTO.ok("Informe de conformidad de entrega emitido exitosamente", actualizado));
+    }
+
+    @GetMapping("/{id}/informe-conformidad/pdf")
+    public ResponseEntity<InputStreamResource> descargarInformeConformidadPdf(@PathVariable Integer id) {
+        if (reporteJasperService == null) {
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).build();
+        }
+        ExpedienteResponseDTO exp = expedienteService.buscarPorId(id);
+        ByteArrayInputStream pdf = reporteJasperService.exportarInformeConformidadPdf(exp);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentDisposition(ContentDisposition.inline()
+                .filename("informe-conformidad-" + exp.getCodigoExpediente() + ".pdf")
+                .build());
+        return ResponseEntity.ok()
+                .headers(headers)
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(new InputStreamResource(pdf));
     }
 
     @DeleteMapping("/{id}")

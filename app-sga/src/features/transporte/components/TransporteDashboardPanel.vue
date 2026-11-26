@@ -1,549 +1,419 @@
 <template>
-  <div class="transporte-dashboard-panel">
-    <!-- 1. Grid de KPIs Operativos -->
-    <div class="kpi-grid">
-      <div class="kpi-card accent-card" @click="$emit('select-filter', 'EN_RUTA')">
-        <div class="kpi-card-header">
-          <span class="kpi-num">01</span>
-          <span class="kpi-label">Despachos En Tránsito</span>
-          <i class="pi pi-compass kpi-icon"></i>
-        </div>
-        <div class="kpi-main-stat">
-          <span class="kpi-value font-mono">{{ enRutaCount }}</span>
-          <span class="kpi-badge info">En Ruta</span>
-        </div>
-        <div class="kpi-footer-note">
-          <span>Camiones en traslado hacia cliente o puerto</span>
-        </div>
+  <div class="transporte-dashboard-panel fade-in">
+    <!-- 1. Cabecera Directa (sgaUI) -->
+    <header class="sga-dash-header">
+      <div class="sga-dash-meta">
+        <Tag value="CONTROL LOGÍSTICO MTC" severity="success" rounded />
+        <Tag
+          :value="`${kpis.unidadesDisponibles}/${kpis.unidadesActivas} unidades disponibles`"
+          severity="secondary"
+          class="font-mono"
+          rounded
+        />
+        <Button
+          v-if="kpis.despachosPendientes > 0"
+          type="button"
+          :label="`${kpis.despachosPendientes} pendientes de asignar`"
+          icon="pi pi-clock"
+          severity="warn"
+          outlined
+          size="small"
+          @click="$emit('select-filter', 'PENDIENTE_ASIGNACION')"
+        />
+        <Button
+          v-if="kpis.alertasVencidas > 0"
+          type="button"
+          :label="`${kpis.alertasVencidas} doc. vencido(s)`"
+          icon="pi pi-exclamation-triangle"
+          severity="danger"
+          outlined
+          size="small"
+          @click="$emit('navigate', alertasMtc[0]?.targetTab || 'unidades')"
+        />
       </div>
 
-      <div class="kpi-card warning-card" @click="$emit('select-filter', 'PENDIENTE_ASIGNACION')">
-        <div class="kpi-card-header">
-          <span class="kpi-num">02</span>
-          <span class="kpi-label">Pendientes Asignación</span>
-          <i class="pi pi-clock kpi-icon text-amber-600"></i>
-        </div>
-        <div class="kpi-main-stat">
-          <span class="kpi-value font-mono text-amber-600">{{ pendientesCount }}</span>
-          <span class="kpi-badge warning">Por Atender</span>
-        </div>
-        <div class="kpi-footer-note">
-          <span>Requieren asignar tracto, carreta y chofer</span>
-        </div>
+      <div class="sga-dash-actions">
+        <Button
+          type="button"
+          label="Actualizar"
+          icon="pi pi-sync"
+          severity="secondary"
+          outlined
+          size="small"
+          :loading="loading"
+          @click="$emit('refresh')"
+        />
+        <Button
+          type="button"
+          label="Programar Despacho"
+          icon="pi pi-plus"
+          size="small"
+          @click="$emit('programar-despacho')"
+        />
       </div>
+    </header>
 
-      <div class="kpi-card success-card" @click="$emit('go-tab', 'unidades')">
-        <div class="kpi-card-header">
-          <span class="kpi-num">03</span>
-          <span class="kpi-label">Tractos en Patio</span>
-          <i class="pi pi-truck kpi-icon text-emerald-600"></i>
+    <!-- 2. Grid de 4 KPIs Unificados (sgaUI) -->
+    <section class="sga-kpis-grid">
+      <article class="sga-kpi-card" @click="$emit('select-filter', 'EN_RUTA')">
+        <div class="sga-kpi-head">
+          <span class="sga-kpi-index">01</span>
+          <span class="sga-kpi-label">Despachos En Tránsito</span>
+          <i class="pi pi-compass sga-kpi-icon"></i>
         </div>
-        <div class="kpi-main-stat">
-          <span class="kpi-value font-mono text-emerald-600">{{ disponiblesCount }}</span>
-          <span class="kpi-badge success">Disponibles</span>
+        <div class="sga-kpi-stat">
+          <span class="sga-kpi-value">{{ kpis.despachosEnRuta }}</span>
+          <span class="sga-kpi-pill">{{ kpis.despachosProgramados }} prog.</span>
         </div>
-        <div class="kpi-footer-note">
-          <span>Listos para enganche y salida inmediata</span>
-        </div>
-      </div>
+        <p class="sga-kpi-foot">Unidades circulando hacia planta o terminal</p>
+      </article>
 
-      <div class="kpi-card" @click="$emit('select-filter', 'ENTREGADO')">
-        <div class="kpi-card-header">
-          <span class="kpi-num">04</span>
-          <span class="kpi-label">Entregas Conformes</span>
-          <i class="pi pi-check-circle kpi-icon text-slate-600"></i>
+      <article class="sga-kpi-card is-warn" @click="$emit('select-filter', 'PENDIENTE_ASIGNACION')">
+        <div class="sga-kpi-head">
+          <span class="sga-kpi-index">02</span>
+          <span class="sga-kpi-label">Pendientes de Asignar</span>
+          <i class="pi pi-inbox sga-kpi-icon"></i>
         </div>
-        <div class="kpi-main-stat">
-          <span class="kpi-value font-mono">{{ entregadosCount }}</span>
-          <span class="kpi-badge neutral">Finalizados</span>
+        <div class="sga-kpi-stat">
+          <span class="sga-kpi-value">{{ kpis.despachosPendientes }}</span>
+          <span class="sga-kpi-pill is-warn">{{ kpis.despachosTotal }} total</span>
         </div>
-        <div class="kpi-footer-note">
-          <span>Traslados concluidos con recepción y DNI</span>
-        </div>
-      </div>
-    </div>
+        <p class="sga-kpi-foot">Solicitudes de Aduanas esperando unidad y chofer</p>
+      </article>
 
-    <!-- 2. Alertas Técnicas Preventivas MTC (SOAT / CITV / Brevete) -->
-    <div v-if="alertasDocumentarias.length > 0" class="alerts-section">
-      <div class="alerts-header">
-        <div class="alerts-title-group">
-          <i class="pi pi-exclamation-triangle text-amber-600"></i>
-          <h4>Alertas Técnicas Preventivas MTC</h4>
+      <article class="sga-kpi-card is-success" @click="$emit('navigate', 'unidades')">
+        <div class="sga-kpi-head">
+          <span class="sga-kpi-index">03</span>
+          <span class="sga-kpi-label">Flota Disponible en Patio</span>
+          <i class="pi pi-truck sga-kpi-icon"></i>
         </div>
-        <span class="alerts-counter font-mono">{{ alertasDocumentarias.length }} advertencia(s)</span>
-      </div>
+        <div class="sga-kpi-stat">
+          <span class="sga-kpi-value">{{ kpis.unidadesDisponibles }}</span>
+          <span class="sga-kpi-pill is-success">{{ kpis.tractosDisponibles }} tractos</span>
+        </div>
+        <p class="sga-kpi-foot">
+          {{ kpis.conductoresDisponibles }} choferes disponibles · {{ kpis.unidadesMantenimiento }} en taller
+        </p>
+      </article>
 
-      <div class="alerts-list">
-        <div
-          v-for="al in alertasDocumentarias"
-          :key="al.id"
-          :class="['alert-card', al.tipo]"
-        >
-          <div class="alert-icon-wrap">
-            <i :class="al.tipo === 'danger' ? 'pi pi-times-circle' : 'pi pi-clock'"></i>
+      <article class="sga-kpi-card is-success" @click="$emit('select-filter', 'ENTREGADO')">
+        <div class="sga-kpi-head">
+          <span class="sga-kpi-index">04</span>
+          <span class="sga-kpi-label">Entregas Conformes</span>
+          <i class="pi pi-check-circle sga-kpi-icon"></i>
+        </div>
+        <div class="sga-kpi-stat">
+          <span class="sga-kpi-value">{{ kpis.despachosEntregados }}</span>
+          <span class="sga-kpi-pill">{{ kpis.conductoresActivos }} choferes</span>
+        </div>
+        <p class="sga-kpi-foot">Traslados completados con acta de recepción</p>
+      </article>
+    </section>
+
+    <!-- 3. Gráficos & Alertas Preventivas MTC -->
+    <section class="sga-charts-grid">
+      <article class="sga-card-surface sga-chart-card">
+        <div class="sga-chart-head">
+          <div>
+            <span class="sga-kicker">CICLO OPERATIVO</span>
+            <h3 class="sga-chart-title">Distribución de Despachos Terrestres</h3>
           </div>
-          <div class="alert-content">
-            <div class="alert-tagline">
-              <span class="font-mono font-bold">{{ al.recurso }}</span>
-              <span class="alert-badge">{{ al.entidad }}</span>
+          <Button
+            type="button"
+            label="Ver bandeja"
+            icon="pi pi-arrow-right"
+            iconPos="right"
+            severity="secondary"
+            text
+            size="small"
+            @click="$emit('navigate', 'despachos')"
+          />
+        </div>
+
+        <div class="sga-chart-box sga-doughnut-wrap">
+          <template v-if="despachos.length > 0">
+            <Chart
+              type="doughnut"
+              :data="despachosChartData"
+              :options="doughnutOptions"
+              class="sga-chart-canvas"
+            />
+            <div class="sga-doughnut-center" aria-hidden="true">
+              <span class="sga-doughnut-pct">{{ despachos.length }}</span>
+              <span class="sga-doughnut-sub">Despachos</span>
             </div>
-            <p class="alert-text">{{ al.mensaje }}</p>
+          </template>
+          <div v-else class="sga-empty-state">
+            <i class="pi pi-chart-pie sga-empty-icon"></i>
+            <p class="sga-empty-desc">Sin despachos registrados para graficar</p>
           </div>
-          <div class="alert-action">
-            <button
+        </div>
+      </article>
+
+      <article class="sga-card-surface sga-chart-card">
+        <div class="sga-chart-head">
+          <div>
+            <span class="sga-kicker">ALERTAS TÉCNICAS MTC (30 DÍAS)</span>
+            <h3 class="sga-chart-title">Vencimientos SOAT, CITV & Licencias</h3>
+          </div>
+          <Tag
+            :value="`${alertasMtc.length} alerta(s)`"
+            :severity="alertasMtc.length > 0 ? (kpis.alertasVencidas > 0 ? 'danger' : 'warn') : 'success'"
+            rounded
+          />
+        </div>
+
+        <div v-if="alertasMtc.length === 0" class="sga-empty-state">
+          <i class="pi pi-verified sga-empty-icon sga-text-success"></i>
+          <p class="sga-empty-title">Documentación MTC al día</p>
+          <p class="sga-empty-desc">Todas las unidades y conductores activos tienen SOAT, CITV y brevetes vigentes.</p>
+        </div>
+
+        <div v-else class="alertas-scroll-list">
+          <button
+            v-for="a in alertasMtc"
+            :key="a.id"
+            type="button"
+            class="alerta-row-btn"
+            @click="$emit('navigate', a.targetTab)"
+          >
+            <div class="alerta-row-main">
+              <strong class="alerta-row-title">{{ a.titulo }}</strong>
+              <span class="sga-cell-sub">{{ a.subtitulo }}</span>
+            </div>
+            <div class="alerta-row-meta">
+              <Tag
+                :value="a.vencido ? `Vencido (${Math.abs(a.diasRestantes)}d)` : `${a.diasRestantes}d`"
+                :severity="a.severity"
+                rounded
+              />
+              <span class="sga-cell-sub font-mono">{{ formatDate(a.vencimiento) }}</span>
+            </div>
+          </button>
+        </div>
+      </article>
+    </section>
+
+    <!-- 4. Despachos Activos en Operación -->
+    <section class="sga-card-surface sga-table-card">
+      <div class="sga-table-toolbar">
+        <div>
+          <span class="sga-kicker">SEGUIMIENTO EN CURSO</span>
+          <h3 class="sga-chart-title">Despachos en Ruta y Programados</h3>
+        </div>
+        <Button
+          type="button"
+          label="Ir a Monitoreo"
+          icon="pi pi-arrow-right"
+          iconPos="right"
+          severity="secondary"
+          outlined
+          size="small"
+          @click="$emit('navigate', 'despachos')"
+        />
+      </div>
+
+      <DataTable
+        :value="despachosActivos"
+        :loading="loading"
+        responsiveLayout="scroll"
+        dataKey="idDespachoTransporte"
+      >
+        <template #empty>
+          <div class="sga-empty-state">
+            <i class="pi pi-truck sga-empty-icon"></i>
+            <p class="sga-empty-title">Sin traslados activos en este momento</p>
+            <p class="sga-empty-desc">Los despachos programados o en ruta aparecerán aquí para seguimiento directo.</p>
+          </div>
+        </template>
+
+        <Column header="TRACKING">
+          <template #body="{ data: d }">
+            <div class="sga-cell-stack">
+              <span class="sga-code-cell font-mono">{{ d.codigoTracking }}</span>
+              <span class="sga-cell-sub font-mono">{{ d.codigoExpediente || '—' }}</span>
+            </div>
+          </template>
+        </Column>
+
+        <Column header="CLIENTE & DESTINO">
+          <template #body="{ data: d }">
+            <div class="sga-cell-stack">
+              <span class="sga-cell-primary">{{ d.clienteRazonSocial || 'Cliente' }}</span>
+              <span class="sga-cell-sub">{{ d.distritoLlegada }} · {{ d.direccionLlegada }}</span>
+            </div>
+          </template>
+        </Column>
+
+        <Column header="UNIDAD & CONDUCTOR">
+          <template #body="{ data: d }">
+            <div class="sga-cell-stack">
+              <span class="sga-code-cell font-mono">{{ d.unidadPlacaTracto || 'Sin asignar' }}</span>
+              <span class="sga-cell-sub">{{ d.conductorNombre || 'Sin chofer' }}</span>
+            </div>
+          </template>
+        </Column>
+
+        <Column header="ESTADO">
+          <template #body="{ data: d }">
+            <Tag
+              :value="formatEstadoDespacho(d.estadoTransporte)"
+              :severity="getEstadoDespachoSeverity(d.estadoTransporte)"
+              rounded
+            />
+          </template>
+        </Column>
+
+        <Column header="ACCIÓN" headerClass="text-right" bodyClass="text-right">
+          <template #body="{ data: d }">
+            <Button
               type="button"
-              class="btn-subtle-alert"
-              @click="$emit('go-tab', al.targetTab)"
-            >
-              Auditar
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 3. Acciones Rápidas & Guía Operativa -->
-    <div class="quick-nav-grid">
-      <div class="quick-action-card" @click="$emit('go-tab', 'despachos')">
-        <div class="action-icon-box">
-          <i class="pi pi-list"></i>
-        </div>
-        <div class="action-meta">
-          <h5>Bandeja de Despachos</h5>
-          <p>Supervisar órdenes por estado, asignar recursos e iniciar rutas.</p>
-        </div>
-        <i class="pi pi-arrow-right action-arrow"></i>
-      </div>
-
-      <div class="quick-action-card" @click="$emit('go-tab', 'cabina')">
-        <div class="action-icon-box">
-          <i class="pi pi-send"></i>
-        </div>
-        <div class="action-meta">
-          <h5>Cabina de Ruta Activa</h5>
-          <p>Panel táctico para monitorear viajes en curso o despachar como chofer.</p>
-        </div>
-        <i class="pi pi-arrow-right action-arrow"></i>
-      </div>
-
-      <div class="quick-action-card" @click="$emit('go-tab', 'unidades')">
-        <div class="action-icon-box">
-          <i class="pi pi-car"></i>
-        </div>
-        <div class="action-meta">
-          <h5>Parque de Flota MTC</h5>
-          <p>Inventario de tractos, carretas, SOAT, revisiones CITV y odómetros.</p>
-        </div>
-        <i class="pi pi-arrow-right action-arrow"></i>
-      </div>
-
-      <div class="quick-action-card" @click="$emit('go-tab', 'conductores')">
-        <div class="action-icon-box">
-          <i class="pi pi-users"></i>
-        </div>
-        <div class="action-meta">
-          <h5>Directorio de Choferes</h5>
-          <p>Padrón de choferes profesionales, categorías de brevete y usuarios.</p>
-        </div>
-        <i class="pi pi-arrow-right action-arrow"></i>
-      </div>
-    </div>
+              label="Hoja de Ruta"
+              icon="pi pi-eye"
+              severity="secondary"
+              outlined
+              size="small"
+              @click="$emit('ver-detalle', d)"
+            />
+          </template>
+        </Column>
+      </DataTable>
+    </section>
   </div>
 </template>
 
 <script setup>
 import { computed } from 'vue'
+import Button from 'primevue/button'
+import Chart from 'primevue/chart'
+import Column from 'primevue/column'
+import DataTable from 'primevue/datatable'
+import Tag from 'primevue/tag'
+import { useTheme } from '@/shared/composables/useTheme'
+import {
+  formatDate,
+  formatEstadoDespacho,
+  getEstadoDespachoSeverity
+} from '../utils/transporteFormatters'
 
 const props = defineProps({
-  despachos: {
-    type: Array,
-    default: () => []
-  },
-  unidades: {
-    type: Array,
-    default: () => []
-  },
-  conductores: {
-    type: Array,
-    default: () => []
-  },
-  loading: {
-    type: Boolean,
-    default: false
+  despachos: { type: Array, default: () => [] },
+  alertasMtc: { type: Array, default: () => [] },
+  kpis: { type: Object, required: true },
+  loading: { type: Boolean, default: false }
+})
+
+defineEmits(['refresh', 'navigate', 'select-filter', 'programar-despacho', 'ver-detalle'])
+
+const { isDark } = useTheme()
+
+const despachosActivos = computed(() =>
+  props.despachos
+    .filter((d) => ['EN_RUTA', 'PROGRAMADO', 'PENDIENTE_ASIGNACION'].includes(d.estadoTransporte))
+    .slice(0, 6)
+)
+
+const chartPalette = computed(() =>
+  isDark.value
+    ? {
+        text: '#e6dfd5',
+        surfaceBorder: '#24201c',
+        colors: ['#f59e0b', '#38bdf8', '#d48252', '#4ade80', '#f87171']
+      }
+    : {
+        text: '#4a433c',
+        surfaceBorder: '#ffffff',
+        colors: ['#d97706', '#21598f', '#b45309', '#1e6638', '#b91c1c']
+      }
+)
+
+const despachosChartData = computed(() => ({
+  labels: ['Pendiente', 'Programado', 'En Ruta', 'Entregado', 'Cancelado'],
+  datasets: [
+    {
+      data: [
+        props.kpis.despachosPendientes || 0,
+        props.kpis.despachosProgramados || 0,
+        props.kpis.despachosEnRuta || 0,
+        props.kpis.despachosEntregados || 0,
+        props.kpis.despachosCancelados || 0
+      ],
+      backgroundColor: chartPalette.value.colors,
+      borderColor: chartPalette.value.surfaceBorder,
+      borderWidth: 2,
+      borderRadius: 6,
+      spacing: 3
+    }
+  ]
+}))
+
+const doughnutOptions = computed(() => ({
+  responsive: true,
+  maintainAspectRatio: false,
+  cutout: '70%',
+  plugins: {
+    legend: {
+      position: 'bottom',
+      labels: {
+        color: chartPalette.value.text,
+        usePointStyle: true,
+        pointStyle: 'circle',
+        padding: 12,
+        font: { family: "'Inter', sans-serif", size: 11, weight: '600' }
+      }
+    }
   }
-})
-
-defineEmits(['select-filter', 'go-tab'])
-
-const enRutaCount = computed(() => {
-  return props.despachos.filter(d => (d.estadoTransporte || '').toUpperCase() === 'EN_RUTA').length
-})
-
-const pendientesCount = computed(() => {
-  return props.despachos.filter(d => (d.estadoTransporte || '').toUpperCase() === 'PENDIENTE_ASIGNACION').length
-})
-
-const disponiblesCount = computed(() => {
-  return props.unidades.filter(u => u.estadoActivo && (u.estadoOperativo || '').toUpperCase() === 'DISPONIBLE').length
-})
-
-const entregadosCount = computed(() => {
-  return props.despachos.filter(d => (d.estadoTransporte || '').toUpperCase() === 'ENTREGADO').length
-})
-
-const alertasDocumentarias = computed(() => {
-  const alerts = []
-  const today = new Date()
-  const in30Days = new Date()
-  in30Days.setDate(today.getDate() + 30)
-
-  // 1. Alertas de Unidades
-  props.unidades.forEach(u => {
-    if (!u.estadoActivo) return
-
-    const soatStr = u.fechaVencimientoSoat || u.soatVencimiento
-    if (soatStr) {
-      const soatDate = new Date(soatStr)
-      if (soatDate < today) {
-        alerts.push({
-          id: `soat-exp-${u.idUnidad}`,
-          recurso: u.placaTracto,
-          entidad: 'UNIDAD',
-          tipo: 'danger',
-          mensaje: `SOAT vencido el ${soatStr.substring(0, 10)}. Unidad no autorizada para circular.`,
-          targetTab: 'unidades'
-        })
-      } else if (soatDate <= in30Days) {
-        alerts.push({
-          id: `soat-warn-${u.idUnidad}`,
-          recurso: u.placaTracto,
-          entidad: 'UNIDAD',
-          tipo: 'warning',
-          mensaje: `SOAT por vencer el ${soatStr.substring(0, 10)} (dentro de los próximos 30 días).`,
-          targetTab: 'unidades'
-        })
-      }
-    }
-
-    const citvStr = u.fechaVencimientoCitv || u.citvVencimiento
-    if (citvStr) {
-      const citvDate = new Date(citvStr)
-      if (citvDate < today) {
-        alerts.push({
-          id: `citv-exp-${u.idUnidad}`,
-          recurso: u.placaTracto,
-          entidad: 'UNIDAD',
-          tipo: 'danger',
-          mensaje: `Revisión Técnica CITV vencida el ${citvStr.substring(0, 10)}.`,
-          targetTab: 'unidades'
-        })
-      } else if (citvDate <= in30Days) {
-        alerts.push({
-          id: `citv-warn-${u.idUnidad}`,
-          recurso: u.placaTracto,
-          entidad: 'UNIDAD',
-          tipo: 'warning',
-          mensaje: `Revisión Técnica CITV por vencer el ${citvStr.substring(0, 10)}.`,
-          targetTab: 'unidades'
-        })
-      }
-    }
-  })
-
-  // 2. Alertas de Choferes
-  props.conductores.forEach(c => {
-    if (!c.estadoActivo || !c.fechaVencimientoLicencia) return
-    const licDate = new Date(c.fechaVencimientoLicencia)
-    const licStr = c.fechaVencimientoLicencia.substring(0, 10)
-    if (licDate < today) {
-      alerts.push({
-        id: `lic-exp-${c.idConductor}`,
-        recurso: `${c.nombres} ${c.apellidos}`,
-        entidad: 'CONDUCTOR',
-        tipo: 'danger',
-        mensaje: `Licencia ${c.numeroLicencia} vencida el ${licStr}. Operador no habilitado.`,
-        targetTab: 'conductores'
-      })
-    } else if (licDate <= in30Days) {
-      alerts.push({
-        id: `lic-warn-${c.idConductor}`,
-        recurso: `${c.nombres} ${c.apellidos}`,
-        entidad: 'CONDUCTOR',
-        tipo: 'warning',
-        mensaje: `Licencia ${c.numeroLicencia} próxima a vencer el ${licStr}.`,
-        targetTab: 'conductores'
-      })
-    }
-  })
-
-  return alerts.slice(0, 4)
-})
+}))
 </script>
 
 <style scoped>
 .transporte-dashboard-panel {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1.25rem;
 }
 
-.kpi-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-  gap: 1rem;
-}
-
-.kpi-card {
-  background: var(--color-bg-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg, 0.75rem);
-  padding: 1.25rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
+.alertas-scroll-list {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
-}
-
-.kpi-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
-  border-color: var(--color-border-strong);
-}
-
-.kpi-card-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.kpi-num {
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: var(--color-text-subtle);
-}
-
-.kpi-label {
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: var(--color-text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.kpi-icon {
-  font-size: 1.125rem;
-  color: var(--color-text-subtle);
-}
-
-.kpi-main-stat {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-}
-
-.kpi-value {
-  font-size: 2.25rem;
-  font-weight: 700;
-  line-height: 1;
-  color: var(--color-text-main);
-}
-
-.kpi-badge {
-  font-family: var(--font-mono);
-  font-size: 0.6875rem;
-  font-weight: 700;
-  padding: 0.2rem 0.5rem;
-  border-radius: 9999px;
-  text-transform: uppercase;
-}
-
-.kpi-badge.info { background: var(--color-info-bg); color: var(--color-info-text); border: 1px solid var(--color-info-border); }
-.kpi-badge.warning { background: var(--color-warning-bg); color: var(--color-warning-text); border: 1px solid var(--color-warning-border); }
-.kpi-badge.success { background: var(--color-success-bg); color: var(--color-success-text); border: 1px solid var(--color-success-border); }
-.kpi-badge.neutral { background: var(--color-bg-muted); color: var(--color-text-muted); }
-
-.kpi-footer-note {
-  font-size: 0.75rem;
-  color: var(--color-text-subtle);
-}
-
-/* Alertas Técnicas */
-.alerts-section {
-  background: var(--color-bg-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg, 0.75rem);
-  padding: 1.25rem 1.5rem;
-}
-
-.alerts-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
-}
-
-.alerts-title-group {
-  display: flex;
-  align-items: center;
   gap: 0.5rem;
+  max-height: 240px;
+  overflow-y: auto;
+  padding-right: 0.25rem;
 }
 
-.alerts-title-group h4 {
-  margin: 0;
-  font-size: 0.9375rem;
-  font-weight: 700;
-  color: var(--color-text-main);
-}
-
-.alerts-counter {
-  font-size: 0.75rem;
-  color: var(--color-warning-text);
-  background: var(--color-warning-bg);
-  border: 1px solid var(--color-warning-border);
-  padding: 0.2rem 0.5rem;
-  border-radius: 9999px;
-  font-weight: 600;
-}
-
-.alerts-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 0.75rem;
-}
-
-.alert-card {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.75rem;
-  padding: 0.875rem 1rem;
-  border-radius: var(--radius-md, 0.5rem);
-  border: 1px solid;
-}
-
-.alert-card.warning {
-  background: var(--color-warning-bg);
-  border-color: var(--color-warning-border);
-  color: var(--color-warning-text);
-}
-
-.alert-card.danger {
-  background: var(--color-danger-bg);
-  border-color: var(--color-danger-border);
-  color: var(--color-danger-text);
-}
-
-.alert-icon-wrap {
-  margin-top: 0.125rem;
-  font-size: 1.125rem;
-}
-
-.alert-content {
-  flex: 1;
-}
-
-.alert-tagline {
+.alerta-row-btn {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  font-size: 0.8125rem;
-  margin-bottom: 0.25rem;
-}
-
-.alert-badge {
-  font-size: 0.625rem;
-  padding: 0.1rem 0.375rem;
-  border-radius: 4px;
-  background: rgba(0, 0, 0, 0.08);
-  font-weight: 700;
-}
-
-.alert-text {
-  margin: 0;
-  font-size: 0.75rem;
-  line-height: 1.4;
-}
-
-.btn-subtle-alert {
-  background: transparent;
-  border: 1px solid currentColor;
-  color: inherit;
-  font-size: 0.6875rem;
-  font-weight: 600;
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.btn-subtle-alert:hover {
-  background: rgba(0, 0, 0, 0.06);
-}
-
-/* Quick Nav */
-.quick-nav-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 1rem;
-}
-
-.quick-action-card {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 1.125rem 1.25rem;
-  background: var(--color-bg-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg, 0.75rem);
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.quick-action-card:hover {
-  transform: translateY(-2px);
-  border-color: var(--color-primary);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-}
-
-.action-icon-box {
-  width: 2.75rem;
-  height: 2.75rem;
-  border-radius: var(--radius-md, 0.5rem);
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.65rem 0.85rem;
+  border-radius: 10px;
+  border: 1px solid var(--color-border-subtle);
   background: var(--color-bg-subtle);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color var(--transition-fast);
+}
+
+.alerta-row-btn:hover {
+  border-color: var(--color-primary);
+}
+
+.alerta-row-main,
+.alerta-row-meta {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.25rem;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.alerta-row-meta {
+  align-items: flex-end;
+  flex-shrink: 0;
+}
+
+.alerta-row-title {
+  font-size: 0.84rem;
   color: var(--color-text-main);
-}
-
-.action-meta {
-  flex: 1;
-}
-
-.action-meta h5 {
-  margin: 0 0 0.25rem 0;
-  font-size: 0.875rem;
-  font-weight: 700;
-  color: var(--color-text-main);
-}
-
-.action-meta p {
-  margin: 0;
-  font-size: 0.75rem;
-  color: var(--color-text-muted);
-  line-height: 1.35;
-}
-
-.action-arrow {
-  color: var(--color-text-subtle);
-  font-size: 0.875rem;
-  transition: transform 0.2s ease;
-}
-
-.quick-action-card:hover .action-arrow {
-  transform: translateX(4px);
-  color: var(--color-primary);
 }
 </style>

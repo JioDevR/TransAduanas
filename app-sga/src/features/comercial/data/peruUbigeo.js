@@ -328,6 +328,15 @@ export const PERU_UBIGEO_DATA = [
   }
 ]
 
+const normalizeUbigeoKey = (str) => {
+  if (!str) return ''
+  return String(str)
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim()
+    .toUpperCase()
+}
+
 /**
  * Obtiene la lista ordenada de departamentos del Perú
  */
@@ -336,17 +345,58 @@ export const getDepartamentosPeru = () => {
 }
 
 /**
- * Obtiene la lista de provincias para un departamento dado
+ * Normaliza un nombre de departamento (ej. 'La Libertad', 'Callao', 'Ancash')
+ * al formato canónico de PERU_UBIGEO_DATA ('LA LIBERTAD', 'CALLAO', 'ÁNCASH').
  */
-export const getProvinciasPorDepartamento = (departamento) => {
+export const normalizeDepartamentoPeru = (departamento, fallback = '') => {
+  if (!departamento) return fallback
+  const target = normalizeUbigeoKey(departamento)
+  const found = PERU_UBIGEO_DATA.find((item) => normalizeUbigeoKey(item.departamento) === target)
+  return found ? found.departamento : String(departamento).trim()
+}
+
+/**
+ * Obtiene la lista de provincias para un departamento dado.
+ * Si se indica `currentProvincia` y es un valor legado válido no presente en el catálogo,
+ * lo incluye al inicio para evitar que el selector quede en blanco.
+ */
+export const getProvinciasPorDepartamento = (departamento, currentProvincia = '') => {
   if (!departamento) return []
-  const depUpper = String(departamento).trim().toUpperCase()
-  const found = PERU_UBIGEO_DATA.find((item) => item.departamento.toUpperCase() === depUpper)
-  return found ? [...found.provincias] : []
+  const depKey = normalizeUbigeoKey(departamento)
+  const found = PERU_UBIGEO_DATA.find((item) => normalizeUbigeoKey(item.departamento) === depKey)
+  const list = found ? [...found.provincias] : []
+  const current = String(currentProvincia || '').trim()
+  if (current && !list.includes(current)) {
+    list.unshift(current)
+  }
+  return list
+}
+
+/**
+ * Normaliza una provincia almacenada en BD (ej. 'CALLAO', 'AREQUIPA', 'Lima', 'Viru')
+ * al valor exacto del catálogo para ese departamento, o conserva el valor original si es personalizado.
+ */
+export const normalizeProvinciaPeru = (departamento, provincia, fallback = '') => {
+  const raw = String(provincia || '').trim()
+  if (!raw) return fallback
+  const provs = getProvinciasPorDepartamento(departamento)
+  const target = normalizeUbigeoKey(raw)
+
+  const exact = provs.find((p) => normalizeUbigeoKey(p) === target)
+  if (exact) return exact
+
+  // Coincidencia con nombre base antes de paréntesis, ej. 'Lima' -> 'Lima (Metropolitana)'
+  const partial = provs.find((p) => {
+    const base = normalizeUbigeoKey(p.split('(')[0])
+    return base === target
+  })
+  return partial || raw
 }
 
 export default {
   PERU_UBIGEO_DATA,
   getDepartamentosPeru,
-  getProvinciasPorDepartamento
+  getProvinciasPorDepartamento,
+  normalizeDepartamentoPeru,
+  normalizeProvinciaPeru
 }

@@ -3,16 +3,17 @@
     <!-- ============================================================== -->
     <!-- VISTA COMPLETA: AUDITORÍA TÉCNICA DEL EXPEDIENTE / COTIZACIÓN   -->
     <!-- ============================================================== -->
-    <AuditoriaExpedienteModal
+    <AuditoriaTecnicaPanel
       v-if="showAuditoriaCompleta && (inspectedCotizacion || inspectedExpediente)"
       :cotizacion="inspectedCotizacion"
       :expediente="inspectedExpediente"
       :processing="processingAction"
       @back="closeAuditoriaCompleta"
       @approve="handleApproveFromAuditoria"
-      @observe="handleObserveFromAuditoria"
-      @reject="handleRejectFromAuditoria"
+      @observe="openRevisionDialog($event, 'observe')"
+      @reject="openRevisionDialog($event, 'reject')"
       @open-apertura="handleAperturaFromAuditoria"
+      @notify-whatsapp="handleNotifyWhatsApp"
       @doc-updated="loadData"
     />
 
@@ -55,6 +56,7 @@
         @approve="confirmApprove"
         @observe="openRevisionDialog($event, 'observe')"
         @reject="openRevisionDialog($event, 'reject')"
+        @notify-whatsapp="handleNotifyWhatsApp"
       />
 
       <!-- ============================================================== -->
@@ -102,6 +104,7 @@
         @open-levante="openLevanteModal"
         @open-retiro="openRetiroDirectoModal"
         @open-cierre="openCierreModal"
+        @open-asignar-agente="openAsignarAgenteDialog"
       />
     </div>
 
@@ -130,7 +133,6 @@
     <DocumentosManagerModal
       :visible="showDocumentosModal"
       :entidad-tipo="selectedDocEntidadTipo"
-      :id-entidad="selectedDocEntidadId"
       :entidad-id="selectedDocEntidadId"
       :codigo-entidad="selectedDocCodigoEntidad"
       :titulo-entidad="selectedDocTituloEntidad"
@@ -161,12 +163,99 @@
       @close="showActualizarTransitoModal = false"
       @updated="onTransitoUpdated"
     />
+
+    <!-- Modal: Envío rápido de notificación por enlace WhatsApp tras aprobar/rebotar -->
+    <Dialog
+      v-model:visible="showWhatsAppDialog"
+      modal
+      header="Notificar al Cliente vía WhatsApp"
+      :style="{ width: '520px', maxWidth: '95vw' }"
+    >
+      <div class="sga-wa-dialog">
+        <p class="sga-wa-desc">
+          La cotización <strong>{{ whatsAppCotizacion?.codigoCotizacion }}</strong> fue registrada como
+          <strong>{{ whatsAppCotizacion?.estado }}</strong>. Envíe la notificación directa por WhatsApp:
+        </p>
+        <Textarea
+          :model-value="whatsAppMessagePreview"
+          rows="5"
+          readonly
+          fluid
+        />
+      </div>
+      <template #footer>
+        <Button
+          type="button"
+          label="Cerrar"
+          severity="secondary"
+          outlined
+          size="small"
+          @click="showWhatsAppDialog = false"
+        />
+        <Button
+          type="button"
+          label="Abrir WhatsApp (wa.me)"
+          icon="pi pi-whatsapp"
+          severity="success"
+          size="small"
+          @click="abrirWhatsAppConfirmado"
+        />
+      </template>
+    </Dialog>
+
+    <!-- Modal: Asignar / Reasignar Agente Aduanero al Expediente -->
+    <Dialog
+      v-model:visible="showAsignarAgenteDialog"
+      modal
+      header="Asignar Agente Aduanero Responsable"
+      :style="{ width: '440px', maxWidth: '95vw' }"
+    >
+      <div class="sga-form-field">
+        <label for="asignar-agente-select" class="sga-form-label">
+          Agente Aduanero para {{ expedienteParaAgente?.codigoExpediente }} *
+        </label>
+        <Select
+          id="asignar-agente-select"
+          v-model="selectedAgenteParaExpediente"
+          :options="agentesCatalogo"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Seleccione un agente aduanero"
+          size="small"
+          fluid
+        />
+      </div>
+      <template #footer>
+        <Button
+          type="button"
+          label="Cancelar"
+          severity="secondary"
+          outlined
+          size="small"
+          @click="showAsignarAgenteDialog = false"
+        />
+        <Button
+          type="button"
+          label="Guardar Asignación"
+          icon="pi pi-check"
+          size="small"
+          :loading="savingAgente"
+          :disabled="!selectedAgenteParaExpediente"
+          @click="confirmarAsignarAgente"
+        />
+      </template>
+    </Dialog>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import Button from 'primevue/button'
+import Dialog from 'primevue/dialog'
+import Select from 'primevue/select'
+import Textarea from 'primevue/textarea'
+import { userService } from '@/features/admin/users/services/userService'
 import { gestionAduaneraService } from '../services/gestionAduaneraService'
 import { expedienteService } from '../services/expedienteService'
 import { useAuthStore } from '@/features/auth/stores/authStore'
@@ -180,7 +269,7 @@ import RetiroDirectoModal from '../components/RetiroDirectoModal.vue'
 import CierreExpedienteModal from '../components/CierreExpedienteModal.vue'
 import ActualizarTransitoModal from '../components/ActualizarTransitoModal.vue'
 import DocumentosManagerModal from '@/shared/components/DocumentosManagerModal.vue'
-import AuditoriaExpedienteModal from '../components/AuditoriaExpedienteModal.vue'
+import AuditoriaTecnicaPanel from '../components/auditoria/AuditoriaTecnicaPanel.vue'
 import DashboardAduaneroPanel from '../components/DashboardAduaneroPanel.vue'
 import AduanasCotizacionesPanel from '../components/AduanasCotizacionesPanel.vue'
 import CotizacionRevisionDialog from '../components/CotizacionRevisionDialog.vue'
@@ -188,6 +277,7 @@ import { useAduanasCotizaciones } from '../composables/useAduanasCotizaciones'
 import { useAduanasApertura } from '../composables/useAduanasApertura'
 import { useAduanasExpedientes } from '../composables/useAduanasExpedientes'
 import { filtrarCotizacionesParaSupervision } from '../utils/supervisionCotizacionUtils'
+import { buildCotizacionWhatsAppMessage, openCotizacionWhatsApp } from '@/shared/utils/whatsappUtils'
 
 
 const route = useRoute()
@@ -195,7 +285,7 @@ const router = useRouter()
 const authStore = useAuthStore()
 const navigationStore = useNavigationStore()
 
-const { showSuccess, showError, showInfo } = useNotification()
+const { showSuccess, showError, showInfo, showWarn } = useNotification()
 const { confirmAction } = useConfirmation()
 
 const loading = ref(false)
@@ -388,10 +478,14 @@ const loadData = async () => {
       showError(firstFailure.reason?.response?.data?.message || 'Error al sincronizar datos de Supervisión.')
     }
 
-    // Si había una cotización inspeccionada en vista completa, refrescar su dato
+    // Si había una cotización o expediente inspeccionado en vista completa, refrescar su dato
     if (inspectedCotizacion.value) {
       const updated = cotizaciones.value.find((c) => c.idCotizacion === inspectedCotizacion.value.idCotizacion)
       if (updated) inspectedCotizacion.value = updated
+    }
+    if (inspectedExpediente.value) {
+      const updatedExp = expedientes.value.find((e) => e.idExpediente === inspectedExpediente.value.idExpediente)
+      if (updatedExp) inspectedExpediente.value = updatedExp
     }
   } finally {
     loading.value = false
@@ -419,8 +513,70 @@ const {
   authStore,
   notify: { showSuccess, showError, showInfo },
   confirmAction,
-  onReload: loadData
+  onReload: loadData,
+  onRevisionCompleted: (revisada) => {
+    if (revisada?.clienteTelefono) {
+      whatsAppCotizacion.value = revisada
+      showWhatsAppDialog.value = true
+    }
+  }
 })
+
+const showWhatsAppDialog = ref(false)
+const whatsAppCotizacion = ref(null)
+const whatsAppMessagePreview = computed(() =>
+  whatsAppCotizacion.value ? buildCotizacionWhatsAppMessage(whatsAppCotizacion.value) : ''
+)
+
+const abrirWhatsAppConfirmado = () => {
+  if (!whatsAppCotizacion.value) return
+  handleNotifyWhatsApp(whatsAppCotizacion.value)
+  showWhatsAppDialog.value = false
+}
+
+const showAsignarAgenteDialog = ref(false)
+const expedienteParaAgente = ref(null)
+const selectedAgenteParaExpediente = ref(null)
+const agentesCatalogo = ref([])
+const savingAgente = ref(false)
+
+const openAsignarAgenteDialog = async (exp) => {
+  expedienteParaAgente.value = exp
+  selectedAgenteParaExpediente.value = exp?.idAgenteAduanero || null
+  if (agentesCatalogo.value.length === 0) {
+    try {
+      const lista = await userService.getAgentesAduaneros()
+      agentesCatalogo.value = (lista || []).map((u) => ({
+        value: u.idUsuario,
+        label: u.nombreCompleto || u.username
+      }))
+    } catch {
+      agentesCatalogo.value = (agentesAduanerosDisponibles.value || []).map((a) => ({
+        value: a.id,
+        label: a.nombre
+      }))
+    }
+  }
+  showAsignarAgenteDialog.value = true
+}
+
+const confirmarAsignarAgente = async () => {
+  if (!expedienteParaAgente.value?.idExpediente || !selectedAgenteParaExpediente.value) return
+  savingAgente.value = true
+  try {
+    await expedienteService.asignarAgente(
+      expedienteParaAgente.value.idExpediente,
+      selectedAgenteParaExpediente.value
+    )
+    showSuccess(`Agente aduanero asignado a ${expedienteParaAgente.value.codigoExpediente}.`)
+    showAsignarAgenteDialog.value = false
+    await loadData()
+  } catch (err) {
+    showError(err?.response?.data?.message || 'No se pudo asignar el agente aduanero.')
+  } finally {
+    savingAgente.value = false
+  }
+}
 
 const {
   searchQuery: aperturaSearchQuery,
@@ -460,6 +616,13 @@ const confirmApprove = async (cotizacion) => {
   await aprobarCotizacion(cotizacion)
 }
 
+const handleNotifyWhatsApp = (cotizacion) => {
+  const res = openCotizacionWhatsApp(cotizacion)
+  if (!res.ok) {
+    showWarn(res.reason)
+  }
+}
+
 const handleApproveFromAuditoria = async (cotizacion) => {
   await confirmApprove(cotizacion)
   if (inspectedCotizacion.value) {
@@ -468,32 +631,12 @@ const handleApproveFromAuditoria = async (cotizacion) => {
   }
 }
 
-const handleObserveFromAuditoria = async ({ cotizacion, reason }) => {
-  const ok = await ejecutarRevisionTecnica({
-    cotizacion,
-    estado: 'OBSERVADA',
-    motivoObservacion: reason,
-    observaciones: 'Observaciones emitidas en auditoría técnica aduanera.'
-  })
-  if (ok) closeAuditoriaCompleta()
-}
-
-const handleRejectFromAuditoria = async ({ cotizacion, reason }) => {
-  const ok = await ejecutarRevisionTecnica({
-    cotizacion,
-    estado: 'RECHAZADA',
-    motivoObservacion: reason,
-    observaciones: 'Rechazo técnico formal emitido en auditoría aduanera.'
-  })
-  if (ok) closeAuditoriaCompleta()
-}
-
 const handleAperturaFromAuditoria = (cotizacion) => {
   closeAuditoriaCompleta()
   goToApertura(cotizacion)
 }
 
-// Acciones rápidas desde la bandeja (Observación / Rechazo)
+// Acciones unificadas de revisión (Observar / Rechazar) desde Bandeja o Auditoría
 const openRevisionDialog = (cotizacion, mode) => {
   actionCotizacion.value = cotizacion
   revisionDialogMode.value = mode
@@ -512,6 +655,9 @@ const handleRevisionConfirm = async ({ cotizacion, mode, reason }) => {
   })
   if (ok) {
     showRevisionDialog.value = false
+    if (showAuditoriaCompleta.value) {
+      closeAuditoriaCompleta()
+    }
   }
 }
 </script>

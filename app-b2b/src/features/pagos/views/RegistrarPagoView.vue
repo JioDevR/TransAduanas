@@ -1,396 +1,303 @@
 <template>
-  <div class="registrar-pago-view">
-    <!-- Header de Navegación -->
-    <div class="page-topbar">
-      <button class="btn-back" @click="volver">
-        <i class="pi pi-arrow-left"></i>
-        <span>Volver a Cobros & Pagos</span>
-      </button>
-      <div class="topbar-status-chip" v-if="obligacionSeleccionada">
-        <span class="chip-type" :class="obligacionSeleccionada.tipoObligacion === 'EXPEDIENTE_HEREDADO' || obligacionSeleccionada.tipoObligacion === 'LIQUIDACION_EXPEDIENTE' ? 'chip-exp' : 'chip-cot'">
-          {{ obligacionSeleccionada.tipoObligacion === 'EXPEDIENTE_HEREDADO' ? 'EXPEDIENTE ADUANERO (DEUDA HEREDADA)' : (obligacionSeleccionada.tipoObligacion === 'LIQUIDACION_EXPEDIENTE' ? 'LIQUIDACIÓN DE EXPEDIENTE' : 'ANTICIPO DE COTIZACIÓN (PRE-EXPEDIENTE)') }}
-        </span>
-        <span class="chip-code font-mono">{{ obligacionSeleccionada.codigo }}</span>
-      </div>
-    </div>
-
-    <div class="page-header">
-      <div class="header-titles">
-        <span class="view-kicker">CONCILIACIÓN BANCARIA // MONEDA USD</span>
-        <h1 class="view-title">Registrar Comprobante / Voucher de Pago</h1>
-        <p class="view-subtitle">
-          Realice su abono bancario en Dólares Americanos ($ USD) para dar apertura al despacho o cancelar la deuda consolidada del expediente.
-        </p>
-      </div>
-    </div>
-
-    <div v-if="loadingObligaciones" class="loading-state">
-      <i class="pi pi-spin pi-spinner"></i>
-      <span>Cargando detalle de obligaciones financieras...</span>
-    </div>
-
-    <div v-else-if="!obligacionSeleccionada && obligaciones.length === 0" class="empty-state">
-      <i class="pi pi-check-circle success-icon"></i>
-      <h2>No tiene obligaciones pendientes de pago</h2>
-      <p>Todas sus cotizaciones y expedientes se encuentran al día con sus abonos y liquidaciones en USD.</p>
-      <button class="btn-primary" @click="volver">Volver al Tablero Principal</button>
-    </div>
-
-    <!-- Layout a Dos Columnas -->
-    <div v-else class="payment-workspace-grid">
-      <!-- Columna Izquierda: Ficha de la Obligación -->
-      <div class="col-summary">
-        <div class="summary-card">
-          <div class="summary-card-header">
-            <span class="card-kicker">DOCUMENTO A AMORTIZAR</span>
-            <!-- Selector de Obligación si hay varias -->
-            <div class="document-picker" v-if="obligaciones.length > 1">
-              <label for="select-obligation" class="picker-label">Cambiar Documento:</label>
-              <select id="select-obligation" v-model="idReferenciaSeleccionada" class="custom-select" @change="cambiarObligacion">
-                <option v-for="ob in obligaciones" :key="ob.idReferencia + ob.tipoObligacion" :value="ob.idReferencia">
-                  {{ ob.codigo }} • {{ ob.descripcion }} (Saldo: $ {{ formatCurrency(ob.saldoPendienteUsd) }})
-                </option>
-              </select>
-            </div>
-            <h2 class="doc-code font-mono">{{ obligacionSeleccionada?.codigo }}</h2>
-            <span class="doc-desc">{{ obligacionSeleccionada?.descripcion }}</span>
-          </div>
-
-          <div class="summary-meta-grid">
-            <div class="meta-item" v-if="obligacionSeleccionada?.codigoCotizacion">
-              <span class="meta-label">COTIZACIÓN ORIGEN</span>
-              <span class="meta-val font-mono">{{ obligacionSeleccionada.codigoCotizacion }}</span>
-            </div>
-            <div class="meta-item" v-if="obligacionSeleccionada?.numeroDam">
-              <span class="meta-label">N° DAM / DUA</span>
-              <span class="meta-val font-mono">{{ obligacionSeleccionada.numeroDam }}</span>
-            </div>
-            <div class="meta-item" v-if="obligacionSeleccionada?.canalSunat">
-              <span class="meta-label">CANAL SUNAT</span>
-              <span class="canal-badge" :class="obligacionSeleccionada.canalSunat.toLowerCase()">
-                {{ obligacionSeleccionada.canalSunat }}
-              </span>
-            </div>
-            <div class="meta-item">
-              <span class="meta-label">ESTADO ACTUAL</span>
-              <span class="status-pill">{{ formatEstado(obligacionSeleccionada?.estadoPago) }}</span>
-            </div>
-          </div>
-
-          <!-- Desglose Financiero en USD -->
-          <div class="financial-breakdown">
-            <h3 class="breakdown-title">Estado de Cuenta (Dólares USD)</h3>
-            <div class="breakdown-row">
-              <span class="b-label">Total Contratado / Cotizado:</span>
-              <span class="b-value font-mono">$ {{ formatCurrency(obligacionSeleccionada?.totalContratadoUsd) }}</span>
-            </div>
-            <div class="breakdown-row">
-              <span class="b-label">Total Amortizado a la Fecha:</span>
-              <span class="b-value font-mono success-text">$ {{ formatCurrency(obligacionSeleccionada?.totalAmortizadoUsd) }}</span>
-            </div>
-            <div class="breakdown-divider"></div>
-            <div class="breakdown-row highlight">
-              <span class="b-label">Saldo Pendiente Actual:</span>
-              <span class="b-value font-mono warning-text">$ {{ formatCurrency(obligacionSeleccionada?.saldoPendienteUsd) }}</span>
-            </div>
-          </div>
-
-          <!-- Mensaje Explicativo de Contexto -->
-          <div class="info-callout" :class="obligacionSeleccionada?.tipoObligacion === 'EXPEDIENTE_HEREDADO' ? 'exp-info' : 'cot-info'">
-            <i class="pi" :class="obligacionSeleccionada?.tipoObligacion === 'EXPEDIENTE_HEREDADO' ? 'pi-info-circle' : 'pi-bolt'"></i>
-            <div class="info-text">
-              <strong v-if="obligacionSeleccionada?.tipoObligacion === 'EXPEDIENTE_HEREDADO'">
-                Deuda Heredada en Expediente
-              </strong>
-              <strong v-else>
-                Anticipo para Apertura Operativa
-              </strong>
-              <p v-if="obligacionSeleccionada?.tipoObligacion === 'EXPEDIENTE_HEREDADO'">
-                Este expediente consolida el saldo pendiente de cotización junto con los gastos y tributos aduaneros en curso. Puede abonar el 50%, cancelar el saldo total o registrar abonos progresivos.
-              </p>
-              <p v-else>
-                El registro del anticipo (mínimo sugerido 50%) permite a Finanzas validar los fondos y autorizar de inmediato la apertura formal del Expediente y numeración de DAM.
-              </p>
-            </div>
-          </div>
+  <div class="registrar-pago-view fade-in">
+    <!-- Cabecera Directa sgaUI -->
+    <header class="sga-form-header">
+      <div class="header-left">
+        <Button
+          type="button"
+          label="Volver"
+          icon="pi pi-arrow-left"
+          severity="secondary"
+          outlined
+          size="small"
+          @click="volver"
+        />
+        <div v-if="obligacionSeleccionada" class="header-doc-meta">
+          <Tag
+            :value="getTipoObligacionMeta(obligacionSeleccionada.tipoObligacion).label"
+            :severity="getTipoObligacionMeta(obligacionSeleccionada.tipoObligacion).severity"
+            class="sga-mini-tag"
+          />
+          <span class="sga-mono doc-pill">{{ obligacionSeleccionada.codigo }}</span>
         </div>
       </div>
 
-      <!-- Columna Derecha: Formulario Interactivo -->
-      <div class="col-form">
-        <form @submit.prevent="confirmarYRegistrar" class="payment-form-card">
-          <!-- 1. Modalidad y Monto de Abono -->
-          <div class="form-section">
-            <div class="section-badge-header">
-              <span class="step-num">1</span>
-              <div>
-                <h3 class="section-title">Modalidad y Monto del Abono (USD)</h3>
-                <p class="section-subtitle">Seleccione un porcentaje sugerido o digite una cantidad personalizada en Dólares.</p>
-              </div>
-            </div>
+      <div v-if="obligacionSeleccionada" class="sga-form-actions">
+        <Button
+          type="button"
+          label="Cancelar"
+          severity="secondary"
+          outlined
+          size="small"
+          :disabled="enviando"
+          @click="volver"
+        />
+        <Button
+          type="button"
+          label="Confirmar y Registrar Abono"
+          icon="pi pi-send"
+          size="small"
+          :loading="enviando"
+          :disabled="errorMontoExcedido"
+          @click="confirmarYRegistrar"
+        />
+      </div>
+    </header>
 
-            <!-- Chips de Preajuste Rápido -->
-            <div class="presets-row">
-              <button 
-                type="button" 
-                class="preset-chip"
-                :class="{ active: presetSeleccionado === '50' }"
+    <!-- Cargando -->
+    <div v-if="loadingObligaciones" class="sga-card-surface state-card">
+      <i class="pi pi-spin pi-spinner state-icon"></i>
+      <span>Cargando detalle de obligaciones financieras...</span>
+    </div>
+
+    <!-- Sin obligaciones pendientes -->
+    <div v-else-if="!obligacionSeleccionada && obligaciones.length === 0" class="sga-card-surface state-card">
+      <i class="pi pi-check-circle state-icon sga-text-success"></i>
+      <h3>No tiene obligaciones pendientes de pago</h3>
+      <p>Todas sus cotizaciones y expedientes se encuentran al día con sus abonos en USD.</p>
+      <Button type="button" label="Volver a Cobros y Pagos" size="small" @click="volver" />
+    </div>
+
+    <!-- Layout Split-Screen sga-forms.css -->
+    <div v-else class="sga-split-layout">
+      <form class="sga-split-main" @submit.prevent="confirmarYRegistrar">
+        <!-- Bloque 1: Obligación y Monto -->
+        <section class="sga-card-surface form-card">
+          <div class="block-head">
+            <span class="sga-kicker">PASO 01 // MONEDA USD</span>
+            <h3 class="sga-chart-title">Documento a Amortizar y Monto del Abono</h3>
+          </div>
+
+          <div v-if="obligaciones.length > 1" class="sga-form-field">
+            <label for="select-obligation" class="sga-form-label">Seleccionar Documento *</label>
+            <Select
+              id="select-obligation"
+              v-model="idReferenciaSeleccionada"
+              :options="obligacionSelectOptions"
+              optionLabel="label"
+              optionValue="value"
+              size="small"
+              fluid
+              @change="cambiarObligacion"
+            />
+          </div>
+
+          <div class="sga-form-field">
+            <label class="sga-form-label">Modalidad de Abono Rápido (Anticipo &gt; 30%)</label>
+            <div class="presets-grid">
+              <button
+                type="button"
+                :class="['preset-card', { 'is-selected': presetSeleccionado === '35' }]"
+                @click="aplicarPreset(35)"
+              >
+                <span class="preset-label">35% Anticipo (&gt; 30%)</span>
+                <strong class="sga-mono preset-val">$ {{ formatCurrency(monto35Calculado) }}</strong>
+              </button>
+
+              <button
+                type="button"
+                :class="['preset-card', { 'is-selected': presetSeleccionado === '50' }]"
                 @click="aplicarPreset(50)"
               >
-                <div class="chip-main">
-                  <i class="pi pi-percentage"></i>
-                  <span>50% Anticipo / Mitad</span>
-                </div>
-                <span class="chip-amount font-mono">$ {{ formatCurrency(monto50Calculado) }}</span>
+                <span class="preset-label">50% Mitad</span>
+                <strong class="sga-mono preset-val">$ {{ formatCurrency(monto50Calculado) }}</strong>
               </button>
 
-              <button 
-                type="button" 
-                class="preset-chip"
-                :class="{ active: presetSeleccionado === '100' }"
+              <button
+                type="button"
+                :class="['preset-card', { 'is-selected': presetSeleccionado === '100' }]"
                 @click="aplicarPreset(100)"
               >
-                <div class="chip-main">
-                  <i class="pi pi-check-circle"></i>
-                  <span>100% Pago Completo</span>
-                </div>
-                <span class="chip-amount font-mono">$ {{ formatCurrency(saldoPendienteMax) }}</span>
+                <span class="preset-label">100% Saldo Completo</span>
+                <strong class="sga-mono preset-val">$ {{ formatCurrency(saldoPendienteMax) }}</strong>
               </button>
 
-              <button 
-                type="button" 
-                class="preset-chip"
-                :class="{ active: presetSeleccionado === 'custom' }"
+              <button
+                type="button"
+                :class="['preset-card', { 'is-selected': presetSeleccionado === 'custom' }]"
                 @click="activarMontoLibre"
               >
-                <div class="chip-main">
-                  <i class="pi pi-sliders-h"></i>
-                  <span>Monto Menor / Libre</span>
-                </div>
-                <span class="chip-amount">Personalizado</span>
+                <span class="preset-label">Monto Libre</span>
+                <strong class="preset-val">Personalizado</strong>
               </button>
             </div>
+          </div>
 
-            <!-- Input Numérico con validación -->
-            <div class="form-field-group mt-3">
-              <label for="input-monto">Monto a Transferir / Abonar ($ USD) *</label>
-              <div class="input-currency-wrapper">
-                <span class="currency-prefix">$</span>
-                <input 
-                  id="input-monto"
-                  v-model.number="form.montoAbonado" 
-                  type="number" 
-                  step="0.01" 
-                  min="0.01"
-                  :max="saldoPendienteMax"
-                  placeholder="0.00" 
-                  required 
-                  class="custom-input font-mono input-lg"
-                  @input="onMontoManualInput"
-                />
-                <span class="currency-tag">USD</span>
-              </div>
-              <span class="input-hint" v-if="errorMontoExcedido" style="color: var(--color-danger, #b3261e);">
-                El monto ingresado excede el saldo pendiente ($ {{ formatCurrency(saldoPendienteMax) }}).
-              </span>
-            </div>
+          <div class="sga-form-field">
+            <label for="input-monto" class="sga-form-label">Monto a Transferir / Abonar ($ USD) *</label>
+            <InputNumber
+              id="input-monto"
+              v-model="form.montoAbonado"
+              mode="currency"
+              currency="USD"
+              locale="en-US"
+              :min="0.01"
+              :minFractionDigits="2"
+              :maxFractionDigits="2"
+              size="small"
+              fluid
+              @update:modelValue="onMontoManualInput"
+            />
+            <span v-if="errorMontoExcedido" class="error-hint">
+              El monto ingresado excede el saldo pendiente ($ {{ formatCurrency(saldoPendienteMax) }}).
+            </span>
+            <span v-else-if="errorAnticipoMinimo" class="error-hint">
+              El anticipo inicial debe ser mayor al 30% del total cotizado (&gt; $ {{ formatCurrency(umbral30Usd) }} USD) o cubrir el 100% del saldo.
+            </span>
+            <span v-else-if="requiereMinimo30" class="sga-cell-sub">
+              Anticipo inicial mínimo: mayor al 30% del total (&gt; $ {{ formatCurrency(umbral30Usd) }} USD).
+            </span>
+          </div>
+        </section>
 
-            <!-- Widget Simulador de Saldo Proyectado -->
-            <div class="simulation-box">
-              <div class="sim-item">
-                <span class="sim-lbl">Saldo Actual</span>
-                <span class="sim-val font-mono">$ {{ formatCurrency(saldoPendienteMax) }}</span>
+        <!-- Bloque 2: Cuenta Receptora TransAduanas -->
+        <section class="sga-card-surface form-card">
+          <div class="block-head">
+            <span class="sga-kicker">PASO 02 // CUENTA RECEPTORA</span>
+            <h3 class="sga-chart-title">Cuenta Corriente TransAduanas (USD)</h3>
+          </div>
+
+          <div class="banks-grid">
+            <div
+              v-for="banco in CUENTAS_BANCARIAS_USD"
+              :key="banco.id"
+              role="button"
+              tabindex="0"
+              :class="['bank-card', { 'is-selected': form.bancoDestino === banco.nombre }]"
+              @click="form.bancoDestino = banco.nombre"
+              @keydown.enter.prevent="form.bancoDestino = banco.nombre"
+              @keydown.space.prevent="form.bancoDestino = banco.nombre"
+            >
+              <div class="bank-top">
+                <strong>{{ banco.banco }}</strong>
+                <Tag value="USD" severity="secondary" class="sga-mini-tag sga-mono" />
               </div>
-              <div class="sim-operator">-</div>
-              <div class="sim-item">
-                <span class="sim-lbl">Abono a Registrar</span>
-                <span class="sim-val font-mono success-text">$ {{ formatCurrency(form.montoAbonado || 0) }}</span>
-              </div>
-              <div class="sim-operator">=</div>
-              <div class="sim-item highlight">
-                <span class="sim-lbl">Saldo Restante Estimado</span>
-                <span class="sim-val font-mono" :class="saldoRestanteEstimado <= 0 ? 'success-text' : 'warning-text'">
-                  $ {{ formatCurrency(Math.max(0, saldoRestanteEstimado)) }}
-                </span>
+              <div class="bank-nums sga-mono">
+                <span>Cta: {{ banco.numeroCuenta }}</span>
+                <span>CCI: {{ banco.cci }}</span>
               </div>
             </div>
           </div>
+        </section>
 
-          <!-- 2. Cuentas Receptoras de TransAduanas en USD -->
-          <div class="form-section">
-            <div class="section-badge-header">
-              <span class="step-num">2</span>
-              <div>
-                <h3 class="section-title">Cuenta Receptora de TransAduanas (USD)</h3>
-                <p class="section-subtitle">Seleccione la cuenta corriente en Dólares a la que realizó la transferencia.</p>
-              </div>
+        <!-- Bloque 3: Datos de Operación y Voucher -->
+        <section class="sga-card-surface form-card">
+          <div class="block-head">
+            <span class="sga-kicker">PASO 03 // COMPROBANTE</span>
+            <h3 class="sga-chart-title">Datos de Transferencia y Voucher Bancario</h3>
+          </div>
+
+          <div class="two-col-grid">
+            <div class="sga-form-field">
+              <label for="banco-origen" class="sga-form-label">Banco Emisor (Su Banco) *</label>
+              <Select
+                id="banco-origen"
+                v-model="form.bancoOrigen"
+                :options="BANCOS_ORIGEN_OPTIONS"
+                optionLabel="label"
+                optionValue="value"
+                size="small"
+                fluid
+              />
             </div>
 
-            <div class="bank-accounts-grid">
-              <div 
-                v-for="banco in cuentasBancariasUsd" 
-                :key="banco.id"
-                role="button"
-                tabindex="0"
-                class="bank-account-card"
-                :class="{ selected: form.bancoDestino === banco.nombre }"
-                @click="form.bancoDestino = banco.nombre"
-                @keydown.enter="form.bancoDestino = banco.nombre"
-                @keydown.space.prevent="form.bancoDestino = banco.nombre"
-              >
-                <div class="bank-card-header">
-                  <div class="bank-badge-title">
-                    <span class="bank-logo-text">{{ banco.banco }}</span>
-                    <span class="bank-curr-pill">USD</span>
-                  </div>
-                  <i class="pi pi-check" v-if="form.bancoDestino === banco.nombre"></i>
-                </div>
-                <div class="bank-card-numbers font-mono">
-                  <div class="acc-row">
-                    <span class="lbl">Cta Cte:</span>
-                    <span class="val">{{ banco.numeroCuenta }}</span>
-                  </div>
-                  <div class="acc-row">
-                    <span class="lbl">CCI:</span>
-                    <span class="val">{{ banco.cci }}</span>
-                  </div>
-                </div>
-                <div class="bank-titular">TransAduanas Logística S.A.C.</div>
-              </div>
+            <div class="sga-form-field">
+              <label for="numero-operacion" class="sga-form-label">N° de Operación Bancaria *</label>
+              <InputText
+                id="numero-operacion"
+                v-model.trim="form.numeroOperacion"
+                placeholder="Ej. OP-4928172"
+                size="small"
+                fluid
+              />
+            </div>
+
+            <div class="sga-form-field">
+              <label for="fecha-operacion" class="sga-form-label">Fecha de Transferencia *</label>
+              <InputText
+                id="fecha-operacion"
+                v-model="form.fechaOperacion"
+                type="date"
+                :max="fechaHoy"
+                size="small"
+                fluid
+              />
+            </div>
+
+            <div class="sga-form-field">
+              <label for="metodo-pago" class="sga-form-label">Modalidad de Transferencia *</label>
+              <Select
+                id="metodo-pago"
+                v-model="form.metodoPago"
+                :options="METODOS_PAGO_OPTIONS"
+                optionLabel="label"
+                optionValue="value"
+                size="small"
+                fluid
+              />
             </div>
           </div>
 
-          <!-- 3. Datos de la Operación Bancaria -->
-          <div class="form-section">
-            <div class="section-badge-header">
-              <span class="step-num">3</span>
-              <div>
-                <h3 class="section-title">Datos de la Operación y Comprobante</h3>
-                <p class="section-subtitle">Ingrese el número de constancia bancaria y adjunte el voucher emitido.</p>
-              </div>
+          <PagoVoucherUploadField v-model="archivoVoucher" />
+
+          <div class="sga-form-field">
+            <label for="observaciones" class="sga-form-label">Notas para Finanzas (Opcional)</label>
+            <Textarea
+              id="observaciones"
+              v-model="form.observaciones"
+              rows="2"
+              placeholder="Referencia de pago empresarial o sucursal bancaria..."
+              size="small"
+              fluid
+            />
+          </div>
+        </section>
+      </form>
+
+      <!-- Columna Lateral Sticky: Resumen Financiero en Vivo -->
+      <aside class="sga-split-aside">
+        <div class="sga-card-surface summary-card">
+          <span class="sga-kicker">ESTADO DE CUENTA EN VIVO</span>
+          <h3 class="summary-code sga-mono">{{ obligacionSeleccionada?.codigo }}</h3>
+          <p class="summary-desc">{{ obligacionSeleccionada?.descripcion }}</p>
+
+          <div class="summary-rows">
+            <div class="summary-row">
+              <span>Total Contratado</span>
+              <strong class="sga-mono">$ {{ formatCurrency(obligacionSeleccionada?.totalContratadoUsd) }}</strong>
             </div>
-
-            <div class="form-fields-grid">
-              <div class="form-field">
-                <label for="banco-origen">Banco Emisor (Su Banco) *</label>
-                <select id="banco-origen" v-model="form.bancoOrigen" required class="custom-select">
-                  <option value="BCP">Banco de Crédito del Perú (BCP)</option>
-                  <option value="BBVA">BBVA Perú</option>
-                  <option value="INTERBANK">Interbank</option>
-                  <option value="SCOTIABANK">Scotiabank Perú</option>
-                  <option value="BANBIF">BanBif</option>
-                  <option value="BANCO_PICHINCHA">Banco Pichincha</option>
-                  <option value="BANCO_COMERCIO">Banco de Comercio</option>
-                  <option value="TRANSFERENCIA_EXTERIOR">Transferencia Internacional / Swift</option>
-                </select>
-              </div>
-
-              <div class="form-field">
-                <label for="numero-operacion">N° de Operación Bancaria *</label>
-                <input 
-                  id="numero-operacion"
-                  v-model.trim="form.numeroOperacion" 
-                  type="text" 
-                  placeholder="Ej. OP-4928172 o N° Referencia" 
-                  required 
-                  class="custom-input font-mono"
-                />
-              </div>
-
-              <div class="form-field">
-                <label for="fecha-operacion">Fecha de la Transferencia *</label>
-                <input 
-                  id="fecha-operacion"
-                  v-model="form.fechaOperacion" 
-                  type="date" 
-                  :max="fechaHoy"
-                  required 
-                  class="custom-input"
-                />
-              </div>
-
-              <div class="form-field">
-                <label for="metodo-pago">Modalidad de Transferencia *</label>
-                <select id="metodo-pago" v-model="form.metodoPago" required class="custom-select">
-                  <option value="TRANSFERENCIA_BANCARIA">Transferencia Bancaria Vía Web/App</option>
-                  <option value="TRANSFERENCIA_INTERBANCARIA">Transferencia Interbancaria (CCI)</option>
-                  <option value="DEPOSITO_EN_VENTANILLA">Depósito en Ventanilla / Agente</option>
-                  <option value="TRANSFERENCIA_INTERNACIONAL">Transferencia Swift Exterior</option>
-                </select>
-              </div>
+            <div class="summary-row">
+              <span>Amortizado a la Fecha</span>
+              <strong class="sga-mono sga-text-success">$ {{ formatCurrency(obligacionSeleccionada?.totalAmortizadoUsd) }}</strong>
             </div>
-
-            <!-- Zona de Carga de Comprobante / Voucher -->
-            <div class="voucher-upload-section mt-3">
-              <label class="field-label-bold">Adjuntar Voucher Bancario (PDF o Imagen) *</label>
-              
-              <div 
-                class="file-dropzone" 
-                :class="{ 'file-attached': archivoVoucher != null }"
-                @dragover.prevent
-                @drop.prevent="onFileDrop"
-              >
-                <input 
-                  type="file" 
-                  id="voucher-file-input" 
-                  accept="application/pdf,image/png,image/jpeg,image/webp" 
-                  class="file-input-hidden"
-                  @change="onFileSelected"
-                />
-
-                <label for="voucher-file-input" class="dropzone-inner" v-if="!archivoVoucher">
-                  <div class="dropzone-icon">
-                    <i class="pi pi-upload"></i>
-                  </div>
-                  <div class="dropzone-texts">
-                    <span class="primary-text">Haga clic para adjuntar comprobante o arrastre el archivo aquí</span>
-                    <span class="sub-text">Formatos permitidos: PDF, PNG, JPG, WEBP (Hasta 10 MB)</span>
-                  </div>
-                </label>
-
-                <div class="file-preview-bar" v-else>
-                  <div class="file-icon-box">
-                    <i class="pi" :class="archivoVoucher.type.includes('pdf') ? 'pi-file-pdf text-danger' : 'pi-image text-primary'"></i>
-                  </div>
-                  <div class="file-info-details">
-                    <span class="file-name font-mono">{{ archivoVoucher.name }}</span>
-                    <span class="file-size">{{ (archivoVoucher.size / 1024).toFixed(1) }} KB</span>
-                  </div>
-                  <button type="button" class="btn-remove-file" @click="quitarArchivo" title="Quitar archivo" aria-label="Quitar archivo">
-                    <i class="pi pi-times"></i>
-                  </button>
-                </div>
-              </div>
+            <div class="summary-row">
+              <span>Saldo Actual</span>
+              <strong class="sga-mono sga-text-warn">$ {{ formatCurrency(saldoPendienteMax) }}</strong>
             </div>
-
-            <!-- Observaciones / Comentarios Adicionales -->
-            <div class="form-field mt-3">
-              <label for="observaciones">Observaciones o Notas para Finanzas (Opcional):</label>
-              <textarea 
-                id="observaciones"
-                v-model="form.observaciones" 
-                rows="2" 
-                placeholder="Indique detalles adicionales, referencia de pago empresarial o sucursal bancaria..."
-                class="custom-textarea"
-              ></textarea>
+            <div class="summary-divider"></div>
+            <div class="summary-row">
+              <span>Abono a Registrar</span>
+              <strong class="sga-mono sga-text-success">- $ {{ formatCurrency(form.montoAbonado || 0) }}</strong>
+            </div>
+            <div class="summary-row is-total">
+              <span>Saldo Restante Estimado</span>
+              <strong class="sga-mono" :class="saldoRestanteEstimado <= 0 ? 'sga-text-success' : 'sga-text-warn'">
+                $ {{ formatCurrency(Math.max(0, saldoRestanteEstimado)) }}
+              </strong>
             </div>
           </div>
 
-          <!-- Acciones de Envío -->
-          <div class="form-footer-actions">
-            <button type="button" class="btn-secondary" @click="volver">
-              Cancelar
-            </button>
-
-            <button type="submit" class="btn-primary btn-submit" :disabled="enviando || errorMontoExcedido">
-              <i v-if="enviando" class="pi pi-spin pi-spinner"></i>
-              <i v-else class="pi pi-send"></i>
-              <span v-if="enviando">Registrando y Enviando Comprobante...</span>
-              <span v-else>Confirmar y Registrar Abono Bancario ($ USD)</span>
-            </button>
+          <div class="sga-banner is-info">
+            <i class="pi pi-info-circle"></i>
+            <span v-if="obligacionSeleccionada?.tipoObligacion === 'EXPEDIENTE_HEREDADO'">
+              Consolida saldo de cotización y gastos aduaneros. Puede abonar parcial o totalmente.
+            </span>
+            <span v-else>
+              Al validarse este abono en Finanzas, quedará habilitada la apertura formal de su expediente DAM.
+            </span>
           </div>
-        </form>
-      </div>
+        </div>
+      </aside>
     </div>
   </div>
 </template>
@@ -398,13 +305,24 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import Button from 'primevue/button'
+import InputNumber from 'primevue/inputnumber'
+import InputText from 'primevue/inputtext'
+import Select from 'primevue/select'
+import Tag from 'primevue/tag'
+import Textarea from 'primevue/textarea'
+import PagoVoucherUploadField from '../components/PagoVoucherUploadField.vue'
 import { portalPagoService } from '../services/portalPagoService'
 import { useNotification } from '@/shared/composables/useNotification'
+import { formatCurrency } from '@/shared/utils/formatters'
 import {
-  formatCurrency,
-  formatEstadoPago as formatEstado,
-  validarArchivoVoucher
-} from '@/shared/utils/formatters'
+  CUENTAS_BANCARIAS_USD,
+  BANCOS_ORIGEN_OPTIONS,
+  METODOS_PAGO_OPTIONS,
+  calcularMontoPorcentaje,
+  getTipoObligacionMeta,
+  validarRegistroPagoForm
+} from '../utils/pagoFormUtils'
 
 const route = useRoute()
 const router = useRouter()
@@ -418,30 +336,6 @@ const presetSeleccionado = ref('50')
 const archivoVoucher = ref(null)
 
 const fechaHoy = new Date().toISOString().substring(0, 10)
-
-const cuentasBancariasUsd = [
-  {
-    id: 'bcp-usd',
-    banco: 'Banco de Crédito BCP',
-    nombre: 'BCP Dolares TransAduanas',
-    numeroCuenta: '191-289381-1-09',
-    cci: '002-19100289381109-54'
-  },
-  {
-    id: 'bbva-usd',
-    banco: 'BBVA Perú',
-    nombre: 'BBVA Dolares TransAduanas',
-    numeroCuenta: '0011-0182-010049281',
-    cci: '011-182-00010049281-22'
-  },
-  {
-    id: 'interbank-usd',
-    banco: 'Interbank',
-    nombre: 'Interbank Dolares TransAduanas',
-    numeroCuenta: '200-300189281',
-    cci: '003-200-00300189281-19'
-  }
-]
 
 const form = ref({
   tipoObligacion: 'ANTICIPO_COTIZACION',
@@ -457,8 +351,57 @@ const form = ref({
   idDocumentoComprobante: null
 })
 
-onMounted(async () => {
-  await cargarObligaciones()
+const obligacionSelectOptions = computed(() =>
+  obligaciones.value.map(ob => ({
+    value: ob.idReferencia,
+    label: `${ob.codigo} • ${ob.descripcion} (Saldo: $ ${formatCurrency(ob.saldoPendienteUsd)})`
+  }))
+)
+
+const obligacionSeleccionada = computed(() =>
+  obligaciones.value.find(o => o.idReferencia === idReferenciaSeleccionada.value) || null
+)
+
+const saldoPendienteMax = computed(() =>
+  obligacionSeleccionada.value ? Number(obligacionSeleccionada.value.saldoPendienteUsd || 0) : 0
+)
+
+const totalContratadoObligacion = computed(() =>
+  obligacionSeleccionada.value ? Number(obligacionSeleccionada.value.totalContratadoUsd || 0) : 0
+)
+
+const totalAmortizadoObligacion = computed(() =>
+  obligacionSeleccionada.value ? Number(obligacionSeleccionada.value.totalAmortizadoUsd || 0) : 0
+)
+
+const requiereMinimo30 = computed(() =>
+  totalAmortizadoObligacion.value === 0 && totalContratadoObligacion.value > 0
+)
+
+const umbral30Usd = computed(() =>
+  calcularMontoPorcentaje(totalContratadoObligacion.value, 30)
+)
+
+const monto35Calculado = computed(() => {
+  const base = totalContratadoObligacion.value > 0 ? totalContratadoObligacion.value : saldoPendienteMax.value
+  return Math.min(saldoPendienteMax.value, calcularMontoPorcentaje(base, 35))
+})
+
+const monto50Calculado = computed(() => calcularMontoPorcentaje(saldoPendienteMax.value, 50))
+
+const saldoRestanteEstimado = computed(() =>
+  Number((saldoPendienteMax.value - Number(form.value.montoAbonado || 0)).toFixed(2))
+)
+
+const errorMontoExcedido = computed(() => {
+  const monto = Number(form.value.montoAbonado || 0)
+  return monto > saldoPendienteMax.value && saldoPendienteMax.value > 0
+})
+
+const errorAnticipoMinimo = computed(() => {
+  if (!requiereMinimo30.value || saldoPendienteMax.value <= 0) return false
+  const monto = Number(form.value.montoAbonado || 0)
+  return monto > 0 && monto < saldoPendienteMax.value && monto <= umbral30Usd.value
 })
 
 async function cargarObligaciones() {
@@ -468,7 +411,6 @@ async function cargarObligaciones() {
     if (data) {
       obligaciones.value = data
 
-      // Seleccionar según query params o el primer elemento
       const qTipo = route.query.tipo?.toString().toUpperCase()
       const qId = Number(route.query.id)
 
@@ -498,45 +440,23 @@ async function cargarObligaciones() {
   }
 }
 
-const obligacionSeleccionada = computed(() => {
-  return obligaciones.value.find(o => o.idReferencia === idReferenciaSeleccionada.value) || null
-})
-
-const saldoPendienteMax = computed(() => {
-  return obligacionSeleccionada.value ? Number(obligacionSeleccionada.value.saldoPendienteUsd || 0) : 0
-})
-
-const monto50Calculado = computed(() => {
-  return Number((saldoPendienteMax.value / 2).toFixed(2))
-})
-
-const saldoRestanteEstimado = computed(() => {
-  const monto = Number(form.value.montoAbonado || 0)
-  return Number((saldoPendienteMax.value - monto).toFixed(2))
-})
-
-const errorMontoExcedido = computed(() => {
-  const monto = Number(form.value.montoAbonado || 0)
-  return monto > saldoPendienteMax.value && saldoPendienteMax.value > 0
-})
-
 function aplicarObligacion(ob) {
   form.value.tipoObligacion = ob.tipoObligacion
   form.value.idReferencia = ob.idReferencia
-  // Aplicar preset del 50% por defecto
-  aplicarPreset(50)
+  aplicarPreset(35)
 }
 
 function cambiarObligacion() {
-  const ob = obligacionSeleccionada.value
-  if (ob) {
-    aplicarObligacion(ob)
+  if (obligacionSeleccionada.value) {
+    aplicarObligacion(obligacionSeleccionada.value)
   }
 }
 
 function aplicarPreset(pct) {
   presetSeleccionado.value = String(pct)
-  if (pct === 50) {
+  if (pct === 35) {
+    form.value.montoAbonado = monto35Calculado.value
+  } else if (pct === 50) {
     form.value.montoAbonado = monto50Calculado.value
   } else if (pct === 100) {
     form.value.montoAbonado = saldoPendienteMax.value
@@ -549,7 +469,9 @@ function activarMontoLibre() {
 
 function onMontoManualInput() {
   const val = Number(form.value.montoAbonado || 0)
-  if (val === monto50Calculado.value) {
+  if (val === monto35Calculado.value) {
+    presetSeleccionado.value = '35'
+  } else if (val === monto50Calculado.value) {
     presetSeleccionado.value = '50'
   } else if (val === saldoPendienteMax.value) {
     presetSeleccionado.value = '100'
@@ -558,68 +480,35 @@ function onMontoManualInput() {
   }
 }
 
-function onFileSelected(e) {
-  const file = e.target.files?.[0]
-  if (file) {
-    if (!validarArchivoVoucher(file, showWarn)) {
-      e.target.value = ''
-      return
-    }
-    archivoVoucher.value = file
-  }
-}
-
-function onFileDrop(e) {
-  const file = e.dataTransfer?.files?.[0]
-  if (file) {
-    if (!validarArchivoVoucher(file, showWarn)) {
-      return
-    }
-    archivoVoucher.value = file
-  }
-}
-
-function quitarArchivo() {
-  archivoVoucher.value = null
-  const input = document.getElementById('voucher-file-input')
-  if (input) input.value = ''
-}
-
-async function subirComprobante(file) {
-  const docRes = await portalPagoService.subirComprobante(file)
-  return docRes?.idDocumento || docRes?.id
-}
-
 async function confirmarYRegistrar() {
-  if (!form.value.montoAbonado || form.value.montoAbonado <= 0) {
-    showWarn('Por favor ingrese un monto válido a abonar.')
-    return
-  }
+  const check = validarRegistroPagoForm({
+    montoAbonado: form.value.montoAbonado,
+    saldoPendienteMax: saldoPendienteMax.value,
+    totalContratadoUsd: totalContratadoObligacion.value,
+    totalAmortizadoUsd: totalAmortizadoObligacion.value,
+    numeroOperacion: form.value.numeroOperacion,
+    bancoOrigen: form.value.bancoOrigen,
+    archivoVoucher: archivoVoucher.value
+  })
 
-  if (errorMontoExcedido.value) {
-    showError('El monto ingresado excede el saldo pendiente de la obligación.')
-    return
-  }
-
-  if (!archivoVoucher.value) {
-    showWarn('Debe adjuntar la constancia o voucher bancario en formato PDF o Imagen.')
+  if (!check.valid) {
+    showWarn(check.error)
     return
   }
 
   enviando.value = true
   try {
-    // 1. Subir voucher si está seleccionado
-    if (archivoVoucher.value) {
-      const docId = await subirComprobante(archivoVoucher.value)
-      form.value.idDocumentoComprobante = docId
-    }
-
-    // 2. Forzar moneda USD
+    const docRes = await portalPagoService.subirComprobante(archivoVoucher.value)
+    form.value.idDocumentoComprobante = docRes?.idDocumento || docRes?.id
     form.value.moneda = 'USD'
 
     const res = await portalPagoService.registrarVoucher(form.value)
     if (res) {
-      showSuccess(`¡Voucher ${res.codigoPago || ''} registrado con éxito! Ha sido remitido a conciliación contable en Finanzas.`, 'Voucher Registrado', 4500)
+      showSuccess(
+        `¡Voucher ${res.codigoPago || ''} registrado con éxito! Ha sido remitido a conciliación contable en Finanzas.`,
+        'Voucher Registrado',
+        4500
+      )
       router.push('/pagos')
     }
   } catch (err) {
@@ -633,737 +522,208 @@ async function confirmarYRegistrar() {
 function volver() {
   router.push('/pagos')
 }
+
+onMounted(cargarObligaciones)
 </script>
 
 <style scoped>
 .registrar-pago-view {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
-  padding-bottom: 3rem;
-}
-
-.page-topbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 1rem;
-}
-
-.btn-back {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  background: var(--color-bg-surface, #ffffff);
-  border: 1px solid var(--color-border, #e4dacb);
-  border-radius: 6px;
-  padding: 0.5rem 1rem;
-  color: var(--color-text-main, #2b2520);
-  font-weight: 600;
-  font-size: 0.875rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.btn-back:hover {
-  background: var(--color-bg-subtle, #f2ebe1);
-  border-color: var(--color-primary, #352f2a);
-}
-
-.topbar-status-chip {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  background: var(--color-bg-surface, #ffffff);
-  border: 1px solid var(--color-border, #e4dacb);
-  border-radius: 20px;
-  padding: 0.35rem 0.85rem;
-}
-
-.chip-type {
-  font-size: 0.6875rem;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  padding: 0.2rem 0.5rem;
-  border-radius: 12px;
-}
-
-.chip-type.chip-cot {
-  background: var(--color-warning-bg, #fdf5e6);
-  color: var(--color-warning-text, #8c5b16);
-}
-
-.chip-type.chip-exp {
-  background: var(--color-info-bg, #eef4fc);
-  color: var(--color-info-text, #1b4d89);
-}
-
-.chip-code {
-  font-weight: 800;
-  font-size: 0.85rem;
-  color: var(--color-text-main, #2b2520);
-}
-
-.page-header {
-  border-bottom: 1px solid var(--color-border, #e4dacb);
-  padding-bottom: 1rem;
-}
-
-.view-kicker {
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  color: var(--color-accent-kicker, #9a7f60);
-  display: block;
-  margin-bottom: 0.25rem;
-}
-
-.view-title {
-  font-size: 1.75rem;
-  font-weight: 800;
-  color: var(--color-primary, #352f2a);
-  margin: 0;
-}
-
-.view-subtitle {
-  font-size: 0.9rem;
-  color: var(--color-text-muted, #6f6356);
-  margin-top: 0.35rem;
-}
-
-/* Layout a Dos Columnas */
-.payment-workspace-grid {
-  display: grid;
-  grid-template-columns: 360px 1fr;
-  gap: 1.75rem;
-  align-items: start;
-}
-
-@media (max-width: 1024px) {
-  .payment-workspace-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* Columna Izquierda */
-.summary-card {
-  background: var(--color-bg-surface, #ffffff);
-  border: 1px solid var(--color-border, #e4dacb);
-  border-radius: 10px;
-  padding: 1.25rem;
-  display: flex;
-  flex-direction: column;
   gap: 1.25rem;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+  width: 100%;
+  font-family: var(--font-sans);
 }
 
-.summary-card-header .card-kicker {
-  font-size: 0.6875rem;
-  font-weight: 800;
-  letter-spacing: 0.05em;
-  color: var(--color-text-subtle, #998c7e);
-  display: block;
-  margin-bottom: 0.5rem;
-}
-
-.document-picker {
-  margin-bottom: 0.75rem;
-}
-
-.picker-label {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--color-text-muted, #6f6356);
-  margin-bottom: 0.25rem;
-  display: block;
-}
-
-.doc-code {
-  font-size: 1.4rem;
-  font-weight: 800;
-  color: var(--color-text-main, #2b2520);
-  margin: 0;
-}
-
-.doc-desc {
-  font-size: 0.85rem;
-  color: var(--color-text-muted, #6f6356);
-  display: block;
-  margin-top: 0.25rem;
-}
-
-.summary-meta-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+.header-left {
+  display: flex;
+  align-items: center;
   gap: 0.75rem;
-  padding: 0.75rem;
-  background: var(--color-bg-base, #f6f3ee);
-  border-radius: 6px;
+  flex-wrap: wrap;
 }
 
-.meta-item {
+.header-doc-meta {
   display: flex;
-  flex-direction: column;
-}
-
-.meta-label {
-  font-size: 0.65rem;
-  font-weight: 700;
-  color: var(--color-text-subtle, #998c7e);
-}
-
-.meta-val {
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: var(--color-text-main, #2b2520);
-}
-
-.canal-badge {
-  display: inline-block;
-  padding: 0.15rem 0.45rem;
-  border-radius: 4px;
-  font-size: 0.7rem;
-  font-weight: 800;
-  text-align: center;
-  width: fit-content;
-}
-
-.canal-badge.verde { background: var(--color-success-bg); color: var(--color-success-text); }
-.canal-badge.naranja { background: var(--color-warning-bg); color: var(--color-warning-text); }
-.canal-badge.rojo { background: var(--color-danger-bg); color: var(--color-danger-text); }
-
-.status-pill {
-  font-size: 0.7rem;
-  font-weight: 700;
-  color: var(--color-text-muted, #6f6356);
-}
-
-.financial-breakdown {
-  display: flex;
-  flex-direction: column;
+  align-items: center;
   gap: 0.5rem;
-  border-top: 1px dashed var(--color-border, #e4dacb);
-  padding-top: 1rem;
 }
 
-.breakdown-title {
-  font-size: 0.78rem;
-  font-weight: 800;
-  color: var(--color-primary, #352f2a);
-  margin: 0 0 0.5rem 0;
-}
-
-.breakdown-row {
-  display: flex;
-  justify-content: space-between;
-  font-size: 0.85rem;
-}
-
-.breakdown-row.highlight {
-  font-size: 0.95rem;
-  font-weight: 800;
-}
-
-.breakdown-divider {
-  border-bottom: 1px solid var(--color-border, #e4dacb);
-  margin: 0.25rem 0;
-}
-
-.success-text { color: var(--color-success-text, #1e6638); }
-.warning-text { color: var(--color-warning-text, #8c5b16); }
-
-.info-callout {
-  display: flex;
-  gap: 0.75rem;
-  padding: 0.85rem;
-  border-radius: 6px;
+.doc-pill {
   font-size: 0.8rem;
+  font-weight: 700;
+  padding: 0.18rem 0.55rem;
+  border-radius: var(--radius-pill);
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-main);
 }
 
-.info-callout.cot-info {
-  background: var(--color-warning-bg, #fdf5e6);
-  border: 1px solid var(--color-warning-border, #f8dab3);
-  color: var(--color-warning-text, #8c5b16);
-}
-
-.info-callout.exp-info {
-  background: var(--color-info-bg, #eef4fc);
-  border: 1px solid var(--color-info-border, #b8d4f6);
-  color: var(--color-info-text, #1b4d89);
-}
-
-.info-callout p {
-  margin: 0.25rem 0 0 0;
-  line-height: 1.35;
-}
-
-/* Columna Derecha: Formulario */
-.payment-form-card {
-  background: var(--color-bg-surface, #ffffff);
-  border: 1px solid var(--color-border, #e4dacb);
-  border-radius: 10px;
-  padding: 1.75rem;
+.state-card {
+  padding: 3rem 1.5rem;
   display: flex;
   flex-direction: column;
-  gap: 2rem;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+  align-items: center;
+  text-align: center;
+  gap: 0.65rem;
+  color: var(--color-text-muted);
 }
 
-.form-section {
+.state-icon {
+  font-size: 2rem;
+}
+
+.form-card,
+.summary-card {
   display: flex;
   flex-direction: column;
   gap: 1rem;
 }
 
-.section-badge-header {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.75rem;
-  border-bottom: 1px solid var(--color-border-subtle, #f0eae1);
-  padding-bottom: 0.75rem;
-}
-
-.step-num {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: var(--color-primary);
-  color: var(--color-primary-text);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.85rem;
-  font-weight: 800;
-  flex-shrink: 0;
-}
-
-.section-title {
-  font-size: 1.05rem;
-  font-weight: 800;
-  color: var(--color-primary, #352f2a);
-  margin: 0;
-}
-
-.section-subtitle {
-  font-size: 0.8rem;
-  color: var(--color-text-muted, #6f6356);
-  margin: 0.15rem 0 0 0;
-}
-
-/* Presets Chips */
-.presets-row {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0.75rem;
-}
-
-@media (max-width: 640px) {
-  .presets-row {
-    grid-template-columns: 1fr;
-  }
-}
-
-.preset-chip {
-  background: var(--color-bg-base, #f6f3ee);
-  border: 2px solid var(--color-border, #e4dacb);
-  border-radius: 8px;
-  padding: 0.75rem;
+.block-head {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  gap: 0.15rem;
+}
+
+.presets-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.preset-card {
+  padding: 0.75rem 0.85rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-subtle);
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
   text-align: left;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: border-color var(--transition-fast), background-color var(--transition-fast);
 }
 
-.preset-chip:hover {
-  border-color: var(--color-primary, #352f2a);
-  background: var(--color-bg-subtle, #f2ebe1);
-}
-
-.preset-chip.active {
-  background: var(--color-bg-surface);
+.preset-card.is-selected {
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(214, 180, 118, 0.2);
-}
-
-.chip-main {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: var(--color-text-main, #2b2520);
-}
-
-.chip-amount {
-  font-size: 0.95rem;
-  font-weight: 800;
-  color: var(--color-primary, #352f2a);
-}
-
-/* Input Numérico */
-.input-currency-wrapper {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-
-.currency-prefix {
-  position: absolute;
-  left: 1rem;
-  font-size: 1.25rem;
-  font-weight: 800;
-  color: var(--color-text-muted, #6f6356);
-}
-
-.input-lg {
-  padding-left: 2.25rem;
-  padding-right: 3.5rem;
-  font-size: 1.25rem;
-  font-weight: 800;
-  height: 48px;
-}
-
-.currency-tag {
-  position: absolute;
-  right: 1rem;
-  font-size: 0.8rem;
-  font-weight: 800;
-  color: var(--color-text-subtle, #998c7e);
-}
-
-/* Simulador de Saldo */
-.simulation-box {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: var(--color-bg-base, #f6f3ee);
-  border: 1px solid var(--color-border, #e4dacb);
-  border-radius: 8px;
-  padding: 0.75rem 1rem;
-  gap: 0.5rem;
-}
-
-.sim-item {
-  display: flex;
-  flex-direction: column;
-}
-
-.sim-lbl {
-  font-size: 0.6875rem;
-  font-weight: 700;
-  color: var(--color-text-subtle, #998c7e);
-}
-
-.sim-val {
-  font-size: 1rem;
-  font-weight: 800;
-  color: var(--color-text-main, #2b2520);
-}
-
-.sim-operator {
-  font-size: 1.2rem;
-  font-weight: 800;
-  color: var(--color-text-muted, #6f6356);
-}
-
-/* Cuentas Bancarias Grid */
-.bank-accounts-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0.75rem;
-}
-
-@media (max-width: 768px) {
-  .bank-accounts-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-.bank-account-card {
-  background: var(--color-bg-base, #f6f3ee);
-  border: 2px solid var(--color-border, #e4dacb);
-  border-radius: 8px;
-  padding: 0.85rem;
-  cursor: pointer;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  transition: all 0.2s ease;
-}
-
-.bank-account-card:hover {
-  border-color: var(--color-primary, #352f2a);
-}
-
-.bank-account-card.selected {
   background: var(--color-bg-surface);
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(214, 180, 118, 0.2);
+  box-shadow: 0 0 0 1px var(--color-primary);
 }
 
-.bank-card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.bank-badge-title {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.bank-logo-text {
-  font-size: 0.85rem;
-  font-weight: 800;
-  color: var(--color-primary, #352f2a);
-}
-
-.bank-curr-pill {
-  font-size: 0.65rem;
-  font-weight: 800;
-  background: var(--color-success-bg, #eaf6ed);
-  color: var(--color-success-text, #1e6638);
-  padding: 0.1rem 0.35rem;
-  border-radius: 4px;
-}
-
-.bank-card-numbers {
-  font-size: 0.75rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
-}
-
-.acc-row {
-  display: flex;
-  justify-content: space-between;
-}
-
-.acc-row .lbl { color: var(--color-text-subtle, #998c7e); }
-.acc-row .val { font-weight: 700; color: var(--color-text-main, #2b2520); }
-
-.bank-titular {
-  font-size: 0.65rem;
-  color: var(--color-text-subtle, #998c7e);
-  border-top: 1px dashed var(--color-border, #e4dacb);
-  padding-top: 0.35rem;
-}
-
-/* Campos de Formulario */
-.form-fields-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-}
-
-@media (max-width: 640px) {
-  .form-fields-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-.form-field {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-}
-
-.form-field label {
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: var(--color-text-main, #2b2520);
-}
-
-.field-label-bold {
-  font-size: 0.82rem;
-  font-weight: 800;
-  color: var(--color-text-main, #2b2520);
-  display: block;
-  margin-bottom: 0.35rem;
-}
-
-.custom-input, .custom-select, .custom-textarea {
-  border: 1px solid var(--color-border);
-  border-radius: 6px;
-  padding: 0.65rem 0.85rem;
-  font-size: 0.9rem;
-  color: var(--color-text-main);
-  background-color: var(--color-bg-surface);
-  width: 100%;
-}
-
-.custom-select {
-  padding-right: 2.25rem;
-}
-
-.custom-input:focus, .custom-select:focus, .custom-textarea:focus {
-  outline: none;
-  border-color: var(--color-primary, #352f2a);
-  box-shadow: 0 0 0 3px rgba(53, 47, 42, 0.1);
-}
-
-/* Dropzone de Archivo */
-.file-dropzone {
-  border: 2px dashed var(--color-border, #e4dacb);
-  border-radius: 8px;
-  background: var(--color-bg-base, #f6f3ee);
-  padding: 1.25rem;
-  cursor: pointer;
-  text-align: center;
-  transition: all 0.2s ease;
-}
-
-.file-dropzone:hover {
-  border-color: var(--color-primary, #352f2a);
-  background: var(--color-bg-subtle, #f2ebe1);
-}
-
-.file-dropzone.file-attached {
-  border-style: solid;
-  border-color: var(--color-success-border, #bce5c6);
-  background: var(--color-success-bg, #eaf6ed);
-}
-
-.file-input-hidden {
-  display: none;
-}
-
-.dropzone-inner {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.5rem;
-  cursor: pointer;
-}
-
-.dropzone-icon {
-  font-size: 1.75rem;
-  color: var(--color-accent-kicker, #9a7f60);
-}
-
-.dropzone-texts .primary-text {
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: var(--color-text-main, #2b2520);
-  display: block;
-}
-
-.dropzone-texts .sub-text {
-  font-size: 0.72rem;
-  color: var(--color-text-muted, #6f6356);
-}
-
-.file-preview-bar {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  justify-content: space-between;
-}
-
-.file-icon-box {
-  font-size: 1.5rem;
-}
-
-.file-info-details {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  flex: 1;
-}
-
-.file-name {
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: var(--color-text-main, #2b2520);
-}
-
-.file-size {
-  font-size: 0.72rem;
-  color: var(--color-text-muted, #6f6356);
-}
-
-.btn-remove-file {
-  background: none;
-  border: none;
-  color: var(--color-text-muted, #6f6356);
-  cursor: pointer;
-  font-size: 1rem;
-  padding: 0.25rem;
-}
-
-.btn-remove-file:hover {
-  color: var(--color-danger, #b3261e);
-}
-
-/* Botones de Pie */
-.form-footer-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 1rem;
-  border-top: 1px solid var(--color-border, #e4dacb);
-  padding-top: 1.25rem;
-}
-
-.btn-primary {
-  background: var(--color-primary);
-  color: var(--color-primary-text);
-  border: none;
-  border-radius: 6px;
-  padding: 0.75rem 1.5rem;
-  font-weight: 700;
-  font-size: 0.95rem;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.btn-primary:hover:not(:disabled) {
-  background: var(--color-primary-hover);
-}
-
-.btn-primary:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.btn-secondary {
-  background: transparent;
-  color: var(--color-text-muted, #6f6356);
-  border: 1px solid var(--color-border, #e4dacb);
-  border-radius: 6px;
-  padding: 0.75rem 1.25rem;
+.preset-label {
+  font-size: 0.74rem;
   font-weight: 600;
-  font-size: 0.95rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
+  color: var(--color-text-muted);
 }
 
-.btn-secondary:hover {
-  background: var(--color-bg-base, #f6f3ee);
-  color: var(--color-text-main, #2b2520);
+.preset-val {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--color-text-main);
 }
 
-.loading-state, .empty-state {
+.error-hint {
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: var(--color-danger-text);
+}
+
+.banks-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 0.75rem;
+}
+
+.bank-card {
+  padding: 0.85rem 1rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-subtle);
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 4rem 2rem;
-  background: var(--color-bg-surface, #ffffff);
-  border: 1px solid var(--color-border, #e4dacb);
-  border-radius: 10px;
-  gap: 1rem;
-  text-align: center;
+  gap: 0.45rem;
+  cursor: pointer;
+  transition: border-color var(--transition-fast), background-color var(--transition-fast);
 }
 
-.success-icon {
-  font-size: 2.5rem;
-  color: var(--color-success-text, #1e6638);
+.bank-card.is-selected {
+  border-color: var(--color-primary);
+  background: var(--color-bg-surface);
+  box-shadow: 0 0 0 1px var(--color-primary);
+}
+
+.bank-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.84rem;
+  color: var(--color-text-main);
+}
+
+.bank-nums {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  font-size: 0.74rem;
+  color: var(--color-text-muted);
+}
+
+.two-col-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
+.summary-code {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--color-text-main);
+}
+
+.summary-desc {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+.summary-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 0.82rem;
+  color: var(--color-text-muted);
+}
+
+.summary-row strong {
+  color: var(--color-text-main);
+}
+
+.summary-row.is-total {
+  padding: 0.65rem 0.75rem;
+  border-radius: var(--radius-md);
+  background: var(--color-bg-subtle);
+  border: 1px solid var(--color-border);
+  font-weight: 700;
+  color: var(--color-text-main);
+}
+
+.summary-divider {
+  height: 1px;
+  background: var(--color-border-subtle);
+}
+
+@media (max-width: 720px) {
+  .presets-grid,
+  .two-col-grid {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

@@ -10,8 +10,10 @@ import lombok.*;
 public class UsuarioReporteItemDTO {
 
     private String username;
+    private String nombreCompleto;
     private String correo;
     private String numero;
     private String cargo;
     private String sede;
+    private String estado;
 }

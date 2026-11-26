@@ -10,21 +10,28 @@
     <table class="ti-list-table">
         <thead>
             <tr>
-                <th style="width: 15%;">USUARIO</th>
-                <th style="width: 34%;">EMPRESA</th>
-                <th style="width: 21%;">REPRESENTANTE</th>
-                <th style="width: 30%;">CORREO</th>
+                <th style="width: 14%;">USUARIO</th>
+                <th style="width: 30%;">EMPRESA / RUC</th>
+                <th style="width: 20%;">REPRESENTANTE</th>
+                <th style="width: 26%;">CORREO</th>
+                <th style="width: 10%;">ESTADO</th>
             </tr>
         </thead>
         <tbody>
             <tr th:if="${#lists.isEmpty(items)}">
-                <td colspan="4" class="ti-empty-row">No se encontraron usuarios del portal para mostrar en este informe.</td>
+                <td colspan="5" class="ti-empty-row">No se encontraron usuarios del portal para mostrar en este informe.</td>
             </tr>
             <tr th:each="p : ${items}">
                 <td><span class="ti-user-chip" th:text="'@' + ${p.username}">@20370146994</span></td>
-                <td><strong th:text="${p.empresa}">Empresa Cliente S.A.C.</strong></td>
+                <td>
+                    <strong th:text="${p.empresa}">Empresa Cliente S.A.C.</strong><br />
+                    <span class="ti-sub-text" th:text="'RUC: ' + ${p.ruc}">RUC: 20370146994</span>
+                </td>
                 <td th:text="${p.representante}">Representante Legal</td>
                 <td><span class="ti-email-text" th:text="${p.correo}">contacto@empresa.pe</span></td>
+                <td>
+                    <span th:class="${p.estado == 'Activo'} ? 'ti-badge-ok' : 'ti-badge-err'" th:text="${p.estado}">Activo</span>
+                </td>
             </tr>
         </tbody>
     </table>

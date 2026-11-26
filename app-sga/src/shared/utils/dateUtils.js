@@ -198,3 +198,18 @@ export function resolvePeriodoRange(periodo, referenceDate = new Date()) {
   return { desde: getLocalDateString(start), hasta: getLocalDateString(end) }
 }
 
+/**
+ * Normaliza un valor de input datetime-local (YYYY-MM-DDTHH:mm o YYYY-MM-DDTHH:mm:ss)
+ * al formato ISO_LOCAL_DATE_TIME esperado por LocalDateTime en Java/Jackson (sin sufijo Z UTC).
+ */
+export function toLocalDateTimePayload(val) {
+  if (!val) return null
+  const clean = String(val).trim()
+  if (!clean) return null
+  if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(clean)) {
+    return `${clean}:00`
+  }
+  return clean.slice(0, 19)
+}
+
+

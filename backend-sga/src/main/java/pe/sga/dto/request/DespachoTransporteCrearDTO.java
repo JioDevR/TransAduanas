@@ -4,6 +4,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.*;
+import pe.sga.entity.enums.TipoTraslado;
 
 import java.time.LocalDateTime;
 
@@ -18,8 +19,7 @@ public class DespachoTransporteCrearDTO {
     private Integer idExpediente;
 
     @Builder.Default
-    @Size(max = 30, message = "El tipo de traslado no puede exceder 30 caracteres")
-    private String tipoTraslado = "ENTREGA_IMPORTACION";
+    private TipoTraslado tipoTraslado = TipoTraslado.ENTREGA_IMPORTACION;
 
     private Integer idConductor;
 

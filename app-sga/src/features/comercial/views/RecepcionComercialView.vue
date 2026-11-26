@@ -75,6 +75,7 @@
         @correct="openCorrectionCotizacion"
         @open-docs="openDocumentosCotizacion"
         @view-observation="openViewObservation"
+        @send-aduanas="handleSendToAduanas"
         @notify-whatsapp="notifyObservationViaWhatsApp"
         @delete="handleDeleteCotizacion"
       />
@@ -118,62 +119,13 @@
     />
 
     <!-- Modal: Detalle de Observación de Supervisión Aduanera -->
-    <Dialog
+    <CotizacionObservacionDialog
       v-model:visible="showObservationDialog"
-      modal
-      header="Observaciones de Supervisión Aduanera"
-      :style="{ width: '500px', maxWidth: '95vw' }"
-      class="custom-sga-dialog"
-    >
-      <div v-if="selectedObservationCotizacion" class="observation-view-content">
-        <div class="obs-box-header">
-          <span class="badge-kicker">EXPEDIENTE N° {{ selectedObservationCotizacion.codigoCotizacion }}</span>
-          <strong class="obs-box-title">{{ selectedObservationCotizacion.clienteRazonSocial || 'Cliente Asignado' }}</strong>
-          <div class="obs-client-status">
-            <span v-if="selectedObservationCotizacion.clienteTieneUsuario" class="portal-badge origin-badge origin-portal">
-              <i class="pi pi-id-card"></i> Cuenta B2B Activa — Notificación enviada al portal del cliente
-            </span>
-            <span v-else class="presencial-badge origin-badge origin-presencial">
-              <i class="pi pi-user"></i> Prospecto sin cuenta B2B — Coordinación presencial o directa con el vendedor
-            </span>
-          </div>
-        </div>
-        <div class="obs-box-body">
-          <i class="pi pi-exclamation-triangle obs-box-icon"></i>
-          <div>
-            <span class="obs-box-label">Indicaciones de Supervisión Aduanera:</span>
-            <p class="obs-box-text">{{ selectedObservationCotizacion.motivoObservacion || 'Se requieren ajustes en la cotización antes de la aprobación.' }}</p>
-          </div>
-        </div>
-        <p class="obs-box-hint">
-          Subsanar los puntos observados haciendo clic en "Corregir Cotización". Al guardar los cambios, la propuesta volverá automáticamente a la bandeja de Supervisión Aduanera para su reevaluación.
-        </p>
-      </div>
-      <template #footer>
-        <div class="dialog-footer-actions">
-          <button
-            v-if="selectedObservationCotizacion && !selectedObservationCotizacion.clienteTieneUsuario && (selectedObservationCotizacion.clienteTelefono || getClienteTelefono(selectedObservationCotizacion.idCliente))"
-            type="button"
-            class="btn-whatsapp-dialog btn-whatsapp-modal"
-            @click="notifyObservationViaWhatsApp(selectedObservationCotizacion)"
-          >
-            <i class="pi pi-whatsapp"></i>
-            <span>Notificar WhatsApp</span>
-          </button>
-          <button type="button" class="btn-outline-warm" @click="showObservationDialog = false">
-            <span>Cerrar</span>
-          </button>
-          <button
-            type="button"
-            class="btn-espresso"
-            @click="openEditFromObservation"
-          >
-            <i class="pi pi-pencil"></i>
-            <span>Corregir Cotización</span>
-          </button>
-        </div>
-      </template>
-    </Dialog>
+      :cotizacion="selectedObservationCotizacion"
+      :can-notify-whats-app="canNotifyObservationWhatsApp"
+      @edit="openEditFromObservation"
+      @whatsapp="notifyObservationViaWhatsApp"
+    />
 
     <!-- Modal: Gestión Integral de Documentos Adjuntos -->
     <DocumentosManagerModal
@@ -195,7 +147,7 @@ import { useRoute, useRouter } from 'vue-router'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import Tag from 'primevue/tag'
-import Dialog from 'primevue/dialog'
+import CotizacionObservacionDialog from '../components/CotizacionObservacionDialog.vue'
 import { comercialService } from '../services/comercialService'
 import { documentoService } from '@/features/documentos/services/documentoService'
 import { useAuthStore } from '@/features/auth/stores/authStore'
@@ -203,6 +155,7 @@ import { useNavigationStore } from '@/core/stores/navigationStore'
 import { useNotification } from '@/shared/composables/useNotification'
 import { useConfirmation } from '@/shared/composables/useConfirmation'
 import { formatRegimen } from '@/shared/utils/formatters'
+import { openCotizacionWhatsApp } from '@/shared/utils/whatsappUtils'
 import ClienteRegistrationForm from '../components/ClienteRegistrationForm.vue'
 import CotizacionRegistrationForm from '../components/CotizacionRegistrationForm.vue'
 import CotizacionCorrectionView from '../components/CotizacionCorrectionView.vue'
@@ -285,6 +238,12 @@ const openViewObservation = (cotizacion) => {
   showObservationDialog.value = true
 }
 
+const canNotifyObservationWhatsApp = computed(() => {
+  const cot = selectedObservationCotizacion.value
+  if (!cot || cot.clienteTieneUsuario) return false
+  return Boolean(cot.clienteTelefono || getClienteTelefono(cot.idCliente))
+})
+
 const openEditFromObservation = () => {
   if (selectedObservationCotizacion.value) {
     const c = selectedObservationCotizacion.value
@@ -306,18 +265,23 @@ const getClienteTelefono = (idCliente) => {
 }
 
 const notifyObservationViaWhatsApp = (cotizacion) => {
-  const tel = cotizacion.clienteTelefono || getClienteTelefono(cotizacion.idCliente) || ''
-  const digitsOnly = tel.replace(/[^0-9]/g, '')
-  if (!digitsOnly) {
-    showToast('El cliente no tiene registrado número de teléfono/celular de contacto.', 'warn')
-    return
+  const res = openCotizacionWhatsApp(cotizacion, {
+    fallbackPhone: getClienteTelefono(cotizacion?.idCliente)
+  })
+  if (!res.ok) {
+    showToast(res.reason, 'warn')
   }
-  const phone = digitsOnly.startsWith('51') ? digitsOnly : `51${digitsOnly}`
-  const reason = cotizacion.motivoObservacion || 'Se requieren ajustes documentarios y técnicos en la propuesta comercial.'
-  const msg = `Hola *${cotizacion.clienteRazonSocial || 'Estimado Cliente'}*, le saluda TransAduanas SGA.\n\nLe informamos que su cotización aduanera *${cotizacion.codigoCotizacion}* ha sido revisada por Supervisión Técnica y presenta la siguiente observación:\n\n📌 *Motivo:* ${reason}\n\nPor favor facilítenos los datos o documentos solicitados para subsanar la cotización y continuar con su trámite.\n\nAtentamente,\n*Área Comercial - TransAduanas*`
+}
 
-  const url = `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`
-  window.open(url, '_blank')
+const handleSendToAduanas = async (cotizacion) => {
+  if (!cotizacion?.idCotizacion) return
+  try {
+    await comercialService.enviarCotizacionAAduanas(cotizacion.idCotizacion)
+    showSuccess(`Cotización ${cotizacion.codigoCotizacion} enviada a Gestión Aduanera.`)
+    await loadData()
+  } catch (err) {
+    showError(err?.response?.data?.message || 'No se pudo enviar la cotización a Gestión Aduanera.')
+  }
 }
 
 // Cerrar todos los formularios de vista completa y volver a los listados
@@ -1649,73 +1613,6 @@ onMounted(() => {
   filter: brightness(0.95);
 }
 
-/* Contenido Modal de Observación */
-.observation-view-content {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4, 1rem);
-  padding: var(--space-2, 0.5rem) 0;
-}
-
-.obs-box-header {
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
-  padding-bottom: var(--space-2, 0.5rem);
-  border-bottom: 1px solid var(--color-border);
-}
-
-.obs-box-title {
-  font-size: 1rem;
-  color: var(--color-text-main);
-}
-
-.obs-box-body {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--space-3, 0.75rem);
-  padding: var(--space-4, 1rem);
-  background: var(--color-warning-bg);
-  border: 1px solid var(--color-warning-border);
-  border-radius: var(--radius-md, 8px);
-  color: var(--color-warning-text);
-}
-
-.obs-box-icon {
-  font-size: 1.5rem;
-  margin-top: 0.15rem;
-  flex-shrink: 0;
-}
-
-.obs-box-label {
-  font-size: 0.75rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  display: block;
-}
-
-.obs-box-text {
-  margin: 0.25rem 0 0 0;
-  font-size: 0.875rem;
-  line-height: 1.45;
-  font-weight: 500;
-}
-
-.obs-box-hint {
-  font-size: 0.8125rem;
-  color: var(--color-text-muted);
-  line-height: 1.45;
-  margin: 0;
-}
-
-.dialog-footer-actions {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: var(--space-3, 0.75rem);
-}
-
 /* ==========================================================================
    Controles de Tablas (Filtros, Búsqueda, Ordenación - Estilo Warm Editorial)
    ========================================================================== */
@@ -1860,38 +1757,6 @@ onMounted(() => {
   margin-top: 0.15rem;
 }
 
-.portal-badge,
-.origin-badge.origin-portal {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  font-size: 0.68rem;
-  font-weight: 600;
-  padding: 0.1rem 0.4rem;
-  border-radius: var(--radius-sm, 3px);
-  background: var(--color-info-bg);
-  color: var(--color-info-text);
-  border: 1px solid var(--color-info-border);
-}
-
-.presencial-badge,
-.origin-badge.origin-presencial {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  font-size: 0.68rem;
-  font-weight: 600;
-  padding: 0.1rem 0.4rem;
-  border-radius: var(--radius-sm, 3px);
-  background: var(--color-warning-bg);
-  color: var(--color-warning-text);
-  border: 1px solid var(--color-warning-border);
-}
-
-.obs-client-status {
-  margin-top: 0.4rem;
-}
-
 .btn-whatsapp-action,
 .btn-whatsapp {
   color: var(--color-success-text) !important;
@@ -1903,26 +1768,5 @@ onMounted(() => {
   background-color: #25d366 !important;
   color: #ffffff !important;
   border-color: #25d366 !important;
-}
-
-.btn-whatsapp-dialog,
-.btn-whatsapp-modal {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  background-color: #25d366;
-  color: #ffffff;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: var(--radius-md, 4px);
-  font-size: 0.8125rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-}
-
-.btn-whatsapp-dialog:hover,
-.btn-whatsapp-modal:hover {
-  background-color: #1ebd56;
 }
 </style>

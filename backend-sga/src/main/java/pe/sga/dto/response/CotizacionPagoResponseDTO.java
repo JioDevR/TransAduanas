@@ -45,6 +45,10 @@ public class CotizacionPagoResponseDTO {
     private LocalDateTime fechaValidacion;
     private String observacionFinanzas;
 
+    // Comprobante / Factura emitida automáticamente
+    private Integer idComprobanteFactura;
+    private String numeroFacturaEmitida;
+
     // Registro
     private Integer idUsuarioRegistro;
     private String usuarioRegistroNombre;

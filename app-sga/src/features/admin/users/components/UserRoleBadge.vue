@@ -26,8 +26,7 @@ const roleConfig = {
   [ROLES.SUPERVISOR_ADUANERO]: { icon: 'pi pi-verified', severity: 'info' },
   [ROLES.AGENTE_ADUANERO]: { icon: 'pi pi-compass', severity: 'info' },
   [ROLES.SUPERVISOR_TRANSPORTE]: { icon: 'pi pi-truck', severity: 'warn' },
-  [ROLES.CONTADOR]: { icon: 'pi pi-dollar', severity: 'success' },
-  [ROLES.ASESOR_LEGAL]: { icon: 'pi pi-bookmark', severity: 'danger' }
+  [ROLES.CONTADOR]: { icon: 'pi pi-dollar', severity: 'success' }
 }
 
 const displayRoleName = computed(() => {

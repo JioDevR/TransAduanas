@@ -295,8 +295,8 @@ CREATE TABLE expediente (
     id_mercancia INT NULL,
     id_tipo_carga INT NULL,
     -- Asignación a agente aduanero responsable (Paso 3)
-    id_agente_aduanero INT NOT NULL,
-    fecha_asignacion DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    id_agente_aduanero INT NULL,
+    fecha_asignacion DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
     -- Contacto exterior (Import: Proveedor en origen | Export: Comprador en destino)
     contacto_exterior_nombre VARCHAR(150) NULL,
     contacto_exterior_telefono VARCHAR(30) NULL,
@@ -314,10 +314,33 @@ CREATE TABLE expediente (
     fecha_notificacion DATETIME NULL,
     detalle_inspeccion TEXT NULL,
     fecha_levante_autorizacion DATETIME NULL,
-    -- Carga, contenedor y nave
+    -- Carga, contenedor y nave / vuelo
     numero_contenedor VARCHAR(30) NULL,
     precinto_aduanero VARCHAR(50) NULL,
     nave_viaje VARCHAR(100) NULL,
+    tipo_transporte_internacional VARCHAR(30) NULL,
+    numero_vuelo VARCHAR(60) NULL,
+    -- Marcación operativa de exportación / importación y canales
+    en_espera_transito BOOLEAN NOT NULL DEFAULT FALSE,
+    en_revision_aduana BOOLEAN NOT NULL DEFAULT FALSE,
+    id_documento_conformidad_destino INT NULL,
+    verificacion_origen_ok BOOLEAN NOT NULL DEFAULT FALSE,
+    fecha_verificacion_origen DATETIME NULL,
+    cuadrilla_solicitada BOOLEAN NOT NULL DEFAULT FALSE,
+    cuadrilla_detalle VARCHAR(200) NULL,
+    fecha_cita_inspeccion DATETIME NULL,
+    codigo_cita_inspeccion VARCHAR(50) NULL,
+    revision_rojo_finalizada BOOLEAN NOT NULL DEFAULT FALSE,
+    envio_sunat_simulado_ok BOOLEAN NOT NULL DEFAULT FALSE,
+    codigo_transmision_sunat VARCHAR(60) NULL,
+    fecha_envio_sunat DATETIME NULL,
+    entregado_almacen_verde BOOLEAN NOT NULL DEFAULT FALSE,
+    fecha_entrega_almacen_verde DATETIME NULL,
+    informe_conformidad_texto TEXT NULL,
+    fecha_informe_conformidad DATETIME NULL,
+    receptor_conformidad_nombre VARCHAR(150) NULL,
+    receptor_conformidad_dni VARCHAR(30) NULL,
+    id_documento_informe_conformidad INT NULL,
     -- Ciclo de vida y estado del expediente
     estado_expediente VARCHAR(30) NOT NULL DEFAULT 'ASIGNADO',
     fecha_apertura DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -333,6 +356,19 @@ CREATE TABLE expediente (
     CONSTRAINT fk_expediente_agente FOREIGN KEY (id_agente_aduanero) REFERENCES usuario (id_usuario) ON UPDATE CASCADE ON DELETE RESTRICT,
     CONSTRAINT fk_expediente_mercancia FOREIGN KEY (id_mercancia) REFERENCES catalogo_mercancia (id_mercancia) ON UPDATE CASCADE ON DELETE SET NULL,
     CONSTRAINT fk_expediente_tipo_carga FOREIGN KEY (id_tipo_carga) REFERENCES catalogo_tipo_carga (id_tipo_carga) ON UPDATE CASCADE ON DELETE SET NULL
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+
+CREATE TABLE expediente_evento (
+    id_evento INT NOT NULL AUTO_INCREMENT,
+    id_expediente INT NOT NULL,
+    codigo_estado VARCHAR(60) NOT NULL,
+    titulo VARCHAR(150) NOT NULL,
+    descripcion TEXT NULL,
+    regimen VARCHAR(30) NULL,
+    usuario_nombre VARCHAR(150) NULL,
+    fecha_evento DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id_evento),
+    CONSTRAINT fk_exp_evento_expediente FOREIGN KEY (id_expediente) REFERENCES expediente (id_expediente) ON UPDATE CASCADE ON DELETE CASCADE
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- =============================================================================
@@ -372,9 +408,8 @@ CREATE TABLE control_almacen (
 -- =============================================================================
 
 CREATE TABLE conductor (
-    -- Identificador y vinculación de usuario
+    -- Identificador
     id_conductor INT NOT NULL AUTO_INCREMENT,
-    id_usuario INT NULL,
     -- Información personal y contacto
     nombres VARCHAR(100) NOT NULL,
     apellidos VARCHAR(100) NOT NULL,
@@ -388,11 +423,13 @@ CREATE TABLE conductor (
     estado_operativo VARCHAR(20) NOT NULL DEFAULT 'DISPONIBLE',
     estado_activo BOOLEAN NOT NULL DEFAULT TRUE,
     observaciones TEXT NULL,
+    version BIGINT NOT NULL DEFAULT 0,
+    created_at DATETIME NULL,
+    updated_at DATETIME NULL,
     -- Llave primaria y restricciones
     PRIMARY KEY (id_conductor),
-    CONSTRAINT uq_conductor_usuario UNIQUE (id_usuario),
-    CONSTRAINT uq_conductor_licencia UNIQUE (numero_licencia),
-    CONSTRAINT fk_conductor_usuario FOREIGN KEY (id_usuario) REFERENCES usuario (id_usuario) ON UPDATE CASCADE ON DELETE SET NULL
+    CONSTRAINT uq_conductor_documento UNIQUE (numero_documento),
+    CONSTRAINT uq_conductor_licencia UNIQUE (numero_licencia)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 CREATE TABLE unidad_transporte (
@@ -402,7 +439,7 @@ CREATE TABLE unidad_transporte (
     placa_carreta VARCHAR(15) NULL,
     marca_modelo VARCHAR(100) NOT NULL,
     ano_fabricacion INT NULL,
-    tipo_vehiculo VARCHAR(50) NOT NULL DEFAULT 'TRACTO_PLATAFORMA',
+    tipo_vehiculo VARCHAR(50) NOT NULL DEFAULT 'TRACTO',
     capacidad_carga_kg DECIMAL(10, 2) NOT NULL DEFAULT 30000.00,
     -- Certificaciones técnicas y kilometraje
     soat_vencimiento DATE NULL,
@@ -412,6 +449,9 @@ CREATE TABLE unidad_transporte (
     estado_operativo VARCHAR(20) NOT NULL DEFAULT 'DISPONIBLE',
     estado_activo BOOLEAN NOT NULL DEFAULT TRUE,
     observaciones TEXT NULL,
+    version BIGINT NOT NULL DEFAULT 0,
+    created_at DATETIME NULL,
+    updated_at DATETIME NULL,
     -- Llave primaria y restricciones
     PRIMARY KEY (id_unidad),
     CONSTRAINT uq_unidad_tracto UNIQUE (placa_tracto)
@@ -421,6 +461,9 @@ CREATE TABLE despacho_transporte (
     -- Identificador y tracking de traslado
     id_despacho_transporte INT NOT NULL AUTO_INCREMENT,
     id_expediente INT NOT NULL,
+    id_expediente_activo INT GENERATED ALWAYS AS (
+        CASE WHEN estado_transporte = 'CANCELADO' THEN NULL ELSE id_expediente END
+    ) STORED,
     codigo_tracking VARCHAR(30) NOT NULL,
     tipo_traslado VARCHAR(30) NOT NULL DEFAULT 'ENTREGA_IMPORTACION',
     -- Recursos asignados normalizados (3NF)
@@ -444,9 +487,12 @@ CREATE TABLE despacho_transporte (
     estado_transporte VARCHAR(30) NOT NULL DEFAULT 'PENDIENTE_ASIGNACION',
     detalle_incidencia TEXT NULL,
     observaciones TEXT NULL,
+    version BIGINT NOT NULL DEFAULT 0,
+    created_at DATETIME NULL,
+    updated_at DATETIME NULL,
     -- Llave primaria y restricciones
     PRIMARY KEY (id_despacho_transporte),
-    CONSTRAINT uq_transporte_expediente UNIQUE (id_expediente),
+    CONSTRAINT uq_transporte_expediente_activo UNIQUE (id_expediente_activo),
     CONSTRAINT uq_transporte_tracking UNIQUE (codigo_tracking),
     CONSTRAINT fk_transporte_expediente FOREIGN KEY (id_expediente) REFERENCES expediente (id_expediente) ON UPDATE CASCADE ON DELETE RESTRICT,
     CONSTRAINT fk_transporte_conductor FOREIGN KEY (id_conductor) REFERENCES conductor (id_conductor) ON UPDATE CASCADE ON DELETE SET NULL,
@@ -497,6 +543,45 @@ CREATE TABLE liquidacion_financiera (
     CONSTRAINT fk_liquidacion_usuario FOREIGN KEY (id_usuario_liquidador) REFERENCES usuario (id_usuario) ON UPDATE CASCADE ON DELETE RESTRICT,
     CONSTRAINT fk_liquidacion_doc_factura FOREIGN KEY (id_documento_factura) REFERENCES documento_adjunto (id_documento) ON UPDATE CASCADE ON DELETE SET NULL,
     CONSTRAINT fk_liquidacion_doc_voucher FOREIGN KEY (id_documento_voucher) REFERENCES documento_adjunto (id_documento) ON UPDATE CASCADE ON DELETE SET NULL
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+
+CREATE TABLE comprobante_factura (
+    -- Identificador y numeración tributaria
+    id_comprobante INT NOT NULL AUTO_INCREMENT,
+    tipo_comprobante VARCHAR(20) NOT NULL DEFAULT 'FACTURA',
+    serie VARCHAR(10) NOT NULL,
+    correlativo INT NOT NULL,
+    numero_completo VARCHAR(25) NOT NULL,
+    -- Origen del comprobante (abono aprobado de cotización o liquidación pagada)
+    origen_tipo VARCHAR(30) NOT NULL,
+    id_pago_cotizacion INT NULL,
+    id_liquidacion INT NULL,
+    id_cliente INT NOT NULL,
+    -- Snapshot del receptor al momento de emitir
+    cliente_razon_social VARCHAR(200) NOT NULL,
+    cliente_numero_documento VARCHAR(25) NOT NULL,
+    cliente_direccion VARCHAR(255) NULL,
+    -- Detalle de concepto y montos
+    codigo_referencia VARCHAR(60) NOT NULL,
+    concepto TEXT NOT NULL,
+    moneda VARCHAR(5) NOT NULL DEFAULT 'PEN',
+    tipo_cambio DECIMAL(8, 4) NOT NULL DEFAULT 3.7500,
+    inafecto DECIMAL(12, 2) NOT NULL DEFAULT 0.00,
+    subtotal_gravado DECIMAL(12, 2) NOT NULL DEFAULT 0.00,
+    igv_monto DECIMAL(12, 2) NOT NULL DEFAULT 0.00,
+    total_comprobante DECIMAL(12, 2) NOT NULL DEFAULT 0.00,
+    total_equivalente_pen DECIMAL(12, 2) NOT NULL DEFAULT 0.00,
+    -- Estado y auditoría
+    estado VARCHAR(20) NOT NULL DEFAULT 'EMITIDA',
+    fecha_emision DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    id_usuario_emisor INT NULL,
+    observaciones TEXT NULL,
+    PRIMARY KEY (id_comprobante),
+    CONSTRAINT uq_comprobante_numero UNIQUE (numero_completo),
+    CONSTRAINT fk_comprobante_pago_cot FOREIGN KEY (id_pago_cotizacion) REFERENCES cotizacion_pago (id_pago) ON UPDATE CASCADE ON DELETE SET NULL,
+    CONSTRAINT fk_comprobante_liquidacion FOREIGN KEY (id_liquidacion) REFERENCES liquidacion_financiera (id_liquidacion) ON UPDATE CASCADE ON DELETE SET NULL,
+    CONSTRAINT fk_comprobante_cliente FOREIGN KEY (id_cliente) REFERENCES cliente (id_cliente) ON UPDATE CASCADE ON DELETE RESTRICT,
+    CONSTRAINT fk_comprobante_usuario FOREIGN KEY (id_usuario_emisor) REFERENCES usuario (id_usuario) ON UPDATE CASCADE ON DELETE SET NULL
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- =============================================================================
@@ -602,13 +687,7 @@ CREATE INDEX idx_expediente_estado ON expediente (estado_expediente);
 CREATE INDEX idx_almacen_estado ON control_almacen (estado_almacen);
 
 -- Transporte y Distribución Local
-CREATE INDEX idx_conductor_licencia ON conductor (numero_licencia);
-
-CREATE INDEX idx_conductor_usuario ON conductor (id_usuario);
-
 CREATE INDEX idx_conductor_estado_operativo ON conductor (estado_operativo);
-
-CREATE INDEX idx_unidad_placa ON unidad_transporte (placa_tracto);
 
 CREATE INDEX idx_unidad_vencimientos ON unidad_transporte (
     soat_vencimiento,
@@ -618,6 +697,12 @@ CREATE INDEX idx_unidad_vencimientos ON unidad_transporte (
 CREATE INDEX idx_unidad_estado ON unidad_transporte (estado_operativo);
 
 CREATE INDEX idx_transporte_estado ON despacho_transporte (estado_transporte);
+
+CREATE INDEX idx_despacho_expediente_estado ON despacho_transporte (id_expediente, estado_transporte);
+
+CREATE INDEX idx_despacho_conductor_estado ON despacho_transporte (id_conductor, estado_transporte);
+
+CREATE INDEX idx_despacho_unidad_estado ON despacho_transporte (id_unidad, estado_transporte);
 
 -- Finanzas y Liquidación
 CREATE INDEX idx_liquidacion_estado_pago ON liquidacion_financiera (estado_pago);
@@ -639,6 +724,30 @@ CREATE INDEX idx_doc_activo ON documento_adjunto (activo);
 -- Notificaciones del Portal Cliente B2B
 CREATE INDEX idx_notifcli_cliente ON notificacion_cliente (id_cliente);
 CREATE INDEX idx_notifcli_leido ON notificacion_cliente (id_cliente, leido);
+
+-- =============================================================================
+-- 9. AUDITORÍA DE EVENTOS TI Y SEGURIDAD
+-- =============================================================================
+
+CREATE TABLE auditoria_evento (
+    id_evento BIGINT NOT NULL AUTO_INCREMENT,
+    fecha DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    usuario_actor VARCHAR(80) NOT NULL,
+    rol_actor VARCHAR(50) NULL,
+    modulo VARCHAR(50) NOT NULL,
+    accion VARCHAR(60) NOT NULL,
+    entidad VARCHAR(60) NULL,
+    id_entidad VARCHAR(50) NULL,
+    detalle VARCHAR(500) NULL,
+    ip_origen VARCHAR(64) NULL,
+    resultado VARCHAR(20) NOT NULL DEFAULT 'EXITO',
+    PRIMARY KEY (id_evento)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+
+CREATE INDEX idx_auditoria_fecha ON auditoria_evento (fecha);
+CREATE INDEX idx_auditoria_actor ON auditoria_evento (usuario_actor);
+CREATE INDEX idx_auditoria_modulo ON auditoria_evento (modulo);
+CREATE INDEX idx_auditoria_resultado ON auditoria_evento (resultado);
 
 -- Rehabilitación de validación de claves foráneas
 SET FOREIGN_KEY_CHECKS = 1;

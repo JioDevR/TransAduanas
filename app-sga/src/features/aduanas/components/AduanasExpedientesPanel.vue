@@ -100,6 +100,18 @@
       />
 
       <Button
+        v-if="selectedRow && selectedRow.estadoExpediente !== 'CERRADO' && selectedRow.estadoExpediente !== 'ANULADO'"
+        type="button"
+        :label="selectedRow.idAgenteAduanero ? 'Reasignar Agente' : 'Asignar Agente'"
+        icon="pi pi-user-edit"
+        :severity="selectedRow.idAgenteAduanero ? 'secondary' : 'warn'"
+        outlined
+        size="small"
+        title="Asignar o reasignar agente aduanero responsable"
+        @click="$emit('open-asignar-agente', selectedRow)"
+      />
+
+      <Button
         v-if="selectedAcciones?.puedeActualizarTransito"
         type="button"
         label="Tránsito"
@@ -356,7 +368,8 @@ const emit = defineEmits([
   'open-canal',
   'open-levante',
   'open-retiro',
-  'open-cierre'
+  'open-cierre',
+  'open-asignar-agente'
 ])
 
 const viewMode = ref('table')

@@ -18,11 +18,17 @@ import pe.sga.entity.UnidadTransporte;
 import pe.sga.entity.Usuario;
 import pe.sga.entity.UsuarioCliente;
 import pe.sga.entity.enums.CanalSunat;
+import pe.sga.entity.enums.CategoriaLicenciaMtc;
 import pe.sga.entity.enums.EstadoCotizacion;
 import pe.sga.entity.enums.EstadoExpediente;
+import pe.sga.entity.enums.EstadoOperativoConductor;
+import pe.sga.entity.enums.EstadoOperativoFlota;
 import pe.sga.entity.enums.EstadoPagoCotizacion;
+import pe.sga.entity.enums.EstadoTransporte;
 import pe.sga.entity.enums.RolUsuario;
 import pe.sga.entity.enums.TipoAbonoCotizacion;
+import pe.sga.entity.enums.TipoTraslado;
+import pe.sga.entity.enums.TipoVehiculo;
 import pe.sga.repository.CatalogoPuertoRepository;
 import pe.sga.repository.CatalogoTipoCargaRepository;
 import pe.sga.repository.ClienteRepository;
@@ -196,12 +202,12 @@ public class DataInitializer implements CommandLineRunner {
                             .placaCarreta("T1A-981")
                             .marcaModelo("Volvo FH 500 Globetrotter")
                             .anoFabricacion(2022)
-                            .tipoVehiculo("TRACTO")
+                            .tipoVehiculo(TipoVehiculo.TRACTO)
                             .capacidadCargaKg(new BigDecimal("32000.00"))
                             .soatVencimiento(LocalDate.of(2027, 8, 15))
                             .citvVencimiento(LocalDate.of(2027, 9, 20))
                             .kilometrajeActual(145000)
-                            .estadoOperativo("DISPONIBLE")
+                            .estadoOperativo(EstadoOperativoFlota.DISPONIBLE)
                             .estadoActivo(true)
                             .observaciones("Tracto con suspensión neumática y GPS satelital")
                             .build(),
@@ -210,12 +216,12 @@ public class DataInitializer implements CommandLineRunner {
                             .placaCarreta("T2B-982")
                             .marcaModelo("Scania R500 V8 Streamline")
                             .anoFabricacion(2021)
-                            .tipoVehiculo("TRACTO")
+                            .tipoVehiculo(TipoVehiculo.TRACTO)
                             .capacidadCargaKg(new BigDecimal("32000.00"))
                             .soatVencimiento(LocalDate.of(2027, 4, 10))
                             .citvVencimiento(LocalDate.of(2027, 5, 12))
                             .kilometrajeActual(198000)
-                            .estadoOperativo("DISPONIBLE")
+                            .estadoOperativo(EstadoOperativoFlota.DISPONIBLE)
                             .estadoActivo(true)
                             .observaciones("Asignado a rutas interprovinciales")
                             .build(),
@@ -223,38 +229,38 @@ public class DataInitializer implements CommandLineRunner {
                             .placaTracto("V3C-910")
                             .marcaModelo("International ProStar 450")
                             .anoFabricacion(2020)
-                            .tipoVehiculo("TRACTO")
+                            .tipoVehiculo(TipoVehiculo.TRACTO)
                             .capacidadCargaKg(new BigDecimal("30000.00"))
                             .soatVencimiento(LocalDate.now().plusDays(15))
                             .citvVencimiento(LocalDate.now().plusDays(45))
                             .kilometrajeActual(220000)
-                            .estadoOperativo("DISPONIBLE")
+                            .estadoOperativo(EstadoOperativoFlota.DISPONIBLE)
                             .estadoActivo(true)
                             .observaciones("Alerta preventiva: SOAT próximo a vencer en 15 días")
                             .build(),
                     UnidadTransporte.builder()
-                            .placaTracto("T1A-981")
+                            .placaTracto("P4A-983")
                             .marcaModelo("Randon Plataforma 3 Ejes")
                             .anoFabricacion(2022)
-                            .tipoVehiculo("PLATAFORMA")
+                            .tipoVehiculo(TipoVehiculo.PLATAFORMA)
                             .capacidadCargaKg(new BigDecimal("34000.00"))
                             .soatVencimiento(LocalDate.of(2027, 11, 30))
                             .citvVencimiento(LocalDate.of(2027, 12, 15))
                             .kilometrajeActual(85000)
-                            .estadoOperativo("DISPONIBLE")
+                            .estadoOperativo(EstadoOperativoFlota.DISPONIBLE)
                             .estadoActivo(true)
                             .observaciones("Plataforma para contenedores 20ft y 40ft con piñas de seguridad")
                             .build(),
                     UnidadTransporte.builder()
-                            .placaTracto("T2B-982")
+                            .placaTracto("P5B-984")
                             .marcaModelo("Tremac Semirremolque Baranda Rebatible")
                             .anoFabricacion(2023)
-                            .tipoVehiculo("PLATAFORMA")
+                            .tipoVehiculo(TipoVehiculo.PLATAFORMA)
                             .capacidadCargaKg(new BigDecimal("32000.00"))
                             .soatVencimiento(LocalDate.of(2028, 2, 28))
                             .citvVencimiento(LocalDate.of(2028, 3, 15))
                             .kilometrajeActual(62000)
-                            .estadoOperativo("DISPONIBLE")
+                            .estadoOperativo(EstadoOperativoFlota.DISPONIBLE)
                             .estadoActivo(true)
                             .observaciones("Plataforma con barandas desmontables para carga suelta")
                             .build(),
@@ -262,12 +268,12 @@ public class DataInitializer implements CommandLineRunner {
                             .placaTracto("F4D-550")
                             .marcaModelo("Scania P360 Furgon Refrigerado ThermoKing")
                             .anoFabricacion(2023)
-                            .tipoVehiculo("FURGON")
+                            .tipoVehiculo(TipoVehiculo.FURGON)
                             .capacidadCargaKg(new BigDecimal("22000.00"))
                             .soatVencimiento(LocalDate.of(2027, 10, 18))
                             .citvVencimiento(LocalDate.of(2027, 11, 10))
                             .kilometrajeActual(85000)
-                            .estadoOperativo("DISPONIBLE")
+                            .estadoOperativo(EstadoOperativoFlota.DISPONIBLE)
                             .estadoActivo(true)
                             .observaciones("Furgón reefer bi-temperatura certificado Senasa")
                             .build(),
@@ -275,12 +281,12 @@ public class DataInitializer implements CommandLineRunner {
                             .placaTracto("F5E-660")
                             .marcaModelo("Hino 500 Series Furgon Seco")
                             .anoFabricacion(2022)
-                            .tipoVehiculo("FURGON")
+                            .tipoVehiculo(TipoVehiculo.FURGON)
                             .capacidadCargaKg(new BigDecimal("18000.00"))
                             .soatVencimiento(LocalDate.of(2027, 6, 25))
                             .citvVencimiento(LocalDate.of(2027, 7, 30))
                             .kilometrajeActual(110000)
-                            .estadoOperativo("DISPONIBLE")
+                            .estadoOperativo(EstadoOperativoFlota.DISPONIBLE)
                             .estadoActivo(true)
                             .observaciones("Furgón cerrado con rampa hidráulica de 2.5T")
                             .build(),
@@ -288,12 +294,12 @@ public class DataInitializer implements CommandLineRunner {
                             .placaTracto("B7G-110")
                             .marcaModelo("Isuzu Forward 12T Baranda Alta")
                             .anoFabricacion(2021)
-                            .tipoVehiculo("CAMION_BARANDA")
+                            .tipoVehiculo(TipoVehiculo.CAMION_BARANDA)
                             .capacidadCargaKg(new BigDecimal("12000.00"))
                             .soatVencimiento(LocalDate.of(2027, 9, 5))
                             .citvVencimiento(LocalDate.of(2027, 10, 1))
                             .kilometrajeActual(130000)
-                            .estadoOperativo("DISPONIBLE")
+                            .estadoOperativo(EstadoOperativoFlota.DISPONIBLE)
                             .estadoActivo(true)
                             .observaciones("Camión baranda para reparto urbano y consolidado")
                             .build()
@@ -303,23 +309,23 @@ public class DataInitializer implements CommandLineRunner {
 
         if (conductorRepository.count() == 0) {
             conductorRepository.saveAll(List.of(
-                    construirConductor("transporte", "Raul", "Cardenas Melendez", "60123456", "+51 987 667 001",
-                            "A-IIIc", "Q60123456", LocalDate.of(2028, 5, 15),
+                    construirConductor("Raul", "Cardenas Melendez", "60123456", "+51 987 667 001",
+                            CategoriaLicenciaMtc.A_IIIC, "Q60123456", LocalDate.of(2028, 5, 15),
                             "Conductor master con certificación MATPEL y 15 años de experiencia"),
-                    construirConductor("ebravor", "Enrique", "Bravo Rojas", "60234567", "+51 987 667 002",
-                            "A-IIIc", "Q60234567", LocalDate.of(2027, 12, 10),
+                    construirConductor("Enrique", "Bravo Rojas", "60234567", "+51 987 667 002",
+                            CategoriaLicenciaMtc.A_IIIC, "Q60234567", LocalDate.of(2027, 12, 10),
                             "Especialista en tractos de alto tonelaje Callao-Sur"),
-                    construirConductor("wgalarza", "Wilmer", "Galarza Silva", "60345678", "+51 987 667 003",
-                            "A-IIIb", "Q60345678", LocalDate.now().plusDays(20),
+                    construirConductor("Wilmer", "Galarza Silva", "60345678", "+51 987 667 003",
+                            CategoriaLicenciaMtc.A_IIIB, "Q60345678", LocalDate.now().plusDays(20),
                             "Alerta preventiva: Brevete profesional próximo a revalidar"),
-                    construirConductor("osanchez", "Oscar", "Sanchez Huamanchumo", "60456789", "+51 987 667 004",
-                            "A-IIIc", "Q60456789", LocalDate.of(2028, 3, 22),
+                    construirConductor("Oscar", "Sanchez Huamanchumo", "60456789", "+51 987 667 004",
+                            CategoriaLicenciaMtc.A_IIIC, "Q60456789", LocalDate.of(2028, 3, 22),
                             "Operador de furgón refrigerado y control de cadena de frío"),
-                    construirConductor("fparedes", "Felix", "Paredes Valles", "60567890", "+51 987 667 005",
-                            "A-IIIc", "Q60567890", LocalDate.of(2027, 9, 30),
+                    construirConductor("Felix", "Paredes Valles", "60567890", "+51 987 667 005",
+                            CategoriaLicenciaMtc.A_IIIC, "Q60567890", LocalDate.of(2027, 9, 30),
                             "Rutas interprovinciales y puertos norte (Paita / Salaverry)"),
-                    construirConductor("jcastaneda", "Juan", "Castaneda Luna", "60678901", "+51 987 667 006",
-                            "A-IIIb", "Q60678901", LocalDate.of(2028, 1, 14),
+                    construirConductor("Juan", "Castaneda Luna", "60678901", "+51 987 667 006",
+                            CategoriaLicenciaMtc.A_IIIB, "Q60678901", LocalDate.of(2028, 1, 14),
                             "Distribución local en parques industriales de Lima")
             ));
             log.info("Directorio de conductores semilla (6 choferes) inicializado exitosamente.");
@@ -401,13 +407,13 @@ public class DataInitializer implements CommandLineRunner {
                 despachoTransporteRepository.save(DespachoTransporte.builder()
                         .expediente(exp1)
                         .codigoTracking("TRK-2026-0001")
-                        .tipoTraslado("RECOJO_EXPORTACION")
+                        .tipoTraslado(TipoTraslado.RECOJO_EXPORTACION)
                         .direccionPartida("Almacén Central Camposol, Panamericana Norte Km 497, Chao")
                         .direccionLlegada("Terminal Portuario Muelle Sur (DP World), Callao")
                         .distritoLlegada("Callao")
                         .contactoRecepcion("Ing. Javier Morales (+51 944 112 233)")
                         .fechaProgramada(LocalDateTime.now().plusDays(1))
-                        .estadoTransporte("PENDIENTE_ASIGNACION")
+                        .estadoTransporte(EstadoTransporte.PENDIENTE_ASIGNACION)
                         .observaciones("Pendiente asignación de tracto refrigerado para recojo de exportación en planta y traslado a zona primaria Callao")
                         .build());
 
@@ -415,7 +421,7 @@ public class DataInitializer implements CommandLineRunner {
                 despachoTransporteRepository.save(DespachoTransporte.builder()
                         .expediente(exp2)
                         .codigoTracking("TRK-2026-0002")
-                        .tipoTraslado("RECOJO_EXPORTACION")
+                        .tipoTraslado(TipoTraslado.RECOJO_EXPORTACION)
                         .unidad(u2)
                         .conductor(c2)
                         .guiaRemisionTransporte("GRT-001-000142")
@@ -424,20 +430,20 @@ public class DataInitializer implements CommandLineRunner {
                         .distritoLlegada("Callao")
                         .contactoRecepcion("Sr. Carlos Benites (+51 944 223 344)")
                         .fechaProgramada(LocalDateTime.now().plusDays(2))
-                        .estadoTransporte("PROGRAMADO")
+                        .estadoTransporte(EstadoTransporte.PROGRAMADO)
                         .observaciones("Programado para recojo de contenedor refrigerado en planta Trujillo con destino al puerto del Callao")
                         .build());
 
                 // 3. EN_RUTA (Importación: Puerto Callao -> Centro de Distribución Samsung)
-                u1.setEstadoOperativo("EN_RUTA");
+                u1.setEstadoOperativo(EstadoOperativoFlota.EN_RUTA);
                 unidadTransporteRepository.save(u1);
-                c1.setEstadoOperativo("EN_RUTA");
+                c1.setEstadoOperativo(EstadoOperativoConductor.EN_RUTA);
                 conductorRepository.save(c1);
 
                 despachoTransporteRepository.save(DespachoTransporte.builder()
                         .expediente(exp3)
                         .codigoTracking("TRK-2026-0003")
-                        .tipoTraslado("ENTREGA_IMPORTACION")
+                        .tipoTraslado(TipoTraslado.ENTREGA_IMPORTACION)
                         .unidad(u1)
                         .conductor(c1)
                         .guiaRemisionTransporte("GRT-001-000140")
@@ -447,7 +453,7 @@ public class DataInitializer implements CommandLineRunner {
                         .contactoRecepcion("Lic. Patricia Vega (+51 988 554 433)")
                         .fechaProgramada(LocalDateTime.now())
                         .fechaSalidaRuta(LocalDateTime.now().minusHours(2))
-                        .estadoTransporte("EN_RUTA")
+                        .estadoTransporte(EstadoTransporte.EN_RUTA)
                         .detalleIncidencia("Tránsito fluido por Av. Néstor Gambetta")
                         .observaciones("Despacho con escolta de seguridad satelital")
                         .build());
@@ -456,7 +462,7 @@ public class DataInitializer implements CommandLineRunner {
                 despachoTransporteRepository.save(DespachoTransporte.builder()
                         .expediente(exp4)
                         .codigoTracking("TRK-2026-0004")
-                        .tipoTraslado("ENTREGA_IMPORTACION")
+                        .tipoTraslado(TipoTraslado.ENTREGA_IMPORTACION)
                         .unidad(u6)
                         .conductor(c4)
                         .guiaRemisionTransporte("GRT-001-000138")
@@ -469,7 +475,7 @@ public class DataInitializer implements CommandLineRunner {
                         .fechaProgramada(LocalDateTime.now().minusDays(1))
                         .fechaSalidaRuta(LocalDateTime.now().minusDays(1))
                         .fechaEntregaConforme(LocalDateTime.now().minusHours(18))
-                        .estadoTransporte("ENTREGADO")
+                        .estadoTransporte(EstadoTransporte.ENTREGADO)
                         .detalleIncidencia("Entrega conforme sin observaciones")
                         .observaciones("GRE-T firmada electrónicamente y precintos verificados")
                         .build());
@@ -479,12 +485,10 @@ public class DataInitializer implements CommandLineRunner {
         }
     }
 
-    private Conductor construirConductor(String username, String nombres, String apellidos, String numeroDocumento,
-                                         String telefono, String tipoLicencia, String numeroLicencia,
+    private Conductor construirConductor(String nombres, String apellidos, String numeroDocumento,
+                                         String telefono, CategoriaLicenciaMtc tipoLicencia, String numeroLicencia,
                                          LocalDate fechaVencimientoLicencia, String observaciones) {
-        Usuario usuario = usuarioRepository.findByUsername(username).orElse(null);
         return Conductor.builder()
-                .usuario(usuario)
                 .nombres(nombres)
                 .apellidos(apellidos)
                 .numeroDocumento(numeroDocumento)
@@ -492,7 +496,7 @@ public class DataInitializer implements CommandLineRunner {
                 .tipoLicencia(tipoLicencia)
                 .numeroLicencia(numeroLicencia)
                 .fechaVencimientoLicencia(fechaVencimientoLicencia)
-                .estadoOperativo("DISPONIBLE")
+                .estadoOperativo(EstadoOperativoConductor.DISPONIBLE)
                 .estadoActivo(true)
                 .observaciones(observaciones)
                 .build();

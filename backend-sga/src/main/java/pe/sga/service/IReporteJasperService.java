@@ -1,9 +1,13 @@
 package pe.sga.service;
 
+import pe.sga.dto.portal.PortalCotizacionDTO;
+import pe.sga.dto.response.ComprobanteFacturaResponseDTO;
+import pe.sga.dto.response.ExpedienteResponseDTO;
 import pe.sga.entity.Usuario;
 
 import java.io.ByteArrayInputStream;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 public interface IReporteJasperService {
 
@@ -30,4 +34,20 @@ public interface IReporteJasperService {
             String regimen,
             Usuario usuarioActual
     );
+
+    ByteArrayInputStream exportarAuditoriaTiPdf(
+            String buscar,
+            String modulo,
+            String resultado,
+            LocalDateTime desde,
+            LocalDateTime hasta
+    );
+
+    ByteArrayInputStream exportarSistemaTiPdf(int dias);
+
+    ByteArrayInputStream exportarCotizacionPortalPdf(PortalCotizacionDTO cotizacion);
+
+    ByteArrayInputStream exportarComprobanteFacturaPdf(ComprobanteFacturaResponseDTO factura);
+
+    ByteArrayInputStream exportarInformeConformidadPdf(ExpedienteResponseDTO expediente);
 }

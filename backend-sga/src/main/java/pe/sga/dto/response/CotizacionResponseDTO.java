@@ -22,6 +22,7 @@ public class CotizacionResponseDTO {
     private String clienteTelefono;
     private String clienteCorreo;
     private Boolean clienteTieneUsuario;
+    private Boolean clienteDebeCambiarPassword;
     private Integer idUsuarioComercial;
     private String usuarioComercialNombre;
 
@@ -31,13 +32,21 @@ public class CotizacionResponseDTO {
     private String mercanciaNombre;
     private Integer idTipoCarga;
     private String tipoCargaNombre;
+    private String tipoCargaDescripcion;
 
     // Régimen y Puertos
     private String regimenAduanero;
+    private String modalidad;
     private Integer idPuertoEnvio;
     private String puertoEnvioNombre;
+    private String puertoEnvioCodigo;
+    private String puertoEnvioPais;
+    private String puertoEnvioTipo;
     private Integer idPuertoDestino;
     private String puertoDestinoNombre;
+    private String puertoDestinoCodigo;
+    private String puertoDestinoPais;
+    private String puertoDestinoTipo;
     private Boolean servicioTransporte;
     private String origenDepartamento;
     private String origenProvincia;

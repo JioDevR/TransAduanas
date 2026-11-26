@@ -10,8 +10,7 @@ public enum RolUsuario {
     SUPERVISOR_ADUANERO("Supervisor Aduanero"),
     AGENTE_ADUANERO("Agente Aduanero"),
     SUPERVISOR_TRANSPORTE("Supervisor de Transporte"),
-    CONTADOR("Contador"),
-    ASESOR_LEGAL("Asesor Legal");
+    CONTADOR("Contador");
 
     private final String etiqueta;
 

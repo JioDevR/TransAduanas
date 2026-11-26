@@ -90,6 +90,21 @@
             fluid
           />
         </div>
+
+        <div class="field-item full-width">
+          <label for="ingreso-fotos">Fotos de Recepción en Almacén Central (Opcional)</label>
+          <input
+            id="ingreso-fotos"
+            type="file"
+            multiple
+            accept="image/*,.pdf"
+            class="text-input"
+            @change="onFotosSelected"
+          />
+          <small v-if="fotosSeleccionadas.length > 0" class="sga-cell-sub">
+            {{ fotosSeleccionadas.length }} archivo(s) seleccionado(s) para adjuntar al almacén.
+          </small>
+        </div>
       </div>
 
       <div class="modal-actions">
@@ -118,8 +133,9 @@ import Button from 'primevue/button'
 import InputText from 'primevue/inputtext'
 import Textarea from 'primevue/textarea'
 import BaseModal from '@/shared/components/BaseModal.vue'
-import { expedienteService } from '../services/expedienteService'
-import { getNowDateTimeInput } from '@/shared/utils/dateUtils'
+import { expedienteService } from '@/shared/services/expedienteService'
+import { documentoService } from '@/features/documentos/services/documentoService'
+import { getNowDateTimeInput, toLocalDateTimePayload } from '@/shared/utils/dateUtils'
 
 const props = defineProps({
   visible: { type: Boolean, default: false },
@@ -130,6 +146,11 @@ const emit = defineEmits(['close', 'saved'])
 
 const loading = ref(false)
 const errorMessage = ref('')
+const fotosSeleccionadas = ref([])
+
+const onFotosSelected = (event) => {
+  fotosSeleccionadas.value = Array.from(event?.target?.files || [])
+}
 
 const form = ref({
   terminalAlmacenOrigen: 'DP World Callao - Muelle Sur',
@@ -164,6 +185,7 @@ watch(
 
 const handleClose = () => {
   errorMessage.value = ''
+  fotosSeleccionadas.value = []
   emit('close')
 }
 
@@ -176,13 +198,21 @@ const handleSubmit = async () => {
     const payload = {
       terminalAlmacenOrigen: form.value.terminalAlmacenOrigen,
       numeroTicketIngreso: form.value.numeroTicketIngreso,
-      fechaIngreso: form.value.fechaIngreso ? new Date(form.value.fechaIngreso).toISOString() : null,
+      fechaIngreso: toLocalDateTimePayload(form.value.fechaIngreso),
       numeroContenedor: form.value.numeroContenedor,
       precintoAduanero: form.value.precintoAduanero,
       observaciones: form.value.observaciones
     }
 
     const res = await expedienteService.confirmarIngresoOrigen(props.expediente.idExpediente, payload)
+    if (fotosSeleccionadas.value.length > 0) {
+      await documentoService.upload(fotosSeleccionadas.value, {
+        categoria: 'FOTO_ALMACEN',
+        descripcion: `Evidencia fotográfica recepción almacén (${form.value.terminalAlmacenOrigen})`,
+        entidadTipo: 'EXPEDIENTE',
+        idEntidad: props.expediente.idExpediente
+      })
+    }
     emit('saved', res)
     handleClose()
   } catch (err) {

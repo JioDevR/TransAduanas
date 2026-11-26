@@ -1,25 +1,38 @@
 <template>
   <div class="sga-shell">
-    <PortalSidebar />
+    <div
+      v-if="mobileMenuOpen"
+      class="sga-drawer-backdrop"
+      @click="mobileMenuOpen = false"
+    />
+
+    <PortalSidebar
+      :mobile-open="mobileMenuOpen"
+      @close-mobile="mobileMenuOpen = false"
+    />
 
     <div class="sga-main">
       <!-- Topbar Minimalista en una sola línea (sgaUI) -->
       <header class="sga-topbar">
-        <h1 class="sga-topbar-title">{{ currentTitle }}</h1>
+        <div class="sga-topbar-left">
+          <button
+            type="button"
+            class="sga-mobile-menu-btn"
+            aria-label="Abrir menú de navegación"
+            :aria-expanded="mobileMenuOpen"
+            @click="mobileMenuOpen = true"
+          >
+            <i class="pi pi-bars"></i>
+          </button>
+
+          <h1 class="sga-topbar-title">{{ currentTitle }}</h1>
+        </div>
 
         <div class="sga-topbar-actions">
-          <!-- Acceso rápido a Notificaciones -->
-          <Button
-            type="button"
-            icon="pi pi-bell"
-            severity="secondary"
-            variant="text"
-            rounded
-            :badge="unreadCount > 0 ? (unreadCount > 99 ? '99+' : String(unreadCount)) : undefined"
-            badgeSeverity="danger"
-            aria-label="Centro de Notificaciones"
-            title="Centro de Notificaciones"
-            @click="router.push('/notificaciones')"
+          <!-- Menú desplegable de Notificaciones -->
+          <NotificationBellMenu
+            ref="notificationMenuRef"
+            @open="userPopoverRef?.hide()"
           />
 
           <!-- Perfil de Usuario + Popover -->
@@ -93,35 +106,51 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import Button from 'primevue/button'
 import Popover from 'primevue/popover'
 import ToggleSwitch from 'primevue/toggleswitch'
 import PortalSidebar from '@/core/layouts/PortalSidebar.vue'
+import NotificationBellMenu from '@/features/notificaciones/components/NotificationBellMenu.vue'
 import { useAuthStore } from '@/core/stores/authStore'
+import { useNotificationStore } from '@/features/notificaciones/stores/notificationStore'
 import { useTheme } from '@/shared/composables/useTheme'
 import { useConfirmation } from '@/shared/composables/useConfirmation'
-import { portalNotificationService, unreadNotificationsCount } from '@/features/notificaciones/services/portalNotificationService'
+import { useResponsive } from '@/shared/composables/useResponsive'
 import '../../../../sgaUI/sga-shell.css'
 
 const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
+const notificationStore = useNotificationStore()
 const theme = useTheme()
 const { confirmAction } = useConfirmation()
+const { isTabletOrBelow } = useResponsive()
 
+const mobileMenuOpen = ref(false)
 const userPopoverRef = ref(null)
-const unreadCount = unreadNotificationsCount
+const notificationMenuRef = ref(null)
+
+watch(isTabletOrBelow, (tabletDown) => {
+  if (!tabletDown) mobileMenuOpen.value = false
+})
+
+watch(
+  () => route.fullPath,
+  () => {
+    mobileMenuOpen.value = false
+  }
+)
 
 const ROUTE_TITLES = {
+  Dashboard: 'Resumen General',
   Cotizaciones: 'Mis Cotizaciones Logísticas',
   CotizacionDetalle: 'Detalle de Cotización',
   Expedientes: 'Expedientes & Tracking DAM',
   Pagos: 'Cobros y Pagos',
   RegistrarPago: 'Registrar Pago / Abono Bancario',
-  SubsanarPago: 'Subsanar Abono Bancario',
-  Notificaciones: 'Notificaciones & Avisos'
+  SubsanarPago: 'Subsanar Abono Bancario'
 }
 
 const currentTitle = computed(() => {
@@ -137,22 +166,30 @@ const avatarInitials = computed(() => {
 })
 
 const toggleUserPopover = (event) => {
+  notificationMenuRef.value?.hide()
   userPopoverRef.value?.toggle(event)
 }
 
-async function cargarResumenNotificaciones() {
+function cargarResumenNotificaciones() {
   if (!authStore.isAuthenticated) return
-  try {
-    await portalNotificationService.getResumenNoLeidas()
-  } catch (error) {
-    console.debug('Error al obtener resumen de notificaciones:', error)
-  }
+  notificationStore.fetchUnreadCount({ force: true })
 }
 
 watch(() => route.path, cargarResumenNotificaciones, { immediate: true })
 
+onMounted(() => {
+  if (authStore.isAuthenticated) {
+    notificationStore.startPolling()
+  }
+})
+
+onUnmounted(() => {
+  notificationStore.stopPolling()
+})
+
 async function handleLogout() {
   userPopoverRef.value?.hide()
+  notificationMenuRef.value?.hide()
   const confirmed = await confirmAction({
     header: 'Cerrar Sesión Empresarial',
     message: '¿Está seguro de que desea salir del portal corporativo TransAduanas?',
@@ -163,6 +200,7 @@ async function handleLogout() {
   })
 
   if (confirmed) {
+    notificationStore.reset()
     authStore.logout()
     router.replace('/login')
   }

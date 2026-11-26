@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { createSSRApp, h } from 'vue'
 import { renderToString } from 'vue/server-renderer'
 import { createPinia, setActivePinia } from 'pinia'
+import PrimeVue from 'primevue/config'
 import CotizacionesListView from '../CotizacionesListView.vue'
 import { portalCotizacionService } from '../../services/portalCotizacionService'
 
@@ -73,9 +74,11 @@ describe('CotizacionesListView Component', () => {
         return h(CotizacionesListView)
       }
     })
+    app.use(PrimeVue)
 
     const html = await renderToString(app)
-    expect(html).toContain('Mis Cotizaciones Logísticas')
+    expect(html).toContain('Solicitar Nueva Cotización')
+    expect(html).toContain('Vista Canvas')
     expect(html).toBeTypeOf('string')
   })
 })

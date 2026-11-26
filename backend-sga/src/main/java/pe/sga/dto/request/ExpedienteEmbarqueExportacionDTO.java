@@ -17,6 +17,12 @@ public class ExpedienteEmbarqueExportacionDTO {
     @Size(max = 100, message = "La nave no puede exceder 100 caracteres")
     private String naveViaje;
 
+    @Size(max = 30, message = "El tipo de transporte internacional no puede exceder 30 caracteres")
+    private String tipoTransporteInternacional;
+
+    @Size(max = 60, message = "El número de vuelo no puede exceder 60 caracteres")
+    private String numeroVuelo;
+
     private LocalDate fechaZarpeEtd;
 
     private LocalDate fechaEstimadaLlegadaExterior;

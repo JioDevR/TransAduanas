@@ -1,39 +1,51 @@
 package pe.sga.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pe.sga.dto.request.ExpedienteActualizarDTO;
+import pe.sga.dto.request.ExpedienteAsignarAgenteDTO;
 import pe.sga.dto.request.ExpedienteCanalDTO;
+import pe.sga.dto.request.ExpedienteCerrarDTO;
 import pe.sga.dto.request.ExpedienteCrearDTO;
+import pe.sga.dto.request.ExpedienteCuadrillaCitaDTO;
+import pe.sga.dto.request.ExpedienteDiligenciaDTO;
+import pe.sga.dto.request.ExpedienteEmbarqueExportacionDTO;
+import pe.sga.dto.request.ExpedienteEventoRequestDTO;
+import pe.sga.dto.request.ExpedienteInformeConformidadDTO;
+import pe.sga.dto.request.ExpedienteIngresoOrigenDTO;
 import pe.sga.dto.request.ExpedienteLevanteDTO;
+import pe.sga.dto.request.ExpedienteRecepcionExteriorDTO;
+import pe.sga.dto.request.ExpedienteRecojoExportacionDTO;
+import pe.sga.dto.request.ExpedienteRetiroDirectoDTO;
+import pe.sga.dto.request.ExpedienteSolicitudTransporteDTO;
+import pe.sga.dto.request.ExpedienteSunatSimuladoDTO;
+import pe.sga.dto.response.ExpedienteEventoDTO;
 import pe.sga.dto.response.ExpedienteResponseDTO;
 import pe.sga.entity.Cotizacion;
+import pe.sga.entity.DespachoTransporte;
 import pe.sga.entity.Expediente;
+import pe.sga.entity.ExpedienteEvento;
+import pe.sga.entity.NotificacionCliente;
 import pe.sga.entity.Usuario;
 import pe.sga.entity.enums.CanalSunat;
 import pe.sga.entity.enums.EstadoCotizacion;
 import pe.sga.entity.enums.EstadoExpediente;
 import pe.sga.entity.enums.EstadoPagoCotizacion;
+import pe.sga.entity.enums.EstadoTransporte;
+import pe.sga.entity.enums.TipoTraslado;
 import pe.sga.exception.BadRequestException;
 import pe.sga.exception.ResourceNotFoundException;
 import pe.sga.dto.request.DespachoTransporteCrearDTO;
-import pe.sga.dto.request.ExpedienteCerrarDTO;
-import pe.sga.dto.request.ExpedienteDiligenciaDTO;
-import pe.sga.dto.request.ExpedienteEmbarqueExportacionDTO;
-import pe.sga.dto.request.ExpedienteIngresoOrigenDTO;
-import pe.sga.dto.request.ExpedienteRecepcionExteriorDTO;
-import pe.sga.dto.request.ExpedienteRecojoExportacionDTO;
-import pe.sga.dto.request.ExpedienteRetiroDirectoDTO;
-import pe.sga.dto.request.ExpedienteSolicitudTransporteDTO;
-import pe.sga.entity.DespachoTransporte;
-import pe.sga.entity.NotificacionCliente;
 import pe.sga.repository.CotizacionPagoRepository;
 import pe.sga.repository.CotizacionRepository;
 import pe.sga.repository.DespachoTransporteRepository;
+import pe.sga.repository.ExpedienteEventoRepository;
 import pe.sga.repository.ExpedienteRepository;
 import pe.sga.repository.NotificacionClienteRepository;
 import pe.sga.repository.UsuarioRepository;
+import pe.sga.service.IAuditoriaService;
 import pe.sga.service.IDespachoTransporteService;
 import pe.sga.service.IExpedienteService;
 
@@ -57,6 +69,58 @@ public class ExpedienteServiceImpl implements IExpedienteService {
     private final NotificacionClienteRepository notificacionClienteRepository;
     private final DespachoTransporteRepository despachoRepository;
     private final IDespachoTransporteService despachoTransporteService;
+    private IAuditoriaService auditoriaService;
+    private ExpedienteEventoRepository expedienteEventoRepository;
+
+    @Autowired(required = false)
+    public void setAuditoriaService(IAuditoriaService auditoriaService) {
+        this.auditoriaService = auditoriaService;
+    }
+
+    @Autowired(required = false)
+    public void setExpedienteEventoRepository(ExpedienteEventoRepository expedienteEventoRepository) {
+        this.expedienteEventoRepository = expedienteEventoRepository;
+    }
+
+    private void registrarEvento(Expediente exp, String codigoEstado, String titulo, String descripcion, String usuarioNombre) {
+        registrarEvento(exp, codigoEstado, titulo, descripcion, usuarioNombre, LocalDateTime.now());
+    }
+
+    private void registrarEvento(Expediente exp, String codigoEstado, String titulo, String descripcion, String usuarioNombre, LocalDateTime fecha) {
+        if (expedienteEventoRepository == null || exp == null || exp.getIdExpediente() == null) return;
+        String reg = exp.getCotizacion() != null ? exp.getCotizacion().getRegimenAduanero() : null;
+        expedienteEventoRepository.save(ExpedienteEvento.builder()
+                .expediente(exp)
+                .codigoEstado(codigoEstado)
+                .titulo(titulo)
+                .descripcion(descripcion)
+                .regimen(reg)
+                .usuarioNombre(usuarioNombre != null && !usuarioNombre.isBlank()
+                        ? usuarioNombre
+                        : (exp.getAgenteAduanero() != null ? exp.getAgenteAduanero().getNombreCompleto() : "Sistema SGA"))
+                .fechaEvento(fecha != null ? fecha : LocalDateTime.now())
+                .build());
+    }
+
+    private void notificarCliente(Expediente exp, String titulo, String mensaje, String tipo) {
+        if (exp == null || exp.getCliente() == null) return;
+        notificacionClienteRepository.save(NotificacionCliente.builder()
+                .cliente(exp.getCliente())
+                .titulo(titulo)
+                .mensaje(mensaje)
+                .tipo(tipo)
+                .leido(false)
+                .enlace("/expedientes")
+                .fechaCreacion(LocalDateTime.now())
+                .build());
+    }
+
+    private void auditar(String accion, Integer idExp, String detalle) {
+        if (auditoriaService != null) {
+            auditoriaService.registrar("ADUANAS", accion, "EXPEDIENTE",
+                    idExp != null ? String.valueOf(idExp) : null, detalle, "EXITO");
+        }
+    }
 
 
     @Override
@@ -202,6 +266,14 @@ public class ExpedienteServiceImpl implements IExpedienteService {
                     .build();
             notificacionClienteRepository.save(notifAgente);
         }
+        auditar("APERTURAR_EXPEDIENTE", guardado.getIdExpediente(),
+                "Apertura expediente " + guardado.getCodigoExpediente() + " (cotización " + cotizacion.getCodigoCotizacion() + ")");
+        registrarEvento(guardado, "EXPEDIENTE_CREADO", "Expediente Aperturado",
+                "Carpeta aduanera " + guardado.getCodigoExpediente() + " creada desde cotización " + cotizacion.getCodigoCotizacion(),
+                "Gestión Aduanera");
+        registrarEvento(guardado, "AGENTE_ASIGNADO", "Agente Aduanero Asignado",
+                "Asignado a " + agente.getNombreCompleto(),
+                "Gestión Aduanera");
 
         return mapToResponse(guardado);
     }
@@ -227,7 +299,10 @@ public class ExpedienteServiceImpl implements IExpedienteService {
         if (dto.getNaveViaje() != null) expediente.setNaveViaje(dto.getNaveViaje());
         if (dto.getObservaciones() != null) expediente.setObservaciones(dto.getObservaciones());
 
-        return mapToResponse(expedienteRepository.save(expediente));
+        Expediente guardado = expedienteRepository.save(expediente);
+        auditar("ACTUALIZAR_EXPEDIENTE", guardado.getIdExpediente(),
+                "Actualización de expediente " + guardado.getCodigoExpediente());
+        return mapToResponse(guardado);
     }
 
     @Override
@@ -279,6 +354,10 @@ public class ExpedienteServiceImpl implements IExpedienteService {
             notificacionClienteRepository.save(notif);
         }
 
+        auditar("CONFIRMAR_SALIDA_ORIGEN", guardado.getIdExpediente(),
+                "Salida de origen confirmada para expediente " + guardado.getCodigoExpediente());
+        registrarEvento(guardado, "SALIDA_ORIGEN", "Embarque / Salida de Origen Confirmada",
+                bitacora, null);
         return mapToResponse(guardado);
     }
 
@@ -311,7 +390,12 @@ public class ExpedienteServiceImpl implements IExpedienteService {
         String obsPrevias = expediente.getObservaciones() != null ? expediente.getObservaciones() + "\n" : "";
         expediente.setObservaciones(obsPrevias + bitacora);
 
-        return mapToResponse(expedienteRepository.save(expediente));
+        Expediente guardado = expedienteRepository.save(expediente);
+        auditar("ARRIBO_DESTINO_EXPEDIENTE", guardado.getIdExpediente(),
+                "Arribo a destino confirmado para " + guardado.getCodigoExpediente());
+        registrarEvento(guardado, "ARRIBO_PUERTO_AEROPUERTO", "Llegada a Puerto / Aeropuerto de Destino",
+                bitacora, null, fechaArribo);
+        return mapToResponse(guardado);
     }
 
     @Override
@@ -360,7 +444,12 @@ public class ExpedienteServiceImpl implements IExpedienteService {
             expediente.setObservaciones(obsPrevias + notaVerde);
         }
 
-        return mapToResponse(expedienteRepository.save(expediente));
+        Expediente guardado = expedienteRepository.save(expediente);
+        auditar("ASIGNAR_CANAL_SUNAT", guardado.getIdExpediente(),
+                "DAM " + dam + " · Canal " + dto.getCanalSunat().name() + " en " + guardado.getCodigoExpediente());
+        registrarEvento(guardado, "CANAL_ASIGNADO", "Canal SUNAT Asignado: " + dto.getCanalSunat().name(),
+                "DAM " + dam + " asignada con canal " + dto.getCanalSunat().name(), "Gestión Aduanera", fechaAsignacion);
+        return mapToResponse(guardado);
     }
 
     @Override
@@ -382,7 +471,13 @@ public class ExpedienteServiceImpl implements IExpedienteService {
         }
         expediente.setEstadoExpediente(EstadoExpediente.LEVANTE_AUTORIZADO);
 
-        return mapToResponse(expedienteRepository.save(expediente));
+        Expediente guardado = expedienteRepository.save(expediente);
+        auditar("AUTORIZAR_LEVANTE", guardado.getIdExpediente(),
+                "Levante autorizado para " + guardado.getCodigoExpediente());
+        registrarEvento(guardado, "LEVANTE_AUTORIZADO", "Levante Aduanero Autorizado",
+                dto.getDetalleInspeccion() != null ? dto.getDetalleInspeccion() : "Levante SUNAT aprobado", null,
+                guardado.getFechaLevanteAutorizacion());
+        return mapToResponse(guardado);
     }
 
     @Override
@@ -395,16 +490,31 @@ public class ExpedienteServiceImpl implements IExpedienteService {
             throw new BadRequestException("No se puede solicitar recojo en un expediente en estado: " + expediente.getEstadoExpediente());
         }
 
-        if (despachoRepository.existsByExpediente_IdExpediente(idExpediente)) {
-            throw new BadRequestException("Ya existe una orden de traslado terrestre vinculada a este expediente.");
+        if (expediente.getCotizacion() != null && !Boolean.TRUE.equals(expediente.getCotizacion().getServicioTransporte())) {
+            throw new BadRequestException("La cotización asociada no contrató el servicio de transporte de TransAduanas.");
         }
+
+        if (despachoRepository.existsByExpediente_IdExpedienteAndEstadoTransporteNot(
+                idExpediente, EstadoTransporte.CANCELADO)) {
+            throw new BadRequestException("Ya existe una orden de traslado terrestre activa vinculada a este expediente.");
+        }
+
+        String distritoDestino = dto.getDistritoDestino() != null && !dto.getDistritoDestino().isBlank()
+                ? dto.getDistritoDestino().trim()
+                : (expediente.getCotizacion() != null && expediente.getCotizacion().getDestinoProvincia() != null
+                        ? expediente.getCotizacion().getDestinoProvincia()
+                        : "Callao");
+        String partidaConDistrito = dto.getDistritoRecojo() != null && !dto.getDistritoRecojo().isBlank()
+                && !dto.getDireccionRecojoPlanta().toLowerCase().contains(dto.getDistritoRecojo().trim().toLowerCase())
+                ? dto.getDireccionRecojoPlanta().trim() + " (" + dto.getDistritoRecojo().trim() + ")"
+                : dto.getDireccionRecojoPlanta().trim();
 
         DespachoTransporteCrearDTO despachoDTO = DespachoTransporteCrearDTO.builder()
                 .idExpediente(idExpediente)
-                .tipoTraslado("RECOJO_EXPORTACION")
-                .direccionPartida(dto.getDireccionRecojoPlanta())
+                .tipoTraslado(TipoTraslado.RECOJO_EXPORTACION)
+                .direccionPartida(partidaConDistrito)
                 .direccionLlegada(dto.getAlmacenDestinoTerminal())
-                .distritoLlegada(dto.getDistritoRecojo())
+                .distritoLlegada(distritoDestino)
                 .contactoRecepcion(dto.getContactoPlanta())
                 .fechaProgramada(dto.getFechaProgramadaRecojo() != null ? dto.getFechaProgramadaRecojo() : LocalDateTime.now().plusDays(1))
                 .observaciones(dto.getObservaciones())
@@ -426,6 +536,10 @@ public class ExpedienteServiceImpl implements IExpedienteService {
             notificacionClienteRepository.save(notif);
         }
 
+        auditar("SOLICITAR_RECOJO_EXPORTACION", expediente.getIdExpediente(),
+                "Recojo de exportación solicitado para expediente " + expediente.getCodigoExpediente());
+        registrarEvento(expediente, "RECOJO_SOLICITADO", "Solicitud de Recojo en Planta",
+                "Recojo solicitado en " + partidaConDistrito + " hacia " + dto.getAlmacenDestinoTerminal(), null);
         return mapToResponse(expediente);
     }
 
@@ -476,6 +590,10 @@ public class ExpedienteServiceImpl implements IExpedienteService {
             notificacionClienteRepository.save(notif);
         }
 
+        auditar("CONFIRMAR_INGRESO_ORIGEN", guardado.getIdExpediente(),
+                "Ingreso a zona primaria confirmado para expediente " + guardado.getCodigoExpediente());
+        registrarEvento(guardado, "INGRESO_ALMACEN_CENTRAL", "Recepción en Almacén Central / Terminal",
+                nota, null, fechaIngreso);
         return mapToResponse(guardado);
     }
 
@@ -495,7 +613,10 @@ public class ExpedienteServiceImpl implements IExpedienteService {
             String obsActual = expediente.getObservaciones() != null ? expediente.getObservaciones() + "\n" : "";
             expediente.setObservaciones(obsActual + "[DILIGENCIA AGENTE]: " + dto.getObservaciones());
         }
-        return mapToResponse(expedienteRepository.save(expediente));
+        Expediente guardado = expedienteRepository.save(expediente);
+        auditar("REGISTRAR_DILIGENCIA_EXPEDIENTE", guardado.getIdExpediente(),
+                "Diligencia aduanera registrada en expediente " + guardado.getCodigoExpediente());
+        return mapToResponse(guardado);
     }
 
     @Override
@@ -511,6 +632,13 @@ public class ExpedienteServiceImpl implements IExpedienteService {
         if (dto.getNaveViaje() != null && !dto.getNaveViaje().isBlank()) {
             expediente.setNaveViaje(dto.getNaveViaje().trim());
         }
+        if (dto.getTipoTransporteInternacional() != null && !dto.getTipoTransporteInternacional().isBlank()) {
+            expediente.setTipoTransporteInternacional(dto.getTipoTransporteInternacional().trim().toUpperCase());
+        }
+        if (dto.getNumeroVuelo() != null && !dto.getNumeroVuelo().isBlank()) {
+            expediente.setNumeroVuelo(dto.getNumeroVuelo().trim());
+        }
+        expediente.setEnEsperaTransito(false);
         if (dto.getFechaZarpeEtd() != null) {
             expediente.setFechaZarpeEtd(dto.getFechaZarpeEtd());
         }
@@ -545,6 +673,10 @@ public class ExpedienteServiceImpl implements IExpedienteService {
             notificacionClienteRepository.save(notif);
         }
 
+        auditar("CONFIRMAR_EMBARQUE_ORIGEN", guardado.getIdExpediente(),
+                "Embarque internacional confirmado para expediente " + guardado.getCodigoExpediente());
+        registrarEvento(guardado, "VUELO_EMBARQUE_CONFIRMADO", "Vuelo / Embarque Confirmado",
+                notaEmbarque, null);
         return mapToResponse(guardado);
     }
 
@@ -559,6 +691,10 @@ public class ExpedienteServiceImpl implements IExpedienteService {
         }
 
         LocalDateTime fechaRecepcion = dto.getFechaRecepcionDestino() != null ? dto.getFechaRecepcionDestino() : LocalDateTime.now();
+
+        if (dto.getIdDocumentoConformidad() != null) {
+            expediente.setIdDocumentoConformidadDestino(dto.getIdDocumentoConformidad());
+        }
 
         String notaRecepcion = String.format("[RECEPCIÓN DESTINO EXTERIOR] Consignatario: %s | Doc/BL: %s | Fecha: %s. %s",
                 dto.getConsignatarioExterior(),
@@ -586,6 +722,10 @@ public class ExpedienteServiceImpl implements IExpedienteService {
             notificacionClienteRepository.save(notif);
         }
 
+        auditar("CONFIRMAR_RECEPCION_EXTERIOR", guardado.getIdExpediente(),
+                "Recepción en destino exterior confirmada para expediente " + guardado.getCodigoExpediente());
+        registrarEvento(guardado, "CONFORMIDAD_DESTINO_SUBIDA", "Conformidad en País de Destino Registrada",
+                notaRecepcion, null, fechaRecepcion);
         return mapToResponse(guardado);
     }
 
@@ -599,13 +739,18 @@ public class ExpedienteServiceImpl implements IExpedienteService {
             throw new BadRequestException("El expediente debe contar con LEVANTE AUTORIZADO para solicitar traslado terrestre.");
         }
 
-        if (despachoRepository.existsByExpediente_IdExpediente(idExpediente)) {
-            throw new BadRequestException("Ya existe una orden de despacho terrestre vinculada a este expediente.");
+        if (expediente.getCotizacion() != null && !Boolean.TRUE.equals(expediente.getCotizacion().getServicioTransporte())) {
+            throw new BadRequestException("La cotización asociada no contrató el servicio de transporte de entrega a destino.");
+        }
+
+        if (despachoRepository.existsByExpediente_IdExpedienteAndEstadoTransporteNot(
+                idExpediente, EstadoTransporte.CANCELADO)) {
+            throw new BadRequestException("Ya existe una orden de despacho terrestre activa vinculada a este expediente.");
         }
 
         DespachoTransporteCrearDTO despachoDTO = DespachoTransporteCrearDTO.builder()
                 .idExpediente(idExpediente)
-                .tipoTraslado("ENTREGA_IMPORTACION")
+                .tipoTraslado(TipoTraslado.ENTREGA_IMPORTACION)
                 .direccionPartida(dto.getDireccionPartida())
                 .direccionLlegada(dto.getDireccionLlegada())
                 .distritoLlegada(dto.getDistritoLlegada())
@@ -630,6 +775,10 @@ public class ExpedienteServiceImpl implements IExpedienteService {
             notificacionClienteRepository.save(notif);
         }
 
+        auditar("SOLICITAR_TRANSPORTE_EXPEDIENTE", expediente.getIdExpediente(),
+                "Traslado terrestre solicitado para expediente " + expediente.getCodigoExpediente());
+        registrarEvento(expediente, "TRANSPORTE_ENTREGA_SOLICITADO", "Transporte de Entrega a Destino Solicitado",
+                "Traslado desde " + dto.getDireccionPartida() + " hacia " + dto.getDireccionLlegada(), null);
         return mapToResponse(expediente);
     }
 
@@ -654,7 +803,10 @@ public class ExpedienteServiceImpl implements IExpedienteService {
         String obsActual = expediente.getObservaciones() != null ? expediente.getObservaciones() + "\n" : "";
         expediente.setObservaciones(obsActual + notaRetiro);
 
-        return mapToResponse(expedienteRepository.save(expediente));
+        Expediente guardado = expedienteRepository.save(expediente);
+        auditar("RETIRO_DIRECTO_EXPEDIENTE", guardado.getIdExpediente(),
+                "Retiro directo registrado en " + guardado.getCodigoExpediente());
+        return mapToResponse(guardado);
     }
 
     @Override
@@ -671,13 +823,15 @@ public class ExpedienteServiceImpl implements IExpedienteService {
             throw new BadRequestException("El expediente no puede cerrarse sin haber obtenido LEVANTE AUTORIZADO.");
         }
 
-        // Si la cotización incluía servicio de transporte y se creó despacho, validar que esté entregado
-        boolean requiereTransporte = expediente.getCotizacion() != null && Boolean.TRUE.equals(expediente.getCotizacion().getServicioTransporte());
-        var despachoOpt = despachoRepository.findByExpediente_IdExpediente(idExpediente);
-        if (requiereTransporte && despachoOpt.isPresent()) {
+        // Si existe un despacho de transporte activo asociado, validar que esté entregado antes de cerrar
+        var despachoOpt = despachoRepository
+                .findFirstByExpediente_IdExpedienteAndEstadoTransporteNotOrderByIdDespachoTransporteDesc(
+                        idExpediente, EstadoTransporte.CANCELADO);
+        if (despachoOpt.isPresent()) {
             DespachoTransporte dt = despachoOpt.get();
-            if (!"ENTREGADO".equalsIgnoreCase(dt.getEstadoTransporte())) {
-                throw new BadRequestException("No es posible cerrar el expediente: El despacho de transporte aún se encuentra en estado '" + dt.getEstadoTransporte() + "'. Debe estar ENTREGADO.");
+            if (dt.getEstadoTransporte() != EstadoTransporte.ENTREGADO) {
+                throw new BadRequestException("No es posible cerrar el expediente: El despacho de transporte aún se encuentra en estado '"
+                        + dt.getEstadoTransporte() + "'. Debe estar ENTREGADO.");
             }
         }
 
@@ -703,8 +857,309 @@ public class ExpedienteServiceImpl implements IExpedienteService {
                     .build();
             notificacionClienteRepository.save(notif);
         }
+        auditar("CERRAR_EXPEDIENTE", cerrado.getIdExpediente(),
+                "Cierre conforme de expediente " + cerrado.getCodigoExpediente());
+        registrarEvento(cerrado, "EXPEDIENTE_FINALIZADO", "Expediente Finalizado Conforme",
+                dto != null && dto.getObservacionesCierre() != null ? dto.getObservacionesCierre() : "Cierre definitivo del despacho.",
+                null, cerrado.getFechaCierre());
 
         return mapToResponse(cerrado);
+    }
+
+    @Override
+    @Transactional
+    public ExpedienteResponseDTO asignarAgente(Integer idExpediente, ExpedienteAsignarAgenteDTO dto, String usuarioNombre) {
+        Expediente expediente = expedienteRepository.findById(idExpediente)
+                .orElseThrow(() -> new ResourceNotFoundException("Expediente no encontrado con ID: " + idExpediente));
+
+        if (expediente.getEstadoExpediente() == EstadoExpediente.ANULADO || expediente.getEstadoExpediente() == EstadoExpediente.CERRADO) {
+            throw new BadRequestException("No se puede asignar agente a un expediente en estado: " + expediente.getEstadoExpediente());
+        }
+
+        Usuario agente = usuarioRepository.findById(dto.getIdAgenteAduanero())
+                .orElseThrow(() -> new ResourceNotFoundException("Agente aduanero no encontrado con ID: " + dto.getIdAgenteAduanero()));
+
+        expediente.setAgenteAduanero(agente);
+        expediente.setFechaAsignacion(LocalDateTime.now());
+        Expediente guardado = expedienteRepository.save(expediente);
+
+        notificarCliente(guardado,
+                "Agente Aduanero Asignado: " + agente.getNombreCompleto(),
+                "Se ha asignado al Agente Aduanero " + agente.getNombreCompleto() + " a su expediente " + guardado.getCodigoExpediente() + ".",
+                "DAM");
+        registrarEvento(guardado, "AGENTE_ASIGNADO", "Agente Aduanero Asignado",
+                "Asignado a " + agente.getNombreCompleto(), usuarioNombre);
+        auditar("ASIGNAR_AGENTE_EXPEDIENTE", guardado.getIdExpediente(),
+                "Agente " + agente.getNombreCompleto() + " asignado a " + guardado.getCodigoExpediente());
+        return mapToResponse(guardado);
+    }
+
+    @Override
+    @Transactional
+    public ExpedienteResponseDTO registrarEventoManual(Integer idExpediente, ExpedienteEventoRequestDTO dto, String usuarioNombre) {
+        Expediente expediente = expedienteRepository.findById(idExpediente)
+                .orElseThrow(() -> new ResourceNotFoundException("Expediente no encontrado con ID: " + idExpediente));
+
+        if (expediente.getEstadoExpediente() == EstadoExpediente.ANULADO || expediente.getEstadoExpediente() == EstadoExpediente.CERRADO) {
+            throw new BadRequestException("No se pueden registrar estados en un expediente en estado: " + expediente.getEstadoExpediente());
+        }
+
+        String code = dto.getCodigoEstado().trim().toUpperCase();
+        if ("REVISION_ADUANA".equals(code)) {
+            expediente.setEnRevisionAduana(true);
+            if (expediente.getEstadoExpediente() == EstadoExpediente.ASIGNADO) {
+                expediente.setEstadoExpediente(EstadoExpediente.EN_TRAMITE);
+            }
+        } else if ("ESPERA_TRANSITO".equals(code)) {
+            expediente.setEnEsperaTransito(true);
+            if (expediente.getEstadoExpediente() == EstadoExpediente.ASIGNADO) {
+                expediente.setEstadoExpediente(EstadoExpediente.EN_TRAMITE);
+            }
+        }
+
+        String nota = "[" + dto.getTitulo().trim().toUpperCase() + "] "
+                + (dto.getDescripcion() != null ? dto.getDescripcion().trim() : "");
+        String obsPrevias = expediente.getObservaciones() != null ? expediente.getObservaciones() + "\n" : "";
+        expediente.setObservaciones(obsPrevias + nota.trim());
+
+        Expediente guardado = expedienteRepository.save(expediente);
+        registrarEvento(guardado, code, dto.getTitulo().trim(),
+                dto.getDescripcion(), usuarioNombre, dto.getFechaEvento());
+        notificarCliente(guardado,
+                "Actualización de Estado: " + dto.getTitulo().trim(),
+                "Su expediente " + guardado.getCodigoExpediente() + " registra nuevo estado: " + dto.getTitulo().trim()
+                        + (dto.getDescripcion() != null && !dto.getDescripcion().isBlank() ? " — " + dto.getDescripcion().trim() : ""),
+                "DAM");
+        auditar("MARCAR_ESTADO_MANUAL", guardado.getIdExpediente(),
+                code + " en " + guardado.getCodigoExpediente());
+        return mapToResponse(guardado);
+    }
+
+    @Override
+    @Transactional
+    public ExpedienteResponseDTO confirmarVerificacionOrigen(Integer idExpediente, String observaciones, String usuarioNombre) {
+        Expediente expediente = expedienteRepository.findById(idExpediente)
+                .orElseThrow(() -> new ResourceNotFoundException("Expediente no encontrado con ID: " + idExpediente));
+
+        if (expediente.getEstadoExpediente() == EstadoExpediente.ANULADO || expediente.getEstadoExpediente() == EstadoExpediente.CERRADO) {
+            throw new BadRequestException("No se puede confirmar verificación en origen en estado: " + expediente.getEstadoExpediente());
+        }
+
+        LocalDateTime ahora = LocalDateTime.now();
+        expediente.setVerificacionOrigenOk(true);
+        expediente.setFechaVerificacionOrigen(ahora);
+        if (expediente.getEstadoExpediente() == EstadoExpediente.ASIGNADO) {
+            expediente.setEstadoExpediente(EstadoExpediente.EN_TRAMITE);
+        }
+        String detalle = observaciones != null && !observaciones.isBlank()
+                ? observaciones.trim()
+                : "Verificación documentaria y de carga en origen conforme.";
+        String obsPrevias = expediente.getObservaciones() != null ? expediente.getObservaciones() + "\n" : "";
+        expediente.setObservaciones(obsPrevias + "[VERIFICACIÓN EN ORIGEN]: " + detalle);
+
+        Expediente guardado = expedienteRepository.save(expediente);
+        registrarEvento(guardado, "VERIFICACION_ORIGEN", "Verificación en Origen Confirmada", detalle, usuarioNombre, ahora);
+        notificarCliente(guardado,
+                "Verificación en Origen Confirmada: " + guardado.getCodigoExpediente(),
+                "El Agente Aduanero ha validado la verificación en origen para su importación " + guardado.getCodigoExpediente() + ".",
+                "DAM");
+        auditar("VERIFICACION_ORIGEN", guardado.getIdExpediente(), "Verificación en origen en " + guardado.getCodigoExpediente());
+        return mapToResponse(guardado);
+    }
+
+    @Override
+    @Transactional
+    public ExpedienteResponseDTO solicitarCuadrillaYCitaRojo(Integer idExpediente, ExpedienteCuadrillaCitaDTO dto, String usuarioNombre) {
+        Expediente expediente = expedienteRepository.findById(idExpediente)
+                .orElseThrow(() -> new ResourceNotFoundException("Expediente no encontrado con ID: " + idExpediente));
+
+        if (expediente.getCanalSunat() != CanalSunat.ROJO) {
+            throw new BadRequestException("La solicitud de cuadrilla y cita de inspección física aplica exclusivamente para Canal ROJO.");
+        }
+
+        String codigoCita = dto.getCodigoCitaInspeccion() != null && !dto.getCodigoCitaInspeccion().isBlank()
+                ? dto.getCodigoCitaInspeccion().trim()
+                : "CITA-ROJO-" + expediente.getIdExpediente();
+
+        expediente.setCuadrillaSolicitada(true);
+        expediente.setCuadrillaDetalle(dto.getCuadrillaDetalle().trim());
+        expediente.setFechaCitaInspeccion(dto.getFechaCitaInspeccion());
+        expediente.setCodigoCitaInspeccion(codigoCita);
+
+        String nota = String.format("[CANAL ROJO - CUADRILLA Y CITA] Cita: %s | Fecha/Hora: %s | Cuadrilla: %s. %s",
+                codigoCita, dto.getFechaCitaInspeccion(), dto.getCuadrillaDetalle().trim(),
+                dto.getObservaciones() != null ? dto.getObservaciones().trim() : "");
+        String obsPrevias = expediente.getObservaciones() != null ? expediente.getObservaciones() + "\n" : "";
+        expediente.setObservaciones(obsPrevias + nota.trim());
+
+        Expediente guardado = expedienteRepository.save(expediente);
+        registrarEvento(guardado, "CUADRILLA_CITA_ROJO", "Cuadrilla y Cita de Inspección Física (Canal Rojo)",
+                nota.trim(), usuarioNombre);
+        notificarCliente(guardado,
+                "Inspección Física Programada (Canal Rojo): " + guardado.getCodigoExpediente(),
+                "Se ha solicitado cuadrilla (" + dto.getCuadrillaDetalle().trim() + ") y registrado cita de aforo físico " + codigoCita
+                        + " para el " + dto.getFechaCitaInspeccion() + ".",
+                "DAM");
+        auditar("SOLICITAR_CUADRILLA_CITA_ROJO", guardado.getIdExpediente(),
+                "Cuadrilla y cita " + codigoCita + " en " + guardado.getCodigoExpediente());
+        return mapToResponse(guardado);
+    }
+
+    @Override
+    @Transactional
+    public ExpedienteResponseDTO finalizarRevisionRojo(Integer idExpediente, ExpedienteLevanteDTO dto, String usuarioNombre) {
+        Expediente expediente = expedienteRepository.findById(idExpediente)
+                .orElseThrow(() -> new ResourceNotFoundException("Expediente no encontrado con ID: " + idExpediente));
+
+        if (expediente.getCanalSunat() != CanalSunat.ROJO) {
+            throw new BadRequestException("Solo se puede finalizar revisión física de Canal ROJO desde esta acción.");
+        }
+
+        LocalDateTime ahora = dto != null && dto.getFechaLevanteAutorizacion() != null
+                ? dto.getFechaLevanteAutorizacion()
+                : LocalDateTime.now();
+
+        expediente.setRevisionRojoFinalizada(true);
+        expediente.setFechaLevanteAutorizacion(ahora);
+        expediente.setEstadoExpediente(EstadoExpediente.LEVANTE_AUTORIZADO);
+        if (dto != null && dto.getDetalleInspeccion() != null && !dto.getDetalleInspeccion().isBlank()) {
+            expediente.setDetalleInspeccion(dto.getDetalleInspeccion().trim());
+        }
+
+        String nota = "[FIN REVISIÓN CANAL ROJO] Inspección física culminada conforme; levante autorizado."
+                + (dto != null && dto.getObservaciones() != null && !dto.getObservaciones().isBlank()
+                ? " " + dto.getObservaciones().trim()
+                : "");
+        String obsPrevias = expediente.getObservaciones() != null ? expediente.getObservaciones() + "\n" : "";
+        expediente.setObservaciones(obsPrevias + nota);
+
+        Expediente guardado = expedienteRepository.save(expediente);
+        registrarEvento(guardado, "REVISION_ROJO_FINALIZADA", "Revisión Física Canal Rojo Finalizada",
+                nota, usuarioNombre, ahora);
+        notificarCliente(guardado,
+                "Revisión Física Conforme y Levante Autorizado: " + guardado.getCodigoExpediente(),
+                "El Agente Aduanero ha finalizado la inspección física de Canal Rojo en su expediente " + guardado.getCodigoExpediente() + ".",
+                "DAM");
+        auditar("FINALIZAR_REVISION_ROJO", guardado.getIdExpediente(),
+                "Revisión física finalizada en " + guardado.getCodigoExpediente());
+        return mapToResponse(guardado);
+    }
+
+    @Override
+    @Transactional
+    public ExpedienteResponseDTO enviarDocumentosSunatSimulado(Integer idExpediente, ExpedienteSunatSimuladoDTO dto, String usuarioNombre) {
+        Expediente expediente = expedienteRepository.findById(idExpediente)
+                .orElseThrow(() -> new ResourceNotFoundException("Expediente no encontrado con ID: " + idExpediente));
+
+        if (expediente.getCanalSunat() != CanalSunat.NARANJA) {
+            throw new BadRequestException("El envío simulado de documentos a SUNAT aplica para expedientes en Canal NARANJA.");
+        }
+
+        LocalDateTime ahora = LocalDateTime.now();
+        String codigoTx = "SUNAT-SIM-" + ahora.format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
+
+        expediente.setEnvioSunatSimuladoOk(true);
+        expediente.setCodigoTransmisionSunat(codigoTx);
+        expediente.setFechaEnvioSunat(ahora);
+        expediente.setFechaLevanteAutorizacion(ahora);
+        expediente.setEstadoExpediente(EstadoExpediente.LEVANTE_AUTORIZADO);
+
+        String docs = dto != null && dto.getDocumentosIncluidos() != null && !dto.getDocumentosIncluidos().isBlank()
+                ? dto.getDocumentosIncluidos().trim()
+                : "Factura Comercial, Packing List, BL/AWB y DAM";
+        String obs = dto != null && dto.getObservaciones() != null ? dto.getObservaciones().trim() : "";
+
+        expediente.setDetalleInspeccion("Transmisión electrónica SUNAT simulada (" + codigoTx + "): " + docs);
+        String nota = "[ENVÍO SUNAT SIMULADO - CANAL NARANJA] Código: " + codigoTx + " | Documentos: " + docs
+                + (!obs.isBlank() ? " | " + obs : "");
+        String obsPrevias = expediente.getObservaciones() != null ? expediente.getObservaciones() + "\n" : "";
+        expediente.setObservaciones(obsPrevias + nota);
+
+        Expediente guardado = expedienteRepository.save(expediente);
+        registrarEvento(guardado, "ENVIO_SUNAT_SIMULADO", "Documentos Enviados a SUNAT (Canal Naranja)",
+                nota, usuarioNombre, ahora);
+        notificarCliente(guardado,
+                "Documentos Transmitidos a SUNAT (Canal Naranja): " + guardado.getCodigoExpediente(),
+                "Se realizó la transmisión documentaria a SUNAT (Constancia " + codigoTx + "), habilitando el levante aduanero.",
+                "DAM");
+        auditar("ENVIO_SUNAT_SIMULADO", guardado.getIdExpediente(),
+                "Transmisión simulada " + codigoTx + " en " + guardado.getCodigoExpediente());
+        return mapToResponse(guardado);
+    }
+
+    @Override
+    @Transactional
+    public ExpedienteResponseDTO marcarEntregadoAlmacenVerde(Integer idExpediente, String observaciones, String usuarioNombre) {
+        Expediente expediente = expedienteRepository.findById(idExpediente)
+                .orElseThrow(() -> new ResourceNotFoundException("Expediente no encontrado con ID: " + idExpediente));
+
+        if (expediente.getCanalSunat() != CanalSunat.VERDE) {
+            throw new BadRequestException("Esta acción rápida aplica únicamente para expedientes con Canal VERDE.");
+        }
+
+        LocalDateTime ahora = LocalDateTime.now();
+        expediente.setEntregadoAlmacenVerde(true);
+        expediente.setFechaEntregaAlmacenVerde(ahora);
+        if (expediente.getFechaLevanteAutorizacion() == null) {
+            expediente.setFechaLevanteAutorizacion(ahora);
+        }
+        expediente.setEstadoExpediente(EstadoExpediente.LEVANTE_AUTORIZADO);
+
+        String detalle = observaciones != null && !observaciones.isBlank()
+                ? observaciones.trim()
+                : "Carga con Canal Verde marcada como entregada en almacén / terminal.";
+        String obsPrevias = expediente.getObservaciones() != null ? expediente.getObservaciones() + "\n" : "";
+        expediente.setObservaciones(obsPrevias + "[CANAL VERDE - ENTREGADO EN ALMACÉN]: " + detalle);
+
+        Expediente guardado = expedienteRepository.save(expediente);
+        registrarEvento(guardado, "ENTREGADO_ALMACEN_VERDE", "Entregado en Almacén (Canal Verde)",
+                detalle, usuarioNombre, ahora);
+        notificarCliente(guardado,
+                "Mercadería Entregada en Almacén (Canal Verde): " + guardado.getCodigoExpediente(),
+                "Su carga con Canal Verde fue marcada como entregada en almacén para su retiro o despacho a destino.",
+                "DAM");
+        auditar("ENTREGADO_ALMACEN_VERDE", guardado.getIdExpediente(),
+                "Entregado en almacén (Canal Verde) en " + guardado.getCodigoExpediente());
+        return mapToResponse(guardado);
+    }
+
+    @Override
+    @Transactional
+    public ExpedienteResponseDTO emitirInformeConformidadEntrega(Integer idExpediente, ExpedienteInformeConformidadDTO dto, String usuarioNombre) {
+        Expediente expediente = expedienteRepository.findById(idExpediente)
+                .orElseThrow(() -> new ResourceNotFoundException("Expediente no encontrado con ID: " + idExpediente));
+
+        if (expediente.getEstadoExpediente() == EstadoExpediente.ANULADO) {
+            throw new BadRequestException("No se puede emitir informe de conformidad en un expediente ANULADO.");
+        }
+
+        LocalDateTime fechaEntrega = dto.getFechaEntrega() != null ? dto.getFechaEntrega() : LocalDateTime.now();
+        expediente.setReceptorConformidadNombre(dto.getReceptorNombre().trim());
+        expediente.setReceptorConformidadDni(dto.getReceptorDni() != null ? dto.getReceptorDni().trim() : null);
+        expediente.setInformeConformidadTexto(dto.getDetalleConformidad().trim());
+        expediente.setFechaInformeConformidad(fechaEntrega);
+        if (dto.getIdDocumentoConformidad() != null) {
+            expediente.setIdDocumentoConformidadInforme(dto.getIdDocumentoConformidad());
+        }
+
+        String nota = String.format("[INFORME DE CONFORMIDAD DE ENTREGA] Receptor: %s | DNI: %s | %s",
+                dto.getReceptorNombre().trim(),
+                dto.getReceptorDni() != null ? dto.getReceptorDni().trim() : "S/D",
+                dto.getDetalleConformidad().trim());
+        String obsPrevias = expediente.getObservaciones() != null ? expediente.getObservaciones() + "\n" : "";
+        expediente.setObservaciones(obsPrevias + nota);
+
+        Expediente guardado = expedienteRepository.save(expediente);
+        registrarEvento(guardado, "INFORME_CONFORMIDAD_EMITIDO", "Informe de Conformidad de Entrega Emitido",
+                nota, usuarioNombre, fechaEntrega);
+        notificarCliente(guardado,
+                "Informe de Conformidad Disponible: " + guardado.getCodigoExpediente(),
+                "Se ha redactado el Informe de Conformidad de Entrega para su expediente " + guardado.getCodigoExpediente()
+                        + " (Receptor: " + dto.getReceptorNombre().trim() + "). Ya puede descargarlo desde el Portal B2B.",
+                "DAM");
+        auditar("EMITIR_INFORME_CONFORMIDAD", guardado.getIdExpediente(),
+                "Informe de conformidad emitido en " + guardado.getCodigoExpediente());
+        return mapToResponse(guardado);
     }
 
     @Override
@@ -716,6 +1171,7 @@ public class ExpedienteServiceImpl implements IExpedienteService {
         expediente.setEstadoExpediente(EstadoExpediente.ANULADO);
         expediente.setFechaCierre(LocalDateTime.now());
         expedienteRepository.save(expediente);
+        auditar("ANULAR_EXPEDIENTE", idExpediente, "Anulación de expediente " + expediente.getCodigoExpediente());
     }
 
     private String generarCodigoExpediente() {
@@ -739,23 +1195,47 @@ public class ExpedienteServiceImpl implements IExpedienteService {
                 .toList();
         Map<Integer, DespachoTransporte> despachoMap = idsExp.isEmpty()
                 ? Map.of()
-                : despachoRepository.findByExpediente_IdExpedienteIn(idsExp).stream()
+                : despachoRepository.findByExpediente_IdExpedienteInAndEstadoTransporteNot(idsExp, EstadoTransporte.CANCELADO).stream()
                 .filter(d -> d.getExpediente() != null)
                 .collect(Collectors.toMap(d -> d.getExpediente().getIdExpediente(), Function.identity(), (a, b) -> a));
+        Map<Integer, List<ExpedienteEventoDTO>> eventosMap = (expedienteEventoRepository == null || idsExp.isEmpty())
+                ? Map.of()
+                : expedienteEventoRepository.findByExpediente_IdExpedienteInOrderByFechaEventoAscIdEventoAsc(idsExp).stream()
+                .filter(ev -> ev.getExpediente() != null)
+                .collect(Collectors.groupingBy(ev -> ev.getExpediente().getIdExpediente(),
+                        Collectors.mapping(this::mapEventoToDTO, Collectors.toList())));
 
         return expedientes.stream()
-                .map(e -> mapToResponse(e, Optional.ofNullable(despachoMap.get(e.getIdExpediente()))))
+                .map(e -> mapToResponse(e, Optional.ofNullable(despachoMap.get(e.getIdExpediente())),
+                        eventosMap.getOrDefault(e.getIdExpediente(), List.of())))
                 .toList();
     }
 
     private ExpedienteResponseDTO mapToResponse(Expediente e) {
         var despachoOpt = e.getIdExpediente() != null
-                ? despachoRepository.findByExpediente_IdExpediente(e.getIdExpediente())
+                ? despachoRepository.findFirstByExpediente_IdExpedienteAndEstadoTransporteNotOrderByIdDespachoTransporteDesc(
+                        e.getIdExpediente(), EstadoTransporte.CANCELADO)
                 : Optional.<DespachoTransporte>empty();
-        return mapToResponse(e, despachoOpt);
+        List<ExpedienteEventoDTO> eventos = (expedienteEventoRepository != null && e.getIdExpediente() != null)
+                ? expedienteEventoRepository.findByExpediente_IdExpedienteOrderByFechaEventoAscIdEventoAsc(e.getIdExpediente())
+                        .stream().map(this::mapEventoToDTO).toList()
+                : List.of();
+        return mapToResponse(e, despachoOpt, eventos);
     }
 
-    private ExpedienteResponseDTO mapToResponse(Expediente e, Optional<DespachoTransporte> despachoOpt) {
+    private ExpedienteEventoDTO mapEventoToDTO(ExpedienteEvento ev) {
+        return ExpedienteEventoDTO.builder()
+                .idEvento(ev.getIdEvento())
+                .codigoEstado(ev.getCodigoEstado())
+                .titulo(ev.getTitulo())
+                .descripcion(ev.getDescripcion())
+                .regimen(ev.getRegimen())
+                .usuarioNombre(ev.getUsuarioNombre())
+                .fechaEvento(ev.getFechaEvento())
+                .build();
+    }
+
+    private ExpedienteResponseDTO mapToResponse(Expediente e, Optional<DespachoTransporte> despachoOpt, List<ExpedienteEventoDTO> eventos) {
         var cot = e.getCotizacion();
         var merc = e.getMercancia() != null ? e.getMercancia() : (cot != null ? cot.getMercancia() : null);
         var tc = e.getTipoCarga() != null ? e.getTipoCarga() : (cot != null ? cot.getTipoCarga() : null);
@@ -794,6 +1274,29 @@ public class ExpedienteServiceImpl implements IExpedienteService {
                 .numeroContenedor(e.getNumeroContenedor())
                 .precintoAduanero(e.getPrecintoAduanero())
                 .naveViaje(e.getNaveViaje())
+                .tipoTransporteInternacional(e.getTipoTransporteInternacional())
+                .numeroVuelo(e.getNumeroVuelo())
+                .enEsperaTransito(Boolean.TRUE.equals(e.getEnEsperaTransito()))
+                .enRevisionAduana(Boolean.TRUE.equals(e.getEnRevisionAduana()))
+                .idDocumentoConformidadDestino(e.getIdDocumentoConformidadDestino())
+                .verificacionOrigenOk(Boolean.TRUE.equals(e.getVerificacionOrigenOk()))
+                .fechaVerificacionOrigen(e.getFechaVerificacionOrigen())
+                .cuadrillaSolicitada(Boolean.TRUE.equals(e.getCuadrillaSolicitada()))
+                .cuadrillaDetalle(e.getCuadrillaDetalle())
+                .fechaCitaInspeccion(e.getFechaCitaInspeccion())
+                .codigoCitaInspeccion(e.getCodigoCitaInspeccion())
+                .revisionRojoFinalizada(Boolean.TRUE.equals(e.getRevisionRojoFinalizada()))
+                .envioSunatSimuladoOk(Boolean.TRUE.equals(e.getEnvioSunatSimuladoOk()))
+                .codigoTransmisionSunat(e.getCodigoTransmisionSunat())
+                .fechaEnvioSunat(e.getFechaEnvioSunat())
+                .entregadoAlmacenVerde(Boolean.TRUE.equals(e.getEntregadoAlmacenVerde()))
+                .fechaEntregaAlmacenVerde(e.getFechaEntregaAlmacenVerde())
+                .informeConformidadTexto(e.getInformeConformidadTexto())
+                .fechaInformeConformidad(e.getFechaInformeConformidad())
+                .receptorConformidadNombre(e.getReceptorConformidadNombre())
+                .receptorConformidadDni(e.getReceptorConformidadDni())
+                .idDocumentoConformidadInforme(e.getIdDocumentoConformidadInforme())
+                .eventos(eventos != null ? eventos : List.of())
                 .estadoExpediente(e.getEstadoExpediente())
                 .fechaApertura(e.getFechaApertura())
                 .fechaCierre(e.getFechaCierre())
@@ -847,7 +1350,7 @@ public class ExpedienteServiceImpl implements IExpedienteService {
                 .servicioTransporte(cot != null && Boolean.TRUE.equals(cot.getServicioTransporte()))
                 .idDespachoTransporte(despachoOpt.map(DespachoTransporte::getIdDespachoTransporte).orElse(null))
                 .codigoTrackingTransporte(despachoOpt.map(DespachoTransporte::getCodigoTracking).orElse(null))
-                .estadoTransporte(despachoOpt.map(DespachoTransporte::getEstadoTransporte).orElse(null))
+                .estadoTransporte(despachoOpt.map(d -> d.getEstadoTransporte() != null ? d.getEstadoTransporte().name() : null).orElse(null))
                 .build();
     }
 }

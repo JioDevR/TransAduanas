@@ -22,7 +22,7 @@ export const adminRoutes = [
     meta: {
       requiresAuth: true,
       roles: [ROLES.ADMINISTRADOR_TI, ROLES.GERENTE_GENERAL],
-      title: 'Administración TI - Personal Interno - SGA'
+      title: 'Usuarios Internos - SGA'
     }
   },
   {
@@ -32,18 +32,32 @@ export const adminRoutes = [
     meta: {
       requiresAuth: true,
       roles: [ROLES.ADMINISTRADOR_TI, ROLES.GERENTE_GENERAL],
-      title: 'Administración TI - Usuarios Portal Clientes B2B - SGA'
+      title: 'Cuentas Corporativas B2B - SGA'
     }
   },
 
   {
-    path: '/administracion-ti/logs',
-    name: 'AdminLogs',
-    component: () => import('@/features/admin/views/SystemLogsView.vue'),
+    path: '/administracion-ti/auditoria',
+    name: 'AdminAuditoria',
+    component: () => import('@/features/admin/views/AuditoriaTiView.vue'),
     meta: {
       requiresAuth: true,
       roles: [ROLES.ADMINISTRADOR_TI],
-      title: 'Bitácora y Consola de Logs TI - SGA'
+      title: 'Registro de Eventos y Seguridad - SGA'
+    }
+  },
+  {
+    path: '/administracion-ti/roles-accesos',
+    redirect: '/administracion-ti/almacenamiento'
+  },
+  {
+    path: '/administracion-ti/almacenamiento',
+    name: 'AdminAlmacenamiento',
+    component: () => import('@/features/admin/views/AlmacenamientoView.vue'),
+    meta: {
+      requiresAuth: true,
+      roles: [ROLES.ADMINISTRADOR_TI, ROLES.GERENTE_GENERAL],
+      title: 'Almacenamiento y Repositorio Documental - SGA'
     }
   },
   {

@@ -1,6 +1,9 @@
 package pe.sga.dto.response;
 
 import lombok.*;
+import pe.sga.entity.enums.EstadoTransporte;
+import pe.sga.entity.enums.TipoTraslado;
+import pe.sga.entity.enums.TipoVehiculo;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -14,7 +17,7 @@ public class DespachoTransporteResponseDTO {
 
     private Integer idDespachoTransporte;
     private String codigoTracking;
-    private String tipoTraslado;
+    private TipoTraslado tipoTraslado;
 
     // Expediente asociado
     private Integer idExpediente;
@@ -30,7 +33,6 @@ public class DespachoTransporteResponseDTO {
 
     // Recursos Asignados 3NF
     private Integer idConductor;
-    private Integer idUsuarioConductor;
     private String conductorNombre;
     private String conductorLicencia;
     private String conductorTelefono;
@@ -39,8 +41,9 @@ public class DespachoTransporteResponseDTO {
     private String unidadPlacaTracto;
     private String unidadPlacaCarreta;
     private String unidadMarcaModelo;
-    private String unidadTipoVehiculo;
+    private TipoVehiculo unidadTipoVehiculo;
     private BigDecimal unidadCapacidadKg;
+    private Integer unidadKilometrajeActual;
 
     // Documentación y Ruta
     private String guiaRemisionTransporte;
@@ -60,7 +63,7 @@ public class DespachoTransporteResponseDTO {
     private LocalDateTime fechaEntregaConforme;
 
     // Estado
-    private String estadoTransporte;
+    private EstadoTransporte estadoTransporte;
     private String detalleIncidencia;
     private String observaciones;
 }

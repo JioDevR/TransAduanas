@@ -8,8 +8,7 @@ export const ROLES = {
   SUPERVISOR_ADUANERO: 'SUPERVISOR_ADUANERO',
   AGENTE_ADUANERO: 'AGENTE_ADUANERO',
   SUPERVISOR_TRANSPORTE: 'SUPERVISOR_TRANSPORTE',
-  CONTADOR: 'CONTADOR',
-  ASESOR_LEGAL: 'ASESOR_LEGAL'
+  CONTADOR: 'CONTADOR'
 }
 
 export const ROLE_LABELS = {
@@ -19,8 +18,7 @@ export const ROLE_LABELS = {
   [ROLES.SUPERVISOR_ADUANERO]: 'Supervisor Aduanero',
   [ROLES.AGENTE_ADUANERO]: 'Agente Aduanero',
   [ROLES.SUPERVISOR_TRANSPORTE]: 'Supervisor de Transporte',
-  [ROLES.CONTADOR]: 'Contador',
-  [ROLES.ASESOR_LEGAL]: 'Asesor Legal'
+  [ROLES.CONTADOR]: 'Contador'
 }
 
 export const ROLE_MODULE_MAP = {
@@ -30,8 +28,7 @@ export const ROLE_MODULE_MAP = {
   [ROLES.SUPERVISOR_ADUANERO]: 'gestion-aduanera',
   [ROLES.AGENTE_ADUANERO]: 'agente-aduanero',
   [ROLES.SUPERVISOR_TRANSPORTE]: 'transporte-flota',
-  [ROLES.CONTADOR]: 'finanzas',
-  [ROLES.ASESOR_LEGAL]: 'legal-auditoria'
+  [ROLES.CONTADOR]: 'finanzas'
 }
 
 export const ROLE_HOME_PATH = {
@@ -41,8 +38,7 @@ export const ROLE_HOME_PATH = {
   [ROLES.SUPERVISOR_ADUANERO]: '/gestion-aduanera',
   [ROLES.AGENTE_ADUANERO]: '/agente-aduanero',
   [ROLES.SUPERVISOR_TRANSPORTE]: '/transporte-flota',
-  [ROLES.CONTADOR]: '/finanzas',
-  [ROLES.ASESOR_LEGAL]: '/legal-auditoria'
+  [ROLES.CONTADOR]: '/finanzas'
 }
 
 export function getHomeRouteForRole(role) {
@@ -56,6 +52,5 @@ export const ROLE_OPTIONS = [
   { value: ROLES.SUPERVISOR_ADUANERO, label: ROLE_LABELS[ROLES.SUPERVISOR_ADUANERO] },
   { value: ROLES.AGENTE_ADUANERO, label: ROLE_LABELS[ROLES.AGENTE_ADUANERO] },
   { value: ROLES.SUPERVISOR_TRANSPORTE, label: ROLE_LABELS[ROLES.SUPERVISOR_TRANSPORTE] },
-  { value: ROLES.CONTADOR, label: ROLE_LABELS[ROLES.CONTADOR] },
-  { value: ROLES.ASESOR_LEGAL, label: ROLE_LABELS[ROLES.ASESOR_LEGAL] }
+  { value: ROLES.CONTADOR, label: ROLE_LABELS[ROLES.CONTADOR] }
 ]

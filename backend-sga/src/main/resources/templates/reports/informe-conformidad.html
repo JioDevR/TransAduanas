@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <title th:text="'Informe de Conformidad ' + ${codigoExpediente}">Informe de Conformidad de Entrega</title>
+    <style>
+        @page {
+            size: A4 portrait;
+            margin: 18mm 15mm 18mm 15mm;
+            @top-right {
+                content: "ACTA OFICIAL // CONFORMIDAD DE ENTREGA";
+                font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+                font-size: 7.5pt;
+                font-weight: bold;
+                color: #9a7f60;
+            }
+            @bottom-left {
+                content: "TransAduanas del Perú S.A.C. — Gestión Aduanera y Logística Integral";
+                font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+                font-size: 7pt;
+                color: #8c827a;
+            }
+            @bottom-right {
+                content: "Página " counter(page) " de " counter(pages);
+                font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+                font-size: 7.5pt;
+                font-weight: bold;
+                color: #352f2a;
+            }
+        }
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            color: #2b2520;
+            font-size: 9pt;
+            line-height: 1.45;
+            margin: 0;
+            padding: 0;
+        }
+        .header-table {
+            width: 100%;
+            border-bottom: 2px solid #352f2a;
+            padding-bottom: 10px;
+            margin-bottom: 16px;
+        }
+        .brand-kicker {
+            font-size: 7.5pt;
+            font-weight: bold;
+            letter-spacing: 0.9px;
+            color: #9a7f60;
+            text-transform: uppercase;
+            margin-bottom: 3px;
+        }
+        .report-title {
+            font-size: 16pt;
+            font-weight: bold;
+            color: #2b2520;
+            margin: 0 0 4px 0;
+        }
+        .meta-box {
+            border: 1px solid #d9d0c7;
+            background-color: #faf7f2;
+            padding: 10px 12px;
+            margin-bottom: 14px;
+        }
+        .grid-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 14px;
+        }
+        .grid-table td {
+            border: 1px solid #e2dad1;
+            padding: 7px 9px;
+            vertical-align: top;
+        }
+        .label {
+            font-size: 7.2pt;
+            font-weight: bold;
+            text-transform: uppercase;
+            color: #7c7065;
+            display: block;
+            margin-bottom: 2px;
+        }
+        .val {
+            font-size: 9pt;
+            font-weight: bold;
+            color: #2b2520;
+        }
+        .section-title {
+            font-size: 10pt;
+            font-weight: bold;
+            color: #352f2a;
+            border-bottom: 1px solid #d9d0c7;
+            padding-bottom: 4px;
+            margin: 14px 0 8px 0;
+            text-transform: uppercase;
+        }
+        .conformidad-box {
+            border: 1px solid #c9bfb3;
+            background-color: #ffffff;
+            padding: 12px;
+            min-height: 85px;
+            white-space: pre-wrap;
+        }
+        .sign-table {
+            width: 100%;
+            margin-top: 34px;
+        }
+        .sign-cell {
+            width: 48%;
+            text-align: center;
+            vertical-align: bottom;
+            padding-top: 32px;
+        }
+        .sign-line {
+            border-top: 1px solid #352f2a;
+            width: 82%;
+            margin: 0 auto 5px auto;
+        }
+    </style>
+</head>
+<body>
+    <table class="header-table">
+        <tr>
+            <td style="width:65%; vertical-align:top;">
+                <div class="brand-kicker">TRANSADUANAS DEL PERÚ S.A.C. // DESPACHO ADUANERO</div>
+                <h1 class="report-title">Informe de Conformidad de Entrega al Cliente</h1>
+                <div>Constancia formal de entrega física y cierre operativo de mercancía</div>
+            </td>
+            <td style="width:35%; text-align:right; vertical-align:top;">
+                <div><strong>Expediente:</strong> <span th:text="${codigoExpediente}">EXP-2026-0001</span></div>
+                <div><strong>DAM SUNAT:</strong> <span th:text="${numeroDam}">S/N</span></div>
+                <div><strong>Fecha Emisión:</strong> <span th:text="${fechaInforme}">2026-11-24</span></div>
+            </td>
+        </tr>
+    </table>
+
+    <table class="grid-table">
+        <tr>
+            <td style="width:55%;">
+                <span class="label">Cliente / Importador</span>
+                <span class="val" th:text="${clienteRazonSocial}">Empresa S.A.C.</span>
+            </td>
+            <td style="width:45%;">
+                <span class="label">RUC</span>
+                <span class="val" th:text="${clienteRuc}">20000000001</span>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <span class="label">Mercancía Despachada</span>
+                <span class="val" th:text="${mercanciaNombre}">Equipos Móviles</span>
+            </td>
+            <td>
+                <span class="label">Canal SUNAT / Agente Aduanero</span>
+                <span class="val" th:text="${canalSunat} + ' — ' + ${agenteNombre}">VERDE — Agente</span>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <span class="label">Receptor Conforme (Cliente)</span>
+                <span class="val" th:text="${receptorNombre}">Nombre Receptor</span>
+            </td>
+            <td>
+                <span class="label">DNI / Documento de Identidad</span>
+                <span class="val" th:text="${receptorDni}">00000000</span>
+            </td>
+        </tr>
+    </table>
+
+    <div class="section-title">Detalle y Observaciones de Conformidad</div>
+    <div class="conformidad-box" th:text="${detalleConformidad}">
+        Entrega realizada conforme en almacén del cliente.
+    </div>
+
+    <div class="meta-box" style="margin-top: 14px;">
+        <span class="label">Declaración de Conformidad</span>
+        Por medio del presente documento se deja constancia de la entrega de la mercancía amparada bajo el expediente
+        <strong th:text="${codigoExpediente}">EXP</strong> y DAM <strong th:text="${numeroDam}">DAM</strong>,
+        verificándose la integridad de bultos, precintos y documentación aduanera correspondiente.
+    </div>
+
+    <table class="sign-table">
+        <tr>
+            <td class="sign-cell">
+                <div class="sign-line"></div>
+                <strong th:text="${agenteNombre}">Agente Aduanero</strong><br />
+                <span>Agente Aduanero — TransAduanas</span>
+            </td>
+            <td style="width:4%;"></td>
+            <td class="sign-cell">
+                <div class="sign-line"></div>
+                <strong th:text="${receptorNombre}">Receptor Conforme</strong><br />
+                <span>DNI: <span th:text="${receptorDni}">—</span> — Cliente</span>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

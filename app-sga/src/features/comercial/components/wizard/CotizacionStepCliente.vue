@@ -333,17 +333,18 @@ const docTypeOptions = [
 }
 
 .sga-form-grid.cols-3 {
-  grid-template-columns: 0.85fr 1fr 1.35fr;
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1fr) minmax(0, 1.35fr);
 }
 
 .sga-form-grid.cols-2 {
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .sga-field {
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
+  min-width: 0;
 }
 
 .sga-field-label {
@@ -401,7 +402,7 @@ const docTypeOptions = [
 
 .sga-clients-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr));
   gap: 0.75rem;
 }
 
@@ -415,6 +416,8 @@ const docTypeOptions = [
   background: var(--color-bg-base);
   text-align: left;
   cursor: pointer;
+  min-width: 0;
+  overflow: hidden;
   transition: border-color var(--transition-fast), background-color var(--transition-fast);
 }
 

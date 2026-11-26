@@ -234,16 +234,24 @@ const transporteDisplay = computed(() => {
 .sga-proforma-aside {
   position: sticky;
   top: 1.5rem;
+  min-width: 0;
+}
+
+@media (max-width: 1200px) {
+  .sga-proforma-aside {
+    position: static;
+  }
 }
 
 .sga-proforma-card {
   background: var(--color-bg-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--sga-card-radius, 14px);
-  padding: var(--sga-card-padding-y, 1.75rem) var(--sga-card-padding-x, 2rem);
+  padding: var(--sga-card-padding-y, 1.5rem) var(--sga-card-padding-x, 1.75rem);
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  min-width: 0;
 }
 
 .sga-proforma-header {
@@ -322,6 +330,8 @@ const transporteDisplay = computed(() => {
   color: var(--color-text-main);
   text-align: right;
   font-weight: 500;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .sga-row-num {

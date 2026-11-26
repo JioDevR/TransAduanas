@@ -11,6 +11,8 @@ public class UsuarioPortalReporteItemDTO {
 
     private String username;
     private String empresa;
+    private String ruc;
     private String representante;
     private String correo;
+    private String estado;
 }

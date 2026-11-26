@@ -1,5 +1,6 @@
 package pe.sga.dto.request;
 
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 
@@ -27,6 +28,7 @@ public class DespachoEntregaDTO {
 
     private String detalleIncidencia;
 
+    @Min(value = 0, message = "El kilometraje de llegada no puede ser negativo")
     private Integer kilometrajeLlegada;
 
     private String observaciones;

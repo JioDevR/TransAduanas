@@ -40,6 +40,9 @@ ALTER TABLE usuario AUTO_INCREMENT = 2;
 ALTER TABLE notificacion_cliente AUTO_INCREMENT = 1;
 ALTER TABLE usuario_cliente AUTO_INCREMENT = 1;
 ALTER TABLE cliente AUTO_INCREMENT = 1;
+ALTER TABLE conductor AUTO_INCREMENT = 1;
+ALTER TABLE unidad_transporte AUTO_INCREMENT = 1;
+ALTER TABLE despacho_transporte AUTO_INCREMENT = 1;
 
 -- =============================================================================
 -- 1. SEDES DEL SISTEMA (CATÁLOGO MAESTRO DE SEDES Y SUCURSALES)
@@ -260,10 +263,6 @@ INSERT IGNORE INTO usuario (id_usuario, rol, id_sede, username, password_hash, n
 
 INSERT INTO usuario (id_usuario, rol, id_sede, username, password_hash, nombres, apellidos, correo_institucional, tipo_documento, numero_documento, telefono, cargo_titulo, codigo_sunat, ultimo_acceso, estado_activo) VALUES
     (2, 'GERENTE_GENERAL', 1, 'gerente', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', 'Carlos', 'Mendoza Valdivia', 'gerencia@transaduanas.pe', 'DNI', '00000002', '+51 999 000 002', 'Gerente General', 'GG-001', NOW(), TRUE),
-    (3, 'ASESOR_LEGAL', 1, 'legal', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', 'Fernando', 'Arana Silva', 'legal@transaduanas.pe', 'DNI', '10234567', '+51 987 112 001', 'Asesor Legal', 'LEG-001', NOW(), TRUE),
-    (4, 'ASESOR_LEGAL', 2, 'mcamacho', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', 'Mariana', 'Camacho Ruiz', 'm.camacho@transaduanas.pe', 'DNI', '10345678', '+51 987 112 002', 'Asesor Legal', 'LEG-002', NOW(), TRUE),
-    (5, 'ASESOR_LEGAL', 5, 'jvilchez', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', 'Javier', 'Vilchez Navarro', 'j.vilchez@transaduanas.pe', 'DNI', '10456789', '+51 987 112 003', 'Asesor Legal', 'LEG-003', NOW(), TRUE),
-    (6, 'ASESOR_LEGAL', 6, 'cportugal', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', 'Claudia', 'Portugal Yabar', 'c.portugal@transaduanas.pe', 'DNI', '10567890', '+51 987 112 004', 'Asesor Legal', 'LEG-004', NOW(), TRUE),
     (7, 'CONTADOR', 1, 'contador', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', 'Elena', 'Morales Benitez', 'finanzas@transaduanas.pe', 'DNI', '20123456', '+51 987 223 001', 'Contador', 'CON-001', NOW(), TRUE),
     (8, 'CONTADOR', 2, 'rsalazar', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', 'Ricardo', 'Salazar Huaman', 'r.salazar@transaduanas.pe', 'DNI', '20234567', '+51 987 223 002', 'Contador', 'CON-002', NOW(), TRUE),
     (9, 'CONTADOR', 3, 'gmontoya', '$2a$10$vbDgD4A8kg.sizd9I.P/AO44N1VeIvOSzvk8BbxZoqb5j9iJZ48Ee', 'Gisela', 'Montoya Cordova', 'g.montoya@transaduanas.pe', 'DNI', '20345678', '+51 987 223 003', 'Contador', 'CON-003', NOW(), TRUE),
@@ -504,8 +503,8 @@ INSERT INTO unidad_transporte (id_unidad, placa_tracto, placa_carreta, marca_mod
     (1, 'V1A-780', 'T1A-981', 'Volvo FH 500 Globetrotter', 2022, 'TRACTO', 32000.00, '2027-08-15', '2027-09-20', 145000, 'EN_RUTA', TRUE, 'Tracto con suspensión neumática y GPS satelital'),
     (2, 'V2B-890', 'T2B-982', 'Scania R500 V8 Streamline', 2021, 'TRACTO', 32000.00, '2027-04-10', '2027-05-12', 198000, 'DISPONIBLE', TRUE, 'Asignado a rutas interprovinciales'),
     (3, 'V3C-910', NULL, 'International ProStar 450', 2020, 'TRACTO', 30000.00, DATE_ADD(CURRENT_DATE, INTERVAL 15 DAY), DATE_ADD(CURRENT_DATE, INTERVAL 45 DAY), 220000, 'DISPONIBLE', TRUE, 'Alerta preventiva: SOAT próximo a vencer en 15 días'),
-    (4, 'T1A-981', NULL, 'Randon Plataforma 3 Ejes', 2022, 'PLATAFORMA', 34000.00, '2027-11-30', '2027-12-15', 85000, 'DISPONIBLE', TRUE, 'Plataforma para contenedores 20ft y 40ft con piñas de seguridad'),
-    (5, 'T2B-982', NULL, 'Tremac Semirremolque Baranda Rebatible', 2023, 'PLATAFORMA', 32000.00, '2028-02-28', '2028-03-15', 62000, 'DISPONIBLE', TRUE, 'Plataforma con barandas desmontables para carga suelta'),
+    (4, 'P4A-983', NULL, 'Randon Plataforma 3 Ejes', 2022, 'PLATAFORMA', 34000.00, '2027-11-30', '2027-12-15', 85000, 'DISPONIBLE', TRUE, 'Plataforma para contenedores 20ft y 40ft con piñas de seguridad'),
+    (5, 'P5B-984', NULL, 'Tremac Semirremolque Baranda Rebatible', 2023, 'PLATAFORMA', 32000.00, '2028-02-28', '2028-03-15', 62000, 'DISPONIBLE', TRUE, 'Plataforma con barandas desmontables para carga suelta'),
     (6, 'F4D-550', NULL, 'Scania P360 Furgon Refrigerado ThermoKing', 2023, 'FURGON', 22000.00, '2027-10-18', '2027-11-10', 85000, 'DISPONIBLE', TRUE, 'Furgón reefer bi-temperatura certificado Senasa'),
     (7, 'F5E-660', NULL, 'Hino 500 Series Furgon Seco', 2022, 'FURGON', 18000.00, '2027-06-25', '2027-07-30', 110000, 'DISPONIBLE', TRUE, 'Furgón cerrado con rampa hidráulica de 2.5T'),
     (8, 'B7G-110', NULL, 'Isuzu Forward 12T Baranda Alta', 2021, 'CAMION_BARANDA', 12000.00, '2027-09-05', '2027-10-01', 130000, 'DISPONIBLE', TRUE, 'Camión baranda para reparto urbano y consolidado');
@@ -513,13 +512,13 @@ INSERT INTO unidad_transporte (id_unidad, placa_tracto, placa_carreta, marca_mod
 -- =============================================================================
 -- CONDUCTORES PROFESIONALES DE TRANSPORTE (MTC)
 -- =============================================================================
-INSERT INTO conductor (id_conductor, id_usuario, nombres, apellidos, numero_documento, telefono, tipo_licencia, numero_licencia, fecha_vencimiento_licencia, estado_operativo, estado_activo, observaciones) VALUES
-    (1, 54, 'Raul', 'Cardenas Melendez', '60123456', '+51 987 667 001', 'A-IIIc', 'Q60123456', '2028-05-15', 'EN_RUTA', TRUE, 'Conductor master con certificación MATPEL y 15 años de experiencia'),
-    (2, 55, 'Enrique', 'Bravo Rojas', '60234567', '+51 987 667 002', 'A-IIIc', 'Q60234567', '2027-12-10', 'DISPONIBLE', TRUE, 'Especialista en tractos de alto tonelaje Callao-Sur'),
-    (3, 56, 'Wilmer', 'Galarza Silva', '60345678', '+51 987 667 003', 'A-IIIb', 'Q60345678', DATE_ADD(CURRENT_DATE, INTERVAL 20 DAY), 'DISPONIBLE', TRUE, 'Alerta preventiva: Brevete profesional próximo a revalidar'),
-    (4, 57, 'Oscar', 'Sanchez Huamanchumo', '60456789', '+51 987 667 004', 'A-IIIc', 'Q60456789', '2028-03-22', 'DISPONIBLE', TRUE, 'Operador de furgón refrigerado y control de cadena de frío'),
-    (5, 58, 'Felix', 'Paredes Valles', '60567890', '+51 987 667 005', 'A-IIIc', 'Q60567890', '2027-09-30', 'DISPONIBLE', TRUE, 'Rutas interprovinciales y puertos norte (Paita / Salaverry)'),
-    (6, 59, 'Juan', 'Castaneda Luna', '60678901', '+51 987 667 006', 'A-IIIb', 'Q60678901', '2028-01-14', 'DISPONIBLE', TRUE, 'Distribución local en parques industriales de Lima');
+INSERT INTO conductor (id_conductor, nombres, apellidos, numero_documento, telefono, tipo_licencia, numero_licencia, fecha_vencimiento_licencia, estado_operativo, estado_activo, observaciones) VALUES
+    (1, 'Raul', 'Cardenas Melendez', '60123456', '+51 987 667 001', 'A-IIIc', 'Q60123456', '2028-05-15', 'EN_RUTA', TRUE, 'Conductor master con certificación MATPEL y 15 años de experiencia'),
+    (2, 'Enrique', 'Bravo Rojas', '60234567', '+51 987 667 002', 'A-IIIc', 'Q60234567', '2027-12-10', 'DISPONIBLE', TRUE, 'Especialista en tractos de alto tonelaje Callao-Sur'),
+    (3, 'Wilmer', 'Galarza Silva', '60345678', '+51 987 667 003', 'A-IIIb', 'Q60345678', DATE_ADD(CURRENT_DATE, INTERVAL 20 DAY), 'DISPONIBLE', TRUE, 'Alerta preventiva: Brevete profesional próximo a revalidar'),
+    (4, 'Oscar', 'Sanchez Huamanchumo', '60456789', '+51 987 667 004', 'A-IIIc', 'Q60456789', '2028-03-22', 'DISPONIBLE', TRUE, 'Operador de furgón refrigerado y control de cadena de frío'),
+    (5, 'Felix', 'Paredes Valles', '60567890', '+51 987 667 005', 'A-IIIc', 'Q60567890', '2027-09-30', 'DISPONIBLE', TRUE, 'Rutas interprovinciales y puertos norte (Paita / Salaverry)'),
+    (6, 'Juan', 'Castaneda Luna', '60678901', '+51 987 667 006', 'A-IIIb', 'Q60678901', '2028-01-14', 'DISPONIBLE', TRUE, 'Distribución local en parques industriales de Lima');
 
 -- =============================================================================
 -- COTIZACIONES, PAGOS Y EXPEDIENTES OPERATIVOS CON TRANSPORTE VINCULADO

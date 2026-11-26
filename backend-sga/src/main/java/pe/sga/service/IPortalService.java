@@ -22,9 +22,17 @@ public interface IPortalService {
 
     PortalCotizacionDTO aceptarCotizacion(Integer idCliente, Integer idCotizacion);
 
+    PortalCotizacionDTO rechazarCotizacion(Integer idCliente, Integer idCotizacion, PortalCotizacionRechazoDTO dto);
+
     List<PortalExpedienteDTO> listarExpedientes(Integer idCliente);
 
     PortalExpedienteDTO buscarExpedientePorId(Integer idCliente, Integer idExpediente);
+
+    PortalExpedienteDTO crearExpedienteSimple(Integer idCliente, PortalExpedienteSimpleDTO dto, Integer idUsuarioCliente);
+
+    PortalExpedienteDTO actualizarDatosClienteExpediente(Integer idCliente, Integer idExpediente, PortalExpedienteDatosClienteDTO dto);
+
+    pe.sga.dto.response.ExpedienteResponseDTO obtenerExpedienteParaInformePdf(Integer idCliente, Integer idExpediente);
 
     PortalResumenFinancieroDTO obtenerResumenFinanciero(Integer idCliente);
 

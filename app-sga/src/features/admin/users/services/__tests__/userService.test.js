@@ -42,4 +42,15 @@ describe('userService PDF report', () => {
     })
     expect(result).toBe(fakeBlob)
   })
+
+  it('resetPassword sends PATCH to /usuarios/{id}/reset-password', async () => {
+    apiClient.patch.mockResolvedValueOnce({ data: { success: true } })
+
+    const res = await userService.resetPassword(15, 'ClaveTemp2026!')
+
+    expect(apiClient.patch).toHaveBeenCalledWith('/usuarios/15/reset-password', {
+      nuevaPassword: 'ClaveTemp2026!'
+    })
+    expect(res).toEqual({ success: true })
+  })
 })

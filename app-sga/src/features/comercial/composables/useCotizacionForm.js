@@ -1,10 +1,24 @@
 import { ref, computed, watch, onMounted } from 'vue'
-import { FilterService } from '@primevue/core/api'
 import { useAuthStore } from '@/features/auth/stores/authStore'
 import { comercialService } from '../services/comercialService'
 import { catalogoService } from '@/features/admin/catalogos/services/catalogoService'
 import { documentoService } from '@/features/documentos/services/documentoService'
-import { getDepartamentosPeru, getProvinciasPorDepartamento } from '../data/peruUbigeo'
+import {
+  getDepartamentosPeru,
+  getProvinciasPorDepartamento,
+  normalizeDepartamentoPeru,
+  normalizeProvinciaPeru
+} from '../data/peruUbigeo'
+import {
+  REGIMEN_OPTIONS,
+  getRegimenLabel,
+  getTipoCargaDescripcionFallback,
+  normalizeSearchText,
+  ensureSmartFilterRegistered,
+  mapPuertosCatalogo,
+  mapTiposCargaCatalogo,
+  mapMercanciasCatalogo
+} from '../utils/cotizacionCatalogos'
 import {
   calcularValorCif,
   calcularMontoAdValorem,
@@ -14,71 +28,7 @@ import {
 } from './useCotizacionCalculator'
 import { useModalidadPuertos } from './useModalidadPuertos'
 
-export const REGIMEN_OPTIONS = [
-  {
-    value: 'IMPORTACION_DEFINITIVA',
-    codigo: 'REG-10',
-    label: 'Importación para el Consumo',
-    desc: 'Ingreso legal de mercancías para consumo definitivo previo pago de tributos.'
-  },
-  {
-    value: 'EXPORTACION_DEFINITIVA',
-    codigo: 'REG-40',
-    label: 'Exportación Definitiva',
-    desc: 'Salida de mercancías del territorio aduanero para uso o consumo en el exterior.'
-  }
-]
-
-const DESCRIPCIONES_TIPO_CARGA_FALLBACK = {
-  CARGA_FCL: 'Contenedor exclusivo de 20 o 40 pies para un único consignatario',
-  CARGA_LCL: 'Carga agrupada en contenedor compartido para múltiples importadores',
-  CARGA_REEFER: 'Mercancías con cadena de frío continua y atmósfera controlada',
-  CARGA_RO_RO: 'Vehículos y maquinaria autopropulsada embarcada por rampas',
-  CARGA_PROYECTO: 'Bienes sobredimensionados o con peso extrapesado fuera de estándar',
-  CARGA_GRANEL_SOLIDO: 'Sólidos transportados a granel en bodegas sin empaque unitario',
-  CARGA_GRANEL_LIQUIDO: 'Líquidos transportados en buques tanque o tanques cisterna ISO',
-  CARGA_PELIGROSA_IMO: 'Sustancias peligrosas reguladas según código marítimo internacional IMO',
-  CARGA_VALORADA: 'Carga de alto valor comercial sujeta a protocolo de seguridad y custodia',
-  CARGA_AEREA_SUELTA: 'Bultos y cajas sueltas estibadas en bodegas inferiores del avión (belly cargo)',
-  CARGA_AEREA_ULD_PALLET: 'Pallet aeronáutico de aluminio estandarizado IATA con red de sujeción',
-  CARGA_AEREA_ULD_CONT: 'Contenedor liviano adaptado a la curvatura del fuselaje de la aeronave',
-  CARGA_AEREA_COURIER: 'Envíos de entrega rápida y comercio electrónico internacional',
-  CARGA_AEREA_PERECIBLE: 'Fármacos y perecibles en contenedor activo refrigerado con monitoreo continuo',
-  CARGA_AEREA_DGR_IATA: 'Mercancías peligrosas reguladas bajo la estricta normativa técnica IATA DGR',
-  CARGA_AEREA_VALORADA: 'Metales preciosos, joyas y divisas en bóveda blindada aeroportuaria con escolta',
-  CARGA_AEREA_AVI: 'Transporte aéreo de mascotas y animales vivos en cabina o bodega presurizada'
-}
-
-export const normalizeSearchText = (text) => {
-  if (!text) return ''
-  return text
-    .toString()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .trim()
-}
-
-let smartFilterRegistered = false
-const ensureSmartFilterRegistered = () => {
-  if (smartFilterRegistered) return
-  FilterService.register('smart', (value, filter) => {
-    if (filter === undefined || filter === null || filter === '') return true
-    if (value === undefined || value === null) return false
-    const normVal = normalizeSearchText(value)
-    const tokens = normalizeSearchText(filter).split(/\s+/).filter(Boolean)
-    if (tokens.length === 0) return true
-    return tokens.every((tok) => normVal.includes(tok))
-  })
-  smartFilterRegistered = true
-}
-
-const unwrapList = (res) => {
-  if (!res) return []
-  if (Array.isArray(res)) return res
-  if (Array.isArray(res.data)) return res.data
-  return []
-}
+export { REGIMEN_OPTIONS, normalizeSearchText }
 
 const createDefaultQuickClient = () => ({
   tipoDocumento: 'RUC',
@@ -157,8 +107,12 @@ export function useCotizacionForm(props, emit) {
   const isUnassignedClaim = computed(() => isEditMode.value && !props.cotizacionToEdit?.idUsuarioComercial)
 
   const departamentosList = computed(() => getDepartamentosPeru())
-  const provinciasOrigenList = computed(() => getProvinciasPorDepartamento(form.value.origenDepartamento))
-  const provinciasDestinoList = computed(() => getProvinciasPorDepartamento(form.value.destinoDepartamento))
+  const provinciasOrigenList = computed(() =>
+    getProvinciasPorDepartamento(form.value.origenDepartamento, form.value.origenProvincia)
+  )
+  const provinciasDestinoList = computed(() =>
+    getProvinciasPorDepartamento(form.value.destinoDepartamento, form.value.destinoProvincia)
+  )
 
   const onOrigenDepartamentoChange = () => {
     const provs = getProvinciasPorDepartamento(form.value.origenDepartamento)
@@ -190,15 +144,13 @@ export function useCotizacionForm(props, emit) {
     return puertos.value.find((p) => p.idPuerto === form.value.idPuertoDestino) || null
   })
 
-  const getDescripcionFallback = (codigo) => {
-    return (codigo && DESCRIPCIONES_TIPO_CARGA_FALLBACK[codigo]) || ''
-  }
+  const getDescripcionFallback = getTipoCargaDescripcionFallback
 
   const selectedTipoCarga = computed(() => {
     if (!form.value.idTipoCarga) return null
     const found = tiposCarga.value.find((tc) => tc.idTipoCarga === form.value.idTipoCarga)
     if (!found) return null
-    return { ...found, descripcion: found.descripcion || getDescripcionFallback(found.codigo) }
+    return { ...found, descripcion: found.descripcion || getTipoCargaDescripcionFallback(found.codigo) }
   })
 
   const regimenAduaneroComputed = computed(() => form.value.regimenAduanero)
@@ -228,10 +180,7 @@ export function useCotizacionForm(props, emit) {
         catalogoService.getMercancias(true)
       ])
       if (puertosRes.status === 'fulfilled') {
-        puertos.value = unwrapList(puertosRes.value).map((p) => ({
-          ...p,
-          searchCorpus: `${p.codigoPuerto || ''} ${p.nombre || ''} ${p.pais || ''} ${p.tipo || ''}`
-        }))
+        puertos.value = mapPuertosCatalogo(puertosRes.value)
         if (props.cotizacionToEdit?.idCotizacion) {
           inferirDesdePuertos()
         } else {
@@ -239,20 +188,10 @@ export function useCotizacionForm(props, emit) {
         }
       }
       if (tiposCargaRes.status === 'fulfilled') {
-        tiposCarga.value = unwrapList(tiposCargaRes.value).map((t) => {
-          const desc = t.descripcion || getDescripcionFallback(t.codigo)
-          return {
-            ...t,
-            descripcion: desc,
-            searchCorpus: `${t.codigo || ''} ${t.nombre || ''} ${desc}`
-          }
-        })
+        tiposCarga.value = mapTiposCargaCatalogo(tiposCargaRes.value)
       }
       if (mercanciasRes.status === 'fulfilled') {
-        mercancias.value = unwrapList(mercanciasRes.value).map((m) => ({
-          ...m,
-          searchCorpus: `${m.codigo || ''} ${m.nombre || ''} ${m.categoria || ''} ${m.entidadReguladora || ''}`
-        }))
+        mercancias.value = mapMercanciasCatalogo(mercanciasRes.value)
       }
     } catch (err) {
       console.error('Error cargando catálogos para cotización:', err)
@@ -293,6 +232,8 @@ export function useCotizacionForm(props, emit) {
 
       if (val && val.idCotizacion) {
         currentStep.value = !val.idUsuarioComercial ? 4 : 1
+        const origDep = normalizeDepartamentoPeru(val.origenDepartamento, 'CALLAO')
+        const destDep = normalizeDepartamentoPeru(val.destinoDepartamento, 'LIMA')
         form.value = {
           codigoCotizacion: val.codigoCotizacion || '',
           idCliente: val.idCliente || '',
@@ -304,10 +245,10 @@ export function useCotizacionForm(props, emit) {
           idTipoCarga: val.idTipoCarga || null,
           idMercancia: val.idMercancia || null,
           servicioTransporte: val.servicioTransporte === true,
-          origenDepartamento: val.origenDepartamento || 'CALLAO',
-          origenProvincia: val.origenProvincia || 'Callao',
-          destinoDepartamento: val.destinoDepartamento || 'LIMA',
-          destinoProvincia: val.destinoProvincia || 'Lima (Metropolitana)',
+          origenDepartamento: origDep,
+          origenProvincia: normalizeProvinciaPeru(origDep, val.origenProvincia, 'Callao'),
+          destinoDepartamento: destDep,
+          destinoProvincia: normalizeProvinciaPeru(destDep, val.destinoProvincia, 'Lima (Metropolitana)'),
           costoTransporteInterno: Number(val.costoTransporteInterno || 0),
           valorFob: Number(val.valorFob || 0),
           montoFleteEstimado: Number(val.montoFleteEstimado || 0),
@@ -503,11 +444,6 @@ export function useCotizacionForm(props, emit) {
   const formatNumber = (num) => {
     if (num === null || num === undefined || isNaN(num)) return '0.00'
     return Number(num).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-  }
-
-  const getRegimenLabel = (val) => {
-    const match = REGIMEN_OPTIONS.find((r) => r.value === val)
-    return match ? `${match.label} (${match.codigo})` : val
   }
 
   const isFormReady = computed(() => {

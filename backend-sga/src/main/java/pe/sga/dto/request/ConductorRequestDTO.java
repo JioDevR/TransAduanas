@@ -1,9 +1,10 @@
 package pe.sga.dto.request;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.*;
+import pe.sga.entity.enums.CategoriaLicenciaMtc;
+import pe.sga.entity.enums.EstadoOperativoConductor;
 
 import java.time.LocalDate;
 
@@ -14,8 +15,6 @@ import java.time.LocalDate;
 @Builder
 public class ConductorRequestDTO {
 
-    private Integer idUsuario;
-
     @NotBlank(message = "El nombre es obligatorio")
     @Size(max = 100, message = "El nombre no puede exceder 100 caracteres")
     private String nombres;
@@ -24,12 +23,11 @@ public class ConductorRequestDTO {
     @Size(max = 100, message = "El apellido no puede exceder 100 caracteres")
     private String apellidos;
 
-    @Size(max = 15, message = "El número de documento no puede exceder 15 caracteres")
+    @Size(min = 8, max = 15, message = "El número de documento debe tener entre 8 y 15 caracteres")
     private String numeroDocumento;
 
     @Builder.Default
-    @Size(max = 10, message = "El tipo de licencia no puede exceder 10 caracteres")
-    private String tipoLicencia = "A-IIIc";
+    private CategoriaLicenciaMtc tipoLicencia = CategoriaLicenciaMtc.A_IIIC;
 
     @NotBlank(message = "El número de licencia es obligatorio")
     @Size(max = 20, message = "El número de licencia no puede exceder 20 caracteres")
@@ -41,17 +39,10 @@ public class ConductorRequestDTO {
     private String telefono;
 
     @Builder.Default
-    private String estadoOperativo = "DISPONIBLE";
+    private EstadoOperativoConductor estadoOperativo = EstadoOperativoConductor.DISPONIBLE;
 
     @Builder.Default
     private Boolean estadoActivo = true;
 
     private String observaciones;
-
-    @JsonProperty("categoriaLicencia")
-    public void setCategoriaLicencia(String cat) {
-        if (cat != null && !cat.isBlank()) {
-            this.tipoLicencia = cat;
-        }
-    }
 }

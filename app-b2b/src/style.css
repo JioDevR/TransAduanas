@@ -7,16 +7,16 @@
    ========================================================================== */
 
 :root {
-  /* Escala Tipográfica Estandarizada */
-  --font-size-2xs: 0.6875rem; /* 11px - kickers, badges compactos, micro-etiquetas */
-  --font-size-xs: 0.75rem;    /* 12px - metadatos, tags, fechas */
-  --font-size-sm: 0.8125rem;  /* 13px - inputs, botones secundarios, tablas */
-  --font-size-base: 0.875rem; /* 14px - cuerpo de lectura principal */
-  --font-size-md: 0.9375rem;  /* 15px - subtítulos intermedios, badges destacados */
-  --font-size-lg: 1.125rem;   /* 18px - títulos de tarjetas y modales */
-  --font-size-xl: 1.25rem;    /* 20px - títulos de sección */
-  --font-size-2xl: 1.45rem;   /* 23.2px - título de topbar y KPIs */
-  --font-size-3xl: 1.875rem;  /* 30px - cifras maestras de dashboard */
+  /* Escala Tipográfica Estandarizada (referenciada desde sgaUI/sga-theme.css sobre 1rem = 16px) */
+  --font-size-2xs: var(--sga-text-2xs, 0.6875rem); /* 11px */
+  --font-size-xs: var(--sga-text-xs, 0.75rem);      /* 12px */
+  --font-size-sm: var(--sga-text-sm, 0.8125rem);    /* 13px */
+  --font-size-base: var(--sga-text-base, 0.875rem); /* 14px */
+  --font-size-md: var(--sga-text-md, 1rem);         /* 16px */
+  --font-size-lg: var(--sga-text-lg, 1.125rem);     /* 16–18px */
+  --font-size-xl: var(--sga-text-xl, 1.35rem);      /* 18–21.6px */
+  --font-size-2xl: var(--sga-text-2xl, 1.65rem);    /* 20–26.4px */
+  --font-size-3xl: clamp(1.5rem, 1.3rem + 0.9vw, 1.875rem); /* 24–30px */
 
   /* Pesos Tipográficos */
   --font-weight-regular: 400;

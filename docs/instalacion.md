@@ -79,7 +79,7 @@ Antes de comenzar, verifica que tengas instaladas las siguientes herramientas en
 El sistema utiliza una base de datos llamada `SGAdb` con juego de caracteres `utf8mb4` (`utf8mb4_unicode_ci`). Los scripts SQL oficiales se encuentran en la carpeta [`db/`](../db):
 
 - [`db/schema.sql`](../db/schema.sql): Crea la base de datos `SGAdb` y las **17 tablas relacionales** con sus llaves foráneas e índices.
-- [`db/seed.sql`](../db/seed.sql): Inserta los datos iniciales completos para probar el proyecto (6 sedes, 80 puertos/aeropuertos, 17 tipos de carga, 52 subpartidas arancelarias NANDINA, 65 usuarios internos en los 8 roles y 80 empresas clientes con cuentas del Portal B2B).
+- [`db/seed.sql`](../db/seed.sql): Inserta los datos iniciales completos para probar el proyecto (6 sedes, 80 puertos/aeropuertos, 17 tipos de carga, 52 subpartidas arancelarias NANDINA, 61 usuarios internos en los 7 roles y 80 empresas clientes con cuentas del Portal B2B).
 
 **Ejecuta los siguientes comandos desde la raíz del repositorio:**
 
@@ -155,7 +155,7 @@ mvn spring-boot:run
 
 ### 1.5 Paso 3: Instalación y Ejecución del Frontend Interno (SGA Operativo)
 
-El **Frontend Interno** ([`app-sga/`](../app-sga)) es la aplicación web principal donde operan los **8 roles institucionales**. Corre en el puerto `5180` y redirige automáticamente las llamadas `/api` hacia `http://localhost:8085`.
+El **Frontend Interno** ([`app-sga/`](../app-sga)) es la aplicación web principal donde operan los **7 roles institucionales**. Corre en el puerto `5180` y redirige automáticamente las llamadas `/api` hacia `http://localhost:8085`.
 
 Abre una **nueva terminal** desde la raíz del proyecto y ejecuta:
 
@@ -224,7 +224,6 @@ Para probar el flujo completo del proyecto de extremo a extremo, utiliza las sig
 | **`AGENTE_ADUANERO`** | `agente` | `fbalbuena`, `lmejia`, `ccordova` | `/agente-aduanero` |
 | **`SUPERVISOR_TRANSPORTE`** | `transporte` | `ebravor`, `wgalarza`, `osanchez` | `/transporte-flota` |
 | **`CONTADOR`** | `contador` | `rsalazar`, `gmontoya`, `lcornejo` | `/finanzas` |
-| **`ASESOR_LEGAL`** | `legal` | `mcamacho`, `jvilchez`, `cportugal` | `/legal-auditoria` |
 
 #### B. Cuentas Corporativas del Portal B2B (`http://localhost:5174`)
 En el Portal B2B se inicia sesión con el **número de RUC (11 dígitos)** y la contraseña **`Password123!`**:

@@ -196,7 +196,7 @@ import Select from 'primevue/select'
 import Textarea from 'primevue/textarea'
 import BaseModal from '@/shared/components/BaseModal.vue'
 import { almacenService } from '../services/almacenService'
-import { expedienteService } from '../services/expedienteService'
+import { expedienteService } from '@/shared/services/expedienteService'
 import { sedeService } from '@/features/admin/sedes/services/sedeService'
 
 const tipoIngresoOptions = [
@@ -259,10 +259,11 @@ const form = ref(defaultForm())
 
 const loadAuxData = async () => {
   try {
-    const [exps, sedes] = await Promise.all([
-      expedienteService.getExpedientes(),
-      sedeService.getSedes(true)
-    ])
+    const sedesPromise = sedeService.getSedes(true)
+    const expsPromise = props.expediente?.idExpediente
+      ? Promise.resolve([props.expediente])
+      : expedienteService.getExpedientes()
+    const [exps, sedes] = await Promise.all([expsPromise, sedesPromise])
     expedientesList.value = exps || []
     sedesList.value = sedes || []
     if (sedesList.value.length > 0 && !form.value.idSedeDeposito) {
@@ -270,9 +271,6 @@ const loadAuxData = async () => {
     }
     if (props.expediente?.idExpediente) {
       form.value.idExpediente = props.expediente.idExpediente
-      if (!expedientesList.value.some((e) => e.idExpediente === props.expediente.idExpediente)) {
-        expedientesList.value.unshift(props.expediente)
-      }
     } else if (expedientesList.value.length > 0 && !form.value.idExpediente) {
       form.value.idExpediente = expedientesList.value[0].idExpediente
     }

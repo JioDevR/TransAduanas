@@ -32,6 +32,8 @@ public interface ICotizacionService {
 
     CotizacionResponseDTO revisarTecnicamente(Integer id, CotizacionRevisionDTO dto);
 
+    CotizacionResponseDTO enviarAGestionAduanera(Integer id, Usuario usuarioActual);
+
     CotizacionResponseDTO cambiarEstado(Integer id, EstadoCotizacion estado, String motivoObservacion);
 
     void anular(Integer id, Usuario usuarioActual);

@@ -14,7 +14,6 @@ public final class SecurityRoles {
     public static final String AGENTE_ADUANERO = "AGENTE_ADUANERO";
     public static final String SUPERVISOR_TRANSPORTE = "SUPERVISOR_TRANSPORTE";
     public static final String CONTADOR = "CONTADOR";
-    public static final String ASESOR_LEGAL = "ASESOR_LEGAL";
 
     // Expresiones SpEL reutilizables para @PreAuthorize
     public static final String HAS_ROLE_ADMIN_TI = "hasRole('" + ADMINISTRADOR_TI + "')";
@@ -22,8 +21,7 @@ public final class SecurityRoles {
     public static final String HAS_ANY_ADMIN = "hasAnyRole('" + ADMINISTRADOR_TI + "', '" + GERENTE_GENERAL + "')";
     public static final String ACCESS_INTERNAL_STAFF = "hasAnyRole('" + ADMINISTRADOR_TI + "', '"
             + GERENTE_GENERAL + "', '" + AGENTE_COMERCIAL + "', '" + SUPERVISOR_ADUANERO + "', '"
-            + AGENTE_ADUANERO + "', '" + SUPERVISOR_TRANSPORTE + "', '" + CONTADOR + "', '"
-            + ASESOR_LEGAL + "')";
+            + AGENTE_ADUANERO + "', '" + SUPERVISOR_TRANSPORTE + "', '" + CONTADOR + "')";
 
     // Matriz de accesos por módulo/dominio:
 
@@ -44,7 +42,7 @@ public final class SecurityRoles {
     // 3. Clientes y Cotizaciones
     public static final String ACCESS_CLIENTE_COTIZACION_READ = "hasAnyRole('" + ADMINISTRADOR_TI + "', '"
             + GERENTE_GENERAL + "', '" + AGENTE_COMERCIAL + "', '" + SUPERVISOR_ADUANERO + "', '" + AGENTE_ADUANERO
-            + "', '" + CONTADOR + "', '" + ASESOR_LEGAL + "')";
+            + "', '" + CONTADOR + "')";
     public static final String ACCESS_CLIENTE_COTIZACION_WRITE = "hasAnyRole('" + ADMINISTRADOR_TI + "', '"
             + GERENTE_GENERAL + "', '" + AGENTE_COMERCIAL + "')";
     public static final String ACCESS_COTIZACION_PAGO_WRITE = "hasAnyRole('" + ADMINISTRADOR_TI + "', '"
@@ -55,7 +53,7 @@ public final class SecurityRoles {
     // 4. Expedientes y Control de Almacén
     public static final String ACCESS_EXPEDIENTE_READ = ACCESS_INTERNAL_STAFF;
     public static final String ACCESS_EXPEDIENTE_ALMACEN_READ = "hasAnyRole('" + ADMINISTRADOR_TI + "', '"
-            + GERENTE_GENERAL + "', '" + SUPERVISOR_ADUANERO + "', '" + AGENTE_ADUANERO + "', '" + ASESOR_LEGAL + "', '"
+            + GERENTE_GENERAL + "', '" + SUPERVISOR_ADUANERO + "', '" + AGENTE_ADUANERO + "', '"
             + SUPERVISOR_TRANSPORTE + "', '" + CONTADOR + "')";
     public static final String ACCESS_EXPEDIENTE_ALMACEN_WRITE = "hasAnyRole('" + ADMINISTRADOR_TI + "', '"
             + GERENTE_GENERAL + "', '" + SUPERVISOR_ADUANERO + "', '" + AGENTE_ADUANERO + "')";
@@ -68,7 +66,7 @@ public final class SecurityRoles {
 
     // 6. Liquidación Financiera
     public static final String ACCESS_LIQUIDACION_READ = "hasAnyRole('" + ADMINISTRADOR_TI + "', '" + GERENTE_GENERAL
-            + "', '" + CONTADOR + "', '" + SUPERVISOR_ADUANERO + "', '" + ASESOR_LEGAL + "')";
+            + "', '" + CONTADOR + "', '" + SUPERVISOR_ADUANERO + "')";
     public static final String ACCESS_LIQUIDACION_WRITE = "hasAnyRole('" + ADMINISTRADOR_TI + "', '" + GERENTE_GENERAL
             + "', '" + CONTADOR + "', '" + SUPERVISOR_ADUANERO + "')";
 

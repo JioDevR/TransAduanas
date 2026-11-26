@@ -116,8 +116,8 @@ import Button from 'primevue/button'
 import InputText from 'primevue/inputtext'
 import Textarea from 'primevue/textarea'
 import BaseModal from '@/shared/components/BaseModal.vue'
-import { expedienteService } from '../services/expedienteService'
-import { getNowDateTimeInput } from '@/shared/utils/dateUtils'
+import { expedienteService } from '@/shared/services/expedienteService'
+import { getNowDateTimeInput, toLocalDateTimePayload } from '@/shared/utils/dateUtils'
 
 const props = defineProps({
   visible: { type: Boolean, default: false },
@@ -179,7 +179,7 @@ const handleSubmit = async () => {
       distritoRecojo: form.value.distritoRecojo,
       almacenDestinoTerminal: form.value.almacenDestinoTerminal,
       contactoPlanta: form.value.contactoPlanta,
-      fechaProgramadaRecojo: form.value.fechaProgramadaRecojo ? new Date(form.value.fechaProgramadaRecojo).toISOString() : null,
+      fechaProgramadaRecojo: toLocalDateTimePayload(form.value.fechaProgramadaRecojo),
       observaciones: form.value.observaciones
     }
 

@@ -5,8 +5,16 @@ import {
   calcularMontoAdValorem,
   calcularMontoIgv,
   calcularMontoPercepcion,
-  calcularLiquidacionIntegral
+  calcularLiquidacionIntegral,
+  formatMoney
 } from './useCotizacionCalculator'
+import {
+  REGIMEN_OPTIONS,
+  getRegimenLabel,
+  getTipoCargaDescripcionFallback,
+  ensureSmartFilterRegistered
+} from '../utils/cotizacionCatalogos'
+import { normalizeDepartamentoPeru, normalizeProvinciaPeru } from '../data/peruUbigeo'
 
 /**
  * Composable que encapsula la gestión de estado y recálculos automáticos
@@ -14,14 +22,26 @@ import {
  *
  * @param {Object} options
  * @param {import('vue').Ref<Object>} options.cotizacion - Objeto de la cotización observada
- * @param {import('vue').Ref<Array>} options.puertos - Lista completa de puertos de catálogo
+ * @param {import('vue').Ref<Array>} [options.puertos] - Lista completa de puertos de catálogo
+ * @param {import('vue').Ref<Array>} [options.tiposCarga] - Lista de tipos de carga
+ * @param {import('vue').Ref<Array>} [options.mercancias] - Lista de mercancías arancelarias
+ * @param {import('vue').Ref<Array>} [options.clientes] - Lista de clientes disponibles
  */
-export function useCotizacionCorrection({ cotizacion, puertos = ref([]) }) {
+export function useCotizacionCorrection({
+  cotizacion,
+  puertos = ref([]),
+  tiposCarga = ref([]),
+  mercancias = ref([]),
+  clientes = ref([])
+}) {
+  ensureSmartFilterRegistered()
+
   const form = ref({
     idCotizacion: null,
     codigoCotizacion: '',
     idCliente: null,
     clienteRazonSocial: '',
+    clienteNumeroDocumento: '',
     idUsuarioComercial: 1,
     validezDias: 15,
     regimenAduanero: 'IMPORTACION_DEFINITIVA',
@@ -69,12 +89,57 @@ export function useCotizacionCorrection({ cotizacion, puertos = ref([]) }) {
     form
   })
 
+  // Objetos seleccionados para vista previa y subcomponentes sgaUI
+  const selectedClientObject = computed(() => {
+    const list = Array.isArray(clientes?.value) ? clientes.value : []
+    const match = list.find((c) => c.idCliente === form.value.idCliente)
+    if (match) return match
+    if (form.value.clienteRazonSocial) {
+      return {
+        idCliente: form.value.idCliente,
+        razonSocial: form.value.clienteRazonSocial,
+        tipoDocumento: 'DOC',
+        numeroDocumento: form.value.clienteNumeroDocumento || 'S/D'
+      }
+    }
+    return null
+  })
+
+  const selectedPuertoEnvio = computed(() => {
+    if (!form.value.idPuertoEnvio) return null
+    const list = Array.isArray(puertos?.value) ? puertos.value : []
+    return list.find((p) => p.idPuerto === form.value.idPuertoEnvio) || null
+  })
+
+  const selectedPuertoDestino = computed(() => {
+    if (!form.value.idPuertoDestino) return null
+    const list = Array.isArray(puertos?.value) ? puertos.value : []
+    return list.find((p) => p.idPuerto === form.value.idPuertoDestino) || null
+  })
+
+  const selectedTipoCarga = computed(() => {
+    if (!form.value.idTipoCarga) return null
+    const list = Array.isArray(tiposCarga?.value) ? tiposCarga.value : []
+    const found = list.find((tc) => tc.idTipoCarga === form.value.idTipoCarga)
+    if (!found) return null
+    return { ...found, descripcion: found.descripcion || getTipoCargaDescripcionFallback(found.codigo) }
+  })
+
+  const selectedMercancia = computed(() => {
+    if (!form.value.idMercancia) return null
+    const list = Array.isArray(mercancias?.value) ? mercancias.value : []
+    return list.find((m) => m.idMercancia === form.value.idMercancia) || null
+  })
+
   // Sincronizar formulario cuando cambia la cotización recibida
   const initFromCotizacion = (c) => {
     if (!c) return
     motivoObservacion.value = c.motivoObservacion || ''
     notaSubsanacion.value = ''
     seguroManual.value = Number(c.montoSeguroEstimado || 0) > 0
+
+    const origDep = normalizeDepartamentoPeru(c.origenDepartamento, 'CALLAO')
+    const destDep = normalizeDepartamentoPeru(c.destinoDepartamento, 'LIMA')
 
     form.value = {
       idCotizacion: c.idCotizacion || null,
@@ -90,10 +155,10 @@ export function useCotizacionCorrection({ cotizacion, puertos = ref([]) }) {
       idTipoCarga: c.idTipoCarga || null,
       idMercancia: c.idMercancia || null,
       servicioTransporte: c.servicioTransporte === true,
-      origenDepartamento: c.origenDepartamento || 'CALLAO',
-      origenProvincia: c.origenProvincia || 'Callao',
-      destinoDepartamento: c.destinoDepartamento || 'LIMA',
-      destinoProvincia: c.destinoProvincia || 'Lima (Metropolitana)',
+      origenDepartamento: origDep,
+      origenProvincia: normalizeProvinciaPeru(origDep, c.origenProvincia, 'Callao'),
+      destinoDepartamento: destDep,
+      destinoProvincia: normalizeProvinciaPeru(destDep, c.destinoProvincia, 'Lima (Metropolitana)'),
       costoTransporteInterno: Number(c.costoTransporteInterno || 0),
       valorFob: Number(c.valorFob || 0),
       montoFleteEstimado: Number(c.montoFleteEstimado || 0),
@@ -161,6 +226,17 @@ export function useCotizacionCorrection({ cotizacion, puertos = ref([]) }) {
       form.value.montoTributosEstimado = result.montoTributos
       form.value.totalCotizado = result.totalCotizado
     }
+  }
+
+  const handleSeguroManualInput = (val) => {
+    if (val !== undefined) form.value.montoSeguroEstimado = Number(val) || 0
+    seguroManual.value = true
+    recalcularLiquidacion()
+  }
+
+  const resetearSeguroAutomatico = () => {
+    seguroManual.value = false
+    recalcularLiquidacion()
   }
 
   // Observador de cambios en insumos económicos para recalcular automáticamente
@@ -233,6 +309,7 @@ export function useCotizacionCorrection({ cotizacion, puertos = ref([]) }) {
     motivoObservacion,
     notaSubsanacion,
     seguroManual,
+    regimenOptions: REGIMEN_OPTIONS,
     modalidadTransporte,
     paisOrigen,
     paisDestino,
@@ -240,14 +317,23 @@ export function useCotizacionCorrection({ cotizacion, puertos = ref([]) }) {
     paisesDestinoDisponibles,
     puertosOrigenFiltrados,
     puertosDestinoFiltrados,
+    selectedClientObject,
+    selectedPuertoEnvio,
+    selectedPuertoDestino,
+    selectedTipoCarga,
+    selectedMercancia,
     setModalidad,
     aplicarReglasRegimen,
+    handleSeguroManualInput,
+    resetearSeguroAutomatico,
     valorCif,
     montoAdValorem,
     montoIgv,
     montoPercepcion,
     recalcularLiquidacion,
     validateCorrection,
-    buildSubmissionPayload
+    buildSubmissionPayload,
+    getRegimenLabel,
+    formatNumber: formatMoney
   }
 }

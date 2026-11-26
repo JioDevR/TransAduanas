@@ -1,6 +1,7 @@
 package pe.sga.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pe.sga.dto.request.SedeCreateDTO;
@@ -10,6 +11,7 @@ import pe.sga.entity.Sede;
 import pe.sga.exception.BadRequestException;
 import pe.sga.exception.ResourceNotFoundException;
 import pe.sga.repository.SedeRepository;
+import pe.sga.service.IAuditoriaService;
 import pe.sga.service.ISedeService;
 
 import java.util.List;
@@ -19,6 +21,20 @@ import java.util.List;
 public class SedeServiceImpl implements ISedeService {
 
     private final SedeRepository sedeRepository;
+
+    private IAuditoriaService auditoriaService;
+
+    @Autowired(required = false)
+    public void setAuditoriaService(IAuditoriaService auditoriaService) {
+        this.auditoriaService = auditoriaService;
+    }
+
+    private void auditar(String accion, Integer idSede, String detalle) {
+        if (auditoriaService != null) {
+            auditoriaService.registrar("MAESTROS", accion, "SEDE",
+                    idSede != null ? String.valueOf(idSede) : null, detalle, "EXITO");
+        }
+    }
 
     @Override
     @Transactional(readOnly = true)
@@ -61,7 +77,10 @@ public class SedeServiceImpl implements ISedeService {
                 .estado(dto.getEstado() != null ? dto.getEstado() : "OPERATIVO")
                 .build();
 
-        return mapToResponse(sedeRepository.save(sede));
+        Sede guardada = sedeRepository.save(sede);
+        auditar("CREAR_SEDE", guardada.getIdSede(),
+                "Sede creada: " + guardada.getCodigoSede() + " - " + guardada.getNombre());
+        return mapToResponse(guardada);
     }
 
     @Override
@@ -77,7 +96,10 @@ public class SedeServiceImpl implements ISedeService {
         if (dto.getTelefono() != null) sede.setTelefono(dto.getTelefono());
         if (dto.getEstado() != null) sede.setEstado(dto.getEstado());
 
-        return mapToResponse(sedeRepository.save(sede));
+        Sede guardada = sedeRepository.save(sede);
+        auditar("ACTUALIZAR_SEDE", guardada.getIdSede(),
+                "Sede actualizada: " + guardada.getCodigoSede() + " - " + guardada.getNombre());
+        return mapToResponse(guardada);
     }
 
     @Override
@@ -87,6 +109,8 @@ public class SedeServiceImpl implements ISedeService {
                 .orElseThrow(() -> new ResourceNotFoundException("Sede no encontrada con ID: " + idSede));
         sede.setEstado("INACTIVO");
         sedeRepository.save(sede);
+        auditar("DESACTIVAR_SEDE", sede.getIdSede(),
+                "Sede desactivada: " + sede.getCodigoSede() + " - " + sede.getNombre());
     }
 
     @Override
@@ -96,6 +120,8 @@ public class SedeServiceImpl implements ISedeService {
                 .orElseThrow(() -> new ResourceNotFoundException("Sede no encontrada con ID: " + idSede));
         sede.setEstado("OPERATIVO");
         sedeRepository.save(sede);
+        auditar("REACTIVAR_SEDE", sede.getIdSede(),
+                "Sede reactivada: " + sede.getCodigoSede() + " - " + sede.getNombre());
     }
 
     private SedeResponseDTO mapToResponse(Sede sede) {

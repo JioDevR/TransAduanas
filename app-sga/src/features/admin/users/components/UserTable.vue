@@ -1,232 +1,283 @@
 <template>
-  <div class="user-table-container">
-    <!-- Barra de Filtros y Búsqueda -->
-    <div class="table-toolbar">
-      <div class="search-box">
-        <i class="pi pi-search search-icon"></i>
-        <input
-          v-model="searchQuery"
-          type="text"
-          placeholder="Buscar por usuario, nombre, documento, código SUNAT o cargo..."
-          class="search-input"
-        />
-        <button
-          v-if="searchQuery"
-          @click="searchQuery = ''"
-          class="clear-search-btn"
-          type="button"
-          title="Limpiar búsqueda"
-        >
-          <i class="pi pi-times"></i>
-        </button>
+  <section class="sga-list-panel">
+    <!-- Barra superior sgaUI: conteo a la izquierda, acciones a la derecha -->
+    <div class="sga-dash-header">
+      <div class="sga-dash-meta">
+        <Tag :value="`${activeUsersCount} cuentas activas`" severity="secondary" />
       </div>
 
-      <div class="filters-group">
-        <!-- Filtro por Rol -->
-        <select v-model="selectedRoleFilter" class="filter-select">
-          <option value="">Todos los Roles</option>
-          <option v-for="rol in roles" :key="rol.idRol" :value="rol.nombreRol">
-            {{ ROLE_LABELS[rol.nombreRol] || rol.nombreRol }}
-          </option>
-        </select>
-
-        <!-- Filtro por Estado -->
-        <select v-model="statusFilter" class="filter-select">
-          <option value="ALL">Todos los Estados</option>
-          <option value="ACTIVE">Solo Activos</option>
-          <option value="INACTIVE">Solo Inactivos</option>
-        </select>
+      <div class="sga-dash-actions">
+        <Button
+          label="Actualizar"
+          icon="pi pi-sync"
+          severity="secondary"
+          outlined
+          size="small"
+          :loading="loading"
+          @click="$emit('refresh')"
+        />
+        <Button
+          label="Nuevo Usuario"
+          icon="pi pi-plus"
+          size="small"
+          @click="$emit('create')"
+        />
       </div>
     </div>
 
-    <!-- Contenedor de la Tabla con PrimeVue DataTable -->
-    <div class="table-responsive">
-      <DataTable
-        :value="paginatedUsers"
-        :loading="loading"
-        responsiveLayout="scroll"
-        class="custom-datatable"
-        dataKey="idUsuario"
-        :rowClass="(data) => ({ 'row-inactive': !data.estadoActivo })"
-      >
-        <template #empty>
-          <div class="empty-state">
-            <i class="pi pi-users empty-icon"></i>
-            <p class="empty-title">No se encontraron usuarios</p>
-            <p class="empty-desc">Prueba cambiando los filtros o agregando un nuevo usuario.</p>
-          </div>
-        </template>
+    <!-- Contenedor sgaUI de Filtros + Tarjetas Canvas -->
+    <div class="sga-card-surface sga-table-card">
+      <div class="sga-table-toolbar">
+        <div class="sga-toolbar-filters">
+          <IconField class="sga-filter-search">
+            <InputIcon class="pi pi-search" />
+            <InputText
+              v-model.trim="searchQuery"
+              placeholder="Buscar usuario, nombre, DNI o SUNAT..."
+              size="small"
+              fluid
+            />
+          </IconField>
 
-        <template #loading>
-          <div class="loading-state">
-            <i class="pi pi-spin pi-spinner"></i>
-            <span>Cargando usuarios del sistema...</span>
-          </div>
-        </template>
+          <Select
+            v-model="selectedRoleFilter"
+            :options="roleOptions"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Todos los Roles"
+            size="small"
+            class="sga-filter-select"
+          />
 
-        <!-- Columna: Usuario / Nombre -->
-        <Column header="Usuario / Nombre">
-          <template #body="{ data: user }">
-            <div class="user-info-cell">
-              <div class="user-avatar" :style="getAvatarBg(user.username)">
+          <Select
+            v-model="selectedSedeFilter"
+            :options="sedeOptions"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Todas las Sedes"
+            size="small"
+            class="sga-filter-select"
+          />
+
+          <Select
+            v-model="statusFilter"
+            :options="statusOptions"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Todos los Estados"
+            size="small"
+            class="sga-filter-select"
+          />
+
+          <Select
+            v-model="sortBy"
+            :options="sortOptions"
+            optionLabel="label"
+            optionValue="value"
+            size="small"
+            class="sga-filter-select sga-sort-select"
+          />
+
+          <Button
+            v-if="hasActiveFilters"
+            type="button"
+            label="Limpiar"
+            icon="pi pi-filter-slash"
+            severity="secondary"
+            outlined
+            size="small"
+            title="Limpiar filtros"
+            @click="resetFilters"
+          />
+        </div>
+      </div>
+
+      <div v-if="loading && paginatedUsers.length === 0" class="sga-empty-state">
+        <i class="pi pi-spin pi-spinner sga-empty-icon"></i>
+        <p class="sga-empty-desc">Cargando usuarios internos...</p>
+      </div>
+
+      <div v-else-if="paginatedUsers.length === 0" class="sga-empty-state">
+        <i class="pi pi-users sga-empty-icon"></i>
+        <p class="sga-empty-title">No se encontraron usuarios</p>
+        <p class="sga-empty-desc">Prueba ajustando los filtros o registrando un nuevo operador.</p>
+      </div>
+
+      <div v-else class="sga-canvas-grid">
+        <article v-for="user in paginatedUsers" :key="user.idUsuario" class="sga-canvas-card">
+          <div class="sga-card-top">
+            <div class="usr-card-identity">
+              <div class="usr-avatar" :style="getWarmAvatarStyle(user.username)">
                 {{ getInitials(user.nombres, user.apellidos) }}
               </div>
-              <div>
-                <div class="user-username-row">
-                  <span class="user-username">@{{ user.username }}</span>
-                  <span v-if="user.numeroDocumento" class="user-doc-badge">
-                    {{ user.tipoDocumento || 'DNI' }}: {{ user.numeroDocumento }}
-                  </span>
-                </div>
-                <div class="user-name">{{ user.nombres }} {{ user.apellidos }}</div>
-              </div>
+              <span class="sga-card-code">@{{ user.username }}</span>
             </div>
-          </template>
-        </Column>
-
-        <!-- Columna: Rol Asignado -->
-        <Column header="Rol Asignado">
-          <template #body="{ data: user }">
-            <UserRoleBadge :roleName="user.nombreRol" />
-          </template>
-        </Column>
-
-        <!-- Columna: Sede Operativa -->
-        <Column header="Sede Operativa">
-          <template #body="{ data: user }">
-            <div class="sede-cell">
-              <span class="sede-code">{{ user.codigoSede || '—' }}</span>
-              <span class="sede-name">{{ user.nombreSede || 'Sin sede' }}</span>
-            </div>
-          </template>
-        </Column>
-
-        <!-- Columna: Contacto -->
-        <Column header="Contacto">
-          <template #body="{ data: user }">
-            <div class="contact-cell">
-              <div class="contact-email">
-                <i class="pi pi-envelope"></i>
-                <span>{{ user.correoInstitucional }}</span>
-              </div>
-              <div v-if="user.telefono" class="contact-phone">
-                <i class="pi pi-phone"></i>
-                <span>{{ user.telefono }}</span>
-              </div>
-            </div>
-          </template>
-        </Column>
-
-        <!-- Columna: Cargo -->
-        <Column header="Cargo">
-          <template #body="{ data: user }">
-            <div class="cargo-cell">
-              <span class="cargo-text">{{ user.cargoTitulo || '—' }}</span>
-              <span v-if="user.codigoSunat" class="sunat-table-badge" title="Operador acreditado ante SUNAT">
-                <i class="pi pi-verified"></i> {{ user.codigoSunat }}
-              </span>
-              <span v-else class="sunat-table-none">Sin código SUNAT</span>
-            </div>
-          </template>
-        </Column>
-
-        <!-- Columna: Estado -->
-        <Column header="Estado">
-          <template #body="{ data: user }">
             <Tag
-              :value="user.estadoActivo ? 'Activo' : 'Desactivado'"
+              :value="user.estadoActivo ? 'Activo' : 'Inactivo'"
               :severity="user.estadoActivo ? 'success' : 'danger'"
               rounded
             />
-          </template>
-        </Column>
+          </div>
 
-        <!-- Columna: Acciones -->
-        <Column header="Acciones" headerClass="text-right" bodyClass="text-right">
-          <template #body="{ data: user }">
-            <div class="actions-wrapper">
-              <button
-                type="button"
-                class="action-btn-outline"
-                title="Editar datos y rol del operador"
-                @click="$emit('edit', user)"
-              >
-                Editar
-              </button>
-
-              <button
-                v-if="user.estadoActivo"
-                type="button"
-                class="action-btn-outline btn-danger-action"
-                title="Desactivar usuario (baja lógica)"
-                @click="$emit('toggle-status', user)"
-              >
-                Eliminar
-              </button>
-              <button
-                v-else
-                type="button"
-                class="action-btn-outline btn-reactivate-action"
-                title="Reactivar usuario"
-                @click="$emit('toggle-status', user)"
-              >
-                Activar
-              </button>
+          <div class="sga-card-client">
+            <h4 class="sga-client-title">{{ user.nombres }} {{ user.apellidos }}</h4>
+            <div class="sga-client-meta">
+              <UserRoleBadge :roleName="user.nombreRol" />
+              <Tag v-if="user.codigoSunat" :value="user.codigoSunat" severity="info" />
             </div>
-          </template>
-        </Column>
-      </DataTable>
-    </div>
+          </div>
 
-    <!-- Paginador Reutilizable con Estilo Cálido -->
-    <BasePagination
-      v-if="filteredUsers.length > 0"
-      :current-page="currentPage"
-      :total-pages="totalPages"
-      :total-items="totalItems"
-      :start-index="startIndex"
-      :end-index="endIndex"
-      item-label="usuarios"
-      @update:current-page="goToPage($event)"
-      @prev="prevPage"
-      @next="nextPage"
-    />
-  </div>
+          <div class="sga-card-meta-grid">
+            <div class="sga-meta-item">
+              <span class="sga-meta-label">DOCUMENTO</span>
+              <span class="sga-meta-val">
+                {{ user.numeroDocumento ? `${user.tipoDocumento || 'DNI'}: ${user.numeroDocumento}` : '—' }}
+              </span>
+            </div>
+            <div class="sga-meta-item">
+              <span class="sga-meta-label">SEDE</span>
+              <span class="sga-meta-val">{{ user.codigoSede || '—' }} · {{ user.nombreSede || 'Sin sede' }}</span>
+            </div>
+            <div class="sga-meta-item">
+              <span class="sga-meta-label">CARGO</span>
+              <span class="sga-meta-val">{{ user.cargoTitulo || '—' }}</span>
+            </div>
+            <div class="sga-meta-item">
+              <span class="sga-meta-label">TELÉFONO</span>
+              <span class="sga-meta-val">{{ user.telefono || '—' }}</span>
+            </div>
+            <div class="sga-meta-item full-span">
+              <span class="sga-meta-label">CORREO INSTITUCIONAL</span>
+              <span class="sga-meta-val">{{ user.correoInstitucional }}</span>
+            </div>
+          </div>
+
+          <div class="sga-card-footer">
+            <Button label="Editar" size="small" outlined severity="secondary" @click="$emit('edit', user)" />
+            <div class="usr-actions">
+              <Button
+                icon="pi pi-key"
+                size="small"
+                outlined
+                severity="secondary"
+                title="Restablecer contraseña"
+                @click="$emit('reset-password', user)"
+              />
+              <Button
+                :label="user.estadoActivo ? 'Baja' : 'Activar'"
+                :severity="user.estadoActivo ? 'danger' : 'success'"
+                outlined
+                size="small"
+                @click="$emit('toggle-status', user)"
+              />
+            </div>
+          </div>
+        </article>
+      </div>
+
+      <BasePagination
+        v-if="filteredUsers.length > 0"
+        :current-page="currentPage"
+        :total-pages="totalPages"
+        :total-items="totalItems"
+        :start-index="startIndex"
+        :end-index="endIndex"
+        item-label="usuarios"
+        @update:current-page="goToPage($event)"
+        @prev="prevPage"
+        @next="nextPage"
+      />
+    </div>
+  </section>
 </template>
 
 <script setup>
 import { ref, computed, watch } from 'vue'
-import DataTable from 'primevue/datatable'
-import Column from 'primevue/column'
+import Button from 'primevue/button'
+import IconField from 'primevue/iconfield'
+import InputIcon from 'primevue/inputicon'
+import InputText from 'primevue/inputtext'
+import Select from 'primevue/select'
 import Tag from 'primevue/tag'
-import UserRoleBadge from './UserRoleBadge.vue'
 import BasePagination from '@/shared/components/BasePagination.vue'
 import { usePagination } from '@/shared/composables/usePagination'
 import { ROLE_LABELS } from '@/core/auth/roles'
+import { getInitials, getWarmAvatarStyle } from '../../utils/adminFormatters'
+import UserRoleBadge from './UserRoleBadge.vue'
 
 const props = defineProps({
-  users: {
-    type: Array,
-    default: () => []
-  },
-  roles: {
-    type: Array,
-    default: () => []
-  },
-  loading: {
-    type: Boolean,
-    default: false
-  }
+  users: { type: Array, default: () => [] },
+  roles: { type: Array, default: () => [] },
+  loading: { type: Boolean, default: false }
 })
 
-defineEmits(['edit', 'toggle-status'])
+defineEmits(['edit', 'toggle-status', 'reset-password', 'refresh', 'create'])
 
 const searchQuery = ref('')
-const selectedRoleFilter = ref('')
+const selectedRoleFilter = ref('ALL')
+const selectedSedeFilter = ref('ALL')
 const statusFilter = ref('ALL')
+const sortBy = ref('RECENTS')
+
+const activeUsersCount = computed(() => props.users.filter((u) => u.estadoActivo).length)
+
+const roleOptions = computed(() => [
+  { label: 'Todos los Roles', value: 'ALL' },
+  ...(props.roles || []).map((r) => ({
+    label: ROLE_LABELS[r.nombreRol] || r.nombreRol,
+    value: r.nombreRol
+  }))
+])
+
+const sedeOptions = computed(() => {
+  const map = new Map()
+  props.users.forEach((u) => {
+    if (u.codigoSede && !map.has(u.codigoSede)) {
+      map.set(u.codigoSede, {
+        label: `${u.codigoSede} — ${u.nombreSede || 'Sede'}`,
+        value: u.codigoSede
+      })
+    }
+  })
+  return [
+    { label: 'Todas las Sedes', value: 'ALL' },
+    ...Array.from(map.values()).sort((a, b) => a.label.localeCompare(b.label))
+  ]
+})
+
+const statusOptions = [
+  { label: 'Todos los Estados', value: 'ALL' },
+  { label: 'Solo Activos', value: 'ACTIVE' },
+  { label: 'Solo Inactivos', value: 'INACTIVE' }
+]
+
+const sortOptions = [
+  { label: 'Orden: Más recientes', value: 'RECENTS' },
+  { label: 'Orden: Nombre A–Z', value: 'NOMBRE_ASC' },
+  { label: 'Orden: Nombre Z–A', value: 'NOMBRE_DESC' },
+  { label: 'Orden: Usuario A–Z', value: 'USER_ASC' }
+]
+
+const hasActiveFilters = computed(() =>
+  Boolean(
+    searchQuery.value ||
+      selectedRoleFilter.value !== 'ALL' ||
+      selectedSedeFilter.value !== 'ALL' ||
+      statusFilter.value !== 'ALL' ||
+      sortBy.value !== 'RECENTS'
+  )
+)
+
+const resetFilters = () => {
+  searchQuery.value = ''
+  selectedRoleFilter.value = 'ALL'
+  selectedSedeFilter.value = 'ALL'
+  statusFilter.value = 'ALL'
+  sortBy.value = 'RECENTS'
+}
 
 const filteredUsers = computed(() => {
-  return props.users.filter((user) => {
+  const list = props.users.filter((user) => {
     const q = searchQuery.value.toLowerCase().trim()
     const matchesSearch =
       !q ||
@@ -238,21 +289,26 @@ const filteredUsers = computed(() => {
       (user.numeroDocumento && user.numeroDocumento.includes(q)) ||
       (user.codigoSunat && user.codigoSunat.toLowerCase().includes(q))
 
-    const matchesRole =
-      !selectedRoleFilter.value || user.nombreRol === selectedRoleFilter.value
+    const matchesRole = selectedRoleFilter.value === 'ALL' || user.nombreRol === selectedRoleFilter.value
+    const matchesSede = selectedSedeFilter.value === 'ALL' || user.codigoSede === selectedSedeFilter.value
+    const matchesStatus =
+      statusFilter.value === 'ALL' ||
+      (statusFilter.value === 'ACTIVE' && user.estadoActivo === true) ||
+      (statusFilter.value === 'INACTIVE' && user.estadoActivo === false)
 
-    let matchesStatus = true
-    if (statusFilter.value === 'ACTIVE') {
-      matchesStatus = user.estadoActivo === true
-    } else if (statusFilter.value === 'INACTIVE') {
-      matchesStatus = user.estadoActivo === false
-    }
+    return matchesSearch && matchesRole && matchesSede && matchesStatus
+  })
 
-    return matchesSearch && matchesRole && matchesStatus
+  return [...list].sort((a, b) => {
+    const nameA = `${a.nombres || ''} ${a.apellidos || ''}`.trim()
+    const nameB = `${b.nombres || ''} ${b.apellidos || ''}`.trim()
+    if (sortBy.value === 'NOMBRE_DESC') return nameB.localeCompare(nameA, 'es')
+    if (sortBy.value === 'USER_ASC') return (a.username || '').localeCompare(b.username || '', 'es')
+    if (sortBy.value === 'NOMBRE_ASC') return nameA.localeCompare(nameB, 'es')
+    return (b.idUsuario || 0) - (a.idUsuario || 0)
   })
 })
 
-// Gestión de Paginación mediante composable desacoplado
 const {
   currentPage,
   totalPages,
@@ -264,394 +320,36 @@ const {
   nextPage,
   goToPage,
   resetPage
-} = usePagination(filteredUsers, 15)
+} = usePagination(filteredUsers, 12)
 
-// Resetear a primera página al buscar o cambiar filtros
-watch([searchQuery, selectedRoleFilter, statusFilter], () => {
+watch([searchQuery, selectedRoleFilter, selectedSedeFilter, statusFilter, sortBy], () => {
   resetPage()
 })
-
-const getInitials = (nombres = '', apellidos = '') => {
-  const n = nombres.trim().charAt(0) || ''
-  const a = apellidos.trim().charAt(0) || ''
-  return (n + a).toUpperCase() || 'U'
-}
-
-const getAvatarBg = (username = '') => {
-  let hash = 0
-  for (let i = 0; i < username.length; i++) {
-    hash = username.charCodeAt(i) + ((hash << 5) - hash)
-  }
-  // Tonos cálidos tierra
-  const warmHues = [25, 35, 45, 18, 195, 140]
-  const hue = warmHues[Math.abs(hash) % warmHues.length]
-  return {
-    background: `hsl(${hue}, 45%, 38%)`,
-    color: '#ffffff'
-  }
-}
 </script>
 
 <style scoped>
-.user-table-container {
-  background: var(--color-bg-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  box-shadow: var(--shadow-subtle);
-}
-
-.table-toolbar {
-  padding: 1.15rem 1.5rem;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-  align-items: center;
-  justify-content: space-between;
-  border-bottom: 1px solid var(--color-border-subtle);
-  background: var(--color-bg-subtle);
-}
-
-.search-box {
-  position: relative;
-  flex: 1;
-  min-width: 260px;
-  max-width: 440px;
+.usr-card-identity {
   display: flex;
   align-items: center;
+  gap: 0.55rem;
 }
 
-.search-icon {
-  position: absolute;
-  left: 0.95rem;
-  color: var(--color-text-subtle);
-  font-size: 0.9rem;
-  pointer-events: none;
-}
-
-.search-input {
-  width: 100%;
-  background: var(--color-bg-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  padding: 0.6rem 2.2rem 0.6rem 2.5rem;
-  color: var(--color-text-main);
-  font-size: 0.85rem;
-  outline: none;
-  transition: all var(--transition-fast);
-}
-
-.search-input:focus {
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(216, 185, 125, 0.2);
-}
-
-.clear-search-btn {
-  position: absolute;
-  right: 0.65rem;
-  background: transparent;
-  border: none;
-  color: var(--color-text-subtle);
-  cursor: pointer;
-  padding: 0.25rem;
-}
-
-.filters-group {
-  display: flex;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-}
-
-.filter-select {
-  background-color: var(--color-bg-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  padding: 0.6rem 2.25rem 0.6rem 0.85rem;
-  color: var(--color-text-main);
-  font-size: 0.825rem;
-  font-weight: 500;
-  outline: none;
-  cursor: pointer;
-  transition: border-color var(--transition-fast);
-}
-
-.filter-select:focus {
-  border-color: var(--color-primary);
-}
-
-.table-responsive {
-  width: 100%;
-  overflow-x: auto;
-}
-
-/* Estilos DataTable PrimeVue con estética cálida de la referencia */
-:deep(.custom-datatable.p-datatable) {
-  width: 100%;
-  font-family: inherit;
-  font-size: 0.86rem;
-  background: transparent;
-}
-
-:deep(.custom-datatable .p-datatable-table) {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-:deep(.custom-datatable .p-datatable-thead > tr > th) {
-  background: var(--color-bg-subtle) !important;
-  color: var(--color-text-muted) !important;
-  font-weight: 700 !important;
-  font-size: 0.725rem !important;
-  text-transform: uppercase !important;
-  letter-spacing: 0.06em !important;
-  padding: 0.95rem 1.25rem !important;
-  border-bottom: 1px solid var(--color-border) !important;
-  border-top: none !important;
-  border-left: none !important;
-  border-right: none !important;
-}
-
-:deep(.custom-datatable .p-datatable-tbody > tr) {
-  border-bottom: 1px solid var(--color-border-subtle) !important;
-  transition: background var(--transition-fast) !important;
-  background: var(--color-bg-surface) !important;
-}
-
-:deep(.custom-datatable .p-datatable-tbody > tr:hover) {
-  background: var(--color-bg-subtle) !important;
-}
-
-:deep(.custom-datatable .p-datatable-tbody > tr.row-inactive) {
-  background: var(--color-bg-muted) !important;
-  opacity: 0.75;
-}
-
-:deep(.custom-datatable .p-datatable-tbody > tr > td) {
-  padding: 0.95rem 1.25rem !important;
-  vertical-align: middle !important;
-  border: none !important;
-}
-
-.user-info-cell {
-  display: flex;
-  align-items: center;
-  gap: 0.85rem;
-}
-
-.user-avatar {
-  width: 36px;
-  height: 36px;
+.usr-avatar {
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
+  font-size: 0.72rem;
   font-weight: 700;
-  font-size: 0.825rem;
-  letter-spacing: -0.02em;
   flex-shrink: 0;
-  box-shadow: 0 1px 4px rgba(45, 35, 25, 0.15);
 }
 
-.user-username {
-  font-weight: 700;
-  color: var(--color-text-main);
-  font-size: 0.875rem;
-}
-
-.user-name {
-  color: var(--color-text-muted);
-  font-size: 0.785rem;
-  margin-top: 0.1rem;
-}
-
-.sede-cell {
-  display: flex;
-  flex-direction: column;
-}
-
-.sede-code {
-  font-family: var(--font-mono, monospace);
-  font-weight: 700;
-  color: var(--color-text-main);
-  font-size: 0.8rem;
-}
-
-.sede-name {
-  color: var(--color-text-subtle);
-  font-size: 0.75rem;
-}
-
-.contact-cell {
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
-  font-size: 0.785rem;
-}
-
-.contact-email,
-.contact-phone {
+.usr-actions {
   display: flex;
   align-items: center;
   gap: 0.4rem;
-  color: var(--color-text-muted);
-}
-
-.contact-email i,
-.contact-phone i {
-  color: var(--color-text-subtle);
-  font-size: 0.75rem;
-}
-
-.user-username-row {
-  display: flex;
-  align-items: center;
-  gap: 0.45rem;
   flex-wrap: wrap;
 }
-
-.user-doc-badge {
-  font-family: var(--font-mono, monospace);
-  font-size: 0.65rem;
-  font-weight: 700;
-  color: var(--color-text-subtle);
-  background: var(--color-bg-subtle);
-  border: 1px solid var(--color-border-subtle);
-  padding: 0.1rem 0.35rem;
-  border-radius: 4px;
-}
-
-.cargo-cell {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.cargo-text {
-  color: var(--color-text-main);
-  font-size: 0.825rem;
-  font-weight: 500;
-}
-
-.sunat-table-badge {
-  font-family: var(--font-mono, monospace);
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-  background: #fef3c7;
-  color: #92400e;
-  border: 1px solid #fde68a;
-  font-size: 0.65rem;
-  font-weight: 700;
-  padding: 0.1rem 0.35rem;
-  border-radius: 4px;
-  width: fit-content;
-}
-
-:global(.dark-theme) .sunat-table-badge {
-  background: #362e1c;
-  color: #f7d270;
-  border-color: #63522b;
-}
-
-.sunat-table-none {
-  font-size: 0.65rem;
-  color: var(--color-text-subtle);
-}
-
-.status-badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.25rem 0.65rem;
-  border-radius: var(--radius-pill);
-  font-size: 0.75rem;
-  font-weight: 600;
-}
-
-.status-badge.active {
-  background: var(--color-success-bg);
-  color: var(--color-success-text);
-  border: 1px solid var(--color-success-border);
-}
-
-.status-badge.inactive {
-  background: var(--color-danger-bg);
-  color: var(--color-danger-text);
-  border: 1px solid var(--color-danger-border);
-}
-
-.text-right {
-  text-align: right;
-}
-
-.actions-wrapper {
-  display: inline-flex;
-  gap: 0.5rem;
-}
-
-/* Botones Outline de Acción idénticos a [Editar] [Eliminar] de la imagen */
-.action-btn-outline {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--color-bg-surface);
-  border: 1px solid var(--color-border);
-  color: var(--color-text-main);
-  padding: 0.35rem 0.8rem;
-  border-radius: 6px;
-  font-size: 0.785rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all var(--transition-fast);
-}
-
-.action-btn-outline:hover {
-  background: var(--color-bg-subtle);
-  border-color: var(--color-border-strong);
-  color: var(--color-text-main);
-}
-
-.btn-danger-action:hover {
-  background: var(--color-danger-bg);
-  border-color: var(--color-danger-border);
-  color: var(--color-danger-text);
-}
-
-.btn-reactivate-action:hover {
-  background: var(--color-success-bg);
-  border-color: var(--color-success-border);
-  color: var(--color-success-text);
-}
-
-.loading-state,
-.empty-state {
-  text-align: center;
-  padding: 3.5rem 1.5rem;
-  color: var(--color-text-muted);
-}
-
-.loading-state i {
-  font-size: 1.5rem;
-  display: block;
-  margin-bottom: 0.75rem;
-  color: var(--color-primary);
-}
-
-.empty-icon {
-  font-size: 2.25rem;
-  color: var(--color-text-subtle);
-  margin-bottom: 0.75rem;
-}
-
-.empty-title {
-  font-weight: 700;
-  color: var(--color-text-main);
-  margin: 0;
-}
-
-.empty-desc {
-  font-size: 0.8rem;
-  margin: 0.35rem 0 0;
-  color: var(--color-text-muted);
-}
-
 </style>

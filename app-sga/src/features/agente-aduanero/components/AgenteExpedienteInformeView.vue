@@ -1,541 +1,379 @@
 <template>
   <div class="agente-informe-view fade-in">
-    <!-- ============================================================== -->
-    <!-- 1. BARRA SUPERIOR DE NAVEGACIÓN Y ACCIONES RÁPIDAS             -->
-    <!-- ============================================================== -->
-    <header class="informe-top-bar no-print">
-      <div class="top-bar-left">
-        <button
+    <!-- Cabecera contextual (sgaUI: título único en .sga-topbar) -->
+    <header class="sga-form-header no-print">
+      <div class="informe-header-left">
+        <Button
           type="button"
-          class="btn-back-nav"
+          label="Volver"
+          icon="pi pi-arrow-left"
+          severity="secondary"
+          text
+          size="small"
           @click="$emit('back')"
-          title="Regresar al listado de expedientes"
-        >
-          <i class="pi pi-arrow-left"></i>
-          <span>Volver a Expedientes</span>
-        </button>
+        />
 
-        <div class="breadcrumbs">
-          <span class="crumb-muted">Agente Aduanero</span>
-          <i class="pi pi-angle-right text-xs text-gray-400"></i>
-          <span class="crumb-muted">Expedientes</span>
-          <i class="pi pi-angle-right text-xs text-gray-400"></i>
-          <span class="crumb-active font-mono">{{ expediente?.codigoExpediente }}</span>
+        <span v-if="expediente" class="informe-code font-mono">
+          {{ expediente.codigoExpediente }}
+        </span>
+
+        <div v-if="expediente" class="informe-badges">
+          <Tag
+            :value="formatRegimenShort(expediente.regimenAduanero)"
+            :severity="acc.isExport ? 'success' : 'info'"
+            rounded
+          />
+          <Tag
+            :value="formatEstadoAgente(expediente.estadoExpediente)"
+            :severity="getExpedienteSeverity(expediente.estadoExpediente)"
+            rounded
+          />
+          <Tag
+            :value="getCanalLabel(expediente)"
+            :severity="getCanalSeverity(expediente.canalSunat)"
+            rounded
+          />
         </div>
       </div>
 
-      <div class="top-bar-actions">
-        <!-- Acciones operativas contextuales -->
-        <template v-if="!isExport">
-          <!-- Salida de Origen -->
-          <button
-            v-if="!hasZarpeConfirmado && !isCerrado"
+      <div v-if="expediente" class="sga-form-actions">
+        <template v-if="!acc.isExport">
+          <Button
+            v-if="acc.puedeVerificacionOrigen"
             type="button"
-            class="action-btn btn-primary"
+            label="Verificación Origen"
+            icon="pi pi-check-square"
+            severity="info"
+            outlined
+            size="small"
+            @click="$emit('verificacion-origen', expediente)"
+          />
+          <Button
+            v-if="acc.puedeSalidaOrigen"
+            type="button"
+            label="Salida Origen"
+            icon="pi pi-send"
+            size="small"
             @click="$emit('salida-origen', expediente)"
-          >
-            <i class="pi pi-send"></i>
-            <span>Registrar Salida de Origen</span>
-          </button>
-
-          <!-- Confirmar Arribo a Puerto -->
-          <button
-            v-if="hasZarpeConfirmado && !expediente?.fechaArriboAduana && !isCerrado"
+          />
+          <Button
+            v-if="acc.puedeConfirmarArribo"
             type="button"
-            class="action-btn btn-success"
+            label="Confirmar Arribo"
+            icon="pi pi-compass"
+            severity="success"
+            size="small"
             @click="$emit('arribo-destino', expediente)"
-          >
-            <i class="pi pi-compass"></i>
-            <span>Confirmar Arribo a Destino</span>
-          </button>
-
-          <!-- Diligencia SUNAT -->
-          <button
-            v-if="(expediente?.canalSunat === 'ROJO' || expediente?.canalSunat === 'NARANJA' || expediente?.estadoExpediente === 'INSPECCION') && !isCerrado"
+          />
+          <Button
+            v-if="acc.puedeCuadrillaCitaRojo"
             type="button"
-            class="action-btn btn-warning"
+            label="Cuadrilla / Cita Rojo"
+            icon="pi pi-users"
+            severity="danger"
+            outlined
+            size="small"
+            @click="$emit('cuadrilla-rojo', expediente)"
+          />
+          <Button
+            v-if="acc.puedeFinalizarRojo"
+            type="button"
+            label="Finalizar Revisión Rojo"
+            icon="pi pi-check-circle"
+            severity="danger"
+            size="small"
+            @click="$emit('finalizar-rojo', expediente)"
+          />
+          <Button
+            v-if="acc.puedeEnviarSunatNaranja"
+            type="button"
+            label="Enviar a SUNAT (Naranja)"
+            icon="pi pi-cloud-upload"
+            severity="warn"
+            size="small"
+            @click="$emit('enviar-sunat', expediente)"
+          />
+          <Button
+            v-if="acc.puedeEntregadoAlmacenVerde"
+            type="button"
+            label="Entregado Almacén (Verde)"
+            icon="pi pi-check-square"
+            severity="success"
+            outlined
+            size="small"
+            @click="$emit('entregado-almacen-verde', expediente)"
+          />
+          <Button
+            v-if="acc.puedeDiligencia"
+            type="button"
+            label="Registrar Diligencia"
+            icon="pi pi-search-plus"
+            severity="warn"
+            outlined
+            size="small"
             @click="$emit('diligencia', expediente)"
-          >
-            <i class="pi pi-search-plus"></i>
-            <span>Registrar Diligencia SUNAT</span>
-          </button>
-
-          <!-- Pedir Envío Terrestre SGA -->
-          <button
-            v-if="expediente?.estadoExpediente === 'LEVANTE_AUTORIZADO' && expediente?.servicioTransporte && !expediente?.idDespachoTransporte"
+          />
+          <Button
+            v-if="acc.puedeSolicitarTransporte"
             type="button"
-            class="action-btn btn-success"
+            label="Solicitar Flota"
+            icon="pi pi-truck"
+            severity="success"
+            size="small"
             @click="$emit('solicitar-transporte', expediente)"
-          >
-            <i class="pi pi-truck"></i>
-            <span>Solicitar Despacho Flota</span>
-          </button>
-
-          <!-- Retiro Directo en Terminal -->
-          <button
-            v-if="expediente?.estadoExpediente === 'LEVANTE_AUTORIZADO' && !expediente?.servicioTransporte"
+          />
+          <Button
+            v-if="acc.puedeRetiroDirecto"
             type="button"
-            class="action-btn btn-outline"
+            label="Acta Retiro Directo"
+            icon="pi pi-check"
+            severity="secondary"
+            outlined
+            size="small"
             @click="$emit('retiro-directo', expediente)"
-          >
-            <i class="pi pi-check"></i>
-            <span>Acta de Retiro Directo</span>
-          </button>
+          />
+          <Button
+            v-if="acc.puedeInformeConformidad"
+            type="button"
+            label="Informe Conformidad"
+            icon="pi pi-file-check"
+            severity="info"
+            size="small"
+            @click="$emit('informe-conformidad', expediente)"
+          />
+          <Button
+            v-if="acc.tieneInformeConformidad"
+            type="button"
+            label="PDF Conformidad"
+            icon="pi pi-file-pdf"
+            severity="secondary"
+            outlined
+            size="small"
+            @click="$emit('descargar-informe', expediente)"
+          />
+          <Button
+            v-if="acc.puedeIngresoAlmacen"
+            type="button"
+            label="Balanza VGM"
+            icon="pi pi-box"
+            severity="secondary"
+            outlined
+            size="small"
+            @click="$emit('ingreso-almacen', expediente)"
+          />
         </template>
 
         <template v-else>
-          <!-- Exportación -->
-          <button
-            v-if="expediente?.servicioTransporte && !expediente?.idDespachoTransporte && (expediente?.estadoExpediente === 'ASIGNADO' || expediente?.estadoExpediente === 'EN_TRAMITE')"
+          <Button
+            v-if="acc.puedeRecojoExportacion"
             type="button"
-            class="action-btn btn-primary"
+            label="Solicitar Recojo"
+            icon="pi pi-truck"
+            size="small"
             @click="$emit('recojo-exportacion', expediente)"
-          >
-            <i class="pi pi-truck"></i>
-            <span>Solicitar Recojo Planta</span>
-          </button>
-
-          <button
-            v-if="expediente?.estadoExpediente === 'ASIGNADO' || (expediente?.estadoExpediente === 'EN_TRAMITE' && !expediente?.fechaArriboAduana)"
+          />
+          <Button
+            v-if="acc.puedeIngresoOrigen"
             type="button"
-            class="action-btn btn-outline"
+            label="Ingreso Almacén Central"
+            icon="pi pi-inbox"
+            severity="secondary"
+            outlined
+            size="small"
             @click="$emit('ingreso-origen', expediente)"
-          >
-            <i class="pi pi-inbox"></i>
-            <span>Ingreso Depósito VGM</span>
-          </button>
-
-          <button
-            v-if="(expediente?.canalSunat === 'ROJO' || expediente?.canalSunat === 'NARANJA' || expediente?.estadoExpediente === 'INSPECCION') && !isCerrado"
+          />
+          <Button
+            v-if="acc.puedeMarcarRevisionAduana"
             type="button"
-            class="action-btn btn-warning"
+            label="Revisión Aduana"
+            icon="pi pi-search"
+            severity="info"
+            outlined
+            size="small"
+            @click="$emit('marcar-estado', { expediente, codigoEstado: 'REVISION_ADUANA', titulo: 'Revisión Aduana' })"
+          />
+          <Button
+            v-if="acc.puedeMarcarEsperaTransito"
+            type="button"
+            label="Espera de Tránsito"
+            icon="pi pi-clock"
+            severity="warn"
+            outlined
+            size="small"
+            @click="$emit('marcar-estado', { expediente, codigoEstado: 'ESPERA_TRANSITO', titulo: 'En Espera de Tránsito' })"
+          />
+          <Button
+            v-if="acc.puedeDiligencia"
+            type="button"
+            label="Registrar Diligencia"
+            icon="pi pi-search-plus"
+            severity="warn"
+            size="small"
             @click="$emit('diligencia', expediente)"
-          >
-            <i class="pi pi-search-plus"></i>
-            <span>Registrar Diligencia</span>
-          </button>
-
-          <button
-            v-if="expediente?.estadoExpediente === 'LEVANTE_AUTORIZADO' && !expediente?.observaciones?.includes('EMBARCADO')"
+          />
+          <Button
+            v-if="acc.puedeEmbarque"
             type="button"
-            class="action-btn btn-success"
+            label="Vuelo / Embarque Confirmado"
+            icon="pi pi-send"
+            severity="success"
+            size="small"
             @click="$emit('embarque', expediente)"
-          >
-            <i class="pi pi-send"></i>
-            <span>Confirmar Embarque</span>
-          </button>
+          />
+          <Button
+            v-else-if="acc.puedeRecepcionExterior"
+            type="button"
+            label="Conformidad Destino"
+            icon="pi pi-check-circle"
+            severity="success"
+            size="small"
+            @click="$emit('recepcion-exterior', expediente)"
+          />
         </template>
 
-        <!-- Actualizar Tránsito General -->
-        <button
-          v-if="!isCerrado"
+        <Button
+          v-if="!acc.isCerrado"
           type="button"
-          class="action-btn btn-outline"
+          label="Marcar Estado"
+          icon="pi pi-stopwatch"
+          severity="secondary"
+          outlined
+          size="small"
+          @click="$emit('marcar-estado-custom', expediente)"
+        />
+        <Button
+          v-if="acc.puedeFinalizarExpediente"
+          type="button"
+          label="Finalizar Expediente"
+          icon="pi pi-lock"
+          severity="success"
+          size="small"
+          @click="$emit('finalizar-expediente', expediente)"
+        />
+
+        <Button
+          v-if="acc.puedeEditarTransito"
+          type="button"
+          label="Editar Tránsito"
+          icon="pi pi-globe"
+          severity="secondary"
+          outlined
+          size="small"
           @click="$emit('transito', expediente)"
-          title="Actualizar datos de travesía, buque o precinto"
-        >
-          <i class="pi pi-globe"></i>
-          <span>Editar Tránsito</span>
-        </button>
-
-        <!-- Documentos Digitales -->
-        <button
+        />
+        <Button
           type="button"
-          class="action-btn btn-outline"
+          label="Documentos"
+          icon="pi pi-paperclip"
+          severity="secondary"
+          outlined
+          size="small"
           @click="$emit('documentos', expediente)"
-          title="Abrir gestor de documentos digitales adjuntos"
-        >
-          <i class="pi pi-paperclip"></i>
-          <span>Documentos</span>
-        </button>
-
-        <!-- Imprimir Ficha -->
-        <button
+        />
+        <Button
           type="button"
-          class="action-btn btn-icon-only"
-          @click="imprimirInforme"
+          icon="pi pi-print"
+          severity="secondary"
+          outlined
+          size="small"
           title="Imprimir informe del despacho"
-        >
-          <i class="pi pi-print"></i>
-        </button>
+          aria-label="Imprimir"
+          @click="imprimirInforme"
+        />
       </div>
     </header>
 
-    <!-- ============================================================== -->
-    <!-- 2. HERO BANNER EJECUTIVO DEL EXPEDIENTE                        -->
-    <!-- ============================================================== -->
-    <div class="informe-hero-banner" v-if="expediente">
-      <div class="hero-left-col">
-        <div class="hero-kicker-row">
-          <span class="hero-badge-kicker">CONTROL ADUANERO OPERATIVO // INFORME TÉCNICO</span>
-          <span :class="['regimen-tag', isExport ? 'tag-export' : 'tag-import']">
-            <i :class="isExport ? 'pi pi-arrow-up-right' : 'pi pi-arrow-down-left'"></i>
-            <span>{{ isExport ? 'EXPORTACIÓN DEFINITIVA' : 'IMPORTACIÓN PARA EL CONSUMO' }}</span>
-          </span>
-        </div>
-
-        <h1 class="hero-main-title">
-          {{ expediente.codigoExpediente }}
-        </h1>
-
-        <div class="hero-meta-row">
-          <span class="meta-item">
-            <i class="pi pi-calendar"></i>
-            <span>Apertura: {{ formatDateTime(expediente.fechaApertura) }}</span>
-          </span>
-          <span class="meta-divider">•</span>
-          <span class="meta-item">
-            <i class="pi pi-file"></i>
-            <span>Cotización: <strong>{{ expediente.codigoCotizacion || '—' }}</strong></span>
-          </span>
-          <span class="meta-divider">•</span>
-          <span class="meta-item">
-            <i class="pi pi-user"></i>
-            <span>Agente: <strong>{{ expediente.agenteAduaneroNombre || 'Agente Asignado' }}</strong></span>
-          </span>
-        </div>
-      </div>
-
-      <div class="hero-right-col">
-        <!-- Semáforo Canal SUNAT -->
-        <div class="canal-sunat-box" :class="getCanalBoxClass(expediente.canalSunat)">
-          <span class="canal-box-label">CANAL DE CONTROL SUNAT</span>
-          <div class="canal-box-content">
-            <i :class="getCanalIcon(expediente.canalSunat)" class="canal-big-icon"></i>
-            <span class="canal-name">
-              {{ expediente.canalSunat ? `CANAL ${expediente.canalSunat}` : (expediente.fechaArriboAduana ? 'PENDIENTE' : 'EN ESPERA DE ARRIBO') }}
-            </span>
-          </div>
-          <span class="canal-help-text">
-            {{ getCanalHelpText(expediente) }}
-          </span>
-        </div>
-
-        <!-- DAM & Estado General -->
-        <div class="dam-and-status-box">
-          <div class="dam-sub-box">
-            <span class="dam-sub-label">DECLARACIÓN ADUANERA (DAM)</span>
-            <span class="dam-sub-number font-mono">{{ expediente.numeroDam || 'Pendiente de Asignación' }}</span>
-          </div>
-
-          <div class="status-sub-pill" :class="getEstadoPillClass(expediente.estadoExpediente)">
-            <span class="status-dot"></span>
-            <span>{{ formatEstado(expediente.estadoExpediente) }}</span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ============================================================== -->
-    <!-- 3. STEPPER VISUAL DE TRAZABILIDAD OPERATIVA                     -->
-    <!-- ============================================================== -->
-    <section class="trazabilidad-stepper-card" v-if="expediente">
-      <div class="stepper-header">
-        <h3 class="stepper-title">
-          <i class="pi pi-directions"></i>
-          <span>Trazabilidad Operativa y Cadena de Custodia</span>
-        </h3>
-        <span class="stepper-summary-tag">
-          {{ getStepperSummaryText(expediente) }}
+    <!-- Stepper horizontal de trazabilidad (sga-stepper-bar) -->
+    <div v-if="expediente" class="sga-stepper-bar informe-stepper-6">
+      <div
+        v-for="step in trazabilidadSteps"
+        :key="step.num"
+        :class="['sga-stepper-item', 'is-static', { 'is-completed': step.done, 'is-active': step.active }]"
+      >
+        <span class="sga-step-circle">
+          <i v-if="step.done" class="pi pi-check"></i>
+          <span v-else>{{ step.num }}</span>
+        </span>
+        <span class="sga-step-meta">
+          <span class="sga-step-kicker">{{ step.kicker }}</span>
+          <span class="sga-step-title">{{ step.title }}</span>
         </span>
       </div>
-
-      <div class="stepper-horizontal-track">
-        <!-- Hito 1: Asignación -->
-        <div class="track-node completed">
-          <div class="node-circle">
-            <i class="pi pi-check"></i>
-          </div>
-          <div class="node-content">
-            <span class="node-title">1. Asignado</span>
-            <span class="node-date">{{ formatDateShort(expediente.fechaApertura) }}</span>
-            <span class="node-desc">Agente designado</span>
-          </div>
-        </div>
-
-        <div class="track-connector" :class="{ filled: hasZarpeConfirmado }"></div>
-
-        <!-- Hito 2: Salida de Origen -->
-        <div class="track-node" :class="{ completed: hasZarpeConfirmado, active: !hasZarpeConfirmado }">
-          <div class="node-circle">
-            <i v-if="hasZarpeConfirmado" class="pi pi-check"></i>
-            <span v-else>2</span>
-          </div>
-          <div class="node-content">
-            <span class="node-title">{{ isExport ? '2. Ingreso Almacén' : '2. Salida Origen' }}</span>
-            <span class="node-date">{{ expediente.fechaZarpeEtd || 'Pendiente' }}</span>
-            <span class="node-desc">{{ hasZarpeConfirmado ? 'Zarpe confirmado' : 'En espera de salida' }}</span>
-          </div>
-        </div>
-
-        <div class="track-connector" :class="{ filled: !!expediente.fechaArriboAduana }"></div>
-
-        <!-- Hito 3: Arribo a Destino -->
-        <div class="track-node" :class="{ completed: !!expediente.fechaArriboAduana, active: hasZarpeConfirmado && !expediente.fechaArriboAduana }">
-          <div class="node-circle">
-            <i v-if="expediente.fechaArriboAduana" class="pi pi-check"></i>
-            <span v-else>3</span>
-          </div>
-          <div class="node-content">
-            <span class="node-title">3. Arribo Destino</span>
-            <span class="node-date">{{ formatDateTimeShort(expediente.fechaArriboAduana) || (expediente.fechaLlegadaEta ? `ETA: ${expediente.fechaLlegadaEta}` : 'Pendiente') }}</span>
-            <span class="node-desc">{{ expediente.fechaArriboAduana ? 'Arribo a puerto' : 'En navegación' }}</span>
-          </div>
-        </div>
-
-        <div class="track-connector" :class="{ filled: !!expediente.canalSunat }"></div>
-
-        <!-- Hito 4: Canal SUNAT -->
-        <div class="track-node" :class="{ completed: !!expediente.canalSunat, active: !!expediente.fechaArriboAduana && !expediente.canalSunat }">
-          <div class="node-circle">
-            <i v-if="expediente.canalSunat" class="pi pi-check"></i>
-            <span v-else>4</span>
-          </div>
-          <div class="node-content">
-            <span class="node-title">4. Canal SUNAT</span>
-            <span class="node-date">{{ expediente.canalSunat ? `CANAL ${expediente.canalSunat}` : 'Por asignar' }}</span>
-            <span class="node-desc">{{ expediente.canalSunat ? 'Revisión asignada' : 'En espera supervisor' }}</span>
-          </div>
-        </div>
-
-        <div class="track-connector" :class="{ filled: isDiligenciaCompletada }"></div>
-
-        <!-- Hito 5: Diligencia / Inspección -->
-        <div class="track-node" :class="{ completed: isDiligenciaCompletada, active: expediente.canalSunat && !isDiligenciaCompletada && expediente.estadoExpediente !== 'LEVANTE_AUTORIZADO' }">
-          <div class="node-circle">
-            <i v-if="isDiligenciaCompletada" class="pi pi-check"></i>
-            <span v-else>5</span>
-          </div>
-          <div class="node-content">
-            <span class="node-title">5. Diligencia</span>
-            <span class="node-date">{{ formatDiligenciaDate(expediente) }}</span>
-            <span class="node-desc">{{ formatDiligenciaDesc(expediente) }}</span>
-          </div>
-        </div>
-
-        <div class="track-connector" :class="{ filled: isLevanteAutorizado }"></div>
-
-        <!-- Hito 6: Levante y Despacho -->
-        <div class="track-node" :class="{ completed: isLevanteAutorizado, active: isDiligenciaCompletada && !isLevanteAutorizado }">
-          <div class="node-circle">
-            <i v-if="isLevanteAutorizado" class="pi pi-check"></i>
-            <span v-else>6</span>
-          </div>
-          <div class="node-content">
-            <span class="node-title">6. Levante</span>
-            <span class="node-date">{{ formatDateShort(expediente.fechaLevanteAutorizacion) || 'Pendiente' }}</span>
-            <span class="node-desc">{{ isLevanteAutorizado ? 'Retiro autorizado' : 'Pendiente de autorización' }}</span>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ============================================================== -->
-    <!-- 4. CUADRÍCULA DE FICHAS TÉCNICAS MODULARES                      -->
-    <!-- ============================================================== -->
-    <div class="informe-modules-grid" v-if="expediente">
-      <!-- MÓDULO 1: CLIENTE Y OPERACIÓN COMERCIAL -->
-      <section class="module-card">
-        <header class="module-card-header">
-          <div class="header-icon-box">
-            <i class="pi pi-building"></i>
-          </div>
-          <div>
-            <h4 class="module-title">1. Cliente & Operación Comercial</h4>
-            <span class="module-sub">Datos del consignatario y cotización base</span>
-          </div>
-        </header>
-
-        <div class="module-body">
-          <div class="data-item">
-            <span class="data-lbl">Razón Social:</span>
-            <span class="data-val strong">{{ expediente.clienteRazonSocial || '—' }}</span>
-          </div>
-          <div class="data-item">
-            <span class="data-lbl">RUC / Identificación Fiscal:</span>
-            <span class="data-val font-mono">{{ expediente.clienteNumeroDocumento || '—' }}</span>
-          </div>
-          <div class="data-item">
-            <span class="data-lbl">Código de Cotización:</span>
-            <span class="data-val doc-tag">{{ expediente.codigoCotizacion || '—' }}</span>
-          </div>
-          <div class="data-item">
-            <span class="data-lbl">Régimen Aduanero:</span>
-            <span class="data-val">{{ isExport ? 'Exportación Definitiva' : 'Importación para el Consumo' }}</span>
-          </div>
-          <div class="data-item">
-            <span class="data-lbl">Modalidad de Transporte:</span>
-            <span class="data-val">
-              <span v-if="expediente.servicioTransporte" class="pill-flota">
-                <i class="pi pi-truck"></i> Flota Propia TransAduanas SGA
-              </span>
-              <span v-else class="pill-retiro">
-                <i class="pi pi-user"></i> Retiro Directo por Cliente
-              </span>
-            </span>
-          </div>
-        </div>
-      </section>
-
-      <!-- MÓDULO 2: LOGÍSTICA DE TRAVESÍA Y EMBARQUE -->
-      <section class="module-card">
-        <header class="module-card-header">
-          <div class="header-icon-box">
-            <i class="pi pi-globe"></i>
-          </div>
-          <div>
-            <h4 class="module-title">2. Logística de Travesía & Embarque</h4>
-            <span class="module-sub">Identificación de nave, contenedor y precintos</span>
-          </div>
-        </header>
-
-        <div class="module-body">
-          <div class="data-item">
-            <span class="data-lbl">Nave / Buque / Vuelo:</span>
-            <span class="data-val strong">{{ expediente.naveViaje || 'Sin nave asignada' }}</span>
-          </div>
-          <div class="data-item">
-            <span class="data-lbl">Número de Contenedor:</span>
-            <span class="data-val font-mono highlight">{{ expediente.numeroContenedor || 'Pendiente' }}</span>
-          </div>
-          <div class="data-item">
-            <span class="data-lbl">Precinto Aduanero de Origen:</span>
-            <span class="data-val font-mono">{{ expediente.precintoAduanero || 'Pendiente' }}</span>
-          </div>
-          <div class="data-item">
-            <span class="data-lbl">Fecha de Salida (ETD):</span>
-            <span class="data-val">{{ expediente.fechaZarpeEtd || 'No confirmada' }}</span>
-          </div>
-          <div class="data-item">
-            <span class="data-lbl">Llegada Estimada (ETA):</span>
-            <span class="data-val">{{ expediente.fechaLlegadaEta || 'No programada' }}</span>
-          </div>
-          <div class="data-item">
-            <span class="data-lbl">Fecha y Hora Real de Arribo:</span>
-            <span class="data-val strong text-primary">
-              {{ expediente.fechaArriboAduana ? formatDateTime(expediente.fechaArriboAduana) : 'Pendiente de arribo' }}
-            </span>
-          </div>
-          <div class="data-item" v-if="expediente.terminalAlmacenDestino">
-            <span class="data-lbl">Terminal Portuario Destino:</span>
-            <span class="data-val strong">{{ expediente.terminalAlmacenDestino }}</span>
-          </div>
-        </div>
-      </section>
-
-      <!-- MÓDULO 3: FISCALIZACIÓN SUNAT & DILIGENCIA -->
-      <section class="module-card">
-        <header class="module-card-header">
-          <div class="header-icon-box">
-            <i class="pi pi-shield"></i>
-          </div>
-          <div>
-            <h4 class="module-title">3. Control Aduanero & SUNAT</h4>
-            <span class="module-sub">Asignación de canal, aforo y estado de levante</span>
-          </div>
-        </header>
-
-        <div class="module-body">
-          <div class="data-item">
-            <span class="data-lbl">Declaración DAM:</span>
-            <span class="data-val font-mono strong">{{ expediente.numeroDam || 'Sin numeración DAM' }}</span>
-          </div>
-          <div class="data-item">
-            <span class="data-lbl">Canal de Selección:</span>
-            <span class="data-val">
-              <span v-if="expediente.canalSunat" :class="['canal-tag', `canal-${expediente.canalSunat.toLowerCase()}`]">
-                <i :class="getCanalIcon(expediente.canalSunat)"></i>
-                CANAL {{ expediente.canalSunat }}
-              </span>
-              <span v-else class="text-muted">Pendiente de designación por SUNAT</span>
-            </span>
-          </div>
-          <div class="data-item">
-            <span class="data-lbl">Especialista SUNAT Asignado:</span>
-            <span class="data-val">{{ expediente.especialistaSunat || 'No asignado' }}</span>
-          </div>
-          <div class="data-item">
-            <span class="data-lbl">Fecha de Diligencia:</span>
-            <span class="data-val">{{ expediente.fechaDiligencia ? formatDateTime(expediente.fechaDiligencia) : 'Sin diligencia registrada' }}</span>
-          </div>
-          <div class="data-item">
-            <span class="data-lbl">Resultado de Inspección:</span>
-            <span class="data-val">{{ expediente.resultadoInspeccion || 'En espera de aforo o canal verde' }}</span>
-          </div>
-          <div class="data-item">
-            <span class="data-lbl">Autorización de Levante:</span>
-            <span class="data-val strong text-success">
-              {{ expediente.fechaLevanteAutorizacion ? formatDateTime(expediente.fechaLevanteAutorizacion) : 'No otorgado' }}
-            </span>
-          </div>
-        </div>
-      </section>
-
-      <!-- MÓDULO 4: ESPECIALISTAS Y CONTACTO EN EL EXTERIOR -->
-      <section class="module-card">
-        <header class="module-card-header">
-          <div class="header-icon-box">
-            <i class="pi pi-users"></i>
-          </div>
-          <div>
-            <h4 class="module-title">4. Contactos & Equipo Responsable</h4>
-            <span class="module-sub">Personal operativo local e internacional</span>
-          </div>
-        </header>
-
-        <div class="module-body">
-          <div class="data-item">
-            <span class="data-lbl">Agente Aduanero Responsable:</span>
-            <span class="data-val strong">{{ expediente.agenteAduaneroNombre || 'Agente Asignado' }}</span>
-          </div>
-          <div class="data-item">
-            <span class="data-lbl">Contacto en el Exterior:</span>
-            <span class="data-val">{{ expediente.contactoExteriorNombre || 'No especificado' }}</span>
-          </div>
-          <div class="data-item">
-            <span class="data-lbl">Teléfono de Contacto Exterior:</span>
-            <span class="data-val font-mono">{{ expediente.contactoExteriorTelefono || '—' }}</span>
-          </div>
-          <div class="data-item">
-            <span class="data-lbl">Correo Electrónico Exterior:</span>
-            <span class="data-val">{{ expediente.contactoExteriorCorreo || '—' }}</span>
-          </div>
-          <div class="data-item" v-if="expediente.ticketBalanzaVgm">
-            <span class="data-lbl">Ticket Balanza VGM / Depósito:</span>
-            <span class="data-val font-mono">{{ expediente.ticketBalanzaVgm }}</span>
-          </div>
-        </div>
-      </section>
     </div>
 
-    <!-- ============================================================== -->
-    <!-- 5. BITÁCORA Y OBSERVACIONES TÉCNICAS                           -->
-    <!-- ============================================================== -->
-    <section class="observaciones-section-card" v-if="expediente">
-      <header class="obs-header">
-        <i class="pi pi-book"></i>
-        <span>Bitácora Operativa & Observaciones del Expediente</span>
-      </header>
-      <div class="obs-body">
-        <div v-if="expediente.observaciones" class="obs-text-content">
-          <p>{{ expediente.observaciones }}</p>
-        </div>
-        <div v-else class="obs-empty">
-          <span>No se han registrado observaciones técnicas en la bitácora operativa de este despacho.</span>
-        </div>
+    <!-- Workspace Split-Screen (sga-split-layout) -->
+    <div v-if="expediente" class="sga-split-layout">
+      <div class="sga-split-main">
+        <AgenteInformeFichaCards :expediente="expediente" />
+
+        <!-- Bitácora Cronológica de Estados y Tiempos -->
+        <section class="sga-card-surface" style="margin-top: 1rem;">
+          <div class="sga-table-toolbar">
+            <div>
+              <span class="sga-kicker">MARCACIÓN DE ESTADOS Y TIEMPOS</span>
+              <h3 class="sga-chart-title">Historial Operativo del Expediente ({{ (expediente.eventos || []).length }})</h3>
+            </div>
+            <Button
+              v-if="!acc.isCerrado"
+              type="button"
+              label="Registrar Hito Manual"
+              icon="pi pi-plus"
+              size="small"
+              outlined
+              @click="$emit('marcar-estado-custom', expediente)"
+            />
+          </div>
+
+          <div v-if="!expediente.eventos || expediente.eventos.length === 0" class="sga-cell-sub">
+            Aún no se registran eventos estructurados; utilice los botones superiores para marcar estados y tiempos.
+          </div>
+
+          <ul v-else class="eventos-list">
+            <li v-for="ev in expediente.eventos" :key="ev.idEvento" class="evento-item">
+              <div>
+                <strong>{{ ev.titulo }}</strong>
+                <div class="sga-cell-sub">{{ ev.descripcion || ev.codigoEstado }}</div>
+              </div>
+              <div class="evento-meta">
+                <span class="font-mono">{{ formatDateTimeSafe(ev.fechaEvento) }}</span>
+                <span class="sga-cell-sub">{{ ev.usuarioNombre || 'Agente' }}</span>
+              </div>
+            </li>
+          </ul>
+        </section>
       </div>
-    </section>
+
+      <div class="sga-split-aside">
+        <AgenteInformeAside :expediente="expediente" />
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
 import { computed } from 'vue'
+import Button from 'primevue/button'
+import Tag from 'primevue/tag'
+import AgenteInformeFichaCards from './informe/AgenteInformeFichaCards.vue'
+import AgenteInformeAside from './informe/AgenteInformeAside.vue'
+import {
+  getAccionesPermitidasAgente,
+  hasZarpeConfirmado,
+  hasArriboConfirmado,
+  hasCanalAsignado,
+  isDiligenciaCompletada,
+  isLevanteAutorizado
+} from '../utils/agenteWorkflowUtils'
+import {
+  formatRegimenShort,
+  formatEstadoAgente,
+  getExpedienteSeverity,
+  getCanalLabel,
+  getCanalSeverity
+} from '../utils/agenteFormatters'
 
 const props = defineProps({
-  expediente: {
-    type: Object,
-    default: null
-  }
+  expediente: { type: Object, default: null }
 })
 
 defineEmits([
@@ -551,125 +389,45 @@ defineEmits([
   'ingreso-origen',
   'embarque',
   'recepcion-exterior',
+  'verificacion-origen',
+  'cuadrilla-rojo',
+  'finalizar-rojo',
+  'enviar-sunat',
+  'entregado-almacen-verde',
+  'informe-conformidad',
+  'descargar-informe',
+  'marcar-estado',
+  'marcar-estado-custom',
+  'finalizar-expediente',
   'documentos'
 ])
 
-const isExport = computed(() => {
-  return (props.expediente?.regimenAduanero || '').toUpperCase().includes('EXPORT')
-})
+const formatDateTimeSafe = (val) => {
+  if (!val) return '—'
+  return String(val).replace('T', ' ').slice(0, 16)
+}
 
-const isCerrado = computed(() => {
-  return props.expediente?.estadoExpediente === 'CERRADO' || props.expediente?.estadoExpediente === 'ANULADO'
-})
+const acc = computed(() => getAccionesPermitidasAgente(props.expediente || {}))
 
-const hasZarpeConfirmado = computed(() => {
-  const obs = props.expediente?.observaciones || ''
-  return (
-    obs.includes('SALIDA ORIGEN CONFIRMADA') ||
-    props.expediente?.estadoExpediente === 'EN_TRAMITE' ||
-    props.expediente?.estadoExpediente === 'INSPECCION' ||
-    props.expediente?.estadoExpediente === 'LEVANTE_AUTORIZADO'
-  )
-})
-
-const isDiligenciaCompletada = computed(() => {
+const trazabilidadSteps = computed(() => {
   const exp = props.expediente
-  if (!exp) return false
-  if (exp.canalSunat === 'VERDE') return true
-  return !!exp.fechaDiligencia || exp.estadoExpediente === 'LEVANTE_AUTORIZADO'
+  if (!exp) return []
+
+  const zarpe = hasZarpeConfirmado(exp)
+  const arribo = hasArriboConfirmado(exp)
+  const canal = hasCanalAsignado(exp)
+  const diligencia = isDiligenciaCompletada(exp)
+  const levante = isLevanteAutorizado(exp)
+
+  return [
+    { num: '01', kicker: 'ASIGNACIÓN', title: 'Asignado', done: true, active: !zarpe },
+    { num: '02', kicker: 'ORIGEN', title: acc.value.isExport ? 'En Tránsito' : 'Salida Origen', done: zarpe, active: !zarpe },
+    { num: '03', kicker: 'ADUANA', title: acc.value.isExport ? 'Zona Primaria' : 'Arribo Destino', done: arribo, active: zarpe && !arribo },
+    { num: '04', kicker: 'SUNAT', title: canal ? `Canal ${exp.canalSunat}` : 'Canal SUNAT', done: canal, active: arribo && !canal },
+    { num: '05', kicker: 'AFORO', title: exp.canalSunat === 'VERDE' ? 'Exento (Verde)' : 'Diligencia', done: diligencia, active: canal && !diligencia },
+    { num: '06', kicker: 'LIBERACIÓN', title: 'Levante', done: levante, active: diligencia && !levante }
+  ]
 })
-
-const isLevanteAutorizado = computed(() => {
-  const exp = props.expediente
-  return exp?.estadoExpediente === 'LEVANTE_AUTORIZADO' || !!exp?.fechaLevanteAutorizacion
-})
-
-const formatEstado = (st) => {
-  const map = {
-    ASIGNADO: 'Asignado a Agente',
-    EN_TRAMITE: 'En Tránsito Internacional',
-    INSPECCION: 'En Diligencia / Inspección SUNAT',
-    LEVANTE_AUTORIZADO: 'Levante Autorizado',
-    REGULARIZADO: 'Despacho Regularizado',
-    CERRADO: 'Expediente Cerrado',
-    ANULADO: 'Expediente Anulado'
-  }
-  return map[st] || st || 'Asignado'
-}
-
-const getEstadoPillClass = (st) => {
-  const map = {
-    ASIGNADO: 'pill-asignado',
-    EN_TRAMITE: 'pill-transito',
-    INSPECCION: 'pill-inspeccion',
-    LEVANTE_AUTORIZADO: 'pill-levante',
-    REGULARIZADO: 'pill-levante',
-    CERRADO: 'pill-neutral',
-    ANULADO: 'pill-anulado'
-  }
-  return map[st] || 'pill-neutral'
-}
-
-const getCanalBoxClass = (canal) => {
-  if (canal === 'VERDE') return 'canal-box-verde'
-  if (canal === 'NARANJA') return 'canal-box-naranja'
-  if (canal === 'ROJO') return 'canal-box-rojo'
-  return 'canal-box-pendiente'
-}
-
-const getCanalIcon = (canal) => {
-  if (canal === 'VERDE') return 'pi pi-check-circle'
-  if (canal === 'NARANJA') return 'pi pi-file'
-  if (canal === 'ROJO') return 'pi pi-exclamation-triangle'
-  return 'pi pi-clock'
-}
-
-const getCanalHelpText = (exp) => {
-  if (exp.canalSunat === 'VERDE') return 'Levante automático sin revisión documental ni física.'
-  if (exp.canalSunat === 'NARANJA') return 'Revisión documentaria por especialista de aduanas.'
-  if (exp.canalSunat === 'ROJO') return 'Requiere aforo físico de mercancía en terminal.'
-  if (exp.fechaArriboAduana) return 'Mercancía en puerto. Supervisor asignará el canal oficial.'
-  return 'Se asignará una vez confirmado el arribo de la nave a destino.'
-}
-
-const getStepperSummaryText = (exp) => {
-  if (isLevanteAutorizado.value) return 'Trámite Culminado: Mercancía con Levante Autorizado'
-  if (exp.canalSunat === 'ROJO' || exp.canalSunat === 'NARANJA') return `En Gestión SUNAT: Diligencia requerida para Canal ${exp.canalSunat}`
-  if (exp.canalSunat === 'VERDE') return 'Canal Verde: Habilitado para levante inmediato'
-  if (exp.fechaArriboAduana) return 'Mercancía en Puerto Nacional: Esperando asignación de Canal SUNAT'
-  if (hasZarpeConfirmado.value) return 'En Navegación / Travesía Internacional'
-  return 'Fase Inicial: En espera de confirmación de salida de origen'
-}
-
-const formatDateTime = (dateStr) => {
-  if (!dateStr) return '—'
-  const d = new Date(dateStr)
-  return isNaN(d) ? dateStr : `${d.toLocaleDateString()} ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
-}
-
-const formatDateShort = (dateStr) => {
-  if (!dateStr) return ''
-  const d = new Date(dateStr)
-  return isNaN(d) ? dateStr : d.toLocaleDateString()
-}
-
-const formatDateTimeShort = (dateStr) => {
-  if (!dateStr) return ''
-  const d = new Date(dateStr)
-  return isNaN(d) ? dateStr : `${d.toLocaleDateString()} ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
-}
-
-const formatDiligenciaDate = (exp) => {
-  if (exp.canalSunat === 'VERDE') return 'Exento'
-  if (exp.fechaDiligencia) return formatDateShort(exp.fechaDiligencia)
-  return 'Pendiente'
-}
-
-const formatDiligenciaDesc = (exp) => {
-  if (exp.canalSunat === 'VERDE') return 'Sin aforo'
-  if (exp.fechaDiligencia) return 'Acta registrada'
-  return 'Aforo de campo'
-}
 
 const imprimirInforme = () => {
   window.print()
@@ -680,737 +438,86 @@ const imprimirInforme = () => {
 .agente-informe-view {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
-  width: 100%;
-  padding: 0.25rem 0 2rem 0;
-  color: var(--color-text-main);
-}
-
-/* 1. Barra de Navegación */
-.informe-top-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  background: var(--color-bg-surface);
-  padding: 0.85rem 1.25rem;
-  border-radius: var(--radius-md, 8px);
-  border: 1px solid var(--color-border);
-  box-shadow: var(--shadow-subtle);
-}
-
-.top-bar-left {
-  display: flex;
-  align-items: center;
   gap: 1.25rem;
+  width: 100%;
 }
 
-.btn-back-nav {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.45rem 0.85rem;
-  background: var(--color-bg-subtle);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm, 6px);
-  color: var(--color-text-main);
-  font-size: var(--font-size-sm, 0.8125rem);
-  font-weight: 700;
-  cursor: pointer;
-  transition: all var(--transition-fast, 0.15s ease);
-}
-
-.btn-back-nav:hover {
-  background: var(--color-primary);
-  color: var(--color-primary-text);
-  border-color: var(--color-primary);
-}
-
-.breadcrumbs {
-  display: flex;
-  align-items: center;
-  gap: 0.45rem;
-  font-size: var(--font-size-sm, 0.8125rem);
-}
-
-.crumb-muted {
-  color: var(--color-text-subtle);
-}
-
-.crumb-active {
-  color: var(--color-text-main);
-  font-weight: 700;
-}
-
-.top-bar-actions {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
-
-.action-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.45rem 0.85rem;
-  border-radius: var(--radius-sm, 6px);
-  font-size: var(--font-size-xs, 0.75rem);
-  font-weight: 700;
-  cursor: pointer;
-  transition: all var(--transition-fast, 0.15s ease);
-  border: 1px solid transparent;
-}
-
-.btn-primary {
-  background: var(--color-primary);
-  color: var(--color-primary-text);
-  border-color: var(--color-primary);
-}
-
-.btn-primary:hover {
-  background: var(--color-primary-hover);
-  border-color: var(--color-primary-hover);
-}
-
-.btn-success {
-  background: var(--color-success-bg);
-  color: var(--color-success-text);
-  border-color: var(--color-success-border);
-}
-
-.btn-success:hover {
-  filter: brightness(0.95);
-}
-
-.btn-warning {
-  background: var(--color-warning-bg);
-  color: var(--color-warning-text);
-  border-color: var(--color-warning-border);
-}
-
-.btn-warning:hover {
-  filter: brightness(0.95);
-}
-
-.btn-outline {
-  background: var(--color-bg-surface);
-  border-color: var(--color-border);
-  color: var(--color-text-main);
-}
-
-.btn-outline:hover {
-  background: var(--color-bg-subtle);
-  border-color: var(--color-border-strong);
-}
-
-.btn-icon-only {
-  width: 34px;
-  height: 34px;
-  padding: 0;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--color-bg-surface);
-  border: 1px solid var(--color-border);
-  color: var(--color-text-muted);
-  border-radius: var(--radius-sm, 6px);
-  cursor: pointer;
-  transition: all var(--transition-fast, 0.15s ease);
-}
-
-.btn-icon-only:hover {
-  background: var(--color-bg-subtle);
-  color: var(--color-text-main);
-  border-color: var(--color-border-strong);
-}
-
-/* 2. Hero Banner */
-.informe-hero-banner {
-  background: var(--color-bg-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg, 10px);
-  padding: 1.5rem 1.75rem;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 2rem;
-  box-shadow: var(--shadow-subtle);
-}
-
-.hero-left-col {
-  display: flex;
-  flex-direction: column;
-  gap: 0.45rem;
-  flex: 1;
-}
-
-.hero-kicker-row {
+.informe-header-left {
   display: flex;
   align-items: center;
   gap: 0.75rem;
   flex-wrap: wrap;
 }
 
-.hero-badge-kicker {
-  font-size: var(--font-size-2xs, 0.6875rem);
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  color: var(--color-accent-kicker);
-  text-transform: uppercase;
+.informe-code {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--color-primary);
 }
 
-.regimen-tag {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-  font-size: var(--font-size-2xs, 0.6875rem);
-  font-weight: 800;
-  padding: 0.15rem 0.55rem;
-  border-radius: 4px;
-}
-
-.tag-import {
-  background: var(--color-info-bg);
-  color: var(--color-info-text);
-  border: 1px solid var(--color-info-border);
-}
-
-.tag-export {
-  background: var(--color-warning-bg);
-  color: var(--color-warning-text);
-  border: 1px solid var(--color-warning-border);
-}
-
-.hero-main-title {
-  margin: 0;
-  font-size: 1.85rem;
-  font-weight: 800;
-  color: var(--color-text-main);
-  letter-spacing: -0.02em;
-}
-
-.hero-meta-row {
+.informe-badges {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
-  font-size: var(--font-size-sm, 0.8125rem);
-  color: var(--color-text-muted);
+  gap: 0.4rem;
   flex-wrap: wrap;
 }
 
-.meta-item {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
+.informe-stepper-6 {
+  grid-template-columns: repeat(6, minmax(115px, 1fr));
 }
 
-.meta-divider {
-  color: var(--color-border-strong);
+.sga-stepper-item.is-static {
+  cursor: default;
 }
 
-.hero-right-col {
-  display: flex;
-  align-items: center;
-  gap: 1.25rem;
+.sga-stepper-item.is-static:hover {
+  background: transparent;
 }
 
-/* Semáforo SUNAT */
-.canal-sunat-box {
+.eventos-list {
+  list-style: none;
+  margin: 0.75rem 0 0 0;
+  padding: 0;
   display: flex;
   flex-direction: column;
-  padding: 0.85rem 1.15rem;
-  border-radius: var(--radius-sm, 6px);
-  border: 1px solid;
-  min-width: 200px;
+  gap: 0.6rem;
 }
 
-.canal-box-label {
-  font-size: 0.65rem;
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  margin-bottom: 0.25rem;
-}
-
-.canal-box-content {
+.evento-item {
   display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.canal-big-icon {
-  font-size: 1.25rem;
-}
-
-.canal-name {
-  font-size: 1.1rem;
-  font-weight: 900;
-  letter-spacing: 0.02em;
-}
-
-.canal-help-text {
-  font-size: var(--font-size-2xs, 0.6875rem);
-  margin-top: 0.35rem;
-  line-height: 1.25;
-}
-
-.canal-box-verde {
-  background: var(--color-success-bg);
-  border-color: var(--color-success-border);
-  color: var(--color-success-text);
-}
-
-.canal-box-verde .canal-help-text {
-  color: var(--color-success-text);
-}
-
-.canal-box-naranja {
-  background: var(--color-warning-bg);
-  border-color: var(--color-warning-border);
-  color: var(--color-warning-text);
-}
-
-.canal-box-naranja .canal-help-text {
-  color: var(--color-warning-text);
-}
-
-.canal-box-rojo {
-  background: var(--color-danger-bg);
-  border-color: var(--color-danger-border);
-  color: var(--color-danger-text);
-}
-
-.canal-box-rojo .canal-help-text {
-  color: var(--color-danger-text);
-}
-
-.canal-box-pendiente {
-  background: var(--color-bg-subtle);
-  border-color: var(--color-border);
-  color: var(--color-text-muted);
-}
-
-.canal-box-pendiente .canal-help-text {
-  color: var(--color-text-subtle);
-}
-
-/* DAM & Estado Box */
-.dam-and-status-box {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  align-items: flex-end;
-}
-
-.dam-sub-box {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  background: var(--color-bg-subtle);
-  border: 1px solid var(--color-border-subtle);
-  padding: 0.4rem 0.75rem;
-  border-radius: var(--radius-sm, 6px);
-}
-
-.dam-sub-label {
-  font-size: 0.6rem;
-  font-weight: 700;
-  color: var(--color-text-subtle);
-  letter-spacing: 0.04em;
-}
-
-.dam-sub-number {
-  font-size: var(--font-size-base, 0.875rem);
-  font-weight: 700;
-  color: var(--color-text-main);
-  font-family: var(--font-mono);
-}
-
-.status-sub-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.3rem 0.7rem;
-  border-radius: 14px;
-  font-size: var(--font-size-xs, 0.75rem);
-  font-weight: 700;
-}
-
-.status-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: currentColor;
-}
-
-.pill-asignado {
-  background: var(--color-info-bg);
-  color: var(--color-info-text);
-}
-
-.pill-transito {
-  background: var(--color-warning-bg);
-  color: var(--color-warning-text);
-}
-
-.pill-inspeccion {
-  background: var(--color-warning-bg);
-  color: var(--color-warning-text);
-}
-
-.pill-levante {
-  background: var(--color-success-bg);
-  color: var(--color-success-text);
-}
-
-.pill-neutral {
-  background: var(--color-bg-muted);
-  color: var(--color-text-muted);
-}
-
-.pill-anulado {
-  background: var(--color-danger-bg);
-  color: var(--color-danger-text);
-}
-
-/* 3. Stepper Card */
-.trazabilidad-stepper-card {
-  background: var(--color-bg-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg, 10px);
-  padding: 1.25rem 1.5rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-  box-shadow: var(--shadow-subtle);
-}
-
-.stepper-header {
-  display: flex;
-  align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid var(--color-border-subtle);
-  padding-bottom: 0.65rem;
-}
-
-.stepper-title {
-  margin: 0;
-  font-size: var(--font-size-md, 0.9375rem);
-  font-weight: 700;
-  color: var(--color-text-main);
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.stepper-summary-tag {
-  font-size: var(--font-size-xs, 0.75rem);
-  font-weight: 700;
-  color: var(--color-accent-kicker);
-  background: var(--color-bg-subtle);
-  padding: 0.2rem 0.6rem;
-  border-radius: 4px;
-  border: 1px solid var(--color-border);
-}
-
-.stepper-horizontal-track {
-  display: flex;
   align-items: flex-start;
-  justify-content: space-between;
-  position: relative;
-  overflow-x: auto;
-  padding: 0.5rem 0;
-}
-
-.track-node {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  gap: 0.4rem;
-  min-width: 110px;
-  z-index: 2;
-}
-
-.node-circle {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: var(--font-size-xs, 0.75rem);
-  font-weight: 800;
+  gap: 1rem;
+  padding: 0.65rem 0.8rem;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
   background: var(--color-bg-subtle);
-  color: var(--color-text-muted);
-  border: 2px solid var(--color-border);
-  transition: all var(--transition-normal, 0.2s ease);
 }
 
-.track-node.completed .node-circle {
-  background: var(--color-primary);
-  color: var(--color-primary-text);
-  border-color: var(--color-primary);
-}
-
-.track-node.active .node-circle {
-  background: var(--color-bg-surface);
-  color: var(--color-primary);
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(180, 83, 9, 0.15);
-}
-
-.node-content {
+.evento-meta {
+  text-align: right;
   display: flex;
   flex-direction: column;
   gap: 0.15rem;
+  font-size: 0.78rem;
+  white-space: nowrap;
 }
 
-.node-title {
-  font-size: var(--font-size-xs, 0.75rem);
-  font-weight: 700;
-  color: var(--color-text-main);
+@media (max-width: 1100px) {
+  .informe-stepper-6 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 
-.node-date {
-  font-size: var(--font-size-2xs, 0.6875rem);
-  color: var(--color-accent-kicker);
-  font-weight: 600;
-}
-
-.node-desc {
-  font-size: 0.65rem;
-  color: var(--color-text-subtle);
-}
-
-.track-connector {
-  flex: 1;
-  height: 3px;
-  background: var(--color-border);
-  margin-top: 15px;
-  z-index: 1;
-}
-
-.track-connector.filled {
-  background: var(--color-primary);
-}
-
-/* 4. Módulos Grid */
-.informe-modules-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 1.25rem;
-}
-
-.module-card {
-  background: var(--color-bg-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg, 10px);
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  box-shadow: var(--shadow-subtle);
-}
-
-.module-card-header {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.85rem 1.15rem;
-  background: var(--color-bg-subtle);
-  border-bottom: 1px solid var(--color-border);
-}
-
-.header-icon-box {
-  width: 32px;
-  height: 32px;
-  border-radius: 6px;
-  background: var(--color-bg-surface);
-  color: var(--color-accent-kicker);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.9rem;
-  border: 1px solid var(--color-border-subtle);
-}
-
-.module-title {
-  margin: 0;
-  font-size: var(--font-size-sm, 0.875rem);
-  font-weight: 700;
-  color: var(--color-text-main);
-}
-
-.module-sub {
-  font-size: var(--font-size-2xs, 0.6875rem);
-  color: var(--color-text-subtle);
-}
-
-.module-body {
-  padding: 1rem 1.15rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.65rem;
-}
-
-.data-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 1rem;
-  font-size: var(--font-size-sm, 0.8125rem);
-  padding-bottom: 0.4rem;
-  border-bottom: 1px dashed var(--color-border-subtle);
-}
-
-.data-item:last-child {
-  border-bottom: none;
-  padding-bottom: 0;
-}
-
-.data-lbl {
-  color: var(--color-text-muted);
-  font-weight: 500;
-  flex-shrink: 0;
-}
-
-.data-val {
-  color: var(--color-text-main);
-  text-align: right;
-  word-break: break-word;
-}
-
-.data-val.strong {
-  font-weight: 700;
-}
-
-.data-val.highlight {
-  color: var(--color-accent-copper);
-  font-weight: 700;
-}
-
-.doc-tag {
-  background: var(--color-bg-subtle);
-  color: var(--color-text-main);
-  border: 1px solid var(--color-border-subtle);
-  padding: 0.15rem 0.45rem;
-  border-radius: 4px;
-  font-family: var(--font-mono);
-  font-weight: 600;
-}
-
-.pill-flota {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  font-size: var(--font-size-xs, 0.75rem);
-  font-weight: 700;
-  color: var(--color-success-text);
-  background: var(--color-success-bg);
-  border: 1px solid var(--color-success-border);
-  padding: 0.15rem 0.5rem;
-  border-radius: 4px;
-}
-
-.pill-retiro {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  font-size: var(--font-size-xs, 0.75rem);
-  font-weight: 600;
-  color: var(--color-text-muted);
-  background: var(--color-bg-subtle);
-  border: 1px solid var(--color-border);
-  padding: 0.15rem 0.5rem;
-  border-radius: 4px;
-}
-
-.canal-tag {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-  font-size: var(--font-size-2xs, 0.6875rem);
-  font-weight: 800;
-  padding: 0.2rem 0.55rem;
-  border-radius: 4px;
-}
-
-/* 5. Observaciones */
-.observaciones-section-card {
-  background: var(--color-bg-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg, 10px);
-  overflow: hidden;
-  box-shadow: var(--shadow-subtle);
-}
-
-.obs-header {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1.15rem;
-  background: var(--color-bg-subtle);
-  border-bottom: 1px solid var(--color-border);
-  font-size: var(--font-size-sm, 0.8125rem);
-  font-weight: 700;
-  color: var(--color-text-main);
-}
-
-.obs-body {
-  padding: 1.15rem;
-}
-
-.obs-text-content p {
-  margin: 0;
-  font-size: var(--font-size-base, 0.875rem);
-  line-height: 1.6;
-  color: var(--color-text-main);
-  white-space: pre-line;
-}
-
-.obs-empty {
-  font-size: var(--font-size-sm, 0.8125rem);
-  color: var(--color-text-subtle);
-  font-style: italic;
-}
-
-.text-primary {
-  color: var(--color-primary);
-}
-
-.text-success {
-  color: var(--color-success-text);
-}
-
-.text-muted {
-  color: var(--color-text-subtle);
-}
-
-.font-mono {
-  font-family: var(--font-mono);
+@media (max-width: 640px) {
+  .informe-stepper-6 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media print {
   .no-print {
     display: none !important;
-  }
-  .agente-informe-view {
-    padding: 0;
-  }
-}
-
-@media (max-width: 900px) {
-  .informe-hero-banner {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-  .hero-right-col {
-    width: 100%;
-    justify-content: space-between;
-  }
-  .informe-modules-grid {
-    grid-template-columns: 1fr;
   }
 }
 </style>

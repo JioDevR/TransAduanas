@@ -452,6 +452,8 @@ defineEmits([
   flex-direction: column;
   gap: 1.5rem;
   padding: 0.25rem 0;
+  min-width: 0;
+  width: 100%;
 }
 
 .sga-field-block,
@@ -460,6 +462,7 @@ defineEmits([
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  min-width: 0;
 }
 
 .sga-route-col {
@@ -488,8 +491,9 @@ defineEmits([
 .sga-route-grid,
 .sga-inline-2 {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1rem;
+  min-width: 0;
 }
 
 .sga-select-card {
@@ -593,6 +597,24 @@ defineEmits([
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.sga-select-val {
+  width: 100%;
+  overflow: hidden;
+}
+
+.sga-select-val > span:not(.sga-code-pill) {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sga-code-pill {
+  flex-shrink: 0;
 }
 
 .sga-select-opt-col {
@@ -622,6 +644,19 @@ defineEmits([
 
 .font-mono {
   font-family: var(--font-mono);
+}
+
+@container sga-main (max-width: 620px) {
+  .sga-route-grid,
+  .sga-inline-2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+@container sga-main (max-width: 480px) {
+  .sga-option-grid.cols-2 {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 900px) {

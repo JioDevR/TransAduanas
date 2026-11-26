@@ -101,8 +101,10 @@ router.beforeEach(async (to, from, next) => {
       navStore.setAdministracionTiSubOption('portal-users')
     } else if (toPath.includes('usuarios')) {
       navStore.setAdministracionTiSubOption('users')
-    } else if (toPath.includes('logs')) {
-      navStore.setAdministracionTiSubOption('logs')
+    } else if (toPath.includes('auditoria')) {
+      navStore.setAdministracionTiSubOption('auditoria')
+    } else if (toPath.includes('almacenamiento') || toPath.includes('roles-accesos')) {
+      navStore.setAdministracionTiSubOption('almacenamiento')
     } else if (toPath.includes('acerca-de')) {
       navStore.setAdministracionTiSubOption('about')
     } else {
@@ -122,10 +124,6 @@ router.beforeEach(async (to, from, next) => {
       navStore.setGerenciaGeneralSubOption('mercancias')
     } else if (toPath.includes('dashboard') || toPath.includes('resumen')) {
       navStore.setGerenciaGeneralSubOption('dashboard')
-    } else if (toPath.includes('flota')) {
-      navStore.setGerenciaGeneralSubOption('flota')
-    } else if (toPath.includes('conductores')) {
-      navStore.setGerenciaGeneralSubOption('conductores')
     } else {
       navStore.setGerenciaGeneralSubOption('dashboard')
     }
@@ -166,15 +164,6 @@ router.beforeEach(async (to, from, next) => {
       navStore.setTransporteFlotaSubOption(to.query.tab)
     } else {
       navStore.resetModuleToDefaultView('transporte-flota')
-    }
-  } else if (toPath.startsWith('/legal-auditoria')) {
-    if (navStore.activeModule !== 'legal-auditoria') {
-      navStore.setActiveModule('legal-auditoria')
-    }
-    if (to?.query?.tab) {
-      navStore.setLegalAuditoriaSubOption(to.query.tab)
-    } else {
-      navStore.resetModuleToDefaultView('legal-auditoria')
     }
   } else if (toPath.startsWith('/finanzas')) {
     if (navStore.activeModule !== 'finanzas') {

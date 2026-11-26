@@ -2,6 +2,7 @@ package pe.sga.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -12,6 +13,7 @@ import pe.sga.exception.BadRequestException;
 import pe.sga.exception.ResourceNotFoundException;
 import pe.sga.repository.ClienteRepository;
 import pe.sga.repository.UsuarioClienteRepository;
+import pe.sga.service.IAuditoriaService;
 import pe.sga.service.IUsuarioClienteService;
 
 import java.time.LocalDateTime;
@@ -26,6 +28,20 @@ public class UsuarioClienteServiceImpl implements IUsuarioClienteService {
     private final UsuarioClienteRepository usuarioClienteRepository;
     private final ClienteRepository clienteRepository;
     private final PasswordEncoder passwordEncoder;
+
+    private IAuditoriaService auditoriaService;
+
+    @Autowired(required = false)
+    public void setAuditoriaService(IAuditoriaService auditoriaService) {
+        this.auditoriaService = auditoriaService;
+    }
+
+    private void auditarPortal(String accion, Integer idEntidad, String detalle) {
+        if (auditoriaService != null) {
+            auditoriaService.registrar("PORTAL_B2B", accion, "USUARIO_CLIENTE",
+                    idEntidad != null ? String.valueOf(idEntidad) : null, detalle, "EXITO");
+        }
+    }
 
     @Override
     @Transactional(readOnly = true)
@@ -130,6 +146,8 @@ public class UsuarioClienteServiceImpl implements IUsuarioClienteService {
         UsuarioCliente guardado = usuarioClienteRepository.save(uc);
         log.info("Usuario del portal creado exitosamente para la empresa: id={}, username={}, cliente={}",
                 guardado.getIdUsuarioCliente(), guardado.getUsername(), cliente.getRazonSocial());
+        auditarPortal("CREAR_USUARIO_PORTAL", guardado.getIdUsuarioCliente(),
+                "Alta cuenta B2B @" + guardado.getUsername() + " para " + cliente.getRazonSocial());
         return mapToResponse(guardado);
     }
 
@@ -187,6 +205,8 @@ public class UsuarioClienteServiceImpl implements IUsuarioClienteService {
         uc.setFechaActualizacion(LocalDateTime.now());
         UsuarioCliente actualizado = usuarioClienteRepository.save(uc);
         log.info("Usuario del portal actualizado: id={}, username={}", actualizado.getIdUsuarioCliente(), actualizado.getUsername());
+        auditarPortal("ACTUALIZAR_USUARIO_PORTAL", actualizado.getIdUsuarioCliente(),
+                "Actualización de cuenta B2B @" + actualizado.getUsername());
         return mapToResponse(actualizado);
     }
 
@@ -200,6 +220,7 @@ public class UsuarioClienteServiceImpl implements IUsuarioClienteService {
         uc.setFechaActualizacion(LocalDateTime.now());
         usuarioClienteRepository.save(uc);
         log.info("Baja lógica por estado aplicada a usuario de portal: id={}, username={}", id, uc.getUsername());
+        auditarPortal("DESACTIVAR_USUARIO_PORTAL", id, "Desactivación de cuenta B2B @" + uc.getUsername());
     }
 
     @Override
@@ -212,6 +233,7 @@ public class UsuarioClienteServiceImpl implements IUsuarioClienteService {
         uc.setFechaActualizacion(LocalDateTime.now());
         usuarioClienteRepository.save(uc);
         log.info("Usuario de portal reactivado: id={}, username={}", id, uc.getUsername());
+        auditarPortal("REACTIVAR_USUARIO_PORTAL", id, "Reactivación de cuenta B2B @" + uc.getUsername());
     }
 
     @Override
@@ -225,6 +247,7 @@ public class UsuarioClienteServiceImpl implements IUsuarioClienteService {
         uc.setFechaActualizacion(LocalDateTime.now());
         usuarioClienteRepository.save(uc);
         log.info("Contraseña restablecida administrativamente para usuario de portal: id={}, username={}", id, uc.getUsername());
+        auditarPortal("RESET_PASSWORD_PORTAL", id, "Restablecimiento de contraseña B2B @" + uc.getUsername());
     }
 
     private UsuarioClienteResponseDTO mapToResponse(UsuarioCliente uc) {

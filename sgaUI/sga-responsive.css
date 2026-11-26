@@ -1,0 +1,134 @@
+/* ==========================================================================
+   sgaUI — Estándar de Responsividad & Grillas Adaptativas
+   Breakpoints Oficiales:
+     - Desktop LG : > 1200px
+     - Tablet LG  : <= 1200px (colapso de Split-Screen y 4-col -> 2-col)
+     - Tablet     : <= 900px  (Sidebar -> Drawer móvil, grids 3-col -> 2-col)
+     - Mobile     : <= 640px  (1 columna universal, botones/filtros adaptados)
+   ========================================================================== */
+
+/* Grillas responsivas seguras (evitan desbordamiento en 320px-375px) */
+.sga-grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.sga-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem 1.25rem;
+}
+
+.sga-grid-4 {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
+.sga-grid-auto {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+  gap: 1rem;
+}
+
+/* Contención de tablas, controles PrimeVue y texto largo */
+.p-select,
+.p-multiselect,
+.p-inputnumber,
+.p-inputtext,
+.p-textarea {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.p-select .p-select-label {
+  min-width: 0;
+  flex: 1 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sga-table-scroll {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.sga-wrap-anywhere {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.sga-truncate {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Visibilidad condicional por tier */
+.sga-show-tablet-down {
+  display: none !important;
+}
+
+.sga-show-mobile-only {
+  display: none !important;
+}
+
+@media (max-width: 1200px) {
+  .sga-grid-4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .sga-grid-3 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .sga-hide-tablet {
+    display: none !important;
+  }
+
+  .sga-show-tablet-down {
+    display: inline-flex !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .sga-grid-2,
+  .sga-grid-3,
+  .sga-grid-4 {
+    grid-template-columns: 1fr;
+  }
+
+  .sga-hide-mobile {
+    display: none !important;
+  }
+
+  .sga-show-mobile-only {
+    display: inline-flex !important;
+  }
+
+  /* Evitar auto-zoom en iOS Safari y mejorar área táctil en móvil */
+  .p-inputtext,
+  .p-textarea,
+  .p-select-label,
+  .p-inputnumber-input {
+    font-size: 1rem;
+  }
+
+  /* Diálogos PrimeVue adaptados a pantallas pequeñas */
+  .p-dialog {
+    margin: 0.75rem !important;
+    max-height: calc(100dvh - 1.5rem) !important;
+  }
+
+  .p-dialog .p-dialog-header,
+  .p-dialog .p-dialog-content,
+  .p-dialog .p-dialog-footer {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+}

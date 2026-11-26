@@ -4,20 +4,12 @@ export const transporteFlotaService = {
   // ==========================================
   // CONDUCTORES
   // ==========================================
-  async getConductores(soloActivos = false) {
-    const response = await apiClient.get('/transporte/conductores', {
-      params: { soloActivos }
-    })
-    return response.data.data
-  },
-
-  async getConductorById(id) {
-    const response = await apiClient.get(`/transporte/conductores/${id}`)
-    return response.data.data
-  },
-
-  async getConductorByLicencia(licencia) {
-    const response = await apiClient.get(`/transporte/conductores/licencia/${licencia}`)
+  async getConductores(paramsOrSoloActivos = false) {
+    const params =
+      typeof paramsOrSoloActivos === 'object' && paramsOrSoloActivos !== null
+        ? paramsOrSoloActivos
+        : { soloActivos: Boolean(paramsOrSoloActivos) }
+    const response = await apiClient.get('/transporte/conductores', { params })
     return response.data.data
   },
 
@@ -42,20 +34,10 @@ export const transporteFlotaService = {
   },
 
   // ==========================================
-  // UNIDADES DE TRANSPORTE (TRACTOS / REMOLQUES)
+  // UNIDADES DE TRANSPORTE (FLOTA MTC)
   // ==========================================
   async getUnidades(params = {}) {
     const response = await apiClient.get('/transporte/unidades', { params })
-    return response.data.data
-  },
-
-  async getUnidadById(id) {
-    const response = await apiClient.get(`/transporte/unidades/${id}`)
-    return response.data.data
-  },
-
-  async getUnidadByPlaca(placa) {
-    const response = await apiClient.get(`/transporte/unidades/placa/${placa}`)
     return response.data.data
   },
 
@@ -92,11 +74,6 @@ export const transporteFlotaService = {
     return response.data.data
   },
 
-  async getDespachoByTracking(tracking) {
-    const response = await apiClient.get(`/transporte/despachos/tracking/${tracking}`)
-    return response.data.data
-  },
-
   async getDespachoByExpediente(idExpediente) {
     const response = await apiClient.get(`/transporte/despachos/expediente/${idExpediente}`)
     return response.data.data
@@ -104,6 +81,11 @@ export const transporteFlotaService = {
 
   async createDespacho(data) {
     const response = await apiClient.post('/transporte/despachos', data)
+    return response.data.data
+  },
+
+  async aceptarSolicitud(id) {
+    const response = await apiClient.patch(`/transporte/despachos/${id}/aceptar`)
     return response.data.data
   },
 
@@ -119,16 +101,6 @@ export const transporteFlotaService = {
 
   async confirmarEntrega(id, payload) {
     const response = await apiClient.patch(`/transporte/despachos/${id}/confirmar-entrega`, payload)
-    return response.data.data
-  },
-
-  async getMiDespachoActivo() {
-    const response = await apiClient.get('/transporte/despachos/mi-despacho-activo')
-    return response.data.data
-  },
-
-  async getMisDespachos() {
-    const response = await apiClient.get('/transporte/despachos/mis-despachos')
     return response.data.data
   },
 

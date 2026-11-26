@@ -1,11 +1,14 @@
 package pe.sga.dto.request;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.*;
+import pe.sga.entity.enums.EstadoOperativoFlota;
+import pe.sga.entity.enums.TipoVehiculo;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -28,11 +31,12 @@ public class UnidadTransporteRequestDTO {
     @Size(max = 100, message = "La marca/modelo no puede exceder 100 caracteres")
     private String marcaModelo;
 
+    @Min(value = 1950, message = "El año de fabricación debe ser mayor o igual a 1950")
+    @Max(value = 2100, message = "El año de fabricación no es válido")
     private Integer anoFabricacion;
 
     @Builder.Default
-    @Size(max = 50, message = "El tipo de vehículo no puede exceder 50 caracteres")
-    private String tipoVehiculo = "TRACTO_PLATAFORMA";
+    private TipoVehiculo tipoVehiculo = TipoVehiculo.TRACTO;
 
     @NotNull(message = "La capacidad de carga es obligatoria")
     @DecimalMin(value = "0.0", inclusive = false, message = "La capacidad de carga debe ser mayor a 0")
@@ -43,44 +47,15 @@ public class UnidadTransporteRequestDTO {
 
     private LocalDate citvVencimiento;
 
+    @Min(value = 0, message = "El kilometraje actual no puede ser negativo")
     @Builder.Default
     private Integer kilometrajeActual = 0;
 
     @Builder.Default
-    @Size(max = 20, message = "El estado operativo no puede exceder 20 caracteres")
-    private String estadoOperativo = "DISPONIBLE";
+    private EstadoOperativoFlota estadoOperativo = EstadoOperativoFlota.DISPONIBLE;
 
     @Builder.Default
     private Boolean estadoActivo = true;
 
     private String observaciones;
-
-    @JsonProperty("anioFabricacion")
-    public void setAnioFabricacion(Integer a) {
-        this.anoFabricacion = a;
-    }
-
-    @JsonProperty("fechaVencimientoSoat")
-    public void setFechaVencimientoSoat(LocalDate d) {
-        this.soatVencimiento = d;
-    }
-
-    @JsonProperty("fechaVencimientoCitv")
-    public void setFechaVencimientoCitv(LocalDate d) {
-        this.citvVencimiento = d;
-    }
-
-    @JsonProperty("placa")
-    public void setPlaca(String p) {
-        if (this.placaTracto == null || this.placaTracto.isBlank()) {
-            this.placaTracto = p;
-        }
-    }
-
-    @JsonProperty("tipoUnidad")
-    public void setTipoUnidad(String t) {
-        if (t != null && !t.isBlank()) {
-            this.tipoVehiculo = t;
-        }
-    }
 }

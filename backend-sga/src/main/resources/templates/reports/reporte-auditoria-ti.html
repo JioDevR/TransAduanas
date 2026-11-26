@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{reports/ti-listado-base :: tiHead(${tituloDocumento})}"></head>
+<body>
+
+    <table th:replace="~{reports/ti-listado-base :: tiHeader(${kickerTexto}, ${tituloReporte}, ${alcanceTexto}, ${fechaGeneracion}, ${totalListado}, 'eventos')}"></table>
+
+    <table th:replace="~{reports/ti-listado-base :: tiSummary(${tituloMetrica1}, ${totalListado}, 'Eventos Exitosos', ${totalExitos}, 'Alertas / Fallos', ${totalFallos})}"></table>
+
+    <table class="ti-list-table">
+        <thead>
+            <tr>
+                <th style="width: 14%;">FECHA</th>
+                <th style="width: 16%;">ACTOR / ROL</th>
+                <th style="width: 21%;">MÓDULO / ACCIÓN</th>
+                <th style="width: 28%;">DETALLE</th>
+                <th style="width: 11%;">IP</th>
+                <th style="width: 10%;">ESTADO</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:if="${#lists.isEmpty(items)}">
+                <td colspan="6" class="ti-empty-row">No se encontraron eventos de auditoría para los filtros seleccionados.</td>
+            </tr>
+            <tr th:each="ev : ${items}">
+                <td th:text="${ev.fechaTexto}">20/11/2026 17:00</td>
+                <td>
+                    <span class="ti-user-chip" th:text="'@' + ${ev.usuarioActor}">@admin</span><br />
+                    <span class="ti-sub-text" th:text="${ev.rolActor}">ADMINISTRADOR_TI</span>
+                </td>
+                <td>
+                    <strong style="font-size: 6.8pt;" th:text="${ev.accion}">LOGIN_EXITOSO</strong><br />
+                    <span class="ti-sub-text" th:text="${ev.moduloEntidad}">SEGURIDAD_TI</span>
+                </td>
+                <td th:text="${ev.detalle}">Inicio de sesión exitoso</td>
+                <td th:text="${ev.ipOrigen}">127.0.0.1</td>
+                <td>
+                    <span th:class="${ev.resultado == 'EXITO'} ? 'ti-badge-ok' : 'ti-badge-err'" th:text="${ev.resultado}">EXITO</span>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+</body>
+</html>

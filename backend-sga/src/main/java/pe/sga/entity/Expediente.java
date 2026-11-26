@@ -42,10 +42,10 @@ public class Expediente {
     private CatalogoTipoCarga tipoCarga;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "id_agente_aduanero", nullable = false)
+    @JoinColumn(name = "id_agente_aduanero", nullable = true)
     private Usuario agenteAduanero;
 
-    @Column(name = "fecha_asignacion", nullable = false)
+    @Column(name = "fecha_asignacion")
     @Builder.Default
     private LocalDateTime fechaAsignacion = LocalDateTime.now();
 
@@ -104,6 +104,80 @@ public class Expediente {
 
     @Column(name = "nave_viaje", length = 100)
     private String naveViaje;
+
+    @Column(name = "tipo_transporte_internacional", length = 30)
+    private String tipoTransporteInternacional;
+
+    @Column(name = "numero_vuelo", length = 60)
+    private String numeroVuelo;
+
+    // Marcación de Estados Operativos y Canales SUNAT
+    @Column(name = "en_espera_transito", nullable = false)
+    @Builder.Default
+    private Boolean enEsperaTransito = false;
+
+    @Column(name = "en_revision_aduana", nullable = false)
+    @Builder.Default
+    private Boolean enRevisionAduana = false;
+
+    @Column(name = "id_documento_conformidad_destino")
+    private Integer idDocumentoConformidadDestino;
+
+    @Column(name = "verificacion_origen_ok", nullable = false)
+    @Builder.Default
+    private Boolean verificacionOrigenOk = false;
+
+    @Column(name = "fecha_verificacion_origen")
+    private LocalDateTime fechaVerificacionOrigen;
+
+    @Column(name = "cuadrilla_solicitada", nullable = false)
+    @Builder.Default
+    private Boolean cuadrillaSolicitada = false;
+
+    @Column(name = "cuadrilla_detalle", length = 200)
+    private String cuadrillaDetalle;
+
+    @Column(name = "fecha_cita_inspeccion")
+    private LocalDateTime fechaCitaInspeccion;
+
+    @Column(name = "codigo_cita_inspeccion", length = 50)
+    private String codigoCitaInspeccion;
+
+    @Column(name = "revision_rojo_finalizada", nullable = false)
+    @Builder.Default
+    private Boolean revisionRojoFinalizada = false;
+
+    @Column(name = "envio_sunat_simulado_ok", nullable = false)
+    @Builder.Default
+    private Boolean envioSunatSimuladoOk = false;
+
+    @Column(name = "codigo_transmision_sunat", length = 60)
+    private String codigoTransmisionSunat;
+
+    @Column(name = "fecha_envio_sunat")
+    private LocalDateTime fechaEnvioSunat;
+
+    @Column(name = "entregado_almacen_verde", nullable = false)
+    @Builder.Default
+    private Boolean entregadoAlmacenVerde = false;
+
+    @Column(name = "fecha_entrega_almacen_verde")
+    private LocalDateTime fechaEntregaAlmacenVerde;
+
+    @Column(name = "informe_conformidad_texto", columnDefinition = "TEXT")
+    private String informeConformidadTexto;
+
+    @Column(name = "fecha_informe_conformidad")
+    private LocalDateTime fechaInformeConformidad;
+
+    @Column(name = "receptor_conformidad_nombre", length = 150)
+    private String receptorConformidadNombre;
+
+    @Column(name = "receptor_conformidad_dni", length = 30)
+    private String receptorConformidadDni;
+
+    @Column(name = "id_documento_informe_conformidad")
+    private Integer idDocumentoConformidadInforme;
 
     // Control y Auditoría
     @Enumerated(EnumType.STRING)

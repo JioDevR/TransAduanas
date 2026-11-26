@@ -1,6 +1,7 @@
 package pe.sga.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pe.sga.dto.request.DespachoAsignarRecursosDTO;
@@ -12,16 +13,24 @@ import pe.sga.entity.Conductor;
 import pe.sga.entity.DespachoTransporte;
 import pe.sga.entity.DocumentoAdjunto;
 import pe.sga.entity.Expediente;
+import pe.sga.entity.ExpedienteEvento;
 import pe.sga.entity.NotificacionCliente;
 import pe.sga.entity.UnidadTransporte;
+import pe.sga.entity.enums.EstadoExpediente;
+import pe.sga.entity.enums.EstadoOperativoConductor;
+import pe.sga.entity.enums.EstadoOperativoFlota;
+import pe.sga.entity.enums.EstadoTransporte;
+import pe.sga.entity.enums.TipoTraslado;
 import pe.sga.exception.BadRequestException;
 import pe.sga.exception.ResourceNotFoundException;
 import pe.sga.repository.ConductorRepository;
 import pe.sga.repository.DespachoTransporteRepository;
+import pe.sga.repository.ExpedienteEventoRepository;
 import pe.sga.repository.ExpedienteRepository;
 import pe.sga.repository.IDocumentoAdjuntoRepository;
 import pe.sga.repository.NotificacionClienteRepository;
 import pe.sga.repository.UnidadTransporteRepository;
+import pe.sga.service.IAuditoriaService;
 import pe.sga.service.IDespachoTransporteService;
 
 import java.time.LocalDate;
@@ -32,6 +41,9 @@ import java.util.List;
 @RequiredArgsConstructor
 public class DespachoTransporteServiceImpl implements IDespachoTransporteService {
 
+    private static final List<EstadoTransporte> ESTADOS_RECURSO_OCUPADO =
+            List.of(EstadoTransporte.PROGRAMADO, EstadoTransporte.EN_RUTA);
+
     private final DespachoTransporteRepository despachoRepository;
     private final ExpedienteRepository expedienteRepository;
     private final ConductorRepository conductorRepository;
@@ -39,39 +51,54 @@ public class DespachoTransporteServiceImpl implements IDespachoTransporteService
     private final IDocumentoAdjuntoRepository documentoRepository;
     private final NotificacionClienteRepository notificacionClienteRepository;
 
-    @Override
-    @Transactional(readOnly = true)
-    public List<DespachoTransporteResponseDTO> listarTodos(Boolean soloActivos) {
-        if (soloActivos != null && soloActivos) {
-            return despachoRepository.findByEstadoTransporteNot("CANCELADO").stream()
-                    .map(this::mapToResponse)
-                    .toList();
+    private IAuditoriaService auditoriaService;
+    private ExpedienteEventoRepository expedienteEventoRepository;
+
+    @Autowired(required = false)
+    public void setAuditoriaService(IAuditoriaService auditoriaService) {
+        this.auditoriaService = auditoriaService;
+    }
+
+    @Autowired(required = false)
+    public void setExpedienteEventoRepository(ExpedienteEventoRepository expedienteEventoRepository) {
+        this.expedienteEventoRepository = expedienteEventoRepository;
+    }
+
+    private void registrarEventoExpediente(Expediente exp, String codigoEstado, String titulo, String descripcion) {
+        if (expedienteEventoRepository == null || exp == null || exp.getIdExpediente() == null) return;
+        String reg = exp.getCotizacion() != null ? exp.getCotizacion().getRegimenAduanero() : null;
+        expedienteEventoRepository.save(ExpedienteEvento.builder()
+                .expediente(exp)
+                .codigoEstado(codigoEstado)
+                .titulo(titulo)
+                .descripcion(descripcion)
+                .regimen(reg)
+                .usuarioNombre("Área de Transporte")
+                .fechaEvento(LocalDateTime.now())
+                .build());
+    }
+
+    private void auditar(String accion, Integer idDespacho, String detalle) {
+        if (auditoriaService != null) {
+            auditoriaService.registrar("TRANSPORTE", accion, "DESPACHO_TRANSPORTE",
+                    idDespacho != null ? String.valueOf(idDespacho) : null, detalle, "EXITO");
         }
-        return despachoRepository.findAll().stream()
-                .map(this::mapToResponse)
-                .toList();
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<DespachoTransporteResponseDTO> listarPorEstado(String estadoTransporte) {
-        return despachoRepository.findByEstadoTransporte(estadoTransporte).stream()
-                .map(this::mapToResponse)
-                .toList();
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<DespachoTransporteResponseDTO> listarPorConductor(Integer idConductor) {
-        return despachoRepository.findByConductor_IdConductor(idConductor).stream()
-                .map(this::mapToResponse)
-                .toList();
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<DespachoTransporteResponseDTO> listarPorUnidad(Integer idUnidad) {
-        return despachoRepository.findByUnidad_IdUnidad(idUnidad).stream()
+    public List<DespachoTransporteResponseDTO> listarConFiltros(
+            boolean soloActivos, String estado, Integer idConductor, Integer idUnidad) {
+        EstadoTransporte estadoEnum = null;
+        if (estado != null && !estado.trim().isEmpty()) {
+            try {
+                estadoEnum = EstadoTransporte.valueOf(estado.trim().toUpperCase());
+            } catch (IllegalArgumentException ex) {
+                throw new BadRequestException("Estado de transporte no válido: " + estado);
+            }
+        }
+        return despachoRepository.buscarConFiltros(soloActivos, estadoEnum, idConductor, idUnidad)
+                .stream()
                 .map(this::mapToResponse)
                 .toList();
     }
@@ -79,7 +106,7 @@ public class DespachoTransporteServiceImpl implements IDespachoTransporteService
     @Override
     @Transactional(readOnly = true)
     public DespachoTransporteResponseDTO buscarPorId(Integer idDespachoTransporte) {
-        DespachoTransporte dt = despachoRepository.findById(idDespachoTransporte)
+        DespachoTransporte dt = despachoRepository.findByIdWithDetails(idDespachoTransporte)
                 .orElseThrow(() -> new ResourceNotFoundException("Despacho no encontrado con ID: " + idDespachoTransporte));
         return mapToResponse(dt);
     }
@@ -95,44 +122,11 @@ public class DespachoTransporteServiceImpl implements IDespachoTransporteService
     @Override
     @Transactional(readOnly = true)
     public DespachoTransporteResponseDTO buscarPorExpediente(Integer idExpediente) {
-        DespachoTransporte dt = despachoRepository.findByExpediente_IdExpediente(idExpediente)
-                .orElseThrow(() -> new ResourceNotFoundException("No existe despacho para el expediente ID: " + idExpediente));
+        DespachoTransporte dt = despachoRepository
+                .findFirstByExpediente_IdExpedienteAndEstadoTransporteNotOrderByIdDespachoTransporteDesc(
+                        idExpediente, EstadoTransporte.CANCELADO)
+                .orElseThrow(() -> new ResourceNotFoundException("No existe despacho activo para el expediente ID: " + idExpediente));
         return mapToResponse(dt);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public DespachoTransporteResponseDTO obtenerDespachoActivoPorUsuario(Integer idUsuario) {
-        if (idUsuario == null) {
-            return null;
-        }
-        // Buscar despacho activo asignado al usuario chofer
-        List<String> estadosActivos = List.of("EN_RUTA", "PROGRAMADO", "PENDIENTE_ASIGNACION");
-        var despachoOpt = despachoRepository.findFirstByConductor_Usuario_IdUsuarioAndEstadoTransporteInOrderByFechaProgramadaAsc(
-                idUsuario, estadosActivos);
-
-        if (despachoOpt.isPresent()) {
-            return mapToResponse(despachoOpt.get());
-        }
-
-        // Si el usuario no tiene conductor asociado o no tiene despacho asignado, buscar si tiene conductor
-        var conductorOpt = conductorRepository.findByUsuario_IdUsuario(idUsuario);
-        if (conductorOpt.isPresent()) {
-            var despachoPorConductor = despachoRepository.findFirstByConductor_IdConductorAndEstadoTransporteInOrderByFechaProgramadaAsc(
-                    conductorOpt.get().getIdConductor(), estadosActivos);
-            return despachoPorConductor.map(this::mapToResponse).orElse(null);
-        }
-
-        return null;
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<DespachoTransporteResponseDTO> listarMisDespachos(Integer idUsuario) {
-        if (idUsuario == null) return List.of();
-        return despachoRepository.findByConductor_Usuario_IdUsuarioOrderByFechaProgramadaDesc(idUsuario).stream()
-                .map(this::mapToResponse)
-                .toList();
     }
 
     @Override
@@ -141,88 +135,103 @@ public class DespachoTransporteServiceImpl implements IDespachoTransporteService
         Expediente expediente = expedienteRepository.findById(dto.getIdExpediente())
                 .orElseThrow(() -> new ResourceNotFoundException("Expediente no encontrado con ID: " + dto.getIdExpediente()));
 
-        if (despachoRepository.existsByExpediente_IdExpediente(dto.getIdExpediente())) {
-            throw new BadRequestException("Ya existe un despacho programado para el expediente ID: " + dto.getIdExpediente());
+        if (expediente.getEstadoExpediente() == EstadoExpediente.ANULADO
+                || expediente.getEstadoExpediente() == EstadoExpediente.CERRADO) {
+            throw new BadRequestException("No se puede programar transporte para un expediente en estado: "
+                    + expediente.getEstadoExpediente());
+        }
+
+        if (despachoRepository.existsByExpediente_IdExpedienteAndEstadoTransporteNot(
+                dto.getIdExpediente(), EstadoTransporte.CANCELADO)) {
+            throw new BadRequestException("Ya existe un despacho activo programado para el expediente ID: " + dto.getIdExpediente());
+        }
+
+        boolean hasConductor = dto.getIdConductor() != null;
+        boolean hasUnidad = dto.getIdUnidad() != null;
+        if (hasConductor != hasUnidad) {
+            throw new BadRequestException(
+                    "Para programar con asignación directa debe indicar tanto conductor como unidad, o dejar ambos vacíos.");
         }
 
         Conductor conductor = null;
-        if (dto.getIdConductor() != null) {
-            conductor = conductorRepository.findById(dto.getIdConductor())
-                    .orElseThrow(() -> new ResourceNotFoundException("Conductor no encontrado con ID: " + dto.getIdConductor()));
-        }
-
         UnidadTransporte unidad = null;
-        if (dto.getIdUnidad() != null) {
-            unidad = unidadRepository.findById(dto.getIdUnidad())
+        if (hasConductor) {
+            conductor = conductorRepository.findByIdForUpdate(dto.getIdConductor())
+                    .orElseThrow(() -> new ResourceNotFoundException("Conductor no encontrado con ID: " + dto.getIdConductor()));
+            unidad = unidadRepository.findByIdForUpdate(dto.getIdUnidad())
                     .orElseThrow(() -> new ResourceNotFoundException("Unidad de transporte no encontrada con ID: " + dto.getIdUnidad()));
+            validarRecursosAptosParaAsignacion(conductor, unidad, null);
         }
 
         String tracking = generarCodigoTracking();
-        String estado = (conductor != null && unidad != null) ? "PROGRAMADO" : "PENDIENTE_ASIGNACION";
+        EstadoTransporte estado = hasConductor
+                ? EstadoTransporte.PROGRAMADO
+                : EstadoTransporte.PENDIENTE_ASIGNACION;
 
         DespachoTransporte dt = DespachoTransporte.builder()
                 .expediente(expediente)
                 .codigoTracking(tracking)
-                .tipoTraslado(dto.getTipoTraslado() != null ? dto.getTipoTraslado().trim().toUpperCase() : "ENTREGA_IMPORTACION")
+                .tipoTraslado(dto.getTipoTraslado() != null ? dto.getTipoTraslado() : TipoTraslado.ENTREGA_IMPORTACION)
                 .conductor(conductor)
                 .unidad(unidad)
-                .guiaRemisionTransporte(dto.getGuiaRemisionTransporte() != null ? dto.getGuiaRemisionTransporte().trim() : null)
+                .guiaRemisionTransporte(normalizeNullable(dto.getGuiaRemisionTransporte()))
                 .direccionPartida(dto.getDireccionPartida().trim())
                 .direccionLlegada(dto.getDireccionLlegada().trim())
                 .distritoLlegada(dto.getDistritoLlegada().trim())
-                .contactoRecepcion(dto.getContactoRecepcion() != null ? dto.getContactoRecepcion().trim() : null)
+                .contactoRecepcion(normalizeNullable(dto.getContactoRecepcion()))
                 .fechaProgramada(dto.getFechaProgramada() != null ? dto.getFechaProgramada() : LocalDateTime.now().plusDays(1))
                 .estadoTransporte(estado)
-                .observaciones(dto.getObservaciones())
+                .observaciones(normalizeNullable(dto.getObservaciones()))
                 .build();
 
-        return mapToResponse(despachoRepository.save(dt));
+        DespachoTransporte guardado = despachoRepository.save(dt);
+        auditar("PROGRAMAR_DESPACHO", guardado.getIdDespachoTransporte(),
+                "Despacho programado " + guardado.getCodigoTracking() + " (" + guardado.getTipoTraslado() + ")");
+        return mapToResponse(guardado);
+    }
+
+    @Override
+    @Transactional
+    public DespachoTransporteResponseDTO aceptarSolicitud(Integer idDespachoTransporte) {
+        DespachoTransporte dt = despachoRepository.findByIdWithDetails(idDespachoTransporte)
+                .orElseThrow(() -> new ResourceNotFoundException("Despacho no encontrado con ID: " + idDespachoTransporte));
+
+        if (dt.getEstadoTransporte() != EstadoTransporte.PENDIENTE_ASIGNACION) {
+            throw new BadRequestException("Solo se pueden aceptar solicitudes en estado PENDIENTE_ASIGNACION (estado actual: "
+                    + dt.getEstadoTransporte() + ")");
+        }
+
+        dt.setEstadoTransporte(EstadoTransporte.ACEPTADO);
+        DespachoTransporte guardado = despachoRepository.save(dt);
+        registrarEventoExpediente(dt.getExpediente(), "TRANSPORTE_ACEPTADO",
+                "Solicitud de Transporte Aceptada",
+                "El área de Transporte aceptó el traslado " + guardado.getCodigoTracking() + " para asignación de unidad y conductor.");
+        auditar("ACEPTAR_SOLICITUD_DESPACHO", guardado.getIdDespachoTransporte(),
+                "Solicitud de despacho aceptada " + guardado.getCodigoTracking());
+        return mapToResponse(guardado);
     }
 
     @Override
     @Transactional
     public DespachoTransporteResponseDTO asignarRecursos(Integer idDespachoTransporte, DespachoAsignarRecursosDTO dto) {
-        DespachoTransporte dt = despachoRepository.findById(idDespachoTransporte)
+        DespachoTransporte dt = despachoRepository.findByIdWithDetails(idDespachoTransporte)
                 .orElseThrow(() -> new ResourceNotFoundException("Despacho no encontrado con ID: " + idDespachoTransporte));
 
-        Conductor conductor = conductorRepository.findById(dto.getIdConductor())
+        if (dt.getEstadoTransporte() != EstadoTransporte.PENDIENTE_ASIGNACION
+                && dt.getEstadoTransporte() != EstadoTransporte.ACEPTADO
+                && dt.getEstadoTransporte() != EstadoTransporte.PROGRAMADO) {
+            throw new BadRequestException(
+                    "Solo se pueden asignar o reasignar recursos en despachos PENDIENTE_ASIGNACION, ACEPTADO o PROGRAMADO (estado actual: "
+                            + dt.getEstadoTransporte() + ")");
+        }
+
+        Conductor conductor = conductorRepository.findByIdForUpdate(dto.getIdConductor())
                 .orElseThrow(() -> new ResourceNotFoundException("Conductor no encontrado con ID: " + dto.getIdConductor()));
 
-        UnidadTransporte unidad = unidadRepository.findById(dto.getIdUnidad())
+        UnidadTransporte unidad = unidadRepository.findByIdForUpdate(dto.getIdUnidad())
                 .orElseThrow(() -> new ResourceNotFoundException("Unidad de transporte no encontrada con ID: " + dto.getIdUnidad()));
 
-        // Validaciones técnicas de seguridad vehicular
-        if (unidad.getEstadoActivo() != null && !unidad.getEstadoActivo()) {
-            throw new BadRequestException("La unidad seleccionada se encuentra inactiva");
-        }
-        if (unidad.getEstadoOperativo() != null && !"DISPONIBLE".equalsIgnoreCase(unidad.getEstadoOperativo())) {
-            throw new BadRequestException("La unidad no se encuentra DISPONIBLE para asignación (estado actual: " + unidad.getEstadoOperativo() + ")");
-        }
-        if (unidad.getSoatVencimiento() != null && unidad.getSoatVencimiento().isBefore(LocalDate.now())) {
-            throw new BadRequestException("No se puede asignar una unidad con SOAT vencido (Vencimiento: " + unidad.getSoatVencimiento() + ")");
-        }
-        if (unidad.getCitvVencimiento() != null && unidad.getCitvVencimiento().isBefore(LocalDate.now())) {
-            throw new BadRequestException("No se puede asignar una unidad con Revisión Técnica CITV vencida (Vencimiento: " + unidad.getCitvVencimiento() + ")");
-        }
-        if (despachoRepository.existsByUnidad_IdUnidadAndEstadoTransporteInAndIdDespachoTransporteNot(
-                unidad.getIdUnidad(), List.of("PROGRAMADO", "EN_RUTA"), idDespachoTransporte)) {
-            throw new BadRequestException("La unidad seleccionada ya se encuentra asignada en otro despacho activo.");
-        }
-
-        // Validaciones técnicas de conductor
-        if (conductor.getEstadoActivo() != null && !conductor.getEstadoActivo()) {
-            throw new BadRequestException("El conductor seleccionado se encuentra inactivo");
-        }
-        if (conductor.getEstadoOperativo() != null && !"DISPONIBLE".equalsIgnoreCase(conductor.getEstadoOperativo())) {
-            throw new BadRequestException("El conductor no se encuentra DISPONIBLE para asignación (estado actual: " + conductor.getEstadoOperativo() + ")");
-        }
-        if (conductor.getFechaVencimientoLicencia() != null && conductor.getFechaVencimientoLicencia().isBefore(LocalDate.now())) {
-            throw new BadRequestException("No se puede asignar un conductor con licencia de conducir vencida (Vencimiento: " + conductor.getFechaVencimientoLicencia() + ")");
-        }
-        if (despachoRepository.existsByConductor_IdConductorAndEstadoTransporteInAndIdDespachoTransporteNot(
-                conductor.getIdConductor(), List.of("PROGRAMADO", "EN_RUTA"), idDespachoTransporte)) {
-            throw new BadRequestException("El conductor seleccionado ya se encuentra asignado en otro despacho activo.");
-        }
+        validarRecursosAptosParaAsignacion(conductor, unidad, idDespachoTransporte);
 
         dt.setConductor(conductor);
         dt.setUnidad(unidad);
@@ -232,42 +241,59 @@ public class DespachoTransporteServiceImpl implements IDespachoTransporteService
         if (dto.getFechaProgramada() != null) {
             dt.setFechaProgramada(dto.getFechaProgramada());
         }
-        if ("PENDIENTE_ASIGNACION".equalsIgnoreCase(dt.getEstadoTransporte())) {
-            dt.setEstadoTransporte("PROGRAMADO");
+        if (dto.getObservaciones() != null) {
+            dt.setObservaciones(normalizeNullable(dto.getObservaciones()));
+        }
+        if (dt.getEstadoTransporte() == EstadoTransporte.PENDIENTE_ASIGNACION
+                || dt.getEstadoTransporte() == EstadoTransporte.ACEPTADO) {
+            dt.setEstadoTransporte(EstadoTransporte.PROGRAMADO);
         }
 
-        return mapToResponse(despachoRepository.save(dt));
+        DespachoTransporte guardado = despachoRepository.save(dt);
+        auditar("ASIGNAR_RECURSOS_DESPACHO", guardado.getIdDespachoTransporte(),
+                "Conductor " + conductor.getNombres() + " " + conductor.getApellidos()
+                        + " y unidad " + unidad.getPlacaTracto()
+                        + " asignados a despacho " + guardado.getCodigoTracking());
+        return mapToResponse(guardado);
     }
 
     @Override
     @Transactional
     public DespachoTransporteResponseDTO iniciarRuta(Integer idDespachoTransporte, DespachoRutaDTO dto) {
-        DespachoTransporte dt = despachoRepository.findById(idDespachoTransporte)
+        DespachoTransporte dt = despachoRepository.findByIdWithDetails(idDespachoTransporte)
                 .orElseThrow(() -> new ResourceNotFoundException("Despacho no encontrado con ID: " + idDespachoTransporte));
+
+        if (dt.getEstadoTransporte() != EstadoTransporte.PROGRAMADO) {
+            throw new BadRequestException(
+                    "Solo se puede iniciar ruta desde el estado PROGRAMADO (estado actual: " + dt.getEstadoTransporte() + ")");
+        }
 
         if (dt.getConductor() == null || dt.getUnidad() == null) {
             throw new BadRequestException("No se puede iniciar ruta sin conductor y unidad asignados");
         }
 
-        dt.setFechaSalidaRuta(dto.getFechaSalidaRuta() != null ? dto.getFechaSalidaRuta() : LocalDateTime.now());
-        if (dto.getGuiaRemisionTransporte() != null && !dto.getGuiaRemisionTransporte().trim().isEmpty()) {
+        Conductor conductor = conductorRepository.findByIdForUpdate(dt.getConductor().getIdConductor())
+                .orElseThrow(() -> new ResourceNotFoundException("Conductor asignado no encontrado"));
+        UnidadTransporte unidad = unidadRepository.findByIdForUpdate(dt.getUnidad().getIdUnidad())
+                .orElseThrow(() -> new ResourceNotFoundException("Unidad asignada no encontrada"));
+
+        validarRecursosAptosParaAsignacion(conductor, unidad, idDespachoTransporte);
+
+        dt.setFechaSalidaRuta(dto != null && dto.getFechaSalidaRuta() != null ? dto.getFechaSalidaRuta() : LocalDateTime.now());
+        if (dto != null && dto.getGuiaRemisionTransporte() != null && !dto.getGuiaRemisionTransporte().trim().isEmpty()) {
             dt.setGuiaRemisionTransporte(dto.getGuiaRemisionTransporte().trim());
         }
-        if (dto.getObservaciones() != null) {
-            dt.setObservaciones(dto.getObservaciones());
+        if (dto != null && dto.getObservaciones() != null) {
+            dt.setObservaciones(normalizeNullable(dto.getObservaciones()));
         }
-        dt.setEstadoTransporte("EN_RUTA");
+        dt.setEstadoTransporte(EstadoTransporte.EN_RUTA);
 
-        // Actualizar vehículo y chofer a EN_RUTA
-        UnidadTransporte unidad = dt.getUnidad();
-        unidad.setEstadoOperativo("EN_RUTA");
+        unidad.setEstadoOperativo(EstadoOperativoFlota.EN_RUTA);
         unidadRepository.save(unidad);
 
-        Conductor conductor = dt.getConductor();
-        conductor.setEstadoOperativo("EN_RUTA");
+        conductor.setEstadoOperativo(EstadoOperativoConductor.EN_RUTA);
         conductorRepository.save(conductor);
 
-        // Notificación B2B al cliente
         if (dt.getExpediente() != null && dt.getExpediente().getCliente() != null) {
             String expCode = dt.getExpediente().getCodigoExpediente() != null ? dt.getExpediente().getCodigoExpediente() : "";
             NotificacionCliente notif = NotificacionCliente.builder()
@@ -276,58 +302,71 @@ public class DespachoTransporteServiceImpl implements IDespachoTransporteService
                     .mensaje("Su despacho " + dt.getCodigoTracking() + " del expediente " + expCode + " ha iniciado ruta hacia el destino programado.")
                     .tipo("TRANSPORTE")
                     .leido(false)
-                    .enlace("/portal-b2b?tab=seguimiento&tracking=" + dt.getCodigoTracking())
+                    .enlace("/expedientes")
+                    .fechaCreacion(LocalDateTime.now())
                     .build();
             notificacionClienteRepository.save(notif);
         }
 
-        return mapToResponse(despachoRepository.save(dt));
+        DespachoTransporte guardado = despachoRepository.save(dt);
+        auditar("INICIAR_RUTA_DESPACHO", guardado.getIdDespachoTransporte(),
+                "Despacho " + guardado.getCodigoTracking() + " inició ruta");
+        return mapToResponse(guardado);
     }
 
     @Override
     @Transactional
     public DespachoTransporteResponseDTO confirmarEntrega(Integer idDespachoTransporte, DespachoEntregaDTO dto) {
-        DespachoTransporte dt = despachoRepository.findById(idDespachoTransporte)
+        DespachoTransporte dt = despachoRepository.findByIdWithDetails(idDespachoTransporte)
                 .orElseThrow(() -> new ResourceNotFoundException("Despacho no encontrado con ID: " + idDespachoTransporte));
+
+        if (dt.getEstadoTransporte() != EstadoTransporte.EN_RUTA) {
+            throw new BadRequestException(
+                    "Solo se puede confirmar entrega de un despacho EN_RUTA (estado actual: " + dt.getEstadoTransporte() + ")");
+        }
 
         dt.setFechaEntregaConforme(dto.getFechaEntregaConforme() != null ? dto.getFechaEntregaConforme() : LocalDateTime.now());
         if (dto.getReceptorNombre() != null) {
-            dt.setReceptorNombre(dto.getReceptorNombre().trim());
+            dt.setReceptorNombre(normalizeNullable(dto.getReceptorNombre()));
         }
         if (dto.getReceptorDni() != null) {
-            dt.setReceptorDni(dto.getReceptorDni().trim());
+            dt.setReceptorDni(normalizeNullable(dto.getReceptorDni()));
         }
         if (dto.getContactoRecepcion() != null) {
-            dt.setContactoRecepcion(dto.getContactoRecepcion().trim());
+            dt.setContactoRecepcion(normalizeNullable(dto.getContactoRecepcion()));
         }
         if (dto.getIdDocumentoRemision() != null) {
-            DocumentoAdjunto doc = documentoRepository.findById(dto.getIdDocumentoRemision()).orElse(null);
+            DocumentoAdjunto doc = documentoRepository.findById(dto.getIdDocumentoRemision())
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "Documento de remisión no encontrado con ID: " + dto.getIdDocumentoRemision()));
             dt.setDocumentoRemision(doc);
         }
-        if (dto.getDetalleIncidencia() != null) {
-            dt.setDetalleIncidencia(dto.getDetalleIncidencia());
+        if (dto.getDetalleIncidencia() != null && !dto.getDetalleIncidencia().isBlank()) {
+            dt.setDetalleIncidencia(dto.getDetalleIncidencia().trim());
         }
-        if (dto.getObservaciones() != null) {
-            dt.setObservaciones(dto.getObservaciones());
+        if (dto.getObservaciones() != null && !dto.getObservaciones().isBlank()) {
+            dt.setObservaciones(dto.getObservaciones().trim());
         }
-        dt.setEstadoTransporte("ENTREGADO");
+        dt.setEstadoTransporte(EstadoTransporte.ENTREGADO);
 
-        // Actualizar odómetro y liberar vehículo a DISPONIBLE
         if (dt.getUnidad() != null) {
             UnidadTransporte unidad = dt.getUnidad();
-            if (dto.getKilometrajeLlegada() != null && (unidad.getKilometrajeActual() == null || dto.getKilometrajeLlegada() > unidad.getKilometrajeActual())) {
+            if (dto.getKilometrajeLlegada() != null) {
+                if (unidad.getKilometrajeActual() != null && dto.getKilometrajeLlegada() < unidad.getKilometrajeActual()) {
+                    throw new BadRequestException("El kilometraje de llegada (" + dto.getKilometrajeLlegada()
+                            + " km) no puede ser menor al kilometraje actual de la unidad (" + unidad.getKilometrajeActual() + " km)");
+                }
                 unidad.setKilometrajeActual(dto.getKilometrajeLlegada());
             }
-            unidad.setEstadoOperativo("DISPONIBLE");
+            unidad.setEstadoOperativo(EstadoOperativoFlota.DISPONIBLE);
             unidadRepository.save(unidad);
         }
         if (dt.getConductor() != null) {
             Conductor conductor = dt.getConductor();
-            conductor.setEstadoOperativo("DISPONIBLE");
+            conductor.setEstadoOperativo(EstadoOperativoConductor.DISPONIBLE);
             conductorRepository.save(conductor);
         }
 
-        // Notificación B2B al cliente
         if (dt.getExpediente() != null && dt.getExpediente().getCliente() != null) {
             String receptor = dt.getReceptorNombre() != null ? dt.getReceptorNombre() : "Recepción conforme";
             String expCode = dt.getExpediente().getCodigoExpediente() != null ? dt.getExpediente().getCodigoExpediente() : "";
@@ -337,66 +376,169 @@ public class DespachoTransporteServiceImpl implements IDespachoTransporteService
                     .mensaje("Su carga del expediente " + expCode + " ha sido entregada conforme en destino a receptor: " + receptor + ".")
                     .tipo("TRANSPORTE")
                     .leido(false)
-                    .enlace("/portal-b2b?tab=seguimiento&tracking=" + dt.getCodigoTracking())
+                    .enlace("/expedientes")
+                    .fechaCreacion(LocalDateTime.now())
                     .build();
             notificacionClienteRepository.save(notif);
         }
 
-        return mapToResponse(despachoRepository.save(dt));
+        DespachoTransporte guardado = despachoRepository.save(dt);
+        if (dt.getTipoTraslado() == TipoTraslado.RECOJO_EXPORTACION) {
+            registrarEventoExpediente(dt.getExpediente(), "RECOGIDO_EN_PLANTA",
+                    "Carga Recogida en Planta / Entregada a Terminal",
+                    "Despacho " + guardado.getCodigoTracking() + " completado. Receptor: "
+                            + (guardado.getReceptorNombre() != null ? guardado.getReceptorNombre() : "Almacén/Terminal"));
+        } else {
+            registrarEventoExpediente(dt.getExpediente(), "ENTREGA_TRANSPORTE_CONFORME",
+                    "Entrega Terrestre Confirmada por Flota",
+                    "Despacho " + guardado.getCodigoTracking() + " entregado a "
+                            + (guardado.getReceptorNombre() != null ? guardado.getReceptorNombre() : "Cliente"));
+        }
+        auditar("CONFIRMAR_ENTREGA_DESPACHO", guardado.getIdDespachoTransporte(),
+                "Entrega confirmada para despacho " + guardado.getCodigoTracking());
+        return mapToResponse(guardado);
     }
 
     @Override
     @Transactional
     public DespachoTransporteResponseDTO reportarIncidencia(Integer idDespachoTransporte, String incidencia) {
-        DespachoTransporte dt = despachoRepository.findById(idDespachoTransporte)
+        if (incidencia == null || incidencia.trim().isEmpty()) {
+            throw new BadRequestException("El detalle de la incidencia es obligatorio");
+        }
+
+        DespachoTransporte dt = despachoRepository.findByIdWithDetails(idDespachoTransporte)
                 .orElseThrow(() -> new ResourceNotFoundException("Despacho no encontrado con ID: " + idDespachoTransporte));
 
-        String detallePrevio = dt.getDetalleIncidencia() != null ? dt.getDetalleIncidencia() + "\n" : "";
-        dt.setDetalleIncidencia(detallePrevio + "[" + LocalDateTime.now() + "] " + incidencia);
+        if (dt.getEstadoTransporte() != EstadoTransporte.PROGRAMADO
+                && dt.getEstadoTransporte() != EstadoTransporte.EN_RUTA) {
+            throw new BadRequestException(
+                    "Solo se pueden reportar incidencias en despachos PROGRAMADO o EN_RUTA (estado actual: "
+                            + dt.getEstadoTransporte() + ")");
+        }
 
-        return mapToResponse(despachoRepository.save(dt));
+        String detallePrevio = dt.getDetalleIncidencia() != null && !dt.getDetalleIncidencia().isBlank()
+                ? dt.getDetalleIncidencia() + "\n"
+                : "";
+        dt.setDetalleIncidencia(detallePrevio + "[" + LocalDateTime.now() + "] " + incidencia.trim());
+
+        DespachoTransporte guardado = despachoRepository.save(dt);
+        auditar("REPORTAR_INCIDENCIA_DESPACHO", guardado.getIdDespachoTransporte(),
+                "Incidencia reportada en despacho " + guardado.getCodigoTracking());
+        return mapToResponse(guardado);
     }
 
     @Override
     @Transactional
     public void anular(Integer idDespachoTransporte) {
-        DespachoTransporte dt = despachoRepository.findById(idDespachoTransporte)
+        DespachoTransporte dt = despachoRepository.findByIdWithDetails(idDespachoTransporte)
                 .orElseThrow(() -> new ResourceNotFoundException("Despacho no encontrado con ID: " + idDespachoTransporte));
 
-        dt.setEstadoTransporte("CANCELADO");
+        if (dt.getEstadoTransporte() == EstadoTransporte.ENTREGADO) {
+            throw new BadRequestException("No es posible anular un despacho que ya fue ENTREGADO.");
+        }
+        if (dt.getEstadoTransporte() == EstadoTransporte.CANCELADO) {
+            throw new BadRequestException("El despacho ya se encuentra CANCELADO.");
+        }
+
+        dt.setEstadoTransporte(EstadoTransporte.CANCELADO);
 
         if (dt.getUnidad() != null) {
             UnidadTransporte unidad = dt.getUnidad();
-            unidad.setEstadoOperativo("DISPONIBLE");
-            unidadRepository.save(unidad);
+            boolean enOtroDespacho = despachoRepository.existsByUnidad_IdUnidadAndEstadoTransporteInAndIdDespachoTransporteNot(
+                    unidad.getIdUnidad(), ESTADOS_RECURSO_OCUPADO, idDespachoTransporte);
+            if (!enOtroDespacho && unidad.getEstadoOperativo() == EstadoOperativoFlota.EN_RUTA) {
+                unidad.setEstadoOperativo(EstadoOperativoFlota.DISPONIBLE);
+                unidadRepository.save(unidad);
+            }
         }
         if (dt.getConductor() != null) {
             Conductor conductor = dt.getConductor();
-            conductor.setEstadoOperativo("DISPONIBLE");
-            conductorRepository.save(conductor);
+            boolean enOtroDespacho = despachoRepository.existsByConductor_IdConductorAndEstadoTransporteInAndIdDespachoTransporteNot(
+                    conductor.getIdConductor(), ESTADOS_RECURSO_OCUPADO, idDespachoTransporte);
+            if (!enOtroDespacho && conductor.getEstadoOperativo() == EstadoOperativoConductor.EN_RUTA) {
+                conductor.setEstadoOperativo(EstadoOperativoConductor.DISPONIBLE);
+                conductorRepository.save(conductor);
+            }
         }
 
         despachoRepository.save(dt);
+        auditar("ANULAR_DESPACHO", dt.getIdDespachoTransporte(),
+                "Despacho " + dt.getCodigoTracking() + " cancelado/anulado");
+    }
+
+    private void validarRecursosAptosParaAsignacion(
+            Conductor conductor, UnidadTransporte unidad, Integer idDespachoActual) {
+        LocalDate hoy = LocalDate.now();
+        Integer idExcluir = idDespachoActual != null ? idDespachoActual : -1;
+
+        if (Boolean.FALSE.equals(unidad.getEstadoActivo())) {
+            throw new BadRequestException("La unidad seleccionada se encuentra inactiva");
+        }
+        if (unidad.getEstadoOperativo() != null && unidad.getEstadoOperativo() != EstadoOperativoFlota.DISPONIBLE) {
+            throw new BadRequestException("La unidad no se encuentra DISPONIBLE para asignación (estado actual: "
+                    + unidad.getEstadoOperativo() + ")");
+        }
+        if (unidad.getSoatVencimiento() != null && unidad.getSoatVencimiento().isBefore(hoy)) {
+            throw new BadRequestException("No se puede asignar una unidad con SOAT vencido (Vencimiento: "
+                    + unidad.getSoatVencimiento() + ")");
+        }
+        if (unidad.getCitvVencimiento() != null && unidad.getCitvVencimiento().isBefore(hoy)) {
+            throw new BadRequestException("No se puede asignar una unidad con Revisión Técnica CITV vencida (Vencimiento: "
+                    + unidad.getCitvVencimiento() + ")");
+        }
+        if (despachoRepository.existsByUnidad_IdUnidadAndEstadoTransporteInAndIdDespachoTransporteNot(
+                unidad.getIdUnidad(), ESTADOS_RECURSO_OCUPADO, idExcluir)) {
+            throw new BadRequestException("La unidad seleccionada ya se encuentra asignada en otro despacho activo.");
+        }
+
+        if (Boolean.FALSE.equals(conductor.getEstadoActivo())) {
+            throw new BadRequestException("El conductor seleccionado se encuentra inactivo");
+        }
+        if (conductor.getEstadoOperativo() != null
+                && conductor.getEstadoOperativo() != EstadoOperativoConductor.DISPONIBLE) {
+            throw new BadRequestException("El conductor no se encuentra DISPONIBLE para asignación (estado actual: "
+                    + conductor.getEstadoOperativo() + ")");
+        }
+        if (conductor.getFechaVencimientoLicencia() != null && conductor.getFechaVencimientoLicencia().isBefore(hoy)) {
+            throw new BadRequestException("No se puede asignar un conductor con licencia de conducir vencida (Vencimiento: "
+                    + conductor.getFechaVencimientoLicencia() + ")");
+        }
+        if (despachoRepository.existsByConductor_IdConductorAndEstadoTransporteInAndIdDespachoTransporteNot(
+                conductor.getIdConductor(), ESTADOS_RECURSO_OCUPADO, idExcluir)) {
+            throw new BadRequestException("El conductor seleccionado ya se encuentra asignado en otro despacho activo.");
+        }
     }
 
     private String generarCodigoTracking() {
         int year = LocalDate.now().getYear();
-        long count = despachoRepository.count() + 1;
+        Integer maxId = despachoRepository.findMaxId();
+        long secuencia = (maxId != null ? maxId : 0) + 1L;
         String codigo;
         do {
-            codigo = String.format("TRK-%d-%04d", year, count);
-            count++;
+            codigo = String.format("TRK-%d-%04d", year, secuencia);
+            secuencia++;
         } while (despachoRepository.existsByCodigoTracking(codigo));
         return codigo;
+    }
+
+    private String normalizeNullable(String val) {
+        if (val == null) {
+            return null;
+        }
+        String trimmed = val.trim();
+        return trimmed.isEmpty() ? null : trimmed;
     }
 
     private DespachoTransporteResponseDTO mapToResponse(DespachoTransporte dt) {
         Expediente exp = dt.getExpediente();
         String docRemisionNombre = dt.getDocumentoRemision() != null ? dt.getDocumentoRemision().getNombreOriginal() : null;
-
-        Integer idUserConductor = null;
-        if (dt.getConductor() != null && dt.getConductor().getUsuario() != null) {
-            idUserConductor = dt.getConductor().getUsuario().getIdUsuario();
+        String mercanciaNombre = null;
+        if (exp != null) {
+            if (exp.getMercancia() != null) {
+                mercanciaNombre = exp.getMercancia().getNombre();
+            } else if (exp.getCotizacion() != null && exp.getCotizacion().getMercancia() != null) {
+                mercanciaNombre = exp.getCotizacion().getMercancia().getNombre();
+            }
         }
 
         return DespachoTransporteResponseDTO.builder()
@@ -412,9 +554,8 @@ public class DespachoTransporteServiceImpl implements IDespachoTransporteService
                 .clienteTelefono(exp != null && exp.getCliente() != null ? exp.getCliente().getTelefonoContacto() : null)
                 .numeroContenedor(exp != null ? exp.getNumeroContenedor() : null)
                 .precintoAduanero(exp != null ? exp.getPrecintoAduanero() : null)
-                .mercanciaNombre(exp != null && exp.getCotizacion() != null && exp.getCotizacion().getMercancia() != null ? exp.getCotizacion().getMercancia().getNombre() : null)
+                .mercanciaNombre(mercanciaNombre)
                 .idConductor(dt.getConductor() != null ? dt.getConductor().getIdConductor() : null)
-                .idUsuarioConductor(idUserConductor)
                 .conductorNombre(dt.getConductor() != null ? dt.getConductor().getNombres() + " " + dt.getConductor().getApellidos() : null)
                 .conductorLicencia(dt.getConductor() != null ? dt.getConductor().getNumeroLicencia() : null)
                 .conductorTelefono(dt.getConductor() != null ? dt.getConductor().getTelefono() : null)
@@ -424,6 +565,7 @@ public class DespachoTransporteServiceImpl implements IDespachoTransporteService
                 .unidadMarcaModelo(dt.getUnidad() != null ? dt.getUnidad().getMarcaModelo() : null)
                 .unidadTipoVehiculo(dt.getUnidad() != null ? dt.getUnidad().getTipoVehiculo() : null)
                 .unidadCapacidadKg(dt.getUnidad() != null ? dt.getUnidad().getCapacidadCargaKg() : null)
+                .unidadKilometrajeActual(dt.getUnidad() != null ? dt.getUnidad().getKilometrajeActual() : null)
                 .guiaRemisionTransporte(dt.getGuiaRemisionTransporte())
                 .idDocumentoRemision(dt.getDocumentoRemision() != null ? dt.getDocumentoRemision().getIdDocumento() : null)
                 .nombreDocumentoRemision(docRemisionNombre)

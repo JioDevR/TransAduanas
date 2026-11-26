@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <title th:text="'Proforma ' + ${codigoCotizacion}">Proforma de Cotización</title>
+    <style>
+        @page {
+            size: A4 portrait;
+            margin: 16mm 14mm 18mm 14mm;
+            @top-right {
+                content: "PORTAL B2B // PROFORMA DE COTIZACIÓN";
+                font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+                font-size: 7.5pt;
+                font-weight: bold;
+                color: #9a7f60;
+            }
+            @bottom-left {
+                content: "Propuesta logística y aduanera — TransAduanas del Perú S.A.C.";
+                font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+                font-size: 7pt;
+                color: #8c827a;
+            }
+            @bottom-right {
+                content: "Página " counter(page) " de " counter(pages);
+                font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+                font-size: 7.5pt;
+                font-weight: bold;
+                color: #352f2a;
+            }
+        }
+
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            color: #2b2520;
+            background-color: #ffffff;
+            font-size: 8.5pt;
+            line-height: 1.4;
+            margin: 0;
+            padding: 0;
+        }
+
+        .header-table {
+            width: 100%;
+            border-bottom: 2px solid #352f2a;
+            padding-bottom: 10px;
+            margin-bottom: 12px;
+        }
+        .header-logo-cell { width: 62%; vertical-align: top; }
+        .header-meta-cell { width: 38%; text-align: right; vertical-align: top; }
+
+        .brand-kicker {
+            font-size: 7.3pt;
+            font-weight: bold;
+            letter-spacing: 0.9px;
+            color: #9a7f60;
+            text-transform: uppercase;
+            margin-bottom: 3px;
+        }
+        .report-title {
+            font-size: 16pt;
+            font-weight: bold;
+            color: #2b2520;
+            margin: 0 0 3px 0;
+        }
+        .report-subtitle {
+            font-size: 8.3pt;
+            color: #6b6158;
+            margin: 0;
+        }
+        .meta-line {
+            font-size: 7.8pt;
+            color: #5b5148;
+            margin-bottom: 3px;
+        }
+        .meta-strong {
+            color: #2b2520;
+            font-weight: bold;
+        }
+        .font-mono {
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        .client-card {
+            width: 100%;
+            table-layout: fixed;
+            background-color: #fbf9f6;
+            border: 1px solid #e4dacb;
+            border-radius: 5px;
+            border-collapse: separate;
+            margin-bottom: 12px;
+            page-break-inside: avoid;
+        }
+        .client-card td {
+            padding: 9px 11px;
+            vertical-align: top;
+            word-wrap: break-word;
+        }
+        .client-main { width: 62%; }
+        .client-status { width: 38%; text-align: right; }
+
+        .micro-label {
+            font-size: 6.8pt;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #7c7066;
+            margin-bottom: 2px;
+        }
+        .client-name {
+            font-size: 11pt;
+            font-weight: bold;
+            color: #2b2520;
+            margin-bottom: 2px;
+        }
+        .client-ruc {
+            font-size: 8pt;
+            color: #5b5148;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 6.8pt;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .badge-ok { background-color: #eaf6ed; color: #1e6638; border: 1px solid #bce5c6; }
+        .badge-warn { background-color: #fdf5e6; color: #8c5b16; border: 1px solid #f8dab3; }
+        .badge-danger { background-color: #fdf0f0; color: #9e2a2b; border: 1px solid #f6c8c8; }
+        .badge-info { background-color: #eef4fb; color: #21598f; border: 1px solid #cadff4; }
+        .badge-neutral { background-color: #f3efe9; color: #4a433c; border: 1px solid #e4dacb; }
+
+        .section-title {
+            font-size: 8.8pt;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            color: #352f2a;
+            border-left: 3px solid #d48252;
+            padding-left: 7px;
+            margin: 13px 0 8px 0;
+            page-break-after: avoid;
+        }
+
+        .info-grid-table {
+            width: 100%;
+            table-layout: fixed;
+            border-collapse: separate;
+            border-spacing: 6px;
+            margin: 0 0 6px 0;
+        }
+        .info-grid-table tr {
+            page-break-inside: avoid;
+        }
+        .info-box {
+            width: 50%;
+            background-color: #faf8f5;
+            border: 1px solid #e8e0d4;
+            border-radius: 4px;
+            padding: 7px 9px;
+            vertical-align: top;
+            word-wrap: break-word;
+        }
+        .info-value {
+            font-size: 8.6pt;
+            font-weight: bold;
+            color: #2b2520;
+            margin-bottom: 1px;
+        }
+        .info-sub {
+            font-size: 7.4pt;
+            color: #6b6158;
+        }
+
+        .data-table {
+            width: 100%;
+            table-layout: fixed;
+            -fs-table-paginate: paginate;
+            border-collapse: collapse;
+            margin-bottom: 10px;
+        }
+        .data-table thead {
+            display: table-header-group;
+        }
+        .data-table tr {
+            page-break-inside: avoid;
+        }
+        .data-table th {
+            background-color: #352f2a;
+            color: #ffffff;
+            font-size: 7.3pt;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            padding: 6px 8px;
+            text-align: left;
+            border: 1px solid #352f2a;
+        }
+        .data-table td {
+            font-size: 8pt;
+            padding: 6px 8px;
+            border-bottom: 1px solid #e6dfd5;
+            border-left: 1px solid #f0ebe3;
+            border-right: 1px solid #f0ebe3;
+            vertical-align: top;
+            word-wrap: break-word;
+        }
+        .data-table tr:nth-child(even) td {
+            background-color: #fcfaf7;
+        }
+        .concept-title {
+            font-weight: bold;
+            color: #2b2520;
+            margin-bottom: 1px;
+        }
+        .concept-desc {
+            font-size: 7.2pt;
+            color: #6b6158;
+        }
+        .total-row td {
+            background-color: #fdf1e8 !important;
+            border-top: 1.5px solid #d48252;
+            border-bottom: 1.5px solid #d48252;
+            font-weight: bold;
+            color: #2b2520;
+        }
+        .total-amount {
+            font-size: 10.5pt;
+            color: #824728;
+            font-weight: bold;
+        }
+
+        .kpi-table {
+            width: 100%;
+            table-layout: fixed;
+            border-collapse: separate;
+            border-spacing: 6px;
+            margin: 0 0 8px 0;
+            page-break-inside: avoid;
+        }
+        .kpi-box {
+            width: 33.33%;
+            background-color: #faf8f5;
+            border: 1px solid #e4ddd3;
+            border-radius: 4px;
+            padding: 8px 10px;
+            vertical-align: top;
+            word-wrap: break-word;
+        }
+        .kpi-box-warn {
+            background-color: #fdf5e6;
+            border-color: #f8dab3;
+        }
+        .kpi-value {
+            font-size: 11.5pt;
+            font-weight: bold;
+            color: #2b2520;
+            margin-top: 2px;
+        }
+        .text-success { color: #1e6638; }
+        .text-warn { color: #8c5b16; }
+        .text-right { text-align: right !important; }
+
+        .notes-box {
+            background-color: #faf8f5;
+            border: 1px solid #e4dacb;
+            border-left: 3px solid #9a7f60;
+            border-radius: 4px;
+            padding: 8px 10px;
+            font-size: 8pt;
+            color: #352f2a;
+            margin-bottom: 8px;
+            word-wrap: break-word;
+            page-break-inside: avoid;
+        }
+        .notes-box-warn {
+            background-color: #fdf5e6;
+            border-color: #f8dab3;
+            border-left-color: #d48252;
+        }
+
+        .legal-footer {
+            margin-top: 12px;
+            padding-top: 8px;
+            border-top: 1px solid #e4dacb;
+            font-size: 7.2pt;
+            color: #6b6158;
+            line-height: 1.45;
+            page-break-inside: avoid;
+        }
+    </style>
+</head>
+<body>
+    <!-- Cabecera Corporativa -->
+    <table class="header-table">
+        <tr>
+            <td class="header-logo-cell">
+                <div class="brand-kicker">TRANSADUANAS DEL PERÚ S.A.C. // PORTAL B2B</div>
+                <h1 class="report-title">Proforma de Cotización</h1>
+                <p class="report-subtitle">Propuesta logística, aduanera y liquidación preliminar en USD</p>
+            </td>
+            <td class="header-meta-cell">
+                <div class="meta-line">Código: <span class="meta-strong font-mono" th:text="${codigoCotizacion}">COT-2026-0001</span></div>
+                <div class="meta-line">Emisión: <span class="meta-strong font-mono" th:text="${fechaEmisionFmt}">En evaluación</span></div>
+                <div class="meta-line">Validez comercial: <span class="meta-strong font-mono" th:text="${validezDias + ' días'}">30 días</span></div>
+                <div class="meta-line">Generado: <span class="font-mono" th:text="${fechaGeneracion}">24/11/2026 19:00</span></div>
+            </td>
+        </tr>
+    </table>
+
+    <!-- Ficha Cliente & Estados -->
+    <table class="client-card">
+        <tr>
+            <td class="client-main">
+                <div class="micro-label">EMPRESA CLIENTE B2B</div>
+                <div class="client-name" th:text="${razonSocialCliente}">Cliente B2B</div>
+                <div class="client-ruc">
+                    RUC: <span class="font-mono meta-strong" th:text="${rucCliente}">—</span>
+                    <span th:if="${aceptadaPorCliente}"> &#8226; <strong class="text-success">Autorizada por el cliente</strong></span>
+                </div>
+            </td>
+            <td class="client-status">
+                <div class="micro-label">ESTADO TÉCNICO</div>
+                <div style="margin-bottom: 5px;">
+                    <span th:class="'badge ' + ${estadoBadgeClass}" th:text="${estadoLabel}">PENDIENTE</span>
+                </div>
+                <div class="micro-label">ESTADO FINANCIERO</div>
+                <div>
+                    <span th:class="'badge ' + ${estadoPagoBadgeClass}" th:text="${estadoPagoLabel}">SIN PAGO</span>
+                </div>
+            </td>
+        </tr>
+    </table>
+
+    <!-- Operación y Ruta -->
+    <div class="section-title">1. Datos de la Operación &amp; Ruta Aduanera</div>
+    <table class="info-grid-table">
+        <tr>
+            <td class="info-box">
+                <div class="micro-label">RÉGIMEN ADUANERO</div>
+                <div class="info-value" th:text="${regimenLabel}">Importación Definitiva</div>
+                <div class="info-sub" th:text="'Tipo de carga: ' + ${nombreTipoCarga}">Carga General</div>
+            </td>
+            <td class="info-box">
+                <div class="micro-label">MERCANCÍA DECLARADA</div>
+                <div class="info-value" th:text="${nombreMercancia}">Mercancía General</div>
+                <div class="info-sub font-mono" th:text="'Subpartida / Cód: ' + ${codigoMercancia}">Cód: N/A</div>
+            </td>
+        </tr>
+        <tr>
+            <td class="info-box">
+                <div class="micro-label">RUTA PORTUARIA / AEROPORTUARIA</div>
+                <div class="info-value" th:text="${puertoEnvio + ' -&gt; ' + puertoDestino}">Origen -&gt; Destino</div>
+                <div class="info-sub" th:text="'Asesor asignado: ' + ${asesorNombre}">Pendiente de asignación</div>
+            </td>
+            <td class="info-box">
+                <div class="micro-label">TRANSPORTE TERRESTRE LOCAL</div>
+                <div class="info-value" th:text="${transporteResumen}">No incluido</div>
+                <div class="info-sub" th:if="${servicioTransporte}" th:text="${transporteRuta}">Origen -&gt; Destino</div>
+            </td>
+        </tr>
+    </table>
+
+    <!-- Desglose Oficial de Costos -->
+    <div class="section-title">2. Desglose Estimado de Costos y Tributos (USD)</div>
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th style="width: 72%;">Concepto Logístico / Aduanero</th>
+                <th style="width: 28%;" class="text-right">Importe ($ USD)</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>
+                    <div class="concept-title">Valor Mercancía (FOB Estimado)</div>
+                    <div class="concept-desc">Base imponible preliminar declarada para determinación de aranceles</div>
+                </td>
+                <td class="text-right font-mono" th:text="${valorFobFmt}">$0.00</td>
+            </tr>
+            <tr>
+                <td>
+                    <div class="concept-title">Flete Internacional Estimado</div>
+                    <div class="concept-desc">Flete marítimo o aéreo internacional</div>
+                </td>
+                <td class="text-right font-mono" th:text="${fleteFmt}">$0.00</td>
+            </tr>
+            <tr>
+                <td>
+                    <div class="concept-title">Seguro de Transporte Estimado</div>
+                    <div class="concept-desc">Póliza o tabla de seguro aduanero SUNAT</div>
+                </td>
+                <td class="text-right font-mono" th:text="${seguroFmt}">$0.00</td>
+            </tr>
+            <tr>
+                <td>
+                    <div class="concept-title">Honorarios de Agenciamiento Aduanero</div>
+                    <div class="concept-desc">Gestión técnica de despacho aduanero TransAduanas</div>
+                </td>
+                <td class="text-right font-mono" th:text="${honorariosFmt}">$0.00</td>
+            </tr>
+            <tr th:if="${servicioTransporte}">
+                <td>
+                    <div class="concept-title">Flete Terrestre Local (Flota SGA)</div>
+                    <div class="concept-desc">Transporte desde terminal portuario/aeroportuario hasta destino nacional</div>
+                </td>
+                <td class="text-right font-mono" th:text="${transporteInternoFmt}">$0.00</td>
+            </tr>
+            <tr>
+                <td>
+                    <div class="concept-title">Tributos Aduaneros Estimados (Ad-Valórem + IGV + IPM)</div>
+                    <div class="concept-desc">Liquidación preliminar según subpartida arancelaria</div>
+                </td>
+                <td class="text-right font-mono" th:text="${tributosFmt}">$0.00</td>
+            </tr>
+            <tr class="total-row">
+                <td>
+                    <div>TOTAL ESTIMADO DEL SERVICIO LOGÍSTICO</div>
+                    <div class="concept-desc" style="font-weight: normal;">Sujeto a liquidación final aduanera</div>
+                </td>
+                <td class="text-right font-mono total-amount" th:text="${totalServicioFmt}">$0.00</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- Control Financiero -->
+    <div class="section-title">3. Resumen Financiero &amp; Estado de Pagos</div>
+    <table class="kpi-table">
+        <tr>
+            <td class="kpi-box">
+                <div class="micro-label">TOTAL COTIZADO</div>
+                <div class="kpi-value font-mono" th:text="${totalCotizadoFmt}">$0.00</div>
+            </td>
+            <td class="kpi-box">
+                <div class="micro-label">TOTAL AMORTIZADO</div>
+                <div class="kpi-value font-mono text-success" th:text="${totalAbonadoFmt}">$0.00</div>
+            </td>
+            <td class="kpi-box kpi-box-warn">
+                <div class="micro-label">SALDO PENDIENTE</div>
+                <div class="kpi-value font-mono text-warn" th:text="${saldoPendienteFmt}">$0.00</div>
+            </td>
+        </tr>
+    </table>
+
+    <!-- Observaciones -->
+    <div th:if="${motivoObservacion != null or observaciones != null}">
+        <div class="section-title">4. Notas y Observaciones</div>
+        <div th:if="${motivoObservacion != null}" class="notes-box notes-box-warn">
+            <strong>Observación Técnica:</strong>
+            <span th:text="${motivoObservacion}">Observación técnica</span>
+        </div>
+        <div th:if="${observaciones != null}" class="notes-box">
+            <strong>Observaciones Comerciales:</strong>
+            <span th:text="${observaciones}">Observaciones comerciales</span>
+        </div>
+    </div>
+
+    <div class="legal-footer">
+        Documento informativo emitido desde el Portal del Cliente B2B de TransAduanas del Perú S.A.C.
+        Los tributos aduaneros y gastos operativos definitivos están sujetos a la numeración de la Declaración Aduanera de Mercancías (DAM) y aforo correspondiente ante SUNAT.
+    </div>
+</body>
+</html>

@@ -39,6 +39,10 @@ public class DocumentoAdjunto {
     @Column(name = "ruta_almacenamiento", nullable = false, length = 500)
     private String rutaAlmacenamiento;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_categoria_documento")
+    private CatalogoCategoriaDocumento categoriaDocumentoEntity;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "categoria", nullable = false, length = 50)
     @Builder.Default

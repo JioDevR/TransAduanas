@@ -7,13 +7,19 @@
 
     <div v-else-if="!expedientes || expedientes.length === 0" class="sga-canvas-state">
       <i class="pi pi-folder-open sga-state-icon"></i>
-      <p class="sga-state-title">No hay expedientes en esta vista</p>
+      <p class="sga-state-title">
+        {{ mode === 'manage' ? 'No hay expedientes abiertos para gestionar' : 'No hay expedientes en esta vista' }}
+      </p>
       <p class="sga-state-desc">
-        No se encontraron despachos aduaneros que coincidan con los filtros seleccionados.
+        {{
+          mode === 'manage'
+            ? 'Todos sus expedientes asignados están cerrados o no coinciden con los filtros seleccionados.'
+            : 'No se encontraron despachos aduaneros que coincidan con los filtros seleccionados.'
+        }}
       </p>
     </div>
 
-    <div v-else class="sga-canvas-grid agente-canvas-grid">
+    <div v-else :class="['sga-canvas-grid', mode === 'manage' ? 'agente-canvas-grid--compact' : 'agente-canvas-grid']">
       <article
         v-for="exp in expedientes"
         :key="exp.idExpediente"
@@ -24,7 +30,7 @@
           <button
             type="button"
             class="sga-code-link font-mono"
-            title="Clic para abrir informe completo"
+            :title="mode === 'manage' ? 'Clic para gestionar hitos del expediente' : 'Clic para ver ficha en lectura'"
             @click="$emit('detalle', exp)"
           >
             {{ exp.codigoExpediente }}
@@ -50,86 +56,94 @@
             {{ exp.clienteRazonSocial || 'Cliente no especificado' }}
           </h4>
           <div class="sga-client-meta">
-            <span class="sga-client-doc font-mono">
-              RUC/Doc: {{ exp.clienteNumeroDocumento || '—' }}
-            </span>
             <Tag
               :value="formatRegimenShort(exp.regimenAduanero)"
               :severity="isExportacion(exp) ? 'success' : 'info'"
               class="sga-mini-tag"
               rounded
             />
+            <span v-if="mode === 'manage'" class="sga-client-doc font-mono">
+              DAM: {{ exp.numeroDam || 'Sin numerar' }}
+            </span>
+            <span v-else class="sga-client-doc font-mono">
+              RUC/Doc: {{ exp.clienteNumeroDocumento || '—' }}
+            </span>
           </div>
         </div>
 
-        <div class="sga-card-meta-grid">
-          <div class="sga-meta-item">
-            <span class="sga-meta-label">DAM SUNAT</span>
-            <span class="sga-meta-val font-mono">{{ exp.numeroDam || 'Sin numerar' }}</span>
+        <!-- MODO LECTURA (Vista panorámica completa) -->
+        <template v-if="mode === 'readonly'">
+          <div class="sga-card-meta-grid">
+            <div class="sga-meta-item">
+              <span class="sga-meta-label">DAM SUNAT</span>
+              <span class="sga-meta-val font-mono">{{ exp.numeroDam || 'Sin numerar' }}</span>
+            </div>
+
+            <div class="sga-meta-item">
+              <span class="sga-meta-label">CONTENEDOR</span>
+              <span class="sga-meta-val font-mono">{{ exp.numeroContenedor || 'Pendiente' }}</span>
+            </div>
+
+            <div class="sga-meta-item">
+              <span class="sga-meta-label">NAVE / VIAJE</span>
+              <span class="sga-meta-val" :title="exp.naveViaje">{{ exp.naveViaje || 'Pendiente' }}</span>
+            </div>
+
+            <div class="sga-meta-item">
+              <span class="sga-meta-label">{{ isExportacion(exp) ? 'ZARPE / HITO' : 'ARRIBO / ETA' }}</span>
+              <span class="sga-meta-val font-mono">{{ formatFechaHitoCard(exp) }}</span>
+            </div>
           </div>
 
-          <div class="sga-meta-item">
-            <span class="sga-meta-label">CONTENEDOR</span>
-            <span class="sga-meta-val font-mono">{{ exp.numeroContenedor || 'Pendiente' }}</span>
+          <div class="agente-mini-stepper" :title="getProgresoResumen(exp)">
+            <div class="mini-step is-done">
+              <span class="mini-dot"></span>
+              <span class="mini-lbl">Asignado</span>
+            </div>
+            <div :class="['mini-step', { 'is-done': hasZarpeConfirmado(exp) }]">
+              <span class="mini-dot"></span>
+              <span class="mini-lbl">Tránsito</span>
+            </div>
+            <div :class="['mini-step', { 'is-done': hasArriboConfirmado(exp) }]">
+              <span class="mini-dot"></span>
+              <span class="mini-lbl">Arribo</span>
+            </div>
+            <div :class="['mini-step', { 'is-done': hasCanalAsignado(exp) }]">
+              <span class="mini-dot"></span>
+              <span class="mini-lbl">Canal</span>
+            </div>
+            <div :class="['mini-step', { 'is-done': isLevanteAutorizado(exp) }]">
+              <span class="mini-dot"></span>
+              <span class="mini-lbl">Levante</span>
+            </div>
           </div>
+        </template>
 
-          <div class="sga-meta-item">
-            <span class="sga-meta-label">NAVE / VIAJE</span>
-            <span class="sga-meta-val" :title="exp.naveViaje">{{ exp.naveViaje || 'Pendiente' }}</span>
+        <!-- MODO GESTIÓN (Canvas simplificado enfocado en el siguiente hito) -->
+        <template v-else>
+          <div
+            :class="[
+              'manage-next-hito',
+              getNextInfo(exp).isWaiting ? 'is-waiting' : 'is-ready'
+            ]"
+          >
+            <i :class="[getNextInfo(exp).icon || 'pi pi-flag', 'manage-next-icon']"></i>
+            <div class="manage-next-text">
+              <span class="manage-next-kicker">
+                {{ getNextInfo(exp).isWaiting ? 'EN ESPERA' : 'SIGUIENTE HITO' }}
+              </span>
+              <span class="manage-next-label">{{ getNextInfo(exp).label }}</span>
+            </div>
           </div>
-
-          <div class="sga-meta-item">
-            <span class="sga-meta-label">{{ isExportacion(exp) ? 'ZARPE / HITO' : 'ARRIBO / ETA' }}</span>
-            <span class="sga-meta-val font-mono">{{ formatFechaHitoCard(exp) }}</span>
-          </div>
-        </div>
-
-        <!-- Mini Stepper Operativo (corregido: PENDIENTE no marca Canal) -->
-        <div class="agente-mini-stepper" :title="getProgresoResumen(exp)">
-          <div class="mini-step is-done">
-            <span class="mini-dot"></span>
-            <span class="mini-lbl">Asignado</span>
-          </div>
-          <div :class="['mini-step', { 'is-done': hasZarpeConfirmado(exp) }]">
-            <span class="mini-dot"></span>
-            <span class="mini-lbl">Tránsito</span>
-          </div>
-          <div :class="['mini-step', { 'is-done': hasArriboConfirmado(exp) }]">
-            <span class="mini-dot"></span>
-            <span class="mini-lbl">Arribo</span>
-          </div>
-          <div :class="['mini-step', { 'is-done': hasCanalAsignado(exp) }]">
-            <span class="mini-dot"></span>
-            <span class="mini-lbl">Canal</span>
-          </div>
-          <div :class="['mini-step', { 'is-done': isLevanteAutorizado(exp) }]">
-            <span class="mini-dot"></span>
-            <span class="mini-lbl">Levante</span>
-          </div>
-        </div>
+        </template>
 
         <footer class="sga-card-footer agente-card-footer">
+          <span v-if="mode === 'manage'" class="sga-cell-sub font-mono">
+            {{ exp.mercanciaNombre || getProgresoResumen(exp) }}
+          </span>
           <AgenteAccionesCell
             :expediente="exp"
-            :active-tab="activeTab"
-            @salida-origen="$emit('salida-origen', $event)"
-            @arribo-destino="$emit('arribo-destino', $event)"
-            @transito="$emit('transito', $event)"
-            @diligencia="$emit('diligencia', $event)"
-            @solicitar-transporte="$emit('solicitar-transporte', $event)"
-            @retiro-directo="$emit('retiro-directo', $event)"
-            @ingreso-almacen="$emit('ingreso-almacen', $event)"
-            @recojo-exportacion="$emit('recojo-exportacion', $event)"
-            @ingreso-origen="$emit('ingreso-origen', $event)"
-            @embarque="$emit('embarque', $event)"
-            @recepcion-exterior="$emit('recepcion-exterior', $event)"
-            @verificacion-origen="$emit('verificacion-origen', $event)"
-            @cuadrilla-rojo="$emit('cuadrilla-rojo', $event)"
-            @finalizar-rojo="$emit('finalizar-rojo', $event)"
-            @enviar-sunat="$emit('enviar-sunat', $event)"
-            @entregado-almacen-verde="$emit('entregado-almacen-verde', $event)"
-            @informe-conformidad="$emit('informe-conformidad', $event)"
-            @finalizar-expediente="$emit('finalizar-expediente', $event)"
+            :mode="mode"
             @documentos="$emit('documentos', $event)"
             @detalle="$emit('detalle', $event)"
           />
@@ -147,7 +161,8 @@ import {
   hasZarpeConfirmado,
   hasArriboConfirmado,
   hasCanalAsignado,
-  isLevanteAutorizado
+  isLevanteAutorizado,
+  getSiguienteAccionAgente
 } from '../utils/agenteWorkflowUtils'
 import {
   formatRegimenShort,
@@ -162,36 +177,24 @@ import {
 defineProps({
   expedientes: { type: Array, default: () => [] },
   loading: { type: Boolean, default: false },
-  activeTab: { type: String, default: 'todos' }
+  mode: {
+    type: String,
+    default: 'readonly' // 'readonly' | 'manage'
+  }
 })
 
-defineEmits([
-  'detalle',
-  'salida-origen',
-  'arribo-destino',
-  'transito',
-  'diligencia',
-  'solicitar-transporte',
-  'retiro-directo',
-  'ingreso-almacen',
-  'recojo-exportacion',
-  'ingreso-origen',
-  'embarque',
-  'recepcion-exterior',
-  'verificacion-origen',
-  'cuadrilla-rojo',
-  'finalizar-rojo',
-  'enviar-sunat',
-  'entregado-almacen-verde',
-  'informe-conformidad',
-  'finalizar-expediente',
-  'documentos'
-])
+defineEmits(['detalle', 'documentos'])
+
+const getNextInfo = (exp) => getSiguienteAccionAgente(exp)
 </script>
 
 <style scoped>
 .agente-canvas-grid {
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
+}
+
+.agente-canvas-grid--compact {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 310px), 1fr));
 }
 
 .agente-canvas-card {
@@ -264,8 +267,61 @@ defineEmits([
   font-weight: 700;
 }
 
+.manage-next-hito {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.6rem 0.8rem;
+  border-radius: var(--radius-md, 8px);
+  background: var(--color-bg-subtle);
+  border: 1px solid var(--color-border);
+}
+
+.manage-next-hito.is-waiting {
+  background: var(--color-warning-bg);
+  border-color: var(--color-warning-border);
+}
+
+.manage-next-icon {
+  font-size: 0.95rem;
+  color: var(--color-primary);
+  flex-shrink: 0;
+}
+
+.manage-next-hito.is-waiting .manage-next-icon {
+  color: var(--color-warning-text);
+}
+
+.manage-next-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.08rem;
+  min-width: 0;
+}
+
+.manage-next-kicker {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--color-accent-kicker);
+}
+
+.manage-next-hito.is-waiting .manage-next-kicker {
+  color: var(--color-warning-text);
+}
+
+.manage-next-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--color-text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .agente-card-footer {
   margin-top: auto;
-  justify-content: flex-end;
+  justify-content: space-between;
+  gap: 0.5rem;
 }
 </style>

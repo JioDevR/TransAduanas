@@ -4,6 +4,7 @@
       <div class="sga-panel-title-group">
         <h2 class="sga-panel-title">{{ title || (viewMode === 'canvas' ? 'Vista Canvas' : 'Vista Tabla') }}</h2>
         <SelectButton
+          v-if="showViewToggle"
           :modelValue="viewMode"
           :options="viewModeOptions"
           optionLabel="label"
@@ -52,6 +53,10 @@ defineProps({
   title: {
     type: String,
     default: ''
+  },
+  showViewToggle: {
+    type: Boolean,
+    default: true
   }
 })
 

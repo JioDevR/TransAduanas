@@ -3,11 +3,11 @@ import { FilterService } from '@primevue/core/api'
 import { useAuthStore } from '@/core/stores/authStore'
 import { useNotification } from '@/shared/composables/useNotification'
 import { portalCotizacionService } from '../services/portalCotizacionService'
+import { catalogoPublicoService } from '@/shared/services/catalogoPublicoService'
 import { useModalidadPuertos } from './useModalidadPuertos'
-import { getDepartamentosPeru, getProvinciasPorDepartamento } from '../data/peruUbigeo'
+import { PERU_UBIGEO_DATA } from '../data/peruUbigeo'
 import {
   REGIMEN_OPTIONS,
-  DESCRIPCIONES_TIPO_CARGA_FALLBACK,
   matchesSmartFilter,
   createDefaultPortalSolicitudForm,
   validatePortalCotizacionForm,
@@ -32,6 +32,7 @@ export function usePortalCotizacionForm(emit) {
   const puertos = ref([])
   const tiposCarga = ref([])
   const mercancias = ref([])
+  const ubigeoList = ref(PERU_UBIGEO_DATA)
 
   const regimen = computed(() => form.value.regimenAduanero)
 
@@ -51,20 +52,23 @@ export function usePortalCotizacionForm(emit) {
     form
   })
 
-  const departamentosPeru = getDepartamentosPeru()
+  const findProvincias = (dep) => {
+    if (!dep) return []
+    const depUpper = dep.toUpperCase()
+    const found = ubigeoList.value.find((item) => item.departamento.toUpperCase() === depUpper)
+    return found ? found.provincias : []
+  }
 
-  const provinciasOrigen = computed(() => {
-    return getProvinciasPorDepartamento(form.value.origenDepartamento)
-  })
+  const departamentosPeru = computed(() => ubigeoList.value.map((item) => item.departamento))
 
-  const provinciasDestino = computed(() => {
-    return getProvinciasPorDepartamento(form.value.destinoDepartamento)
-  })
+  const provinciasOrigen = computed(() => findProvincias(form.value.origenDepartamento))
+
+  const provinciasDestino = computed(() => findProvincias(form.value.destinoDepartamento))
 
   watch(
     () => form.value.origenDepartamento,
     (newDep) => {
-      const validProvs = getProvinciasPorDepartamento(newDep)
+      const validProvs = findProvincias(newDep)
       if (!validProvs.includes(form.value.origenProvincia)) {
         form.value.origenProvincia = validProvs[0] || ''
       }
@@ -74,7 +78,7 @@ export function usePortalCotizacionForm(emit) {
   watch(
     () => form.value.destinoDepartamento,
     (newDep) => {
-      const validProvs = getProvinciasPorDepartamento(newDep)
+      const validProvs = findProvincias(newDep)
       if (!validProvs.includes(form.value.destinoProvincia)) {
         form.value.destinoProvincia = validProvs[0] || ''
       }
@@ -116,13 +120,18 @@ export function usePortalCotizacionForm(emit) {
   onMounted(async () => {
     loadingCatalogos.value = true
     try {
-      const [pRes, tcRes, mRes] = await Promise.allSettled([
+      const [pRes, tcRes, mRes, uRes] = await Promise.allSettled([
         portalCotizacionService.obtenerPuertos(true),
         portalCotizacionService.obtenerTiposCarga(true),
-        portalCotizacionService.obtenerMercancias(true)
+        portalCotizacionService.obtenerMercancias(true),
+        catalogoPublicoService.obtenerUbigeo()
       ])
 
       const unwrap = (r) => (r.status === 'fulfilled' && Array.isArray(r.value) ? r.value : [])
+
+      if (uRes.status === 'fulfilled' && Array.isArray(uRes.value) && uRes.value.length > 0) {
+        ubigeoList.value = uRes.value
+      }
 
       puertos.value = unwrap(pRes).map((p) => ({
         ...p,
@@ -130,7 +139,7 @@ export function usePortalCotizacionForm(emit) {
       }))
 
       tiposCarga.value = unwrap(tcRes).map((t) => {
-        const desc = t.descripcion || DESCRIPCIONES_TIPO_CARGA_FALLBACK[t.codigo] || ''
+        const desc = t.descripcion || ''
         return {
           ...t,
           descripcion: desc,

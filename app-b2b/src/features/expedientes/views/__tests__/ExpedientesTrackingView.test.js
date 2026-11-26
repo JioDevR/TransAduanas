@@ -6,12 +6,16 @@ import PrimeVue from 'primevue/config'
 import ExpedientesTrackingView from '../ExpedientesTrackingView.vue'
 import { portalExpedienteService } from '../../services/portalExpedienteService'
 
+const pushMock = vi.fn()
+
+vi.mock('vue-router', () => ({
+  useRouter: () => ({ push: pushMock }),
+  useRoute: () => ({ path: '/expedientes', params: {} })
+}))
+
 vi.mock('../../services/portalExpedienteService', () => ({
   portalExpedienteService: {
-    listarExpedientes: vi.fn(),
-    listarDocumentosExpediente: vi.fn(),
-    descargarDocumento: vi.fn(),
-    previsualizarDocumento: vi.fn()
+    listarExpedientes: vi.fn()
   }
 }))
 

@@ -1,123 +1,152 @@
 <template>
-  <BaseModal
+  <Dialog
     :visible="visible"
-    title="Registrar Acta de Retiro Directo en Terminal"
-    :subtitle="`Expediente: ${expediente?.codigoExpediente || ''} — Cliente: ${expediente?.clienteRazonSocial || ''}`"
-    icon="pi pi-building"
-    max-width="580px"
-    :error-message="errorMessage"
-    :busy="loading"
-    @close="handleClose"
+    modal
+    :closable="!loading"
+    :dismissableMask="!loading"
+    :style="{ width: getDialogWidth('620px'), maxWidth: '95vw' }"
+    header="Registrar Retiro Directo por el Cliente"
+    @update:visible="(val) => { if (!val && !loading) handleClose() }"
   >
-    <form @submit.prevent="handleSubmit" class="form-body">
-      <!-- Info Banner -->
-      <div class="retiro-info-banner">
-        <i class="pi pi-info-circle text-lg"></i>
-        <div class="banner-texts">
+    <form id="retiro-directo-form" class="sga-dialog-body" @submit.prevent="handleSubmit">
+      <div v-if="expediente" class="sga-dialog-context">
+        <div class="sga-dialog-context-meta">
+          <span class="sga-code-cell font-mono">{{ expediente.codigoExpediente }}</span>
+          <span class="sga-dialog-context-sub">
+            {{ expediente.clienteRazonSocial || expediente.cliente?.razonSocial || 'Cliente asignado' }}
+          </span>
+        </div>
+        <Tag
+          v-if="expediente.numeroDam"
+          :value="`DAM ${expediente.numeroDam}`"
+          severity="secondary"
+          class="sga-mini-tag font-mono"
+          rounded
+        />
+      </div>
+
+      <div class="sga-banner is-warn">
+        <i class="pi pi-user-edit"></i>
+        <div>
           <strong>Retiro Directo por el Cliente (Sin Transporte SGA)</strong>
-          <p>
-            El cliente retira la mercancía liberada directamente del depósito temporal / terminal portuario con su propia unidad de transporte.
+          <p class="retiro-banner-desc">
+            Registre la conformidad cuando el consignatario retira la carga directamente del terminal portuario o almacén con su propia movilidad.
           </p>
         </div>
       </div>
 
-      <div class="retiro-fields-grid">
-        <div class="field-item">
-          <label for="terminal-dep">Terminal Extraportuario / Almacén *</label>
+      <div v-if="errorMessage" class="sga-banner is-danger" role="alert">
+        <i class="pi pi-exclamation-triangle"></i>
+        <span>{{ errorMessage }}</span>
+      </div>
+
+      <div class="sga-grid-2">
+        <div class="sga-form-field">
+          <label for="retiro-terminal" class="sga-form-label">Terminal / Almacén de Retiro *</label>
           <InputText
-            id="terminal-dep"
+            id="retiro-terminal"
             v-model.trim="form.terminalAlmacen"
+            placeholder="Ej. DP World Callao / Almacén Neptunia"
             required
-            placeholder="Ej. DPW Callao / Almacén Temporal Ransa"
+            size="small"
             fluid
           />
         </div>
 
-        <div class="field-item">
-          <label for="acta-num">Número de Ticket / Acta de Salida</label>
+        <div class="sga-form-field">
+          <label for="retiro-acta" class="sga-form-label">N° Acta / Guía de Salida</label>
           <InputText
-            id="acta-num"
+            id="retiro-acta"
             v-model.trim="form.numeroActaRetiro"
+            placeholder="Ej. ACTA-2026-00981"
             class="font-mono"
-            placeholder="Ej. ACT-2026-9812"
+            size="small"
             fluid
           />
         </div>
 
-        <div class="field-item">
-          <label for="receptor-nombre">Nombre de Quien Recibe / Conductor *</label>
+        <div class="sga-form-field">
+          <label for="retiro-receptor" class="sga-form-label">Nombre Completo del Receptor *</label>
           <InputText
-            id="receptor-nombre"
+            id="retiro-receptor"
             v-model.trim="form.receptorNombre"
+            placeholder="Persona autorizada por el cliente"
             required
-            placeholder="Ej. Carlos Mendoza (Transportes Externos)"
+            size="small"
             fluid
           />
         </div>
 
-        <div class="field-item">
-          <label for="receptor-dni">DNI / Documento del Receptor *</label>
+        <div class="sga-form-field">
+          <label for="retiro-dni" class="sga-form-label">DNI / Documento del Receptor *</label>
           <InputText
-            id="receptor-dni"
+            id="retiro-dni"
             v-model.trim="form.receptorDni"
+            placeholder="Ej. 45891234"
             class="font-mono"
             required
-            placeholder="Ej. 45678901"
+            size="small"
             fluid
           />
         </div>
 
-        <div class="field-item">
-          <label for="fecha-retiro">Fecha y Hora de Retiro Conforme</label>
-          <input
-            id="fecha-retiro"
+        <div class="sga-form-field">
+          <label for="retiro-fecha" class="sga-form-label">Fecha y Hora de Retiro</label>
+          <InputText
+            id="retiro-fecha"
             v-model="form.fechaRetiro"
             type="datetime-local"
-            class="text-input"
+            size="small"
+            fluid
           />
         </div>
 
-        <div class="field-item full-width">
-          <label for="obs-retiro">Observaciones del Acta de Recepción Externa</label>
+        <div class="sga-form-field full-span">
+          <label for="retiro-obs" class="sga-form-label">Observaciones de Entrega / Precintos</label>
           <Textarea
-            id="obs-retiro"
+            id="retiro-obs"
             v-model.trim="form.observaciones"
             rows="2"
             autoResize
-            placeholder="Placa del vehículo externo, precintos cortados conforme, condición de embalaje..."
+            placeholder="Ej. Carga retirada con carta poder y placa ABC-123 sin incidencias..."
+            size="small"
             fluid
           />
         </div>
       </div>
-
-      <div class="modal-actions">
-        <Button
-          type="button"
-          label="Cancelar"
-          severity="secondary"
-          outlined
-          @click="handleClose"
-          :disabled="loading"
-        />
-        <Button
-          type="submit"
-          label="Registrar Acta de Retiro"
-          icon="pi pi-check"
-          :loading="loading"
-        />
-      </div>
     </form>
-  </BaseModal>
+
+    <template #footer>
+      <Button
+        type="button"
+        label="Cancelar"
+        severity="secondary"
+        outlined
+        size="small"
+        :disabled="loading"
+        @click="handleClose"
+      />
+      <Button
+        type="submit"
+        form="retiro-directo-form"
+        label="Confirmar Retiro Directo"
+        icon="pi pi-check"
+        size="small"
+        :loading="loading"
+      />
+    </template>
+  </Dialog>
 </template>
 
 <script setup>
 import { ref, watch } from 'vue'
 import Button from 'primevue/button'
+import Dialog from 'primevue/dialog'
 import InputText from 'primevue/inputtext'
+import Tag from 'primevue/tag'
 import Textarea from 'primevue/textarea'
-import BaseModal from '@/shared/components/BaseModal.vue'
+import { useResponsive } from '@/shared/composables/useResponsive'
 import { expedienteService } from '../services/expedienteService'
-import { getNowDateTimeInput } from '@/shared/utils/dateUtils'
 
 const props = defineProps({
   visible: { type: Boolean, default: false },
@@ -125,32 +154,38 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['close', 'saved'])
+const { getDialogWidth } = useResponsive()
 
 const loading = ref(false)
 const errorMessage = ref('')
 
+const getNowDateTimeInput = () => {
+  const now = new Date()
+  const pad = (n) => String(n).padStart(2, '0')
+  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`
+}
+
 const form = ref({
-  terminalAlmacen: 'Terminal Portuario Callao',
+  terminalAlmacen: '',
   numeroActaRetiro: '',
   receptorNombre: '',
   receptorDni: '',
-  fechaRetiro: '',
+  fechaRetiro: getNowDateTimeInput(),
   observaciones: ''
 })
 
 watch(
-  () => props.expediente,
-  (exp) => {
-    if (exp) {
-      const localISOTime = getNowDateTimeInput()
-
+  () => [props.visible, props.expediente],
+  ([vis, exp]) => {
+    if (vis && exp) {
+      errorMessage.value = ''
       form.value = {
-        terminalAlmacen: 'Terminal Portuario Callao',
+        terminalAlmacen: exp.terminalOrigen || exp.depositoTemporal || '',
         numeroActaRetiro: '',
-        receptorNombre: exp.contactoExteriorNombre || '',
+        receptorNombre: '',
         receptorDni: '',
-        fechaRetiro: localISOTime,
-        observaciones: 'Retiro conforme de carga por el cliente en terminal extraportuario.'
+        fechaRetiro: getNowDateTimeInput(),
+        observaciones: ''
       }
     }
   },
@@ -164,16 +199,22 @@ const handleClose = () => {
 
 const handleSubmit = async () => {
   if (!props.expediente?.idExpediente) return
+  if (!form.value.terminalAlmacen || !form.value.receptorNombre || !form.value.receptorDni) {
+    errorMessage.value = 'Complete el terminal de retiro, nombre y documento del receptor.'
+    return
+  }
+
   loading.value = true
   errorMessage.value = ''
 
   try {
+    const fechaRaw = form.value.fechaRetiro
     const payload = {
       terminalAlmacen: form.value.terminalAlmacen,
       numeroActaRetiro: form.value.numeroActaRetiro || null,
       receptorNombre: form.value.receptorNombre,
       receptorDni: form.value.receptorDni,
-      fechaRetiro: form.value.fechaRetiro ? `${form.value.fechaRetiro}:00` : null,
+      fechaRetiro: fechaRaw ? (fechaRaw.length === 16 ? `${fechaRaw}:00` : fechaRaw) : null,
       observaciones: form.value.observaciones || null
     }
 
@@ -181,7 +222,7 @@ const handleSubmit = async () => {
     emit('saved', updated)
     handleClose()
   } catch (err) {
-    errorMessage.value = err.response?.data?.message || 'Error al registrar el acta de retiro en terminal.'
+    errorMessage.value = err.response?.data?.message || 'Error al registrar el retiro directo.'
   } finally {
     loading.value = false
   }
@@ -189,128 +230,13 @@ const handleSubmit = async () => {
 </script>
 
 <style scoped>
-.form-body {
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-  padding: 0.5rem 0;
+.retiro-banner-desc {
+  margin: 0.2rem 0 0;
+  font-size: 0.8rem;
+  line-height: 1.4;
 }
 
-.retiro-info-banner {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.85rem;
-  padding: 0.85rem 1rem;
-  background: var(--color-warning-bg);
-  border: 1px solid var(--color-warning-border);
-  color: var(--color-warning-text);
-  border-radius: 6px;
-}
-
-.banner-texts strong {
-  display: block;
-  font-size: 0.85rem;
-  margin-bottom: 0.2rem;
-}
-
-.banner-texts p {
-  margin: 0;
-  font-size: 0.775rem;
-  opacity: 0.9;
-  line-height: 1.35;
-}
-
-.retiro-fields-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 1rem;
-}
-
-.field-item {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-}
-
-.field-item.full-width {
+.full-span {
   grid-column: 1 / -1;
-}
-
-.field-item label {
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: var(--color-text-main);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.text-input,
-.textarea-input {
-  width: 100%;
-  padding: 0.6rem 0.85rem;
-  border: 1px solid var(--color-border);
-  border-radius: 4px;
-  background: var(--color-bg-subtle);
-  color: var(--color-text-main);
-  font-size: 0.875rem;
-  transition: all 0.2s ease;
-}
-
-.text-input:focus,
-.textarea-input:focus {
-  outline: none;
-  border-color: var(--color-primary);
-  background: var(--color-bg-surface);
-  box-shadow: 0 0 0 2px rgba(53, 47, 42, 0.15);
-}
-
-.modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.75rem;
-  padding-top: 1rem;
-  border-top: 1px solid var(--color-border-subtle);
-}
-
-.btn-modal-cancel {
-  padding: 0.6rem 1.2rem;
-  background: transparent;
-  border: 1px solid var(--color-border);
-  color: var(--color-text-main);
-  border-radius: 4px;
-  font-size: 0.875rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.btn-modal-cancel:hover:not(:disabled) {
-  background: var(--color-bg-subtle);
-}
-
-.btn-modal-save {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.6rem 1.25rem;
-  background: var(--color-primary);
-  border: 1px solid var(--color-primary);
-  color: var(--color-primary-text);
-  border-radius: 4px;
-  font-size: 0.875rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.btn-modal-save:hover:not(:disabled) {
-  background: var(--color-primary-hover);
-  border-color: var(--color-primary-hover);
-}
-
-.btn-modal-save:disabled,
-.btn-modal-cancel:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
 }
 </style>

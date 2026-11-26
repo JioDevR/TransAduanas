@@ -67,8 +67,8 @@
             <span :class="['mini-badge', getExpedienteStatusClass(exp.estadoExpediente)]">
               {{ formatEstadoExpediente(exp.estadoExpediente) }}
             </span>
-            <span v-if="exp.estadoTransporte" class="transporte-sub">
-              Transporte: {{ exp.estadoTransporte }}
+            <span v-if="exp.tieneTransporte || exp.estadoTransporte" class="transporte-sub">
+              Transporte externo: {{ exp.estadoTransporte || 'SOLICITADO' }}
             </span>
           </div>
         </li>

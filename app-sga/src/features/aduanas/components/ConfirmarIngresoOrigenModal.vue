@@ -1,138 +1,170 @@
 <template>
-  <BaseModal
+  <Dialog
     :visible="visible"
-    title="Confirmar Ingreso a Depósito Temporal / Zona Primaria"
-    :subtitle="`Expediente: ${expediente?.codigoExpediente || ''} — DAM: ${expediente?.numeroDam || 'Por asignar'}`"
-    icon="pi pi-inbox"
-    max-width="600px"
-    :error-message="errorMessage"
-    :busy="loading"
-    @close="handleClose"
+    modal
+    :closable="!loading"
+    :dismissableMask="!loading"
+    :style="{ width: getDialogWidth('660px'), maxWidth: '95vw' }"
+    header="Confirmar Ingreso a Terminal Portuario / Aéreo de Origen"
+    @update:visible="(val) => { if (!val && !loading) handleClose() }"
   >
-    <form @submit.prevent="handleSubmit" class="form-body">
-      <!-- Info Banner Ingreso Origen -->
-      <div class="ingreso-info-banner">
-        <i class="pi pi-check-circle text-lg"></i>
-        <div class="banner-texts">
-          <strong>Validación de Ingreso a Zona Primaria y Certificación VGM</strong>
-          <p>
-            Al registrar el ingreso formal de la carga al depósito aduanero de origen con su ticket de balanza/VGM y contenedor precintado, el expediente pasará a <strong>EN TRÁMITE</strong> para la asignación inmediata de Canal de Control SUNAT.
+    <form id="confirmar-ingreso-origen-form" class="sga-dialog-body" @submit.prevent="handleSubmit">
+      <div v-if="expediente" class="sga-dialog-context">
+        <div class="sga-dialog-context-meta">
+          <span class="sga-code-cell font-mono">{{ expediente.codigoExpediente }}</span>
+          <span class="sga-dialog-context-sub">
+            {{ expediente.clienteRazonSocial || 'Exportador asignado' }}
+          </span>
+        </div>
+        <Tag
+          v-if="expediente.numeroContenedor"
+          :value="expediente.numeroContenedor"
+          severity="secondary"
+          class="sga-mini-tag font-mono"
+          rounded
+        />
+      </div>
+
+      <div class="sga-banner is-success">
+        <i class="pi pi-warehouse"></i>
+        <div>
+          <strong>Recepción de Carga en Zona Primaria</strong>
+          <p class="ingreso-banner-desc">
+            Confirme que la carga arribó e ingresó físicamente al depósito temporal o terminal de embarque en origen.
           </p>
         </div>
       </div>
 
-      <div class="ingreso-fields-grid">
-        <div class="field-item full-width">
-          <label for="ingreso-terminal">Depósito Temporal / Terminal de Salida *</label>
+      <div v-if="errorMessage" class="sga-banner is-danger" role="alert">
+        <i class="pi pi-exclamation-triangle"></i>
+        <span>{{ errorMessage }}</span>
+      </div>
+
+      <div class="sga-grid-2">
+        <div class="sga-form-field full-span">
+          <label for="ingreso-terminal" class="sga-form-label">Terminal / Almacén de Recepción en Origen *</label>
           <InputText
             id="ingreso-terminal"
             v-model.trim="form.terminalAlmacenOrigen"
+            placeholder="Ej. DP World Callao / Talma Servicios Aeroportuarios"
             required
-            placeholder="Ej. DP World Callao - Muelle Sur / APM Terminals"
+            size="small"
             fluid
           />
         </div>
 
-        <div class="field-item">
-          <label for="ingreso-ticket">N° Ticket de Balanza / Certificado VGM *</label>
+        <div class="sga-form-field">
+          <label for="ingreso-ticket" class="sga-form-label">N° Ticket de Ingreso / Gate-In *</label>
           <InputText
             id="ingreso-ticket"
             v-model.trim="form.numeroTicketIngreso"
+            placeholder="Ej. GATE-2026-88120"
+            class="font-mono"
             required
-            placeholder="Ej. TKT-VGM-2026-90812"
+            size="small"
             fluid
           />
         </div>
 
-        <div class="field-item">
-          <label for="ingreso-fecha">Fecha y Hora de Ingreso *</label>
-          <input
+        <div class="sga-form-field">
+          <label for="ingreso-fecha" class="sga-form-label">Fecha y Hora de Ingreso *</label>
+          <InputText
             id="ingreso-fecha"
             v-model="form.fechaIngreso"
             type="datetime-local"
-            class="text-input"
             required
+            size="small"
+            fluid
           />
         </div>
 
-        <div class="field-item">
-          <label for="ingreso-contenedor">N° Contenedor *</label>
+        <div class="sga-form-field">
+          <label for="ingreso-contenedor" class="sga-form-label">N° Contenedor / Unidad</label>
           <InputText
             id="ingreso-contenedor"
             v-model.trim="form.numeroContenedor"
+            placeholder="Ej. MSCU9128412"
             class="font-mono"
-            required
-            placeholder="Ej. MSKU9876543"
+            size="small"
             fluid
           />
         </div>
 
-        <div class="field-item">
-          <label for="ingreso-precinto">N° Precinto Aduanero / Botella *</label>
+        <div class="sga-form-field">
+          <label for="ingreso-precinto" class="sga-form-label">N° Precinto Aduanero / Seguridad</label>
           <InputText
             id="ingreso-precinto"
             v-model.trim="form.precintoAduanero"
+            placeholder="Ej. SEAL-90218"
             class="font-mono"
-            required
-            placeholder="Ej. SUNAT-PR-098231"
+            size="small"
             fluid
           />
         </div>
 
-        <div class="field-item full-width">
-          <label for="ingreso-obs">Observaciones de Recepción / Patio</label>
+        <div class="sga-form-field full-span">
+          <label for="ingreso-obs" class="sga-form-label">Observaciones de Recepción / Pesaje</label>
           <Textarea
             id="ingreso-obs"
             v-model.trim="form.observaciones"
             rows="2"
             autoResize
-            placeholder="Contenedor sin abolladuras, precintos de seguridad intactos, peso verificado en balanza..."
+            placeholder="Ej. Contenedor recepcionado sin daños físicos, balanza VGM conforme..."
+            size="small"
             fluid
           />
         </div>
 
-        <div class="field-item full-width">
-          <label for="ingreso-fotos">Fotos de Recepción en Almacén Central (Opcional)</label>
+        <div class="sga-form-field full-span">
+          <label for="ingreso-fotos" class="sga-form-label">Evidencia Fotográfica de Almacén (opcional)</label>
           <input
             id="ingreso-fotos"
             type="file"
             multiple
             accept="image/*,.pdf"
-            class="text-input"
+            class="sga-file-input"
             @change="onFotosSelected"
           />
-          <small v-if="fotosSeleccionadas.length > 0" class="sga-cell-sub">
+          <span v-if="fotosSeleccionadas.length > 0" class="sga-field-hint is-selected">
             {{ fotosSeleccionadas.length }} archivo(s) seleccionado(s) para adjuntar al almacén.
-          </small>
+          </span>
+          <span v-else class="sga-field-hint">
+            Puede adjuntar fotografías del precinto, ticket de balanza o recepción en formato imagen o PDF.
+          </span>
         </div>
       </div>
-
-      <div class="modal-actions">
-        <Button
-          type="button"
-          label="Cancelar"
-          severity="secondary"
-          outlined
-          @click="handleClose"
-          :disabled="loading"
-        />
-        <Button
-          type="submit"
-          label="Confirmar Ingreso a Terminal"
-          icon="pi pi-check"
-          :loading="loading"
-        />
-      </div>
     </form>
-  </BaseModal>
+
+    <template #footer>
+      <Button
+        type="button"
+        label="Cancelar"
+        severity="secondary"
+        outlined
+        size="small"
+        :disabled="loading"
+        @click="handleClose"
+      />
+      <Button
+        type="submit"
+        form="confirmar-ingreso-origen-form"
+        label="Confirmar Ingreso a Terminal"
+        icon="pi pi-check"
+        size="small"
+        :loading="loading"
+      />
+    </template>
+  </Dialog>
 </template>
 
 <script setup>
 import { ref, watch } from 'vue'
 import Button from 'primevue/button'
+import Dialog from 'primevue/dialog'
 import InputText from 'primevue/inputtext'
+import Tag from 'primevue/tag'
 import Textarea from 'primevue/textarea'
-import BaseModal from '@/shared/components/BaseModal.vue'
+import { useResponsive } from '@/shared/composables/useResponsive'
 import { expedienteService } from '@/shared/services/expedienteService'
 import { documentoService } from '@/features/documentos/services/documentoService'
 import { getNowDateTimeInput, toLocalDateTimePayload } from '@/shared/utils/dateUtils'
@@ -143,6 +175,7 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['close', 'saved'])
+const { getDialogWidth } = useResponsive()
 
 const loading = ref(false)
 const errorMessage = ref('')
@@ -166,10 +199,11 @@ const getNowISOString = () => {
 }
 
 watch(
-  () => props.expediente,
-  (exp) => {
-    if (exp) {
+  () => [props.visible, props.expediente],
+  ([vis, exp]) => {
+    if (vis && exp) {
       errorMessage.value = ''
+      fotosSeleccionadas.value = []
       form.value = {
         terminalAlmacenOrigen: 'DP World Callao - Muelle Sur',
         numeroTicketIngreso: '',
@@ -225,136 +259,29 @@ const handleSubmit = async () => {
 </script>
 
 <style scoped>
-.form-body {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.ingreso-info-banner {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  background: var(--color-success-bg);
-  border: 1px solid var(--color-success-border);
-  border-radius: 8px;
-  padding: 12px 14px;
-  color: var(--color-text-main);
-}
-
-.ingreso-info-banner i {
-  color: var(--color-success-text);
-  margin-top: 2px;
-}
-
-.banner-texts strong {
-  display: block;
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: var(--color-success-text);
-  margin-bottom: 3px;
-}
-
-.banner-texts p {
-  margin: 0;
+.ingreso-banner-desc {
+  margin: 0.2rem 0 0;
   font-size: 0.8rem;
-  line-height: 1.35;
-  color: var(--color-text-muted);
+  line-height: 1.4;
 }
 
-.ingreso-fields-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-}
-
-.field-item {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.field-item.full-width {
+.full-span {
   grid-column: 1 / -1;
 }
 
-.field-item label {
-  font-size: 0.75rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--color-text-muted);
-}
-
-.text-input,
-.textarea-input {
+.sga-file-input {
   width: 100%;
-  padding: 8px 12px;
-  background: var(--color-bg-surface);
-  border: 1px solid var(--color-border);
-  border-radius: 6px;
-  color: var(--color-text-main);
-  font-size: 0.85rem;
-  transition: border-color 0.15s ease;
-}
-
-.text-input:focus,
-.textarea-input:focus {
-  outline: none;
-  border-color: var(--color-primary);
-}
-
-.textarea-input {
-  resize: vertical;
-}
-
-.modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  margin-top: 10px;
-  padding-top: 14px;
-  border-top: 1px solid var(--color-border);
-}
-
-.btn-modal-cancel {
-  padding: 8px 16px;
+  padding: 0.45rem 0.65rem;
+  border: 1px dashed var(--color-border-strong, var(--color-border));
+  border-radius: var(--radius-md, 8px);
   background: var(--color-bg-subtle);
-  border: 1px solid var(--color-border);
-  border-radius: 6px;
   color: var(--color-text-main);
-  font-size: 0.85rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.sga-field-hint.is-selected {
+  color: var(--color-success-text);
   font-weight: 600;
-  cursor: pointer;
-  transition: background 0.15s ease;
-}
-
-.btn-modal-cancel:hover:not(:disabled) {
-  background: var(--color-bg-muted);
-}
-
-.btn-modal-save {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 18px;
-  background: var(--color-primary);
-  border: none;
-  border-radius: 6px;
-  color: var(--color-primary-text);
-  font-size: 0.85rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: opacity 0.15s ease;
-}
-
-.btn-modal-save:hover:not(:disabled) {
-  opacity: 0.92;
-}
-
-.btn-modal-save:disabled,
-.btn-modal-cancel:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
 }
 </style>

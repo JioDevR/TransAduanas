@@ -148,7 +148,7 @@ public class ExpedienteController {
             @PathVariable Integer id,
             @Valid @RequestBody ExpedienteRecojoExportacionDTO dto) {
         ExpedienteResponseDTO actualizado = expedienteService.solicitarRecojoExportacion(id, dto);
-        return ResponseEntity.ok(ApiResponseDTO.ok("Solicitud de recojo en planta enviada al módulo de Transporte y Flota", actualizado));
+        return ResponseEntity.ok(ApiResponseDTO.ok("Solicitud de recojo en planta registrada para transporte externo", actualizado));
     }
 
     @PostMapping("/{id}/confirmar-ingreso-origen")
@@ -202,7 +202,7 @@ public class ExpedienteController {
             @PathVariable Integer id,
             @Valid @RequestBody ExpedienteSolicitudTransporteDTO dto) {
         ExpedienteResponseDTO actualizado = expedienteService.solicitarTransporte(id, dto);
-        return ResponseEntity.ok(ApiResponseDTO.ok("Solicitud de despacho terrestre enviada a Flota y Transporte", actualizado));
+        return ResponseEntity.ok(ApiResponseDTO.ok("Solicitud de transporte externo registrada exitosamente", actualizado));
     }
 
     @PostMapping("/{id}/retiro-directo")

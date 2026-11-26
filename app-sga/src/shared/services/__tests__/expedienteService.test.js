@@ -5,7 +5,6 @@ import { expedienteService as aduanasService } from '@/features/aduanas/services
 import { expedienteService as almacenService } from '@/features/almacen/services/expedienteService'
 import { expedienteService as comercialService } from '@/features/comercial/services/expedienteService'
 import { expedienteService as finanzasService } from '@/features/finanzas/services/expedienteService'
-import { expedienteService as transporteService } from '@/features/transporte/services/expedienteService'
 
 vi.mock('@/core/api/apiClient', () => ({
   default: {
@@ -22,12 +21,11 @@ describe('expedienteService canonical & re-exports', () => {
     vi.clearAllMocks()
   })
 
-  it('re-exports reference the exact same instance across all 5 features', () => {
+  it('re-exports reference the exact same instance across all 4 features', () => {
     expect(aduanasService).toBe(expedienteService)
     expect(almacenService).toBe(expedienteService)
     expect(comercialService).toBe(expedienteService)
     expect(finanzasService).toBe(expedienteService)
-    expect(transporteService).toBe(expedienteService)
   })
 
   it('getExpedientes delegates to GET /expedientes with params', async () => {

@@ -148,6 +148,7 @@ const ROUTE_TITLES = {
   Cotizaciones: 'Mis Cotizaciones Logísticas',
   CotizacionDetalle: 'Detalle de Cotización',
   Expedientes: 'Expedientes & Tracking DAM',
+  ExpedienteTrackingDetalle: 'Tracking de Expediente',
   Pagos: 'Cobros y Pagos',
   RegistrarPago: 'Registrar Pago / Abono Bancario',
   SubsanarPago: 'Subsanar Abono Bancario'

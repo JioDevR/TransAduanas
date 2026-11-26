@@ -25,7 +25,6 @@ const roleConfig = {
   [ROLES.AGENTE_COMERCIAL]: { icon: 'pi pi-shopping-bag', severity: 'success' },
   [ROLES.SUPERVISOR_ADUANERO]: { icon: 'pi pi-verified', severity: 'info' },
   [ROLES.AGENTE_ADUANERO]: { icon: 'pi pi-compass', severity: 'info' },
-  [ROLES.SUPERVISOR_TRANSPORTE]: { icon: 'pi pi-truck', severity: 'warn' },
   [ROLES.CONTADOR]: { icon: 'pi pi-dollar', severity: 'success' }
 }
 

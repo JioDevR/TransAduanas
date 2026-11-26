@@ -1,7 +1,13 @@
 <template>
-  <SgaListShell v-model:viewMode="viewMode" :title="panelTitle">
+  <SgaListShell viewMode="canvas" :showViewToggle="false" :title="panelTitle">
     <template #header-right>
       <div class="sga-dash-meta">
+        <Tag
+          :value="mode === 'readonly' ? 'Solo Lectura · Canvas' : 'Operación de Hitos'"
+          :icon="mode === 'readonly' ? 'pi pi-eye' : 'pi pi-sliders-h'"
+          :severity="mode === 'readonly' ? 'secondary' : 'info'"
+          rounded
+        />
         <Tag
           :value="`${expedientes.length} expedientes`"
           severity="secondary"
@@ -18,14 +24,14 @@
           :key="q.value"
           type="button"
           role="tab"
-          :aria-selected="activeTab === q.value"
+          :aria-selected="phaseFilter === q.value"
           :label="q.label"
           :badge="String(q.count)"
           :badgeSeverity="q.badgeSeverity"
-          :severity="activeTab === q.value ? 'primary' : 'secondary'"
-          :outlined="activeTab !== q.value"
+          :severity="phaseFilter === q.value ? 'primary' : 'secondary'"
+          :outlined="phaseFilter !== q.value"
           size="small"
-          @click="$emit('select-tab', q.value)"
+          @click="$emit('update:phaseFilter', q.value)"
         />
       </div>
     </template>
@@ -109,63 +115,17 @@
     </template>
 
     <AgenteExpedientesCanvasGrid
-      v-if="viewMode === 'canvas'"
       :expedientes="expedientes"
       :loading="loading"
-      :active-tab="activeTab"
+      :mode="mode"
       @detalle="$emit('detalle', $event)"
-      @salida-origen="$emit('salida-origen', $event)"
-      @arribo-destino="$emit('arribo-destino', $event)"
-      @transito="$emit('transito', $event)"
-      @diligencia="$emit('diligencia', $event)"
-      @solicitar-transporte="$emit('solicitar-transporte', $event)"
-      @retiro-directo="$emit('retiro-directo', $event)"
-      @ingreso-almacen="$emit('ingreso-almacen', $event)"
-      @recojo-exportacion="$emit('recojo-exportacion', $event)"
-      @ingreso-origen="$emit('ingreso-origen', $event)"
-      @embarque="$emit('embarque', $event)"
-      @recepcion-exterior="$emit('recepcion-exterior', $event)"
-      @verificacion-origen="$emit('verificacion-origen', $event)"
-      @cuadrilla-rojo="$emit('cuadrilla-rojo', $event)"
-      @finalizar-rojo="$emit('finalizar-rojo', $event)"
-      @enviar-sunat="$emit('enviar-sunat', $event)"
-      @entregado-almacen-verde="$emit('entregado-almacen-verde', $event)"
-      @informe-conformidad="$emit('informe-conformidad', $event)"
-      @finalizar-expediente="$emit('finalizar-expediente', $event)"
-      @documentos="$emit('documentos', $event)"
-    />
-
-    <AgenteExpedientesTable
-      v-else
-      :expedientes="expedientes"
-      :loading="loading"
-      :active-tab="activeTab"
-      @detalle="$emit('detalle', $event)"
-      @salida-origen="$emit('salida-origen', $event)"
-      @arribo-destino="$emit('arribo-destino', $event)"
-      @transito="$emit('transito', $event)"
-      @diligencia="$emit('diligencia', $event)"
-      @solicitar-transporte="$emit('solicitar-transporte', $event)"
-      @retiro-directo="$emit('retiro-directo', $event)"
-      @ingreso-almacen="$emit('ingreso-almacen', $event)"
-      @recojo-exportacion="$emit('recojo-exportacion', $event)"
-      @ingreso-origen="$emit('ingreso-origen', $event)"
-      @embarque="$emit('embarque', $event)"
-      @recepcion-exterior="$emit('recepcion-exterior', $event)"
-      @verificacion-origen="$emit('verificacion-origen', $event)"
-      @cuadrilla-rojo="$emit('cuadrilla-rojo', $event)"
-      @finalizar-rojo="$emit('finalizar-rojo', $event)"
-      @enviar-sunat="$emit('enviar-sunat', $event)"
-      @entregado-almacen-verde="$emit('entregado-almacen-verde', $event)"
-      @informe-conformidad="$emit('informe-conformidad', $event)"
-      @finalizar-expediente="$emit('finalizar-expediente', $event)"
       @documentos="$emit('documentos', $event)"
     />
   </SgaListShell>
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 import Button from 'primevue/button'
 import IconField from 'primevue/iconfield'
 import InputIcon from 'primevue/inputicon'
@@ -174,15 +134,18 @@ import Select from 'primevue/select'
 import Tag from 'primevue/tag'
 import SgaListShell from '@/shared/components/SgaListShell.vue'
 import AgenteExpedientesCanvasGrid from './AgenteExpedientesCanvasGrid.vue'
-import AgenteExpedientesTable from './AgenteExpedientesTable.vue'
 
 const props = defineProps({
   expedientes: { type: Array, default: () => [] },
   kpiCounts: {
     type: Object,
-    default: () => ({ todos: 0, transito: 0, inspeccion: 0, levante: 0 })
+    default: () => ({ todos: 0, transito: 0, inspeccion: 0, levante: 0, cerrados: 0 })
   },
-  activeTab: { type: String, default: 'todos' },
+  mode: {
+    type: String,
+    default: 'readonly' // 'readonly' | 'manage'
+  },
+  phaseFilter: { type: String, default: 'todos' },
   searchQuery: { type: String, default: '' },
   filterRegimen: { type: String, default: '' },
   filterCanal: { type: String, default: '' },
@@ -195,7 +158,7 @@ const props = defineProps({
 })
 
 defineEmits([
-  'select-tab',
+  'update:phaseFilter',
   'update:searchQuery',
   'update:filterRegimen',
   'update:filterCanal',
@@ -204,37 +167,25 @@ defineEmits([
   'reset-filters',
   'refresh',
   'detalle',
-  'salida-origen',
-  'arribo-destino',
-  'transito',
-  'diligencia',
-  'solicitar-transporte',
-  'retiro-directo',
-  'ingreso-almacen',
-  'recojo-exportacion',
-  'ingreso-origen',
-  'embarque',
-  'recepcion-exterior',
-  'verificacion-origen',
-  'cuadrilla-rojo',
-  'finalizar-rojo',
-  'enviar-sunat',
-  'entregado-almacen-verde',
-  'informe-conformidad',
-  'finalizar-expediente',
   'documentos'
 ])
 
-const viewMode = ref('canvas')
+const panelTitle = computed(() =>
+  props.mode === 'manage' ? 'Seleccione un Expediente a Gestionar' : 'Vista General de Expedientes (Canvas)'
+)
 
-const panelTitle = computed(() => (viewMode.value === 'canvas' ? 'Vista Canvas' : 'Vista Tabla'))
-
-const phaseQueues = computed(() => [
-  { value: 'todos', label: 'Todos', count: props.kpiCounts.todos || 0, badgeSeverity: 'contrast' },
-  { value: 'transito', label: 'Tránsito / Arribo', count: props.kpiCounts.transito || 0, badgeSeverity: 'info' },
-  { value: 'inspeccion', label: 'Aforo SUNAT', count: props.kpiCounts.inspeccion || 0, badgeSeverity: 'warn' },
-  { value: 'levante', label: 'Levante & Despacho', count: props.kpiCounts.levante || 0, badgeSeverity: 'success' }
-])
+const phaseQueues = computed(() => {
+  const base = [
+    { value: 'todos', label: 'Todos', count: props.kpiCounts.todos || 0, badgeSeverity: 'contrast' },
+    { value: 'transito', label: 'Tránsito / Arribo', count: props.kpiCounts.transito || 0, badgeSeverity: 'info' },
+    { value: 'inspeccion', label: 'Aforo SUNAT', count: props.kpiCounts.inspeccion || 0, badgeSeverity: 'warn' },
+    { value: 'levante', label: 'Levante & Despacho', count: props.kpiCounts.levante || 0, badgeSeverity: 'success' }
+  ]
+  if (props.mode === 'readonly') {
+    base.push({ value: 'cerrados', label: 'Cerrados', count: props.kpiCounts.cerrados || 0, badgeSeverity: 'secondary' })
+  }
+  return base
+})
 
 const regimenOptions = [
   { label: 'Todos los Regímenes', value: '' },

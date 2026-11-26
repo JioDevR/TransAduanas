@@ -1,122 +1,151 @@
 <template>
-  <BaseModal
+  <Dialog
     :visible="visible"
-    title="Solicitar Despacho Terrestre a Destino"
-    :subtitle="`Expediente: ${expediente?.codigoExpediente || ''} — Cliente: ${expediente?.clienteRazonSocial || ''}`"
-    icon="pi pi-truck"
-    max-width="600px"
-    :error-message="errorMessage"
-    :busy="loading"
-    @close="handleClose"
+    modal
+    :closable="!loading"
+    :dismissableMask="!loading"
+    :style="{ width: getDialogWidth('660px'), maxWidth: '95vw' }"
+    header="Solicitar Transporte y Despacho a Destino"
+    @update:visible="(val) => { if (!val && !loading) handleClose() }"
   >
-    <form @submit.prevent="handleSubmit" class="form-body">
-      <!-- Info Banner -->
-      <div class="transporte-info-banner">
-        <i class="pi pi-send text-lg"></i>
-        <div class="banner-texts">
-          <strong>Handoff Operativo a Supervisor de Transporte y Flota</strong>
-          <p>
-            Al confirmar, se generará una orden en estado <strong>PENDIENTE DE ASIGNACIÓN</strong> en la bandeja de Transporte y Flota para la programación de camión, plataforma y chofer autorizado.
+    <form id="solicitud-transporte-form" class="sga-dialog-body" @submit.prevent="handleSubmit">
+      <div v-if="expediente" class="sga-dialog-context">
+        <div class="sga-dialog-context-meta">
+          <span class="sga-code-cell font-mono">{{ expediente.codigoExpediente }}</span>
+          <span class="sga-dialog-context-sub">
+            {{ expediente.clienteRazonSocial || expediente.cliente?.razonSocial || 'Cliente asignado' }}
+          </span>
+        </div>
+        <Tag
+          v-if="expediente.tipoCarga"
+          :value="expediente.tipoCarga"
+          severity="info"
+          class="sga-mini-tag"
+          rounded
+        />
+      </div>
+
+      <div class="sga-banner is-success">
+        <i class="pi pi-truck"></i>
+        <div>
+          <strong>Registro de Solicitud de Transporte Externo</strong>
+          <p class="transporte-banner-desc">
+            Complete los datos de origen, destino y programación. La asignación de unidad y chofer se gestiona externamente fuera del SGA.
           </p>
         </div>
       </div>
 
-      <div class="transporte-fields-grid">
-        <div class="field-item full-width">
-          <label for="dir-partida">Punto de Partida (Terminal / Depósito) *</label>
+      <div v-if="errorMessage" class="sga-banner is-danger" role="alert">
+        <i class="pi pi-exclamation-triangle"></i>
+        <span>{{ errorMessage }}</span>
+      </div>
+
+      <div class="sga-grid-2">
+        <div class="sga-form-field full-span">
+          <label for="transp-partida" class="sga-form-label">Punto de Partida (Terminal / Puerto / Almacén) *</label>
           <InputText
-            id="dir-partida"
+            id="transp-partida"
             v-model.trim="form.direccionPartida"
+            placeholder="Ej. APM Terminals Callao - Puerta 4 / Depósito Neptunia"
             required
-            placeholder="Ej. DP World Callao - Terminal Sur / Almacén Ransa"
+            size="small"
             fluid
           />
         </div>
 
-        <div class="field-item">
-          <label for="dir-llegada">Dirección de Destino / Entrega *</label>
+        <div class="sga-form-field">
+          <label for="transp-llegada" class="sga-form-label">Dirección de Llegada (Planta / Almacén Cliente) *</label>
           <InputText
-            id="dir-llegada"
+            id="transp-llegada"
             v-model.trim="form.direccionLlegada"
+            placeholder="Ej. Av. Argentina 2850, Zona Industrial"
             required
-            placeholder="Ej. Av. Los Industriales 450, Almacén Central"
+            size="small"
             fluid
           />
         </div>
 
-        <div class="field-item">
-          <label for="distrito-llegada">Distrito de Llegada *</label>
+        <div class="sga-form-field">
+          <label for="transp-distrito" class="sga-form-label">Distrito de Llegada *</label>
           <InputText
-            id="distrito-llegada"
+            id="transp-distrito"
             v-model.trim="form.distritoLlegada"
+            placeholder="Ej. Callao / Cercado de Lima / Lurín"
             required
-            placeholder="Ej. Ate / Callao / San Luis"
+            size="small"
             fluid
           />
         </div>
 
-        <div class="field-item">
-          <label for="contacto-recep">Contacto de Recepción</label>
+        <div class="sga-form-field">
+          <label for="transp-contacto" class="sga-form-label">Contacto de Recepción en Destino</label>
           <InputText
-            id="contacto-recep"
+            id="transp-contacto"
             v-model.trim="form.contactoRecepcion"
-            placeholder="Ej. Juan Pérez - Jefe Almacén (999-888-777)"
+            placeholder="Ej. Ing. Carlos Rojas · 987 654 321"
+            size="small"
             fluid
           />
         </div>
 
-        <div class="field-item">
-          <label for="fecha-prog">Fecha Programada de Traslado *</label>
-          <input
-            id="fecha-prog"
+        <div class="sga-form-field">
+          <label for="transp-fecha" class="sga-form-label">Fecha y Hora Programada *</label>
+          <InputText
+            id="transp-fecha"
             v-model="form.fechaProgramada"
             type="datetime-local"
-            class="text-input"
             required
+            size="small"
+            fluid
           />
         </div>
 
-        <div class="field-item full-width">
-          <label for="obs-trans">Instrucciones Especiales de Descarga</label>
+        <div class="sga-form-field full-span">
+          <label for="transp-obs" class="sga-form-label">Instrucciones / Requisitos de Unidad</label>
           <Textarea
-            id="obs-trans"
+            id="transp-obs"
             v-model.trim="form.observaciones"
             rows="2"
             autoResize
-            placeholder="Requiere rampa hidráulica, montacargas en destino o ventana horaria restringida..."
+            placeholder="Ej. Requiere plataforma de 40 pies, chofer con SCTR y EPP completo..."
+            size="small"
             fluid
           />
         </div>
       </div>
-
-      <div class="modal-actions">
-        <Button
-          type="button"
-          label="Cancelar"
-          severity="secondary"
-          outlined
-          @click="handleClose"
-          :disabled="loading"
-        />
-        <Button
-          type="submit"
-          label="Enviar Solicitud a Transporte"
-          icon="pi pi-send"
-          :loading="loading"
-        />
-      </div>
     </form>
-  </BaseModal>
+
+    <template #footer>
+      <Button
+        type="button"
+        label="Cancelar"
+        severity="secondary"
+        outlined
+        size="small"
+        :disabled="loading"
+        @click="handleClose"
+      />
+      <Button
+        type="submit"
+        form="solicitud-transporte-form"
+        label="Registrar Solicitud de Transporte"
+        icon="pi pi-send"
+        size="small"
+        :loading="loading"
+      />
+    </template>
+  </Dialog>
 </template>
 
 <script setup>
 import { ref, watch } from 'vue'
 import Button from 'primevue/button'
+import Dialog from 'primevue/dialog'
 import InputText from 'primevue/inputtext'
+import Tag from 'primevue/tag'
 import Textarea from 'primevue/textarea'
-import BaseModal from '@/shared/components/BaseModal.vue'
+import { useResponsive } from '@/shared/composables/useResponsive'
 import { expedienteService } from '../services/expedienteService'
-import { getNowDateTimeInput } from '@/shared/utils/dateUtils'
 
 const props = defineProps({
   visible: { type: Boolean, default: false },
@@ -124,36 +153,39 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['close', 'saved'])
+const { getDialogWidth } = useResponsive()
 
 const loading = ref(false)
 const errorMessage = ref('')
 
+const getTomorrowMorningInput = () => {
+  const tomorrow = new Date()
+  tomorrow.setDate(tomorrow.getDate() + 1)
+  const pad = (n) => String(n).padStart(2, '0')
+  return `${tomorrow.getFullYear()}-${pad(tomorrow.getMonth() + 1)}-${pad(tomorrow.getDate())}T08:00`
+}
+
 const form = ref({
-  direccionPartida: 'Terminal Portuario DP World / APM Terminals Callao',
+  direccionPartida: '',
   direccionLlegada: '',
   distritoLlegada: '',
   contactoRecepcion: '',
-  fechaProgramada: '',
+  fechaProgramada: getTomorrowMorningInput(),
   observaciones: ''
 })
 
 watch(
-  () => props.expediente,
-  (exp) => {
-    if (exp) {
-      // Formatear mañana a las 08:00 AM como sugerencia por defecto
-      const tomorrow = new Date()
-      tomorrow.setDate(tomorrow.getDate() + 1)
-      tomorrow.setHours(8, 0, 0, 0)
-      const localISOTime = getNowDateTimeInput(tomorrow)
-
+  () => [props.visible, props.expediente],
+  ([vis, exp]) => {
+    if (vis && exp) {
+      errorMessage.value = ''
       form.value = {
-        direccionPartida: 'Terminal Portuario DP World / APM Terminals Callao',
-        direccionLlegada: exp.clienteDireccion || 'Almacén del Cliente',
-        distritoLlegada: exp.clienteDistrito || 'Callao',
-        contactoRecepcion: exp.contactoExteriorNombre || exp.clienteRazonSocial || '',
-        fechaProgramada: localISOTime,
-        observaciones: `Carga: Contenedor ${exp.numeroContenedor || 'FCL'} / Precinto: ${exp.precintoAduanero || 'S/N'}`
+        direccionPartida: exp.terminalOrigen || exp.depositoTemporal || '',
+        direccionLlegada: exp.direccionEntrega || exp.clienteDireccion || '',
+        distritoLlegada: exp.distritoEntrega || '',
+        contactoRecepcion: '',
+        fechaProgramada: getTomorrowMorningInput(),
+        observaciones: ''
       }
     }
   },
@@ -167,16 +199,22 @@ const handleClose = () => {
 
 const handleSubmit = async () => {
   if (!props.expediente?.idExpediente) return
+  if (!form.value.direccionPartida || !form.value.direccionLlegada || !form.value.distritoLlegada || !form.value.fechaProgramada) {
+    errorMessage.value = 'Complete los campos obligatorios de partida, llegada, distrito y fecha programada.'
+    return
+  }
+
   loading.value = true
   errorMessage.value = ''
 
   try {
+    const fechaRaw = form.value.fechaProgramada
     const payload = {
       direccionPartida: form.value.direccionPartida,
       direccionLlegada: form.value.direccionLlegada,
       distritoLlegada: form.value.distritoLlegada,
       contactoRecepcion: form.value.contactoRecepcion || null,
-      fechaProgramada: `${form.value.fechaProgramada}:00`,
+      fechaProgramada: fechaRaw.length === 16 ? `${fechaRaw}:00` : fechaRaw,
       observaciones: form.value.observaciones || null
     }
 
@@ -184,7 +222,7 @@ const handleSubmit = async () => {
     emit('saved', updated)
     handleClose()
   } catch (err) {
-    errorMessage.value = err.response?.data?.message || 'Error al enviar solicitud de despacho a Transporte.'
+    errorMessage.value = err.response?.data?.message || 'Error al solicitar el transporte.'
   } finally {
     loading.value = false
   }
@@ -192,86 +230,13 @@ const handleSubmit = async () => {
 </script>
 
 <style scoped>
-.form-body {
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-  padding: 0.5rem 0;
+.transporte-banner-desc {
+  margin: 0.2rem 0 0;
+  font-size: 0.8rem;
+  line-height: 1.4;
 }
 
-.transporte-info-banner {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.85rem;
-  padding: 0.85rem 1rem;
-  background: var(--color-success-bg);
-  border: 1px solid var(--color-success-border);
-  color: var(--color-success-text);
-  border-radius: 6px;
-}
-
-.banner-texts strong {
-  display: block;
-  font-size: 0.85rem;
-  margin-bottom: 0.2rem;
-}
-
-.banner-texts p {
-  margin: 0;
-  font-size: 0.775rem;
-  opacity: 0.9;
-  line-height: 1.35;
-}
-
-.transporte-fields-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 1rem;
-}
-
-.field-item {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-}
-
-.field-item.full-width {
+.full-span {
   grid-column: 1 / -1;
-}
-
-.field-item label {
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: var(--color-text-main);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.text-input,
-.textarea-input {
-  width: 100%;
-  padding: 0.6rem 0.85rem;
-  border: 1px solid var(--color-border);
-  border-radius: 4px;
-  background: var(--color-bg-subtle);
-  color: var(--color-text-main);
-  font-size: 0.875rem;
-  transition: all 0.2s ease;
-}
-
-.text-input:focus,
-.textarea-input:focus {
-  outline: none;
-  border-color: var(--color-primary);
-  background: var(--color-bg-surface);
-  box-shadow: 0 0 0 2px rgba(53, 47, 42, 0.15);
-}
-
-.modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.75rem;
-  padding-top: 1rem;
-  border-top: 1px solid var(--color-border-subtle);
 }
 </style>

@@ -49,10 +49,16 @@ public class CotizacionServiceImpl implements ICotizacionService {
     private final NotificacionClienteRepository notificacionClienteRepository;
     private final PasswordEncoder passwordEncoder;
     private IAuditoriaService auditoriaService;
+    private CatalogoResolucionService catalogoResolucionService;
 
     @Autowired(required = false)
     public void setAuditoriaService(IAuditoriaService auditoriaService) {
         this.auditoriaService = auditoriaService;
+    }
+
+    @Autowired(required = false)
+    public void setCatalogoResolucionService(CatalogoResolucionService catalogoResolucionService) {
+        this.catalogoResolucionService = catalogoResolucionService;
     }
 
     private void auditar(String modulo, String accion, Integer idCot, String detalle) {
@@ -188,6 +194,9 @@ public class CotizacionServiceImpl implements ICotizacionService {
                 .build();
 
         calcularValoresEconomicos(cotizacion, dto);
+        if (catalogoResolucionService != null) {
+            catalogoResolucionService.enriquecerCotizacion(cotizacion);
+        }
 
         Cotizacion guardada = cotizacionRepository.save(cotizacion);
         if (guardada.getEstado() == EstadoCotizacion.APROBADA) {
@@ -281,6 +290,9 @@ public class CotizacionServiceImpl implements ICotizacionService {
         }
 
         calcularValoresEconomicos(cotizacion, dto);
+        if (catalogoResolucionService != null) {
+            catalogoResolucionService.enriquecerCotizacion(cotizacion);
+        }
 
         Cotizacion guardada = cotizacionRepository.save(cotizacion);
         if (guardada.getEstado() == EstadoCotizacion.APROBADA) {

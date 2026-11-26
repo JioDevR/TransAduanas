@@ -566,7 +566,6 @@ const getRoleDescription = (roleName) => {
     [ROLES.AGENTE_COMERCIAL]: 'Cotizaciones comerciales, prospectos y directorio de clientes.',
     [ROLES.SUPERVISOR_ADUANERO]: 'Aforo aduanero, liquidación tributaria y revisión técnica.',
     [ROLES.AGENTE_ADUANERO]: 'Gestión aduanera, control de almacén, bultos y despachos.',
-    [ROLES.SUPERVISOR_TRANSPORTE]: 'Despacho terrestre, guías de remisión y control de flota de carga.',
     [ROLES.CONTADOR]: 'Cobranza, facturación, cuentas por pagar y reportes contables.'
   }
   return map[roleName] || 'Operador especializado del sistema aduanero.'

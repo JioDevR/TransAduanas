@@ -1,273 +1,427 @@
-# Guía de Instalación y Despliegue — Sistema de Gestión Aduanera - Transaduanas
+# Guía de instalación — TransAduanas (SGA)
 
-**Sistema de Gestión Aduanera - Transaduanas**
+Esta guía tiene dos modalidades:
 
-> [!IMPORTANT]
-> **Alcance de este documento:**  
-> Esta guía está dividida en dos modalidades de despliegue:
-> 1. **[Instalación Local (Entorno de Desarrollo)](#1-instalación-local-entorno-de-desarrollo):** Documentación completa con todos los pasos necesarios para levantar y probar el proyecto de forma nativa en tu máquina local.
-> 2. **[Instalación con Docker](#2-instalación-con-docker):** Sección reservada para el despliegue contenerizado completo (en proceso de implementación).
+1. **[Instalación para desarrollo](#1-instalación-para-desarrollo):** levanta cada servicio de forma nativa en tu máquina.
+2. **[Instalación con Docker Compose](#2-instalación-con-docker-compose):** despliega los cinco servicios en contenedores, sin instalar Java, Node.js ni MySQL.
+
+## Índice
+
+- [1. Instalación para desarrollo](#1-instalación-para-desarrollo)
+  - [1.1 Arquitectura en ejecución](#11-arquitectura-en-ejecución)
+  - [1.2 Requisitos previos](#12-requisitos-previos)
+  - [1.3 Clonar el repositorio](#13-clonar-el-repositorio)
+  - [1.4 Paso 1: Base de datos](#14-paso-1-base-de-datos)
+  - [1.5 Paso 2: Backend](#15-paso-2-backend)
+  - [1.6 Paso 3: Frontend interno (SGA)](#16-paso-3-frontend-interno-sga)
+  - [1.7 Paso 4: Portal B2B](#17-paso-4-portal-b2b)
+  - [1.8 Paso 5: Landing (opcional)](#18-paso-5-landing-opcional)
+  - [1.9 Servicios y puertos](#19-servicios-y-puertos)
+  - [1.10 Credenciales de prueba](#110-credenciales-de-prueba)
+  - [1.11 Pruebas automatizadas](#111-pruebas-automatizadas)
+  - [1.12 Solución de problemas](#112-solución-de-problemas)
+- [2. Instalación con Docker Compose](#2-instalación-con-docker-compose)
+  - [2.1 Arquitectura en contenedores](#21-arquitectura-en-contenedores)
+  - [2.2 Requisitos previos](#22-requisitos-previos)
+  - [2.3 Paso 1: Preparar los archivos de Docker](#23-paso-1-preparar-los-archivos-de-docker)
+  - [2.4 Paso 2: Configurar el `.env`](#24-paso-2-configurar-el-env)
+  - [2.5 Paso 3: Construir y levantar](#25-paso-3-construir-y-levantar)
+  - [2.6 Paso 4: Verificar el despliegue](#26-paso-4-verificar-el-despliegue)
+  - [2.7 Credenciales de prueba](#27-credenciales-de-prueba)
+  - [2.8 Operación diaria](#28-operación-diaria)
+  - [2.9 Solución de problemas](#29-solución-de-problemas)
 
 ---
 
-## Índice General
+# 1. Instalación para desarrollo
 
-- [1. Instalación Local (Entorno de Desarrollo)](#1-instalación-local-entorno-de-desarrollo)
-  - [1.1 Arquitectura en Ejecución Local](#11-arquitectura-en-ejecución-local)
-  - [1.2 Requisitos Previos del Sistema](#12-requisitos-previos-del-sistema)
-  - [1.3 Paso 1: Configuración e Inicialización de la Base de Datos MySQL Local](#13-paso-1-configuración-e-inicialización-de-la-base-de-datos-mysql-local)
-  - [1.4 Paso 2: Configuración y Ejecución del Backend (Spring Boot)](#14-paso-2-configuración-y-ejecución-del-backend-spring-boot)
-  - [1.5 Paso 3: Instalación y Ejecución del Frontend Interno (SGA Operativo)](#15-paso-3-instalación-y-ejecución-del-frontend-interno-sga-operativo)
-  - [1.6 Paso 4: Instalación y Ejecución del Portal del Cliente B2B](#16-paso-4-instalación-y-ejecución-del-portal-del-cliente-b2b)
-  - [1.7 Matriz de Puertos y Servicios Activos](#17-matriz-de-puertos-y-servicios-activos)
-  - [1.8 Credenciales de Prueba para Evaluar el Proyecto (`seed.sql`)](#18-credenciales-de-prueba-para-evaluar-el-proyecto-seedsql)
-  - [1.9 Ejecución de Pruebas Automatizadas (Testing)](#19-ejecución-de-pruebas-automatizadas-testing)
-  - [1.10 Solución de Problemas Frecuentes (Troubleshooting)](#110-solución-de-problemas-frecuentes-troubleshooting)
-- [2. Instalación con Docker](#2-instalación-con-docker)
+## 1.1 Arquitectura en ejecución
 
----
-
-# 1. Instalación Local (Entorno de Desarrollo)
-
-Esta modalidad permite levantar y probar todos los módulos del **Sistema de Gestión Aduanera - Transaduanas** directamente sobre tu estación de trabajo para desarrollo, evaluación o demostración funcional.
-
-### 1.1 Arquitectura en Ejecución Local
-
-En modo local, el ecosistema se compone de **4 servicios** ejecutándose en `localhost`:
-
+```text
+┌──────────────┐   ┌──────────────┐   ┌──────────────┐
+│ app-landing  │   │   app-sga    │   │   app-b2b    │
+│    :5173     │   │    :5180     │   │    :5174     │
+└──────────────┘   └──────┬───────┘   └──────┬───────┘
+                          │  proxy /api → :8085
+                          └─────────┬────────┘
+                                    ▼
+                      ┌───────────────────────────┐
+                      │ backend-sga (Spring Boot) │
+                      │          :8085            │
+                      └─────────────┬─────────────┘
+                                    │ JDBC
+                                    ▼
+                      ┌───────────────────────────┐
+                      │  MySQL 8.4 · BD `SGAdb`   │
+                      │          :3306            │
+                      └───────────────────────────┘
 ```
-┌─────────────────────────────────────────┐     ┌─────────────────────────────────────────┐
-│     FRONTEND INTERNO (SGA Operativo)    │     │         PORTAL DEL CLIENTE B2B          │
-│         Vue 3 + Vite 8 (HMR)            │     │         Vue 3 + Vite 6 (HMR)            │
-│          http://localhost:5180          │     │          http://localhost:5174          │
-└────────────────────┬────────────────────┘     └────────────────────┬────────────────────┘
-                     │  Proxy Vite (/api -> :8085)                   │  Proxy Vite (/api -> :8085)
-                     └──────────────────────┬────────────────────────┘
-                                            ▼
-                     ┌───────────────────────────────────────────────┐
-                     │            BACKEND API REST (SGA)             │
-                     │         Spring Boot 4.1.2 / Java 21           │
-                     │             http://localhost:8085             │
-                     └──────────────────────┬────────────────────────┘
-                                            │  JDBC (Puerto 3306)
-                                            ▼
-                     ┌───────────────────────────────────────────────┐
-                     │           BASE DE DATOS RELACIONAL            │
-                     │            MySQL 8.4 LTS (SGAdb)              │
-                     │              localhost:3306                   │
-                     └───────────────────────────────────────────────┘
-```
 
----
+## 1.2 Requisitos previos
 
-### 1.2 Requisitos Previos del Sistema
+| Herramienta | Versión | Verificación |
+| :-- | :-: | :-- |
+| Git | cualquiera | `git --version` |
+| Java JDK | 21 | `java -version` |
+| Node.js | 20 LTS o superior | `node -v` |
+| npm | 9 o superior | `npm -v` |
+| MySQL Server | 8.0 / 8.4 | `mysql --version` |
 
-Antes de comenzar, verifica que tengas instaladas las siguientes herramientas en tu sistema operativo:
+> [!NOTE]
+> No necesitas instalar Maven: el backend incluye el wrapper `mvnw` (`mvnw.cmd` en Windows).
 
-| Herramienta | Versión Requerida | Comando de Verificación | Propósito |
-| :--- | :---: | :--- | :--- |
-| **Java JDK** | **21 LTS** | `java -version` | Compilación y ejecución del backend Spring Boot 4.1.2. |
-| **Apache Maven** | **3.9+** | `mvn -version` | Gestión de dependencias Java, compilación de Lombok y arranque del servidor. |
-| **Node.js** | **18.x / 20.x LTS+** | `node -v` | Entorno de ejecución para los servidores de desarrollo Vite. |
-| **npm** | **9.x+** | `npm -v` | Gestor de paquetes para `app-sga/` y `app-portal-cliente/`. |
-| **MySQL Server** | **8.0 / 8.4 LTS** | `mysql --version` | Motor de base de datos relacional InnoDB activo en el puerto `3306`. |
-
----
-
-### 1.3 Paso 1: Configuración e Inicialización de la Base de Datos MySQL Local
-
-El sistema utiliza una base de datos llamada `SGAdb` con juego de caracteres `utf8mb4` (`utf8mb4_unicode_ci`). Los scripts SQL oficiales se encuentran en la carpeta [`db/`](../db):
-
-- [`db/schema.sql`](../db/schema.sql): Crea la base de datos `SGAdb` y las **17 tablas relacionales** con sus llaves foráneas e índices.
-- [`db/seed.sql`](../db/seed.sql): Inserta los datos iniciales completos para probar el proyecto (6 sedes, 80 puertos/aeropuertos, 17 tipos de carga, 52 subpartidas arancelarias NANDINA, 61 usuarios internos en los 7 roles y 80 empresas clientes con cuentas del Portal B2B).
-
-**Ejecuta los siguientes comandos desde la raíz del repositorio:**
+## 1.3 Clonar el repositorio
 
 ```bash
-# 1. Crear la base de datos SGAdb y la estructura de 17 tablas
-mysql -u root -p < db/schema.sql
+git clone <URL-del-repositorio> TransAduanas
+cd TransAduanas
+```
 
-# 2. Poblar la base de datos con los catálogos maestros, usuarios y clientes de prueba
+## 1.4 Paso 1: Base de datos
+
+Los scripts están en [`db/`](../db):
+
+- [`schema.sql`](../db/schema.sql): crea la base `SGAdb` (`utf8mb4`) con todas las tablas.
+- [`seed.sql`](../db/seed.sql): carga sedes, catálogos, usuarios internos, clientes y cuentas del Portal B2B de prueba.
+
+Desde la raíz del repositorio, ejecútalos en este orden:
+
+```bash
+mysql -u root -p < db/schema.sql
 mysql -u root -p < db/seed.sql
 ```
 
 > [!TIP]
-> También puedes abrir [`db/schema.sql`](../db/schema.sql) y [`db/seed.sql`](../db/seed.sql) desde **MySQL Workbench**, **DBeaver** o **DataGrip** y ejecutarlos en ese mismo orden.
+> También puedes ejecutar ambos archivos, en el mismo orden, desde MySQL Workbench, DBeaver o DataGrip.
 
----
+> [!WARNING]
+> `schema.sql` crea la base desde cero. Si ya existe `SGAdb` con datos que quieres conservar, haz un respaldo antes de ejecutarlo.
 
-### 1.4 Paso 2: Configuración y Ejecución del Backend (Spring Boot)
+## 1.5 Paso 2: Backend
 
-#### A. Configurar Credenciales Locales (`application-local.properties`)
+### A. Credenciales locales
 
-Para no exponer tu usuario y contraseña de MySQL en Git, el archivo [`backend/src/main/resources/application.properties`](../backend/src/main/resources/application.properties) importa automáticamente el archivo `backend/application-local.properties` (ignorado en `.gitignore`).
-
-1. Ingresa al directorio `backend/` y crea tu archivo local a partir de la plantilla [`backend/application-local.properties.example`](../backend/application-local.properties.example):
-
-   ```bash
-   cd backend
-   cp application-local.properties.example application-local.properties
-   ```
-
-2. Abre `backend/application-local.properties` y coloca el usuario y contraseña de tu servidor MySQL local:
-
-   ```properties
-   # Credenciales de conexión a MySQL Local
-   spring.datasource.url=jdbc:mysql://localhost:3306/SGAdb?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
-   spring.datasource.username=root
-   spring.datasource.password=tu_contraseña_mysql_local
-
-   # Puerto de ejecución del backend (por defecto: 8085)
-   server.port=8085
-   ```
-
-#### B. Variables de Entorno Opcionales
-
-Si prefieres usar variables de entorno en lugar de editar el archivo de propiedades, el backend admite las siguientes:
-
-| Variable de Entorno | Valor por Defecto | Descripción |
-| :--- | :--- | :--- |
-| `SERVER_PORT` | `8085` | Puerto HTTP del servidor Spring Boot. |
-| `DB_URL` | `jdbc:mysql://localhost:3306/SGAdb?...` | URL JDBC de conexión a MySQL. |
-| `DB_USERNAME` | `root` | Usuario de MySQL. |
-| `DB_PASSWORD` | *(vacío)* | Contraseña de MySQL. |
-| `JPA_DDL_AUTO` | `update` | Validación/actualización de esquema con Hibernate. |
-| `JPA_SHOW_SQL` | `true` | Muestra las consultas SQL en consola para depuración. |
-| `CORS_ALLOWED_ORIGINS` | `http://localhost:5173,http://localhost:5180,http://localhost:5174` | Orígenes locales permitidos por CORS. |
-| `STORAGE_DIR` | `./uploads/documentos` | Carpeta local donde se guardan los archivos subidos al sistema. |
-
-#### C. Compilar e Iniciar el Backend
-
-Desde la carpeta `backend/`, ejecuta:
+El backend importa automáticamente `backend-sga/application-local.properties`, que está ignorado por Git. Créalo a partir de la plantilla:
 
 ```bash
-# 1. Compilar el proyecto y descargar dependencias Maven
-mvn clean compile
-
-# 2. Levantar el servidor Spring Boot en el puerto 8085
-mvn spring-boot:run
+cd backend-sga
+cp application-local.properties.example application-local.properties
 ```
 
-- **URL Base de la API:** `http://localhost:8085/api/v1`
-- **Verificación de Salud (Health Check):** `http://localhost:8085/api/v1/health`
+En Windows (PowerShell): `Copy-Item application-local.properties.example application-local.properties`.
 
----
+Edita el archivo con tus credenciales de MySQL:
 
-### 1.5 Paso 3: Instalación y Ejecución del Frontend Interno (SGA Operativo)
+```properties
+spring.datasource.url=jdbc:mysql://localhost:3306/SGAdb?useSSL=false&serverTimezone=America/Lima&allowPublicKeyRetrieval=true
+spring.datasource.username=root
+spring.datasource.password=tu_contraseña_mysql
+```
 
-El **Frontend Interno** ([`app-sga/`](../app-sga)) es la aplicación web principal donde operan los **7 roles institucionales**. Corre en el puerto `5180` y redirige automáticamente las llamadas `/api` hacia `http://localhost:8085`.
+### B. Variables de entorno (alternativa)
 
-Abre una **nueva terminal** desde la raíz del proyecto y ejecuta:
+Puedes usar variables de entorno en lugar del archivo anterior:
+
+| Variable | Valor por defecto | Descripción |
+| :-- | :-- | :-- |
+| `SERVER_PORT` | `8085` | Puerto HTTP del backend |
+| `DB_URL` | `jdbc:mysql://localhost:3306/SGAdb?...` | URL JDBC |
+| `DB_USERNAME` | `root` | Usuario de MySQL |
+| `DB_PASSWORD` | *(vacío)* | Contraseña de MySQL |
+| `JPA_DDL_AUTO` | `update` | Modo `ddl-auto` de Hibernate |
+| `JPA_SHOW_SQL` | `true` | Muestra el SQL en consola |
+| `JWT_SECRET` | *(valor de desarrollo)* | Clave de firma de los JWT |
+| `JWT_EXPIRATION_MS` | `86400000` | Vigencia del token (24 h) |
+| `CORS_ALLOWED_ORIGINS` | `http://localhost:5173,http://localhost:5180,http://localhost:5174` | Orígenes permitidos por CORS |
+| `STORAGE_DIR` | `./uploads/documentos` | Carpeta de archivos subidos |
+
+### C. Iniciar el backend
+
+Desde `backend-sga/`:
 
 ```bash
-# 1. Ingresar al directorio del frontend interno
+./mvnw spring-boot:run          # Linux / macOS
+.\mvnw.cmd spring-boot:run      # Windows
+```
+
+- API base: `http://localhost:8085/api/v1`
+- Health check: `http://localhost:8085/api/v1/health`
+
+Deja esta terminal abierta.
+
+## 1.6 Paso 3: Frontend interno (SGA)
+
+En una **nueva terminal**, desde la raíz del repositorio:
+
+```bash
 cd app-sga
-
-# 2. Instalar dependencias de Node.js
 npm install
-
-# 3. Iniciar el servidor de desarrollo Vite
 npm run dev
 ```
 
-- **URL de Acceso al Sistema Interno:** `http://localhost:5180`
+Acceso: `http://localhost:5180`. Vite redirige `/api` a `http://localhost:8085`.
 
----
+## 1.7 Paso 4: Portal B2B
 
-### 1.6 Paso 4: Instalación y Ejecución del Portal del Cliente B2B
-
-El **Portal del Cliente B2B** ([`app-portal-cliente/`](../app-portal-cliente)) es la plataforma externa donde los clientes corporativos (importadores y exportadores) consultan el tracking de sus expedientes, revisan cotizaciones, registran pagos y descargan su documentación. Corre en el puerto `5174`.
-
-Abre una **tercera terminal** desde la raíz del proyecto y ejecuta:
+En otra terminal, desde la raíz del repositorio:
 
 ```bash
-# 1. Ingresar al directorio del portal de clientes
-cd app-portal-cliente
-
-# 2. Instalar dependencias de Node.js
+cd app-b2b
 npm install
-
-# 3. Iniciar el servidor de desarrollo Vite
 npm run dev
 ```
 
-- **URL de Acceso al Portal del Cliente B2B:** `http://localhost:5174`
+Acceso: `http://localhost:5174`.
 
----
+## 1.8 Paso 5: Landing (opcional)
 
-### 1.7 Matriz de Puertos y Servicios Activos
-
-Una vez completados los 4 pasos anteriores, tendrás todo el ecosistema activo en tu entorno local:
-
-| Servicio | Carpeta | Tecnología | Puerto | URL Local |
-| :--- | :--- | :--- | :---: | :--- |
-| **1. Base de Datos (`SGAdb`)** | [`db/`](../db) | MySQL 8.4 InnoDB | `3306` | `jdbc:mysql://localhost:3306/SGAdb` |
-| **2. Backend API REST** | [`backend/`](../backend) | Spring Boot 4.1.2 / Java 21 | `8085` | `http://localhost:8085/api/v1/health` |
-| **3. Frontend Interno (SGA)** | [`app-sga/`](../app-sga) | Vue 3 + Vite 8 + PrimeVue | `5180` | `http://localhost:5180` |
-| **4. Portal del Cliente B2B** | [`app-portal-cliente/`](../app-portal-cliente) | Vue 3 + Vite 6 + PrimeVue | `5174` | `http://localhost:5174` |
-
----
-
-### 1.8 Credenciales de Prueba para Evaluar el Proyecto (`seed.sql`)
-
-Para probar el flujo completo del proyecto de extremo a extremo, utiliza las siguientes cuentas preconfiguradas:
-
-#### A. Usuarios Internos por Rol Institucional (`http://localhost:5180`)
-**Contraseña única para todos los usuarios internos:** **`Password123!`**
-
-| Rol Institucional | Usuario Principal | Otros Usuarios Disponibles (`seed.sql`) | Ruta de Inicio por Defecto |
-| :--- | :---: | :--- | :--- |
-| **`ADMINISTRADOR_TI`** | `admin` | — | `/administracion-ti/dashboard` |
-| **`GERENTE_GENERAL`** | `gerente` | — | `/gerencia-general/dashboard` |
-| **`AGENTE_COMERCIAL`** | `comercial` | `dcastillo`, `nvalverde`, `mrodriguez` | `/recepcion-comercial` |
-| **`SUPERVISOR_ADUANERO`** | `supervisor` | `rcabrera`, `apena`, `dmiranda` | `/gestion-aduanera` |
-| **`AGENTE_ADUANERO`** | `agente` | `fbalbuena`, `lmejia`, `ccordova` | `/agente-aduanero` |
-| **`SUPERVISOR_TRANSPORTE`** | `transporte` | `ebravor`, `wgalarza`, `osanchez` | `/transporte-flota` |
-| **`CONTADOR`** | `contador` | `rsalazar`, `gmontoya`, `lcornejo` | `/finanzas` |
-
-#### B. Cuentas Corporativas del Portal B2B (`http://localhost:5174`)
-En el Portal B2B se inicia sesión con el **número de RUC (11 dígitos)** y la contraseña **`Password123!`**:
-
-| Empresa Importadora / Exportadora | Usuario (RUC) | Contraseña |
-| :--- | :---: | :---: |
-| **Camposol S.A.** | `20370146994` | `Password123!` |
-| **LG Electronics Peru S.A.** | `20511894520` | `Password123!` |
-| **Danper Trujillo S.A.C.** | `20440058771` | `Password123!` |
-| **Compañía Minera Antamina S.A.** | `20330790762` | `Password123!` |
-| **Ferreyros S.A.** | `20100055237` | `Password123!` |
-| **Alicorp S.A.A.** | `20100055238` | `Password123!` |
-
----
-
-### 1.9 Ejecución de Pruebas Automatizadas (Testing)
-
-Para ejecutar las pruebas unitarias y verificar la compilación de los módulos frontend:
+Sitio público independiente. Copia `.env.example` a `.env` si necesitas ajustar sus variables.
 
 ```bash
-# Pruebas unitarias y build del Frontend Interno
-cd app-sga
-npm run test
-npm run build
-
-# Pruebas unitarias y build del Portal del Cliente B2B
-cd ../app-portal-cliente
-npm run test
-npm run build
+cd app-landing
+npm install
+npm run dev
 ```
 
+Acceso: `http://localhost:5173`.
+
+## 1.9 Servicios y puertos
+
+| Servicio | Directorio | Tecnología | Puerto | URL |
+| :-- | :-- | :-- | :-: | :-- |
+| Base de datos | [`db/`](../db) | MySQL 8.4 | 3306 | `jdbc:mysql://localhost:3306/SGAdb` |
+| Backend API | [`backend-sga/`](../backend-sga) | Spring Boot 4.1 / Java 21 | 8085 | `http://localhost:8085/api/v1/health` |
+| Frontend interno | [`app-sga/`](../app-sga) | Vue 3 + Vite | 5180 | `http://localhost:5180` |
+| Portal B2B | [`app-b2b/`](../app-b2b) | Vue 3 + Vite | 5174 | `http://localhost:5174` |
+| Landing | [`app-landing/`](../app-landing) | Vue 3 + Vite | 5173 | `http://localhost:5173` |
+
+## 1.10 Credenciales de prueba
+
+Todas las cuentas del `seed.sql` usan la contraseña **`Password123!`**. Son solo para desarrollo.
+
+### Usuarios internos (`http://localhost:5180`)
+
+| Rol | Usuario principal | Otros usuarios |
+| :-- | :-: | :-- |
+| `ADMINISTRADOR_TI` | `admin` | `jramirez`, `mquispeti`, `cbenitez` |
+| `GERENTE_GENERAL` | `gerente` | `lsantillan`, `rbelaunde` |
+| `AGENTE_COMERCIAL` | `comercial` | `dcastillo`, `nvalverde`, `mrodriguez` |
+| `SUPERVISOR_ADUANERO` | `supervisor` | `rcabrera`, `apena`, `dmiranda` |
+| `AGENTE_ADUANERO` | `agente` | `fbalbuena`, `lmejia`, `ccordova` |
+| `CONTADOR` | `contador` | `rsalazar`, `gmontoya`, `lcornejo` |
+
+### Portal B2B (`http://localhost:5174`)
+
+El usuario es el **RUC de 11 dígitos** de la empresa.
+
+| Empresa | RUC |
+| :-- | :-: |
+| Camposol S.A. | `20370146994` |
+| Danper Trujillo S.A.C. | `20440058771` |
+| LG Electronics Peru S.A. | `20511894520` |
+| Compania Minera Antamina S.A. | `20330790762` |
+| Ferreyros S.A. | `20100055237` |
+| Alicorp S.A.A. | `20100055238` |
+
+## 1.11 Pruebas automatizadas
+
+```bash
+# Backend (desde backend-sga/)
+./mvnw test
+
+# Frontends (desde cada directorio)
+cd app-sga && npm run test && npm run build
+cd ../app-b2b && npm run test && npm run build
+```
+
+Los casos funcionales y el inventario de pruebas están en [`docs/pruebas/`](pruebas/funcionales/README.md).
+
+## 1.12 Solución de problemas
+
+| Síntoma | Causa probable y solución |
+| :-- | :-- |
+| `Access denied for user 'root'@'localhost'` al iniciar el backend | Revisa `spring.datasource.username` y `spring.datasource.password` en `backend-sga/application-local.properties`. |
+| `Unknown database 'SGAdb'` | Ejecuta primero `db/schema.sql` y luego `db/seed.sql` (Paso 1). |
+| `Network Error` o `502` al iniciar sesión | El backend no está activo. Comprueba `http://localhost:8085/api/v1/health` antes de usar los frontends. |
+| Error de CORS en el navegador | Abre el frontend en uno de los orígenes permitidos (`5173`, `5174`, `5180`) o ajusta `CORS_ALLOWED_ORIGINS`. |
+| `Port 8085 already in use` | Cierra el proceso que usa el puerto o define otro con `SERVER_PORT`. |
+| `UnsupportedClassVersionError` | Tu JDK es anterior a 21. Verifica `java -version` y `JAVA_HOME`. |
+
 ---
 
-### 1.10 Solución de Problemas Frecuentes (Troubleshooting)
+# 2. Instalación con Docker Compose
 
-1. **Error `Access denied for user 'root'@'localhost'` al iniciar el Backend:**
-   - Verifica que hayas creado `backend/application-local.properties` y que `spring.datasource.password` tenga la contraseña correcta de tu servidor MySQL local.
-2. **Error `Unknown database 'SGAdb'`:**
-   - Asegúrate de haber ejecutado primero `mysql -u root -p < db/schema.sql` y luego `mysql -u root -p < db/seed.sql` (Paso 1).
-3. **Errores de red (`Network Error` o `502`) al iniciar sesión en Frontend o Portal B2B:**
-   - Verifica que el backend esté corriendo en `http://localhost:8085/api/v1/health` antes de realizar peticiones desde `http://localhost:5180` o `http://localhost:5174`.
+Despliega todo el sistema en contenedores: MySQL, backend, SGA interno, Portal B2B y landing. Las imágenes se compilan dentro de Docker (multi-stage), por lo que solo necesitas Docker o Podman.
 
----
+> [!IMPORTANT]
+> Los `Dockerfile`, los `nginx.conf` y el `docker-compose.yml` se definen en la [guía de imágenes Docker](docker-image-build.md). Si aún no existen en tu copia del repositorio, créalos primero (Paso 1).
 
-# 2. Instalación con Docker
+## 2.1 Arquitectura en contenedores
 
-<!-- Pendiente de implementación -->
+```text
+ Navegador
+    │
+    ├─ :5173 ─► app-landing  (Nginx)
+    ├─ :5180 ─► app-sga      (Nginx) ──┐
+    └─ :5174 ─► app-b2b      (Nginx) ──┤  /api/ → proxy inverso
+                                       ▼
+                              sga-backend :8085
+                                       │ JDBC
+                                       ▼
+                              mysql :3306 (SGAdb)
+
+ Volúmenes: sga-mysql-data · sga-uploads · sga-logs
+```
+
+Los frontends llaman a `/api/v1` en su propio origen y Nginx reenvía la petición al backend, por lo que no hay problemas de CORS.
+
+## 2.2 Requisitos previos
+
+| Herramienta | Verificación |
+| :-- | :-- |
+| Docker con Compose v2 | `docker --version` y `docker compose version` |
+| Podman (alternativa) | `podman --version` y `podman compose version` |
+| Git | `git --version` |
+
+- Puertos libres: `3306`, `8085`, `5173`, `5174` y `5180`.
+- Conexión a internet en la primera construcción, para descargar imágenes base y dependencias.
+- Con Podman, reemplaza `docker compose` por `podman compose` en todos los comandos.
+
+## 2.3 Paso 1: Preparar los archivos de Docker
+
+Desde la raíz del repositorio, comprueba que existan estos archivos:
+
+```bash
+ls docker-compose.yml .env.example \
+   backend-sga/Dockerfile backend-sga/.dockerignore \
+   app-sga/Dockerfile app-sga/nginx.conf app-sga/.dockerignore \
+   app-b2b/Dockerfile app-b2b/nginx.conf app-b2b/.dockerignore \
+   app-landing/Dockerfile app-landing/nginx.conf app-landing/.dockerignore
+```
+
+Si falta alguno, créalo con el contenido de la [guía de imágenes Docker](docker-image-build.md):
+
+| Archivo | Sección de la guía |
+| :-- | :-- |
+| `.dockerignore` (backend y frontends) | [Paso 1](docker-image-build.md#2-paso-1-archivos-dockerignore) |
+| `backend-sga/Dockerfile` | [Paso 2](docker-image-build.md#3-paso-2-imagen-del-backend) |
+| `nginx.conf` y `Dockerfile` de cada frontend | [Paso 3](docker-image-build.md#4-paso-3-imágenes-de-los-frontends) |
+| `.env.example` | [Paso 4](docker-image-build.md#5-paso-4-variables-de-entorno-env) |
+| `docker-compose.yml` | [Paso 5](docker-image-build.md#6-paso-5-docker-composeyml) |
+
+## 2.4 Paso 2: Configurar el `.env`
+
+```bash
+cp .env.example .env
+```
+
+Edita `.env` y define, como mínimo:
+
+| Variable | Descripción |
+| :-- | :-- |
+| `MYSQL_ROOT_PASSWORD` | Contraseña del usuario `root` de MySQL |
+| `DB_USERNAME` / `DB_PASSWORD` | Usuario y contraseña que usa el backend |
+| `JWT_SECRET` | Clave de firma de los tokens (mínimo 32 caracteres) |
+| `SGA_PUBLIC_URL` / `PORTAL_PUBLIC_URL` | URLs públicas del SGA y del Portal B2B. Con `localhost` basta para una prueba local |
+
+Genera un secreto aleatorio con:
+
+```bash
+openssl rand -base64 48
+```
+
+> [!CAUTION]
+> No subas `.env` a Git (ya está en el `.gitignore`). Usa claves propias, distintas a las del ejemplo.
+
+Valida la configuración antes de construir:
+
+```bash
+docker compose config --quiet && echo "Configuración válida"
+```
+
+## 2.5 Paso 3: Construir y levantar
+
+```bash
+docker compose up -d --build
+```
+
+La primera vez tarda varios minutos; las siguientes aprovechan la caché de capas. Docker hace lo siguiente:
+
+1. Descarga MySQL 8.4 y, con el volumen vacío, ejecuta `db/schema.sql` y `db/seed.sql`.
+2. Compila el JAR del backend dentro de la imagen.
+3. Compila los tres frontends y los sirve con Nginx.
+4. Arranca el backend cuando MySQL está `healthy`.
+
+Para seguir el arranque del backend:
+
+```bash
+docker compose logs -f sga-backend
+```
+
+Espera la línea `Started SgaApplication` y sal con `Ctrl+C` (los contenedores siguen corriendo).
+
+## 2.6 Paso 4: Verificar el despliegue
+
+```bash
+docker compose ps
+curl http://localhost:8085/api/v1/health
+```
+
+Todos los servicios deben estar en ejecución (`running`) y MySQL en `healthy`.
+
+| Servicio | URL |
+| :-- | :-- |
+| Landing | `http://localhost:5173` |
+| SGA interno | `http://localhost:5180` |
+| Portal B2B | `http://localhost:5174` |
+| API REST | `http://localhost:8085/api/v1` |
+| MySQL | `localhost:3306` |
+
+Prueba de extremo a extremo: entra a `http://localhost:5180` con un usuario de la sección siguiente. Si inicia sesión, el proxy de Nginx, el backend y la base de datos funcionan.
+
+## 2.7 Credenciales de prueba
+
+Son las mismas que en el despliegue para desarrollo: usuarios internos y RUC del Portal B2B con la contraseña `Password123!`. Consúltalas en [1.10 Credenciales de prueba](#110-credenciales-de-prueba).
+
+## 2.8 Operación diaria
+
+```bash
+docker compose ps                         # estado de los servicios
+docker compose logs -f sga-backend        # logs del backend
+docker compose restart sga-backend        # reiniciar un servicio
+docker compose up -d --build sga-backend  # reconstruir tras cambios de código
+docker compose down                       # detener conservando los datos
+docker compose down -v                    # detener y BORRAR base de datos y archivos subidos
+```
+
+> [!WARNING]
+> `docker compose down -v` elimina los volúmenes. Úsalo solo para reiniciar el sistema desde cero con `seed.sql`.
+
+**Actualizar a una nueva versión:**
+
+```bash
+git pull
+docker compose up -d --build
+```
+
+Los datos se conservan en los volúmenes. Si cambió `schema.sql`, `docker compose up` no lo reaplica: MySQL solo ejecuta los scripts con el volumen vacío.
+
+**Respaldo de la base de datos:**
+
+```bash
+docker compose exec mysql sh -c 'mysqldump -uroot -p"$MYSQL_ROOT_PASSWORD" SGAdb' > backup-sgadb.sql
+```
+
+## 2.9 Solución de problemas
+
+| Síntoma | Causa probable y solución |
+| :-- | :-- |
+| `required variable ... is missing` | Falta `.env` o una variable. Ejecuta `cp .env.example .env` y complétalo |
+| `Bind for 0.0.0.0:<puerto> failed: port is already allocated` | Otro servicio usa ese puerto. Detenlo o cambia el puerto publicado en `docker-compose.yml` |
+| El backend se reinicia en bucle | Revisa `docker compose logs sga-backend`. Suele ser MySQL sin iniciar o credenciales distintas a las del volumen |
+| `Access denied for user` | Cambiaste `DB_USERNAME` o `DB_PASSWORD` después de crear el volumen. Recréalo con `docker compose down -v` |
+| La base está vacía | El volumen ya existía y no se ejecutaron `schema.sql` y `seed.sql`. Usa `docker compose down -v` y vuelve a levantar |
+| `502 Bad Gateway` en `/api/` | El backend aún no arrancó o falló. Revisa `docker compose ps` y sus logs |
+| Error de CORS | La URL del navegador no coincide con `SGA_PUBLIC_URL` o `PORTAL_PUBLIC_URL`. Ajusta `.env` y reinicia el backend |
+| Los enlaces de la landing apuntan a `localhost` | Las URLs se incrustan al construir. Cambia `.env` y ejecuta `docker compose up -d --build app-landing` |
+| Falla `npm ci` o `mvnw` durante el build | Sin conexión a internet o `package-lock.json` desincronizado. Revisa el mensaje del paso que falló |

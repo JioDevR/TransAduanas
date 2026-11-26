@@ -1,0 +1,37 @@
+REVISION DE LAS 15 PRUEBAS DE MONITOREO
+Fecha: 26 de noviembre de 2026
+
+Se revisaron los quince ejecutores activos, sus requisitos y los ultimos resultados. Un resultado guardado no equivale a una nueva ejecucion.
+
+AJUSTES APLICADOS
+M09: comprobacion previa de CPU valida antes de las 60 consultas. Se confirmo el permiso de contadores y M09 se repitio exitosamente.
+M10: lectura de STORAGE_DIR compatible con WinSW anterior y el lanzador con configuracion cifrada DPAPI; solo se devuelve la ruta, no las credenciales.
+M14: CPU negativa o no disponible impide iniciar la carga; si la medicion deja de ser valida durante el escenario, se detiene la carga.
+Se mantuvieron los criterios de aprobacion y los respaldos de los ejecutores.
+
+VALIDACIONES
+PowerShell y Python: sintaxis correcta. Cinco comprobaciones aisladas de preparacion correctas.
+Interfaces, backend, metricas, Prometheus, Grafana, Loki y Alloy: HTTP 200. Herramientas y JAR disponibles.
+Puertos de laboratorio libres; objetivos temporales vacios. Memoria disponible superior al requisito de 1.5 GiB en la comprobacion.
+
+RESULTADOS POR PRUEBA
+M01 | EXITOSO | M01-20261126-103031-a02caf | Repetida durante esta revision; resultado.json comprobado.
+M02 | EXITOSO | M02-20261126-103043-ac65c2 | Repetida durante esta revision; resultado.json comprobado.
+M03 | EXITOSO | M03-20261126-103047-57845c | Repetida durante esta revision; resultado.json comprobado.
+M04 | EXITOSO | M04-20261126-102036-72097b | Corregida y repetida antes de esta revision; resultado exitoso comprobado.
+M05 | EXITOSO | M05-20261126-103051-d7415e | Repetida durante esta revision; resultado.json comprobado.
+M06 | EXITOSO | M06-20261126-095612-def838 | Sintaxis, requisitos y ultimo resultado revisados; no se repitio el escenario completo.
+M07 | EXITOSO | M07-20261126-095910-73848f | Sintaxis, requisitos y ultimo resultado revisados; no se repitio el escenario completo.
+M08 | EXITOSO | M08-20261126-100113-eb049c | Sintaxis, requisitos y ultimo resultado revisados; no se repitio el escenario completo.
+M09 | EXITOSO | M09-20261126-102642-02cc34 | Repetida durante esta revision; resultado.json comprobado.
+M10 | EXITOSO | M10-20261121-201026-a5075a | Preparacion corregida para configuracion protegida; lectura de almacenamiento verificada; no se repitieron las cargas.
+M11 | EXITOSO | M11-20261121-202149-60a10f | Sintaxis, requisitos y ultimo resultado revisados; no se repitio el escenario completo.
+M12 | EXITOSO | M12-20261121-202830-ed6e67 | Sintaxis, requisitos y ultimo resultado revisados; no se repitio el escenario completo.
+M13 | EXITOSO | M13-20261121-203802-a6a257 | Sintaxis, requisitos y ultimo resultado revisados; no se repitio el escenario completo.
+M14 | EXITOSO | M14-20261121-213355-4df108 | Preparacion sin carga verificada; añadidos controles de CPU valida; no se repitio la saturacion.
+M15 | EXITOSO | M15-20261121-215447-8a9648 | Sintaxis, requisitos y ultimo resultado revisados; no se repitio el escenario completo.
+
+LIMITES
+No se volvieron a ejecutar las pruebas autenticadas de M06/M07, el muestreo M08, las cargas M10 ni los escenarios completos M11 a M15. Sus resultados guardados se conservaron.
+Esta entrega incorpora los ajustes de los ejecutores y el manual actualizado. Las carpetas completas de evidencias permanecen en el equipo original.
+No se eliminaron ni alteraron las evidencias anteriores.

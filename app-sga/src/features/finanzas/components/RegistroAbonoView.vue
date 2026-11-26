@@ -252,7 +252,7 @@
               <Select
                 inputId="f-pago-metodo"
                 v-model="form.metodoPago"
-                :options="METODOS_PAGO_COTIZACION"
+                :options="metodosPagoOptions"
                 optionLabel="label"
                 optionValue="value"
                 size="small"
@@ -266,7 +266,7 @@
               <Select
                 inputId="f-pago-banco-dest"
                 v-model="form.bancoDestino"
-                :options="CUENTAS_RECAUDADORAS_SGA"
+                :options="cuentasRecaudadorasOptions"
                 optionLabel="label"
                 optionValue="value"
                 size="small"
@@ -512,6 +512,7 @@ import Select from 'primevue/select'
 import Tag from 'primevue/tag'
 import Textarea from 'primevue/textarea'
 import { formatRegimen } from '@/shared/utils/formatters'
+import { catalogoService } from '@/features/admin/catalogos/services/catalogoService'
 import { useRegistroAbonoForm } from '../composables/useRegistroAbonoForm'
 import {
   CUENTAS_RECAUDADORAS_SGA,
@@ -519,6 +520,9 @@ import {
   formatPen,
   formatUsd
 } from '../utils/finanzasFormatters'
+
+const metodosPagoOptions = ref(METODOS_PAGO_COTIZACION)
+const cuentasRecaudadorasOptions = ref(CUENTAS_RECAUDADORAS_SGA)
 
 const props = defineProps({
   cotizacion: { type: Object, default: null },
@@ -588,8 +592,31 @@ const {
   onSaved: (payload) => emit('saved', payload)
 })
 
-onMounted(() => {
+onMounted(async () => {
   init()
+  try {
+    const [metodosRes, cuentasRes] = await Promise.allSettled([
+      catalogoService.getMetodosPago('COTIZACION'),
+      catalogoService.getCuentasRecaudadoras('SGA')
+    ])
+    if (metodosRes.status === 'fulfilled' && Array.isArray(metodosRes.value) && metodosRes.value.length > 0) {
+      metodosPagoOptions.value = metodosRes.value.map((m) => ({
+        label: m.nombre,
+        value: m.codigo
+      }))
+    }
+    if (cuentasRes.status === 'fulfilled' && Array.isArray(cuentasRes.value) && cuentasRes.value.length > 0) {
+      cuentasRecaudadorasOptions.value = cuentasRes.value.map((c) => ({
+        label: `${c.nombre} (${c.numeroCuenta})`,
+        value: c.nombre
+      }))
+      if (!cuentasRecaudadorasOptions.value.some((c) => c.value === form.value.bancoDestino)) {
+        form.value.bancoDestino = cuentasRecaudadorasOptions.value[0].value
+      }
+    }
+  } catch {
+    // Mantiene listas de respaldo si el API de catálogos no responde
+  }
 })
 
 function triggerFileInput() {

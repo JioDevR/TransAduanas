@@ -133,10 +133,16 @@ public class ExpedienteResponseDTO {
     private BigDecimal saldoPendiente;
     private String usuarioComercialNombre;
 
-    // Transporte y Despacho
+    // Transporte y Solicitud Externa
     private Boolean servicioTransporte;
-    private Integer idDespachoTransporte;
-    private String codigoTrackingTransporte;
-    private String estadoTransporte;
+    private Boolean transporteSolicitado;
+    private String transporteTipoTraslado;
+    private String transporteDireccionPartida;
+    private String transporteDireccionLlegada;
+    private String transporteDistritoLlegada;
+    private String transporteContactoRecepcion;
+    private LocalDateTime transporteFechaProgramada;
+    private String transporteObservaciones;
+    private LocalDateTime transporteFechaSolicitud;
 }
 

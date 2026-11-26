@@ -1220,9 +1220,7 @@ textarea.textarea-input:disabled {
    ========================================================================== */
 .table-card,
 .data-table-container,
-.content-table-card,
-.flota-table-card,
-.conductores-table-card {
+.content-table-card {
   background: var(--color-bg-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg, 12px);
@@ -1379,9 +1377,7 @@ textarea.textarea-input:disabled {
 /* Modificadores Modo Oscuro: Tablas & Paginador */
 .dark-theme .table-card,
 .dark-theme .data-table-container,
-.dark-theme .content-table-card,
-.dark-theme .flota-table-card,
-.dark-theme .conductores-table-card {
+.dark-theme .content-table-card {
   background: var(--color-bg-surface) !important;
   border-color: var(--color-border) !important;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4) !important;

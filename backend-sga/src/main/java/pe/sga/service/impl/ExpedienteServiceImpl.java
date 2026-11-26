@@ -24,7 +24,6 @@ import pe.sga.dto.request.ExpedienteSunatSimuladoDTO;
 import pe.sga.dto.response.ExpedienteEventoDTO;
 import pe.sga.dto.response.ExpedienteResponseDTO;
 import pe.sga.entity.Cotizacion;
-import pe.sga.entity.DespachoTransporte;
 import pe.sga.entity.Expediente;
 import pe.sga.entity.ExpedienteEvento;
 import pe.sga.entity.NotificacionCliente;
@@ -33,20 +32,15 @@ import pe.sga.entity.enums.CanalSunat;
 import pe.sga.entity.enums.EstadoCotizacion;
 import pe.sga.entity.enums.EstadoExpediente;
 import pe.sga.entity.enums.EstadoPagoCotizacion;
-import pe.sga.entity.enums.EstadoTransporte;
-import pe.sga.entity.enums.TipoTraslado;
 import pe.sga.exception.BadRequestException;
 import pe.sga.exception.ResourceNotFoundException;
-import pe.sga.dto.request.DespachoTransporteCrearDTO;
 import pe.sga.repository.CotizacionPagoRepository;
 import pe.sga.repository.CotizacionRepository;
-import pe.sga.repository.DespachoTransporteRepository;
 import pe.sga.repository.ExpedienteEventoRepository;
 import pe.sga.repository.ExpedienteRepository;
 import pe.sga.repository.NotificacionClienteRepository;
 import pe.sga.repository.UsuarioRepository;
 import pe.sga.service.IAuditoriaService;
-import pe.sga.service.IDespachoTransporteService;
 import pe.sga.service.IExpedienteService;
 
 import java.time.LocalDate;
@@ -54,8 +48,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -67,8 +59,6 @@ public class ExpedienteServiceImpl implements IExpedienteService {
     private final UsuarioRepository usuarioRepository;
     private final CotizacionPagoRepository cotizacionPagoRepository;
     private final NotificacionClienteRepository notificacionClienteRepository;
-    private final DespachoTransporteRepository despachoRepository;
-    private final IDespachoTransporteService despachoTransporteService;
     private IAuditoriaService auditoriaService;
     private ExpedienteEventoRepository expedienteEventoRepository;
 
@@ -104,13 +94,14 @@ public class ExpedienteServiceImpl implements IExpedienteService {
 
     private void notificarCliente(Expediente exp, String titulo, String mensaje, String tipo) {
         if (exp == null || exp.getCliente() == null) return;
+        String enlace = exp.getIdExpediente() != null ? "/expedientes/" + exp.getIdExpediente() : "/expedientes";
         notificacionClienteRepository.save(NotificacionCliente.builder()
                 .cliente(exp.getCliente())
                 .titulo(titulo)
                 .mensaje(mensaje)
                 .tipo(tipo)
                 .leido(false)
-                .enlace("/expedientes")
+                .enlace(enlace)
                 .fechaCreacion(LocalDateTime.now())
                 .build());
     }
@@ -235,6 +226,7 @@ public class ExpedienteServiceImpl implements IExpedienteService {
 
         // Notificaciones al cliente B2B (Diagrama BPMN: "Not. expediente creado" & "Not. agente asignado")
         if (guardado.getCliente() != null) {
+            String enlaceExp = "/expedientes/" + guardado.getIdExpediente();
             // 1. Notificación: Expediente creado
             NotificacionCliente notifExp = NotificacionCliente.builder()
                     .cliente(guardado.getCliente())
@@ -244,7 +236,7 @@ public class ExpedienteServiceImpl implements IExpedienteService {
                             + ". Puede realizar seguimiento continuo de los hitos aduaneros en la sección de Expedientes.")
                     .tipo("DAM")
                     .leido(false)
-                    .enlace("/expedientes")
+                    .enlace(enlaceExp)
                     .fechaCreacion(LocalDateTime.now())
                     .build();
             notificacionClienteRepository.save(notifExp);
@@ -261,7 +253,7 @@ public class ExpedienteServiceImpl implements IExpedienteService {
                             + " para liderar la numeración de DAM, aforo e inspección ante SUNAT.")
                     .tipo("DAM")
                     .leido(false)
-                    .enlace("/expedientes")
+                    .enlace(enlaceExp)
                     .fechaCreacion(LocalDateTime.now())
                     .build();
             notificacionClienteRepository.save(notifAgente);
@@ -348,7 +340,7 @@ public class ExpedienteServiceImpl implements IExpedienteService {
                             + ". Su despacho se encuentra en travesía internacional rumbo a Perú.")
                     .tipo("DAM")
                     .leido(false)
-                    .enlace("/expedientes")
+                    .enlace("/expedientes/" + guardado.getIdExpediente())
                     .fechaCreacion(LocalDateTime.now())
                     .build();
             notificacionClienteRepository.save(notif);
@@ -494,9 +486,8 @@ public class ExpedienteServiceImpl implements IExpedienteService {
             throw new BadRequestException("La cotización asociada no contrató el servicio de transporte de TransAduanas.");
         }
 
-        if (despachoRepository.existsByExpediente_IdExpedienteAndEstadoTransporteNot(
-                idExpediente, EstadoTransporte.CANCELADO)) {
-            throw new BadRequestException("Ya existe una orden de traslado terrestre activa vinculada a este expediente.");
+        if (Boolean.TRUE.equals(expediente.getTransporteSolicitado())) {
+            throw new BadRequestException("Ya existe una solicitud de traslado terrestre registrada en este expediente.");
         }
 
         String distritoDestino = dto.getDistritoDestino() != null && !dto.getDistritoDestino().isBlank()
@@ -509,38 +500,36 @@ public class ExpedienteServiceImpl implements IExpedienteService {
                 ? dto.getDireccionRecojoPlanta().trim() + " (" + dto.getDistritoRecojo().trim() + ")"
                 : dto.getDireccionRecojoPlanta().trim();
 
-        DespachoTransporteCrearDTO despachoDTO = DespachoTransporteCrearDTO.builder()
-                .idExpediente(idExpediente)
-                .tipoTraslado(TipoTraslado.RECOJO_EXPORTACION)
-                .direccionPartida(partidaConDistrito)
-                .direccionLlegada(dto.getAlmacenDestinoTerminal())
-                .distritoLlegada(distritoDestino)
-                .contactoRecepcion(dto.getContactoPlanta())
-                .fechaProgramada(dto.getFechaProgramadaRecojo() != null ? dto.getFechaProgramadaRecojo() : LocalDateTime.now().plusDays(1))
-                .observaciones(dto.getObservaciones())
-                .build();
+        Expediente actualizado = registrarSolicitudTransporteExterno(
+                expediente,
+                "RECOJO_EXPORTACION",
+                partidaConDistrito,
+                dto.getAlmacenDestinoTerminal(),
+                distritoDestino,
+                dto.getContactoPlanta(),
+                dto.getFechaProgramadaRecojo() != null ? dto.getFechaProgramadaRecojo() : LocalDateTime.now().plusDays(1),
+                dto.getObservaciones()
+        );
 
-        despachoTransporteService.programar(despachoDTO);
-
-        if (expediente.getCliente() != null) {
+        if (actualizado.getCliente() != null) {
             NotificacionCliente notif = NotificacionCliente.builder()
-                    .cliente(expediente.getCliente())
-                    .titulo("Recojo en Planta Programado: " + expediente.getCodigoExpediente())
-                    .mensaje("Se ha programado el recojo de mercadería en planta para la exportación "
-                            + expediente.getCodigoExpediente() + ". El área de Flota asignará la unidad para traslado al almacén temporal aduanero.")
+                    .cliente(actualizado.getCliente())
+                    .titulo("Recojo en Planta Programado: " + actualizado.getCodigoExpediente())
+                    .mensaje("Se ha registrado la solicitud de recojo de mercadería en planta para la exportación "
+                            + actualizado.getCodigoExpediente() + " mediante operador de transporte externo hacia el terminal aduanero.")
                     .tipo("TRANSPORTE")
                     .leido(false)
-                    .enlace("/expedientes")
+                    .enlace("/expedientes/" + actualizado.getIdExpediente())
                     .fechaCreacion(LocalDateTime.now())
                     .build();
             notificacionClienteRepository.save(notif);
         }
 
-        auditar("SOLICITAR_RECOJO_EXPORTACION", expediente.getIdExpediente(),
-                "Recojo de exportación solicitado para expediente " + expediente.getCodigoExpediente());
-        registrarEvento(expediente, "RECOJO_SOLICITADO", "Solicitud de Recojo en Planta",
+        auditar("SOLICITAR_RECOJO_EXPORTACION", actualizado.getIdExpediente(),
+                "Recojo de exportación externo registrado para expediente " + actualizado.getCodigoExpediente());
+        registrarEvento(actualizado, "RECOJO_SOLICITADO", "Solicitud de Recojo en Planta (Externo)",
                 "Recojo solicitado en " + partidaConDistrito + " hacia " + dto.getAlmacenDestinoTerminal(), null);
-        return mapToResponse(expediente);
+        return mapToResponse(actualizado);
     }
 
     @Override
@@ -584,7 +573,7 @@ public class ExpedienteServiceImpl implements IExpedienteService {
                             + ") para inicio de trámite y asignación de canal de control SUNAT.")
                     .tipo("DAM")
                     .leido(false)
-                    .enlace("/expedientes")
+                    .enlace("/expedientes/" + guardado.getIdExpediente())
                     .fechaCreacion(LocalDateTime.now())
                     .build();
             notificacionClienteRepository.save(notif);
@@ -667,7 +656,7 @@ public class ExpedienteServiceImpl implements IExpedienteService {
                             + ". Se encuentra en tránsito marítimo/aéreo internacional.")
                     .tipo("DAM")
                     .leido(false)
-                    .enlace("/expedientes")
+                    .enlace("/expedientes/" + guardado.getIdExpediente())
                     .fechaCreacion(LocalDateTime.now())
                     .build();
             notificacionClienteRepository.save(notif);
@@ -716,7 +705,7 @@ public class ExpedienteServiceImpl implements IExpedienteService {
                             + ". El expediente se encuentra listo para liquidación y cierre.")
                     .tipo("DAM")
                     .leido(false)
-                    .enlace("/expedientes")
+                    .enlace("/expedientes/" + guardado.getIdExpediente())
                     .fechaCreacion(LocalDateTime.now())
                     .build();
             notificacionClienteRepository.save(notif);
@@ -743,43 +732,61 @@ public class ExpedienteServiceImpl implements IExpedienteService {
             throw new BadRequestException("La cotización asociada no contrató el servicio de transporte de entrega a destino.");
         }
 
-        if (despachoRepository.existsByExpediente_IdExpedienteAndEstadoTransporteNot(
-                idExpediente, EstadoTransporte.CANCELADO)) {
-            throw new BadRequestException("Ya existe una orden de despacho terrestre activa vinculada a este expediente.");
+        if (Boolean.TRUE.equals(expediente.getTransporteSolicitado())) {
+            throw new BadRequestException("Ya existe una solicitud de transporte terrestre registrada en este expediente.");
         }
 
-        DespachoTransporteCrearDTO despachoDTO = DespachoTransporteCrearDTO.builder()
-                .idExpediente(idExpediente)
-                .tipoTraslado(TipoTraslado.ENTREGA_IMPORTACION)
-                .direccionPartida(dto.getDireccionPartida())
-                .direccionLlegada(dto.getDireccionLlegada())
-                .distritoLlegada(dto.getDistritoLlegada())
-                .contactoRecepcion(dto.getContactoRecepcion())
-                .fechaProgramada(dto.getFechaProgramada() != null ? dto.getFechaProgramada() : LocalDateTime.now().plusDays(1))
-                .observaciones(dto.getObservaciones())
-                .build();
+        Expediente actualizado = registrarSolicitudTransporteExterno(
+                expediente,
+                "ENTREGA_IMPORTACION",
+                dto.getDireccionPartida(),
+                dto.getDireccionLlegada(),
+                dto.getDistritoLlegada(),
+                dto.getContactoRecepcion(),
+                dto.getFechaProgramada() != null ? dto.getFechaProgramada() : LocalDateTime.now().plusDays(1),
+                dto.getObservaciones()
+        );
 
-        despachoTransporteService.programar(despachoDTO);
-
-        if (expediente.getCliente() != null) {
+        if (actualizado.getCliente() != null) {
             NotificacionCliente notif = NotificacionCliente.builder()
-                    .cliente(expediente.getCliente())
-                    .titulo("Envío a Destino Solicitado: " + expediente.getCodigoExpediente())
-                    .mensaje("El Agente Aduanero ha generado la solicitud de despacho terrestre a destino para el expediente "
-                            + expediente.getCodigoExpediente() + ". El área de Flota y Transporte programará la unidad y conductor asignado.")
+                    .cliente(actualizado.getCliente())
+                    .titulo("Envío a Destino Solicitado: " + actualizado.getCodigoExpediente())
+                    .mensaje("El Agente Aduanero ha registrado la solicitud de traslado terrestre a destino para el expediente "
+                            + actualizado.getCodigoExpediente() + " mediante operador de transporte externo.")
                     .tipo("TRANSPORTE")
                     .leido(false)
-                    .enlace("/expedientes")
+                    .enlace("/expedientes/" + actualizado.getIdExpediente())
                     .fechaCreacion(LocalDateTime.now())
                     .build();
             notificacionClienteRepository.save(notif);
         }
 
-        auditar("SOLICITAR_TRANSPORTE_EXPEDIENTE", expediente.getIdExpediente(),
-                "Traslado terrestre solicitado para expediente " + expediente.getCodigoExpediente());
-        registrarEvento(expediente, "TRANSPORTE_ENTREGA_SOLICITADO", "Transporte de Entrega a Destino Solicitado",
+        auditar("SOLICITAR_TRANSPORTE_EXPEDIENTE", actualizado.getIdExpediente(),
+                "Traslado terrestre externo solicitado para expediente " + actualizado.getCodigoExpediente());
+        registrarEvento(actualizado, "TRANSPORTE_ENTREGA_SOLICITADO", "Transporte Externo a Destino Solicitado",
                 "Traslado desde " + dto.getDireccionPartida() + " hacia " + dto.getDireccionLlegada(), null);
-        return mapToResponse(expediente);
+        return mapToResponse(actualizado);
+    }
+
+    private Expediente registrarSolicitudTransporteExterno(
+            Expediente expediente,
+            String tipoTraslado,
+            String direccionPartida,
+            String direccionLlegada,
+            String distritoLlegada,
+            String contactoRecepcion,
+            LocalDateTime fechaProgramada,
+            String observaciones) {
+        expediente.setTransporteSolicitado(true);
+        expediente.setTransporteTipoTraslado(tipoTraslado);
+        expediente.setTransporteDireccionPartida(direccionPartida);
+        expediente.setTransporteDireccionLlegada(direccionLlegada);
+        expediente.setTransporteDistritoLlegada(distritoLlegada);
+        expediente.setTransporteContactoRecepcion(contactoRecepcion);
+        expediente.setTransporteFechaProgramada(fechaProgramada);
+        expediente.setTransporteObservaciones(observaciones);
+        expediente.setTransporteFechaSolicitud(LocalDateTime.now());
+        return expedienteRepository.save(expediente);
     }
 
     @Override
@@ -823,18 +830,6 @@ public class ExpedienteServiceImpl implements IExpedienteService {
             throw new BadRequestException("El expediente no puede cerrarse sin haber obtenido LEVANTE AUTORIZADO.");
         }
 
-        // Si existe un despacho de transporte activo asociado, validar que esté entregado antes de cerrar
-        var despachoOpt = despachoRepository
-                .findFirstByExpediente_IdExpedienteAndEstadoTransporteNotOrderByIdDespachoTransporteDesc(
-                        idExpediente, EstadoTransporte.CANCELADO);
-        if (despachoOpt.isPresent()) {
-            DespachoTransporte dt = despachoOpt.get();
-            if (dt.getEstadoTransporte() != EstadoTransporte.ENTREGADO) {
-                throw new BadRequestException("No es posible cerrar el expediente: El despacho de transporte aún se encuentra en estado '"
-                        + dt.getEstadoTransporte() + "'. Debe estar ENTREGADO.");
-            }
-        }
-
         expediente.setEstadoExpediente(EstadoExpediente.CERRADO);
         expediente.setFechaCierre(LocalDateTime.now());
         if (dto != null && dto.getObservacionesCierre() != null && !dto.getObservacionesCierre().isBlank()) {
@@ -852,7 +847,7 @@ public class ExpedienteServiceImpl implements IExpedienteService {
                             + cerrado.getCodigoExpediente() + ". ¡Gracias por confiar en TransAduanas!")
                     .tipo("DAM")
                     .leido(false)
-                    .enlace("/expedientes")
+                    .enlace("/expedientes/" + cerrado.getIdExpediente())
                     .fechaCreacion(LocalDateTime.now())
                     .build();
             notificacionClienteRepository.save(notif);
@@ -1193,11 +1188,6 @@ public class ExpedienteServiceImpl implements IExpedienteService {
                 .map(Expediente::getIdExpediente)
                 .filter(Objects::nonNull)
                 .toList();
-        Map<Integer, DespachoTransporte> despachoMap = idsExp.isEmpty()
-                ? Map.of()
-                : despachoRepository.findByExpediente_IdExpedienteInAndEstadoTransporteNot(idsExp, EstadoTransporte.CANCELADO).stream()
-                .filter(d -> d.getExpediente() != null)
-                .collect(Collectors.toMap(d -> d.getExpediente().getIdExpediente(), Function.identity(), (a, b) -> a));
         Map<Integer, List<ExpedienteEventoDTO>> eventosMap = (expedienteEventoRepository == null || idsExp.isEmpty())
                 ? Map.of()
                 : expedienteEventoRepository.findByExpediente_IdExpedienteInOrderByFechaEventoAscIdEventoAsc(idsExp).stream()
@@ -1206,21 +1196,16 @@ public class ExpedienteServiceImpl implements IExpedienteService {
                         Collectors.mapping(this::mapEventoToDTO, Collectors.toList())));
 
         return expedientes.stream()
-                .map(e -> mapToResponse(e, Optional.ofNullable(despachoMap.get(e.getIdExpediente())),
-                        eventosMap.getOrDefault(e.getIdExpediente(), List.of())))
+                .map(e -> mapToResponse(e, eventosMap.getOrDefault(e.getIdExpediente(), List.of())))
                 .toList();
     }
 
     private ExpedienteResponseDTO mapToResponse(Expediente e) {
-        var despachoOpt = e.getIdExpediente() != null
-                ? despachoRepository.findFirstByExpediente_IdExpedienteAndEstadoTransporteNotOrderByIdDespachoTransporteDesc(
-                        e.getIdExpediente(), EstadoTransporte.CANCELADO)
-                : Optional.<DespachoTransporte>empty();
         List<ExpedienteEventoDTO> eventos = (expedienteEventoRepository != null && e.getIdExpediente() != null)
                 ? expedienteEventoRepository.findByExpediente_IdExpedienteOrderByFechaEventoAscIdEventoAsc(e.getIdExpediente())
                         .stream().map(this::mapEventoToDTO).toList()
                 : List.of();
-        return mapToResponse(e, despachoOpt, eventos);
+        return mapToResponse(e, eventos);
     }
 
     private ExpedienteEventoDTO mapEventoToDTO(ExpedienteEvento ev) {
@@ -1235,7 +1220,7 @@ public class ExpedienteServiceImpl implements IExpedienteService {
                 .build();
     }
 
-    private ExpedienteResponseDTO mapToResponse(Expediente e, Optional<DespachoTransporte> despachoOpt, List<ExpedienteEventoDTO> eventos) {
+    private ExpedienteResponseDTO mapToResponse(Expediente e, List<ExpedienteEventoDTO> eventos) {
         var cot = e.getCotizacion();
         var merc = e.getMercancia() != null ? e.getMercancia() : (cot != null ? cot.getMercancia() : null);
         var tc = e.getTipoCarga() != null ? e.getTipoCarga() : (cot != null ? cot.getTipoCarga() : null);
@@ -1346,11 +1331,17 @@ public class ExpedienteServiceImpl implements IExpedienteService {
                 .saldoPendiente(cot != null ? cot.getSaldoPendiente() : null)
                 .usuarioComercialNombre(uc != null ? uc.getNombreCompleto() : null)
 
-                // Transporte y Despacho
+                // Transporte y Solicitud Externa
                 .servicioTransporte(cot != null && Boolean.TRUE.equals(cot.getServicioTransporte()))
-                .idDespachoTransporte(despachoOpt.map(DespachoTransporte::getIdDespachoTransporte).orElse(null))
-                .codigoTrackingTransporte(despachoOpt.map(DespachoTransporte::getCodigoTracking).orElse(null))
-                .estadoTransporte(despachoOpt.map(d -> d.getEstadoTransporte() != null ? d.getEstadoTransporte().name() : null).orElse(null))
+                .transporteSolicitado(Boolean.TRUE.equals(e.getTransporteSolicitado()))
+                .transporteTipoTraslado(e.getTransporteTipoTraslado())
+                .transporteDireccionPartida(e.getTransporteDireccionPartida())
+                .transporteDireccionLlegada(e.getTransporteDireccionLlegada())
+                .transporteDistritoLlegada(e.getTransporteDistritoLlegada())
+                .transporteContactoRecepcion(e.getTransporteContactoRecepcion())
+                .transporteFechaProgramada(e.getTransporteFechaProgramada())
+                .transporteObservaciones(e.getTransporteObservaciones())
+                .transporteFechaSolicitud(e.getTransporteFechaSolicitud())
                 .build();
     }
 }

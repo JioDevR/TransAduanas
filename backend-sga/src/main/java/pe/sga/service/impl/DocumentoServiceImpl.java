@@ -29,6 +29,7 @@ import pe.sga.repository.UsuarioRepository;
 import pe.sga.service.IAuditoriaService;
 import pe.sga.service.IDocumentoService;
 import pe.sga.service.IStorageService;
+import pe.sga.security.UploadPolicy;
 
 import java.nio.file.Paths;
 import java.time.LocalDate;
@@ -74,6 +75,7 @@ public class DocumentoServiceImpl implements IDocumentoService {
             Integer idEntidad,
             Integer idUsuario
     ) {
+        UploadPolicy.validateAll(files);
         Usuario usuario = (idUsuario != null)
                 ? usuarioRepository.findById(idUsuario).orElse(null)
                 : null;
@@ -112,7 +114,6 @@ public class DocumentoServiceImpl implements IDocumentoService {
         String subpath = resolverSubdirectorio(entidadTipo, cotizacion, expediente, cliente, categoria, descripcion);
 
         for (MultipartFile file : files) {
-            if (file == null || file.isEmpty()) continue;
 
             String storedRelativePath = storageService.store(file, subpath);
             String storedFilename = Paths.get(storedRelativePath).getFileName().toString();
@@ -124,7 +125,7 @@ public class DocumentoServiceImpl implements IDocumentoService {
                 extension = originalFilename.substring(dotIndex + 1).toLowerCase();
             }
 
-            String mimeType = file.getContentType() != null ? file.getContentType() : "application/octet-stream";
+            String mimeType = UploadPolicy.mime(file);
 
             DocumentoAdjunto doc = DocumentoAdjunto.builder()
                     .nombreOriginal(originalFilename)

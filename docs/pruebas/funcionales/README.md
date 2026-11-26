@@ -1,4 +1,6 @@
 # Manual principal de las 15 pruebas para la sustentación
+> Verificación de esta entrega sobre main: [resultados actuales](../seguridad/VERIFICACION-RAMA.md). Las cifras históricas se conservan como contexto.
+
 
 **Empieza aquí para preparar y mostrar las pruebas al docente.** Este es el manual de la selección vigente: PU01–PU04, PI01–PI04, PS01–PS04 y PA01–PA03.
 
@@ -482,3 +484,9 @@ El 19 de noviembre de 2026, sobre la rama compatible con main `0e43733`, se veri
 - No se modifica código productivo, pom.xml, base de datos ni frontends. Los datos H2 y reportes generados permanecen en target.
 
 Las aserciones originales siguen siendo la comprobación: los metadatos y mensajes no sustituyen el resultado de JUnit. Hay que repetir las pruebas si cambia el código o main.
+
+## Entrega conjunta con seguridad
+
+Esta rama conserva las pruebas funcionales y los ejecutores existentes de main. Consulte también el [índice de las diez pruebas de seguridad](../seguridad/README.md). La preparación H2 habilita explícitamente datos de laboratorio y genera la contraseña inicial en memoria; no necesita credenciales reales.
+
+Los números de pruebas de secciones anteriores describen ejecuciones históricas. La verificación de compatibilidad de esta entrega se documenta en [Verificación de la rama](../seguridad/VERIFICACION-RAMA.md).

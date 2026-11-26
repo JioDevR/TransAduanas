@@ -12,13 +12,19 @@ import java.util.*;
 import com.fasterxml.jackson.databind.*;
 import static org.junit.jupiter.api.Assertions.*;
 @SpringBootTest(webEnvironment=SpringBootTest.WebEnvironment.RANDOM_PORT,properties={
- "spring.config.import=", "spring.datasource.url=jdbc:h2:mem:qa_multinivel;MODE=MySQL;DB_CLOSE_DELAY=-1",
+ "app.data-initializer.enabled=true", "spring.config.import=", "spring.datasource.url=jdbc:h2:mem:qa_multinivel;MODE=MySQL;DB_CLOSE_DELAY=-1",
  "spring.datasource.driver-class-name=org.h2.Driver", "spring.datasource.username=sa", "spring.datasource.password=",
  "spring.jpa.hibernate.ddl-auto=create-drop", "spring.jpa.database-platform=org.hibernate.dialect.H2Dialect",
  "spring.jpa.show-sql=false", "spring.jpa.properties.hibernate.format_sql=false",
  "app.storage.upload-dir=./target/qa-files", "jwt.secret=QA_ONLY_2026_TEST_KEY_012345678901234567890123456789", "jwt.expiration-ms=3600000",
  "server.address=127.0.0.1", "logging.level.org.hibernate.SQL=OFF"})
 abstract class FullStackTestBase {
+ @org.springframework.test.context.DynamicPropertySource
+ static void bootstrapCredentials(org.springframework.test.context.DynamicPropertyRegistry registry) {
+  String generated = pe.sga.security.TemporaryCredentials.generate();
+  registry.add("BOOTSTRAP_ADMIN_PASSWORD", () -> generated);
+ }
+
  @Value("${local.server.port}") int port;
  @Autowired ClienteRepository clientes;
  @Autowired UsuarioRepository usuarios;

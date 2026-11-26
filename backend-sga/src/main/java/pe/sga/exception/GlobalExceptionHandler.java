@@ -60,6 +60,39 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 
+    @ExceptionHandler(org.springframework.web.HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<ApiResponseDTO<Object>> handleMethodNotAllowed(
+            org.springframework.web.HttpRequestMethodNotSupportedException ex) {
+        org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+        if (ex.getSupportedHttpMethods() != null) {
+            headers.setAllow(ex.getSupportedHttpMethods());
+        }
+        return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).headers(headers)
+                .body(ApiResponseDTO.error("Método HTTP no permitido para este recurso"));
+    }
+
+    @ExceptionHandler(org.springframework.http.converter.HttpMessageNotReadableException.class)
+    public ResponseEntity<ApiResponseDTO<Object>> handleUnreadableRequest(
+            org.springframework.http.converter.HttpMessageNotReadableException ex) {
+        // No devolver el mensaje del deserializador: puede incluir el cuerpo recibido o clases internas.
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponseDTO.error("El cuerpo JSON es inválido o contiene tipos de datos incompatibles"));
+    }
+
+    @ExceptionHandler(org.springframework.web.HttpMediaTypeNotSupportedException.class)
+    public ResponseEntity<ApiResponseDTO<Object>> handleUnsupportedContentType(
+            org.springframework.web.HttpMediaTypeNotSupportedException ex) {
+        return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE)
+                .body(ApiResponseDTO.error("El tipo de contenido enviado no es compatible con este recurso"));
+    }
+
+    @ExceptionHandler(org.springframework.web.multipart.MaxUploadSizeExceededException.class)
+    public ResponseEntity<ApiResponseDTO<Object>> handleUploadTooLarge(
+            org.springframework.web.multipart.MaxUploadSizeExceededException ex) {
+        return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE)
+                .body(ApiResponseDTO.error("El archivo o la solicitud supera el tamaño máximo permitido"));
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponseDTO<Object>> handleGlobalException(Exception ex) {
         log.error("Error interno no controlado: ", ex);

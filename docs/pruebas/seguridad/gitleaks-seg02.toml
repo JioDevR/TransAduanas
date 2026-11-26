@@ -1,0 +1,22 @@
+title = "SEG-02 local secret review"
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Out of scope generated files and uploaded customer documents"
+paths = ['''(?:^|[\/])(?:node_modules|target|dist|uploads|\.git)(?:[\/]|$)''']
+
+[[rules]]
+id = "seg02-hardcoded-credential-assignment"
+description = "Credential-like literal assignment; requires manual validation"
+regex = '''(?i)(?:password|passwd|pwd|jwt[._-]?secret|api[._-]?key|client[._-]?secret)["']?\s*[:=]\s*["']?([A-Za-z0-9_@!./+=:-]{6,})'''
+secretGroup = 1
+keywords = ["password", "passwd", "pwd", "secret", "api_key", "apikey"]
+
+[[rules]]
+id = "seg02-encoded-password-literal"
+description = "Literal passed to password encoder; classify demo/test separately"
+regex = '''(?i)passwordEncoder\.encode\(\s*["']([^"'\r\n]{6,})["']'''
+secretGroup = 1
+keywords = ["passwordEncoder"]

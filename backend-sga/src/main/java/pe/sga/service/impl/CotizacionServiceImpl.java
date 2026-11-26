@@ -2,6 +2,7 @@ package pe.sga.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import pe.sga.security.TemporaryCredentials;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -796,7 +797,7 @@ public class CotizacionServiceImpl implements ICotizacionService {
                 UsuarioCliente nuevoUsuario = UsuarioCliente.builder()
                         .cliente(cliente)
                         .username(username)
-                        .passwordHash(passwordEncoder.encode("Password123!"))
+                        .passwordHash(passwordEncoder.encode(TemporaryCredentials.generate()))
                         .estadoActivo(true)
                         .debeCambiarPassword(true) // Obligatorio cambiar contraseña en su primer inicio de sesión
                         .fechaCreacion(LocalDateTime.now())
@@ -811,7 +812,7 @@ public class CotizacionServiceImpl implements ICotizacionService {
                 NotificacionCliente notifBienvenida = NotificacionCliente.builder()
                         .cliente(cliente)
                         .titulo("¡Bienvenido al Portal de Clientes B2B TransAduanas!")
-                        .mensaje("Su primera cotización (" + cotizacion.getCodigoCotizacion() + ") ha sido aprobada. Se ha habilitado su acceso corporativo. Por seguridad, deberá actualizar su contraseña temporal en su primer inicio de sesión.")
+                        .mensaje("Su primera cotización (" + cotizacion.getCodigoCotizacion() + ") ha sido aprobada. Se ha habilitado su acceso corporativo. Contacte al administrador para establecer su contraseña temporal mediante el restablecimiento de acceso; deberá cambiarla en su primer inicio de sesión.")
                         .tipo("ACCESO_CREADO")
                         .leido(false)
                         .enlace("/cotizaciones")

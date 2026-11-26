@@ -1,6 +1,8 @@
 package pe.sga.config;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import pe.sga.security.TemporaryCredentials;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
@@ -53,7 +55,7 @@ import java.util.List;
 @ConditionalOnProperty(
     name = "app.data-initializer.enabled",
     havingValue = "true",
-    matchIfMissing = true
+    matchIfMissing = false
 )
 
 public class DataInitializer implements CommandLineRunner {
@@ -73,6 +75,16 @@ public class DataInitializer implements CommandLineRunner {
     private final ExpedienteRepository expedienteRepository;
     private final DespachoTransporteRepository despachoTransporteRepository;
     private final PasswordEncoder passwordEncoder;
+
+    @Value("${BOOTSTRAP_ADMIN_PASSWORD:}")
+    private String bootstrapAdminPassword;
+
+    private String requiredBootstrapPassword() {
+        if (bootstrapAdminPassword == null || bootstrapAdminPassword.length() < 16) {
+            throw new IllegalStateException("Configure BOOTSTRAP_ADMIN_PASSWORD con al menos 16 caracteres antes de inicializar datos.");
+        }
+        return bootstrapAdminPassword;
+    }
 
     public DataInitializer(
             SedeRepository sedeRepository,
@@ -168,7 +180,7 @@ public class DataInitializer implements CommandLineRunner {
                     .rol(RolUsuario.ADMINISTRADOR_TI)
                     .sede(sedePrincipal)
                     .username("admin")
-                    .passwordHash(passwordEncoder.encode("Password123!"))
+                    .passwordHash(passwordEncoder.encode(requiredBootstrapPassword()))
                     .nombres("Administrador")
                     .apellidos("Sistema")
                     .correoInstitucional("admin@sga.pe")
@@ -631,9 +643,9 @@ public class DataInitializer implements CommandLineRunner {
             usuarioClienteRepository.save(UsuarioCliente.builder()
                     .cliente(cliente)
                     .username(ruc)
-                    .passwordHash(passwordEncoder.encode("Password123!"))
+                    .passwordHash(passwordEncoder.encode(TemporaryCredentials.generate()))
                     .estadoActivo(true)
-                    .debeCambiarPassword(false)
+                    .debeCambiarPassword(true)
                     .build());
             log.info("Cuenta demo de Portal B2B creada exitosamente para RUC: {}", ruc);
         }

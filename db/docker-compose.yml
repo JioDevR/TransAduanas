@@ -8,16 +8,18 @@ services:
       - --collation-server=utf8mb4_unicode_ci
       - --default-time-zone=-05:00
     environment:
-      MYSQL_ROOT_PASSWORD: 123gato456
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Configure MYSQL_ROOT_PASSWORD}
+      SGA_SEED_PASSWORD_HASH: ${SGA_SEED_PASSWORD_HASH:?Configure un hash BCrypt externo para las cuentas de laboratorio}
       MYSQL_DATABASE: SGAdb
       MYSQL_USER: admin
-      MYSQL_PASSWORD: 123gato456
+      MYSQL_PASSWORD: ${DB_PASSWORD:?Configure DB_PASSWORD}
     ports:
       - "3306:3306"
     volumes:
       - sga-mysql-data:/var/lib/mysql
       - ./schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
-      - ./seed.sql:/docker-entrypoint-initdb.d/02-seed.sql:ro
+      - ./seed.sql:/opt/sga/seed.sql:ro
+      - ./init-seed.sh:/docker-entrypoint-initdb.d/02-seed.sh:ro
 
 volumes:
   sga-mysql-data:

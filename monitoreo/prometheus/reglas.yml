@@ -1,0 +1,68 @@
+groups:
+  - name: transaduanas
+    rules:
+      - alert: BackendSinMetricas
+        expr: up{job="transaduanas-backend"} == 0
+        for: 30s
+        labels:
+          severity: critical
+        annotations:
+          summary: Prometheus no puede recolectar metricas del backend
+      - alert: TasaErroresHTTPAlta
+        expr: (sum(rate(http_server_requests_seconds_count{job="transaduanas-backend",status=~"5.."}[5m])) or vector(0)) / clamp_min(sum(rate(http_server_requests_seconds_count{job="transaduanas-backend"}[5m])), 0.0001) > 0.01
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: Mas de 1 por ciento de respuestas HTTP 5xx durante cinco minutos
+      - alert: LatenciaP95Alta
+        expr: histogram_quantile(0.95, sum by (le) (rate(http_server_requests_seconds_bucket{job="transaduanas-backend",uri!~"/actuator.*"}[5m]))) > 0.5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: Latencia p95 superior a 500 ms durante cinco minutos
+      - alert: CPUHostAlta
+        expr: system_cpu_usage{job="transaduanas-backend"} > 0.85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: CPU del host superior a 85 por ciento durante cinco minutos
+
+      - alert: DisponibilidadHTTPFallida
+        expr: probe_success{job="transaduanas-http"} == 0
+        for: 15s
+        labels:
+          severity: critical
+        annotations:
+          summary: Pagina o API no responde correctamente
+      - alert: SondeoHTTPNoDisponible
+        expr: up{job="transaduanas-http"} == 0
+        for: 30s
+        labels:
+          severity: critical
+        annotations:
+          summary: No se puede recolectar el sondeo HTTP
+
+      - alert: IngestaLogsInterrumpida
+        expr: (sum(increase(loki_distributor_lines_received_total{job="transaduanas-loki"}[2m])) == 0) and on() (min(up{job="transaduanas-backend"}) == 1) and on() (min(up{job="transaduanas-loki"}) == 1)
+        for: 5s
+        labels:
+          severity: critical
+        annotations:
+          summary: Dos minutos sin recibir logs mientras el backend sigue disponible
+      - alert: RecolectorLogsNoDisponible
+        expr: up{job="transaduanas-alloy"} == 0
+        for: 30s
+        labels:
+          severity: warning
+        annotations:
+          summary: Prometheus no puede recolectar metricas de Alloy
+      - alert: ReceptorLogsNoDisponible
+        expr: up{job="transaduanas-loki"} == 0
+        for: 30s
+        labels:
+          severity: critical
+        annotations:
+          summary: Loki no esta disponible

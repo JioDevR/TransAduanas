@@ -5,6 +5,8 @@ Esta guía tiene dos modalidades:
 1. **[Instalación para desarrollo](#1-instalación-para-desarrollo):** levanta cada servicio de forma nativa en tu máquina.
 2. **[Instalación con Docker Compose](#2-instalación-con-docker-compose):** despliega los cinco servicios en contenedores, sin instalar Java, Node.js ni MySQL.
 
+Para agregar Prometheus, Grafana, Loki y Alloy (con Docker Compose o con scripts en Windows), consulta la [guía de monitoreo](monitoreo.md).
+
 ## Índice
 
 - [1. Instalación para desarrollo](#1-instalación-para-desarrollo)

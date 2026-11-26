@@ -40,7 +40,7 @@ Esta rama incorpora la instrumentación de monitoreo sobre el código actual de 
 ### Mejoras del 26 de noviembre
 
 - M04 crea su contador cuando falta y espera una línea base común. La consulta de preparación tiene un identificador diferente y queda fuera de las 60 consultas medidas. Si no se sincroniza, guarda `NO_EJECUTADA`.
-- M09 comprueba que las métricas nativas y recolectadas de CPU sean válidas antes de comenzar sus 60 consultas.
+- M09 espera hasta 60 segundos a que respondan el backend, sus métricas, Prometheus y Grafana antes de identificar el proceso y tomar la línea base. Después comprueba que las métricas nativas y recolectadas de CPU sean válidas antes de comenzar sus 60 consultas. Las conexiones rechazadas durante la preparación se registran y reintentan; si persisten, se guarda `NO_EJECUTADA`, con cero consultas medidas.
 - M10 obtiene la ruta de almacenamiento tanto del XML anterior como de la configuración protegida del lanzador. `leer_almacenamiento_backend.py` devuelve únicamente esa ruta; no imprime ni guarda las credenciales.
 - M14 impide empezar con CPU no disponible y detiene la carga si las mediciones dejan de ser válidas. Se mantienen el 85 % y los cinco minutos originales.
 - El manual Word y PDF incluye estos cambios y los comandos del permiso de lectura de contadores en la página 21. Las quince pruebas siguen en sus páginas originales.
@@ -54,6 +54,8 @@ python .\verificar_preparacion.py
 ```
 
 Estas comprobaciones no arrancan servidores ni generan carga y no se contabilizan como ejecuciones de M01 a M15.
+
+`Running` en Windows indica que se inició el proceso supervisor, pero Java puede seguir arrancando. Esperar la disponibilidad evita medir antes de que se publique el puerto 9086. Si M09 sale con código 3, `Ejecutar-CasoMonitoreo.ps1` muestra que la prueba no inició y conserva el motivo y su carpeta de evidencias; ese código no significa que la medición haya fallado ni que haya sido exitosa.
 
 El 26 de noviembre de 2026 se compiló el backend con Java 21 y se ejecutó:
 

@@ -17,22 +17,32 @@ ROOT=Path(__file__).parent
 
 
 class PreparacionCPU(unittest.TestCase):
-    def check_gate(self,code,value):
+    def check_gate(self,code,value,connection_errors=0):
         text=(ROOT/f'ejecutar_prueba_{code[1:]}.py').read_text(encoding='utf-8-sig')
         start=text.index('cpu_preparacion=[]')
         end=text.index('initial=windows()',start) if code=='M09' else text.index('live=[',start)
         with tempfile.TemporaryDirectory() as directory:
             raw='' if value is None else '\n'.join(f'{metric}{{a="b"}} {value}' for metric in ('system_cpu_usage','process_cpu_usage'))
+            calls={'count':0}
+            def native_cpu():
+                calls['count']+=1
+                if connection_errors==-1 or calls['count']<=connection_errors:
+                    raise OSError('Conexion rechazada en comprobacion aislada')
+                return 0,raw
             env={'out':Path(directory),'json':json,'math':math,
                  'time':SimpleNamespace(time=lambda:1000,sleep=lambda _:None),
                  'marker':'revision-local','created':datetime.now(timezone.utc),
-                 'handle':None,'number':lambda expr:value,'native_cpu':lambda:(0,raw),
+                 'handle':None,'number':lambda expr:value,'native_cpu':native_cpu,
                  'expressions':{'CPUHOST':'host','CPUJAVA':'java','UP':'up'},
                  'prom':lambda expr,when:1 if expr=='up' else None if value is None else value*100}
             stopped=False
-            try:exec(compile(text[start:end],f'{code}-preparacion','exec'),env)
-            except SystemExit:stopped=True
-            self.assertEqual(stopped,value is None or value<0)
+            for node in ast.parse(text).body:
+                if isinstance(node,ast.FunctionDef) and node.name=='preparacion_no_disponible':
+                    exec(compile(ast.Module(body=[node],type_ignores=[]),'preparacion-helper','exec'),env)
+            with redirect_stdout(io.StringIO()):
+                try:exec(compile(text[start:end],f'{code}-preparacion','exec'),env)
+                except SystemExit:stopped=True
+            self.assertEqual(stopped,value is None or value<0 or connection_errors==-1)
             if stopped:
                 result=json.loads((Path(directory)/'resultado.json').read_text(encoding='utf-8'))
                 self.assertEqual(result['Estado'],'NO_EJECUTADA')
@@ -40,9 +50,51 @@ class PreparacionCPU(unittest.TestCase):
     def test_m09_valid(self):self.check_gate('M09',.15)
     def test_m09_unavailable(self):self.check_gate('M09',-1)
     def test_m09_missing(self):self.check_gate('M09',None)
+    def test_m09_connection_recovers(self):self.check_gate('M09',.15,connection_errors=2)
+    def test_m09_connection_stays_unavailable(self):self.check_gate('M09',.15,connection_errors=-1)
     def test_m14_valid(self):self.check_gate('M14',.15)
     def test_m14_unavailable(self):self.check_gate('M14',-1)
     def test_m14_missing(self):self.check_gate('M14',None)
+
+
+class DisponibilidadM09(unittest.TestCase):
+    def check_startup(self,delayed_metrics=False,unavailable=False):
+        source=(ROOT/'ejecutar_prueba_09.py').read_text(encoding='utf-8-sig')
+        start=source.index('urls_preparacion=[')
+        end=source.index('baseline=powershell(',start)
+        clock={'value':0};cycles={'count':0}
+        def sleep(seconds):clock['value']+=seconds
+        def open_url(url,timeout):
+            if ':8086/' in url:cycles['count']+=1
+            if ':9086/' in url and (unavailable or delayed_metrics and cycles['count']<=2):
+                raise OSError('Puerto de metricas no disponible en comprobacion aislada')
+            response=io.BytesIO(b'{}');response.status=200
+            return response
+        with tempfile.TemporaryDirectory() as directory:
+            env={'out':Path(directory),'marker':'revision-inicio','created':datetime.now(timezone.utc),
+                 'json':json,'handle':None,'time':SimpleNamespace(monotonic=lambda:clock['value'],sleep=sleep),
+                 'urllib':SimpleNamespace(request=SimpleNamespace(urlopen=open_url))}
+            for node in ast.parse(source).body:
+                if isinstance(node,ast.FunctionDef) and node.name=='preparacion_no_disponible':
+                    exec(compile(ast.Module(body=[node],type_ignores=[]),'preparacion-helper','exec'),env)
+            stopped=False
+            with redirect_stdout(io.StringIO()):
+                try:exec(compile(source[start:end],'M09-disponibilidad','exec'),env)
+                except SystemExit as exc:
+                    stopped=True
+                    self.assertEqual(exc.code,3)
+            self.assertEqual(stopped,unavailable)
+            self.assertTrue((Path(directory)/'preparacion-disponibilidad.json').is_file())
+            if unavailable:
+                result=json.loads((Path(directory)/'resultado.json').read_text(encoding='utf-8'))
+                self.assertEqual(result['Estado'],'NO_EJECUTADA')
+                self.assertEqual(result['SolicitudesMedidas'],0)
+            elif delayed_metrics:
+                self.assertEqual(cycles['count'],3)
+
+    def test_ready(self):self.check_startup()
+    def test_metrics_start_later(self):self.check_startup(delayed_metrics=True)
+    def test_metrics_never_start(self):self.check_startup(unavailable=True)
 
 
 class PreparacionM04(unittest.TestCase):

@@ -40,6 +40,45 @@ def powershell(text):
     result=subprocess.run(['powershell.exe','-NoProfile','-Command',text],capture_output=True,text=True,check=True)
     return json.loads(result.stdout.strip().lstrip('\ufeff'))
 
+def preparacion_no_disponible(reason,phase):
+    result={'CodigoPrueba':'M09','Estado':'NO_EJECUTADA','Identificador':marker,
+            'Resultado':reason,'Fase':phase,'SolicitudesMedidas':0,'InicioLima':created.isoformat()}
+    (out/'resultado.json').write_text(json.dumps(result,ensure_ascii=False,indent=2),encoding='utf-8')
+    (out/'resultado.txt').write_text('M09 - NO_EJECUTADA\n'+reason+'\n',encoding='utf-8')
+    if globals().get('handle'):
+        kernel.CloseHandle(handle)
+        globals()['handle']=None
+    print('Estado: NO_EJECUTADA\n'+reason+'\nEvidencias: '+str(out),flush=True)
+    raise SystemExit(3)
+
+# WinSW puede indicar Running antes de que Java publique sus dos puertos.
+# Esperar antes de identificar el PID y de tomar la linea base de Windows.
+urls_preparacion=[('Backend','http://127.0.0.1:8086/api/v1/health'),
+                  ('Metricas','http://127.0.0.1:9086/actuator/prometheus'),
+                  ('Prometheus','http://127.0.0.1:9090/-/ready'),
+                  ('Grafana','http://127.0.0.1:3000/api/health')]
+disponibilidad=[]
+limite_preparacion=time.monotonic()+60
+print('M09: comprobando disponibilidad del backend y monitoreo antes de medir (hasta 60 s).',flush=True)
+while True:
+    intento=[]
+    for name,url in urls_preparacion:
+        restante=limite_preparacion-time.monotonic()
+        if restante<=0:break
+        try:
+            with urllib.request.urlopen(url,timeout=min(3,restante)) as response:
+                response.read()
+                intento.append({'Componente':name,'HTTP':response.status,'Disponible':response.status==200})
+        except (OSError,ValueError) as exc:
+            intento.append({'Componente':name,'Disponible':False,'TipoError':type(exc).__name__})
+    disponibilidad.append(intento)
+    if len(intento)==len(urls_preparacion) and all(item['Disponible'] for item in intento):break
+    if time.monotonic()>=limite_preparacion:
+        (out/'preparacion-disponibilidad.json').write_text(json.dumps(disponibilidad,indent=2),encoding='utf-8')
+        preparacion_no_disponible('El backend o una herramienta de monitoreo no estuvo disponible a tiempo. Esperar el arranque y revisar preparacion-disponibilidad.json; no se iniciaron las 60 consultas.','Disponibilidad')
+    time.sleep(min(2,max(0,limite_preparacion-time.monotonic())))
+(out/'preparacion-disponibilidad.json').write_text(json.dumps(disponibilidad,indent=2),encoding='utf-8')
+
 baseline=powershell("$p=Get-NetTCPConnection -LocalPort 8086 -State Listen | Select-Object -First 1; $j=Get-CimInstance Win32_Process -Filter ('ProcessId='+$p.OwningProcess); $m=Get-CimInstance Win32_OperatingSystem; $c=Get-CimInstance Win32_ComputerSystem; @{PID=[int]$j.ProcessId; WorkingSet=[double]$j.WorkingSetSize; PrivateBytes=[double]$j.PrivatePageCount; CpuSeconds=([double]$j.KernelModeTime+[double]$j.UserModeTime)/10000000; TotalVisibleBytes=[double]$m.TotalVisibleMemorySize*1024; FreeBytes=[double]$m.FreePhysicalMemory*1024; LogicalProcessors=[int]$c.NumberOfLogicalProcessors} | ConvertTo-Json -Compress")
 (out/'windows-cim-inicial.json').write_text(json.dumps(baseline,indent=2),encoding='utf-8')
 
@@ -98,25 +137,26 @@ def native_cpu():
 # Comprobar las mediciones antes de iniciar las 60 consultas.
 cpu_preparacion=[]
 for attempt in range(10):
-    _,raw=native_cpu()
-    values={}
-    for metric in ('system_cpu_usage','process_cpu_usage'):
-        rows=[line for line in raw.splitlines() if line.startswith(metric+'{')]
-        values[metric]=float(rows[0].rsplit(' ',1)[1]) if rows else None
-    when=time.time()-1
-    collected={key:prom(expressions[key],when) for key in ('CPUHOST','CPUJAVA','UP')}
-    cpu_preparacion.append({'Nativas':values,'Prometheus':collected})
-    if (all(isinstance(v,(int,float)) and math.isfinite(v) and 0<=v<=1 for v in values.values())
-            and all(isinstance(collected[k],(int,float)) and math.isfinite(collected[k]) and 0<=collected[k]<=100 for k in ('CPUHOST','CPUJAVA'))
-            and collected['UP']==1):
-        break
+    try:
+        _,raw=native_cpu()
+        values={}
+        for metric in ('system_cpu_usage','process_cpu_usage'):
+            rows=[line for line in raw.splitlines() if line.startswith(metric+'{')]
+            values[metric]=float(rows[0].rsplit(' ',1)[1]) if rows else None
+        when=time.time()-1
+        collected={key:prom(expressions[key],when) for key in ('CPUHOST','CPUJAVA','UP')}
+        cpu_preparacion.append({'Nativas':values,'Prometheus':collected})
+        if (all(isinstance(v,(int,float)) and math.isfinite(v) and 0<=v<=1 for v in values.values())
+                and all(isinstance(collected[k],(int,float)) and math.isfinite(collected[k]) and 0<=collected[k]<=100 for k in ('CPUHOST','CPUJAVA'))
+                and collected['UP']==1):
+            break
+    except (OSError,ValueError,KeyError,RuntimeError) as exc:
+        cpu_preparacion.append({'TipoError':type(exc).__name__})
     time.sleep(2)
 else:
     (out/'preparacion-cpu.json').write_text(json.dumps(cpu_preparacion,indent=2),encoding='utf-8')
     reason='M09 no ejecutada: metricas de CPU no disponibles. Revisar permiso de lectura de contadores del servicio y reiniciarlo; no se iniciaron las 60 consultas.'
-    (out/'resultado.json').write_text(json.dumps({'CodigoPrueba':'M09','Estado':'NO_EJECUTADA','Identificador':marker,'Resultado':reason,'Fase':'Preparacion','InicioLima':created.isoformat()},ensure_ascii=False,indent=2),encoding='utf-8')
-    if handle:kernel.CloseHandle(handle)
-    raise SystemExit(reason)
+    preparacion_no_disponible(reason,'CPU')
 (out/'preparacion-cpu.json').write_text(json.dumps(cpu_preparacion,indent=2),encoding='utf-8')
 initial=windows()
 if initial['RAMTotalBytes']!=baseline['TotalVisibleBytes']:raise RuntimeError('La memoria total Windows no coincide en las lecturas previas; revisar preparacion.')

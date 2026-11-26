@@ -34,6 +34,10 @@ try{
   if($Codigo -in @('M04','M09')){$argumentos+=@('--endpoint','/api/v1/catalogos/tipos-carga')}
   if($Codigo -eq 'M14' -and $CargaRealCPU){$argumentos+='--autorizar-carga-real-host'}
   & $Python @argumentos
+  if($LASTEXITCODE -eq 3){
+   Write-Output 'Prueba no iniciada. Consulte el motivo y la carpeta de evidencias mostrados arriba.'
+   exit 3
+  }
   if($LASTEXITCODE -ne 0){throw "El ejecutor termino con codigo $LASTEXITCODE. Conservar el diagnostico y comprobar resultado.json si existe."}
  }
  Write-Output 'Revise el Estado y las verificaciones del resultado nuevo; un codigo de proceso 0 no sustituye esa revision.'

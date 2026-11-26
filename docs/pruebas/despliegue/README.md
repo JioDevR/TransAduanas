@@ -1,309 +1,218 @@
 # Manual de las 15 pruebas de despliegue
 
-Este es el único manual de despliegue de esta entrega. Reúne preparación, comandos, explicación, evidencias y recuperación. Los archivos `.ps1` y la plantilla XML que lo acompañan son herramientas ejecutables, no otros manuales.
+Actualizado el 26 de noviembre de 2026. Este es el único manual de despliegue. Incluye preparación, comandos, resultados esperados y recuperación. Los scripts `.ps1` son herramientas que ejecutan esos pasos.
 
-El recorrido corresponde a `backend-sga`, `app-sga`, `app-b2b` y `app-landing`, después de descargar esta rama actualizada o fusionarla con main. Se realizó en un laboratorio Windows local; no se presenta como evidencia de instalación en otro equipo ni publicación en Internet.
+Este documento usa las carpetas de `main`: `backend-sga`, `app-sga`, `app-b2b` y `app-landing`. La versión se lee del POM de la copia que se está probando: no se presupone 0.5.1, 0.5.2 ni la versión de otro equipo. No cambies la versión de un JAR renombrando el archivo.
 
-## Cómo usarlo
+## Preparación de cada terminal
 
-1. Revisar la preparación de abajo y después seguir las pruebas 1 a 15 en orden.
-2. Copiar solo el contenido de cada bloque de comandos. Ejecutar las líneas una por una en la terminal indicada.
-3. Si una prueba falla, conservar el error y no continuar como si hubiera aprobado.
-4. Tomar captura del comando y del resultado indicado en «Qué mostrar». Las consultas de registros anteriores no equivalen a ejecutar la prueba otra vez.
-
-Las pruebas 1 a 12 usan principalmente PowerShell normal. Las acciones de servicios y las pruebas 13 a 15 requieren PowerShell como administrador. Los bloques de cada prueba incluyen sus rutas necesarias: no dependen de variables definidas en otra terminal.
-
-**Una terminal normal y otra como administrador no comparten sus variables.** Una asignación como `$r = ...` no muestra mensajes: guarda una ruta. Si se cierra la terminal, hay que repetir las asignaciones correspondientes.
-
-## Preparación del laboratorio
-
-### Herramientas y archivos necesarios
-
-- Java 21 y el Maven Wrapper incluido en `backend-sga`.
-- Node y npm para compilar las interfaces; sus dependencias se instalan desde los lockfiles.
-- MySQL con la base original `sgadb`; Nginx para publicar las interfaces.
-- Nexus y el usuario de publicación ya preparado para las pruebas 12 y 13.
-- WinSW con el servicio `TransAduanasBackend`, su XML privado y los JAR históricos 0.5.0 y 0.5.1 conservados para las pruebas 13 a 15.
-
-Los comandos usan `Music\TransAduanas` como carpeta del proyecto. Si está en otro lugar, cambiar esa ruta. No ejecutar `schema.sql` o `seed.sql` para repetir estas pruebas: no hace falta borrar los datos originales.
-
-### Consultar los servicios
+Abre PowerShell en la raíz del checkout o del ZIP extraído. Si lo tienes en la ubicación del laboratorio, puedes entrar con:
 
 ```powershell
-Get-Service MySQL84, SonatypeNexusRepository, TransAduanasBackend
-Get-Process nginx -ErrorAction SilentlyContinue
+Set-Location "$env:USERPROFILE\Music\TransAduanas"
+$p = (Get-Location).Path
+$backend = Join-Path $p 'backend-sga'
 ```
 
-`Running` significa servicio encendido; `Stopped`, detenido. Si la segunda consulta no muestra procesos, Nginx no está ejecutándose. Estas consultas no inician ni detienen nada, y por sí solas no demuestran respuesta HTTP.
-
-Si MySQL está detenido, iniciarlo como administrador:
+Lee la versión y guarda las rutas cortas:
 
 ```powershell
-Start-Service MySQL84
+[xml]$pom = Get-Content "$backend\pom.xml" -Raw -ErrorAction Stop
+$version = [string]$pom.project.version
+$jar = Join-Path $backend "target\sga-backend-$version.jar"
 ```
 
-### Preparar Nginx con las carpetas nuevas
-
-Hacerlo una vez, después de tener los tres `dist` compilados. Si todavía no existen, usar los comandos de la prueba 9 durante esta preparación. En la demostración se pueden volver a compilar.
-
 ```powershell
-$p = "$env:USERPROFILE\Music\TransAduanas"
-$nginx = "$env:USERPROFILE\Downloads\nginx-1.31.8\nginx-1.31.8"
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$p\docs\pruebas\despliegue\Preparar-Nginx.ps1" -Nginx $nginx
-```
-
-El script conserva un respaldo de `nginx.conf`, genera las rutas actuales y ejecuta `nginx -t`. Debe mostrar configuración válida. No inicia ni recarga el servidor. Si cambias de terminal, vuelve a definir `$nginx` antes de los bloques siguientes.
-
-Si Nginx está detenido:
-
-```powershell
-Start-Process "$nginx\nginx.exe" -WorkingDirectory $nginx -WindowStyle Hidden
-```
-
-Si ya estaba funcionando, aplicar la configuración nueva mediante una recarga:
-
-```powershell
-Push-Location $nginx
-.\nginx.exe -s reload
-Pop-Location
-```
-
-Mantener Nginx activo para las pruebas 8, 10 y 13 a 15. El backend manual de la prueba 7 debe permanecer abierto hasta la 10 y detenerse con Ctrl+C antes de la 11.
-
-### Direcciones de las páginas
-
-- [SGA](http://localhost:5180)
-- [Clientes de SGA](http://localhost:5180/recepcion-comercial?tab=clientes)
-- [Portal de clientes](http://localhost:5174)
-- [Landing](http://localhost:5173)
-- [Nexus](http://127.0.0.1:8081)
-
-`localhost` apunta al equipo donde se abre el navegador. Estas direcciones no son direcciones públicas.
-
-## Recorrido de pruebas
-
-### Prueba 1 — Entorno y validación Maven
-
-**Objetivo:** Se verificaron Java 21.0.13, Maven 3.9.16 y la configuración Maven de TransAduanas.
-
-**Dónde:** PowerShell normal, desde backend-sga.
-
-```powershell
-Set-Location "$env:USERPROFILE\Music\TransAduanas\backend-sga"
-```
-
-**Ejecutar:**
-
-```powershell
-java --version
-.\mvnw.cmd -v
-.\mvnw.cmd validate
-```
-
-**Qué mostrar y capturar:** Java 21, Maven 3.9.16 y BUILD SUCCESS.
-
-**Qué explicar:** “Compruebo que tenemos las herramientas necesarias y que Maven puede procesar el proyecto. Todavía no estoy iniciando la aplicación.”
-
-### Prueba 2 — Compilación limpia
-
-**Objetivo:** Maven eliminó target y compiló nuevamente los 193 archivos Java del backend sin errores.
-
-**Dónde:** PowerShell normal, desde backend-sga. Las copias de despliegue están fuera de target.
-
-```powershell
-Set-Location "$env:USERPROFILE\Music\TransAduanas\backend-sga"
-```
-
-**Ejecutar:**
-
-```powershell
-.\mvnw.cmd clean compile
-```
-
-**Qué mostrar y capturar:** Deleting ...target, Compiling 193 source files y BUILD SUCCESS.
-
-**Qué explicar:** “Quito la compilación anterior y compruebo que el código actual puede generar nuevamente sus archivos. Esto es necesario antes de crear el paquete de despliegue.”
-
-### Prueba 3 — Funciones antes de desplegar
-
-**Objetivo:** Las 15 pruebas funcionales seleccionadas finalizaron sin fallos, errores ni omisiones.
-
-**Dónde:** PowerShell normal, desde backend-sga. Se usa H2 aislado, no la base MySQL original.
-
-```powershell
-Set-Location "$env:USERPROFILE\Music\TransAduanas\backend-sga"
-```
-
-**Ejecutar:**
-
-```powershell
-.\mvnw.cmd clean test "-Dtest=BusinessFunctionalCasesTest"
-```
-
-**Qué mostrar y capturar:** Tests run: 15, Failures: 0, Errors: 0, Skipped: 0 y BUILD SUCCESS.
-
-**Qué explicar:** “Antes de desplegar compruebo que las funciones seleccionadas siguen respondiendo correctamente. Esto no garantiza que todo el sistema esté libre de errores.”
-
-**H2 aislado:** base temporal en memoria creada por las pruebas. No se instala ni se configura a mano y no usa los datos originales de MySQL. `clean` regenera las clases para evitar archivos compilados faltantes.
-
-### Prueba 4 — Paquete ejecutable JAR
-
-**Objetivo:** Se generó sga-backend-0.5.1.jar y se identificaron la clase principal, la configuración staging y la biblioteca Spring Boot.
-
-**Dónde:** PowerShell normal, desde backend-sga. No cambiar el código después de la prueba 3.
-
-```powershell
-Set-Location "$env:USERPROFILE\Music\TransAduanas\backend-sga"
-```
-
-**Generar y revisar:**
-
-```powershell
-.\mvnw.cmd package "-DskipTests"
-jar tf .\target\sga-backend-0.5.1.jar | Select-String 'SgaApplication.class|application-staging.properties|BOOT-INF/lib/spring-boot-[0-9]'
-```
-
-**Qué mostrar y capturar:** BUILD SUCCESS y las tres entradas del JAR. SkipTests evita repetir la prueba anterior.
-
-**Qué explicar:** “Genero el archivo que vamos a desplegar y reviso componentes de su contenido. El arranque lo comprobaremos en otra prueba.”
-
-### Prueba 5 — Instalación en el repositorio local
-
-**Objetivo:** Maven guardó la versión 0.5.1 en .m2. Los hashes del JAR generado y el instalado coincidieron.
-
-**Dónde:** PowerShell normal, desde backend-sga.
-
-```powershell
-Set-Location "$env:USERPROFILE\Music\TransAduanas\backend-sga"
-```
-
-**Instalar y comparar:**
-
-```powershell
-.\mvnw.cmd install "-DskipTests"
-Get-FileHash -LiteralPath ".\target\sga-backend-0.5.1.jar", "$env:USERPROFILE\.m2\repository\pe\sga\sga-backend\0.5.1\sga-backend-0.5.1.jar" | Format-List Path, Hash
-```
-
-**Qué mostrar y capturar:** Installing..., BUILD SUCCESS y dos hashes iguales.
-
-**Qué explicar:** “Compruebo que Maven guardó una copia idéntica del paquete. Esto lo almacena en mi equipo; no inicia la aplicación ni publica en Nexus.”
-
-### Prueba 6 — Configuración para ejecutar la aplicación
-
-**Objetivo:** Se revisó el archivo staging: puerto 8086, variables externas, esquema en modo validate e inicializador desactivado.
-
-**Dónde:** PowerShell normal, desde backend-sga. Mostrar el archivo de configuración del entorno, no el XML privado.
-
-```powershell
-Set-Location "$env:USERPROFILE\Music\TransAduanas\backend-sga"
-```
-
-**Mostrar:**
-
-```powershell
-Get-Content .\src\main\resources\application-staging.properties
-```
-
-**Qué mostrar y capturar:** Las opciones del entorno; no debe verse una contraseña real.
-
-**Qué explicar:** “La prueba 1 revisa cómo construir el proyecto con Maven. Esta revisa cómo debe arrancar la aplicación en el entorno elegido. Su aplicación real se confirma en la 7.”
-
-**Sobre `${...}`:** el valor se lee de una variable de entorno. `JWT_SECRET` aporta la clave de tokens; `CORS_ALLOWED_ORIGINS`, las direcciones permitidas; `STORAGE_DIR`, la carpeta de documentos. Leer el archivo revisa lo declarado; la prueba 7 comprueba que el backend puede utilizarlo.
-
-### Prueba 7 — Arranque manual del JAR
-
-**Objetivo:** El JAR 0.5.1 inició con staging en el puerto 8086 y respondió UP.
-
-**Dónde:** Usar dos terminales: una como administrador para detener el servicio y otra normal, ubicada en backend-sga, para arrancar el JAR. Cargar las variables en la terminal del JAR.
-
-```powershell
-Set-Location "$env:USERPROFILE\Music\TransAduanas\backend-sga"
-```
-
-Definir la ruta privada en la terminal normal donde se ejecutará el JAR:
-
-```powershell
+$kit = Join-Path $p 'docs\pruebas\despliegue\kit-11-15'
+$r = "$env:USERPROFILE\Music\TransAduanas-desplegado"
 $xml = "$env:USERPROFILE\Music\TransAduanas-herramientas\winsw\TransAduanasBackend.xml"
 ```
 
-**Primero, como administrador:**
+Repite esta preparación en cada terminal nueva, también en la de administrador: no comparten variables. Las asignaciones no imprimen mensajes. Si la carpeta del proyecto es otra, ajusta `Set-Location` antes de definir `$p`. Un error que menciona `C:\backend-sga` o una ruta que empieza en `\docs` suele indicar que faltó definir una variable.
+
+Requisitos: Java 21, Node/npm para compilar interfaces, MySQL con los datos del laboratorio, Nginx, Nexus cuando corresponda y el servicio WinSW preparado para las pruebas 13 a 15. El XML privado, contraseñas, JAR históricos y herramientas se mantienen fuera de Git. El ZIP no instala servicios automáticamente.
+
+No ejecutes `schema.sql` ni `seed.sql` sobre la base existente para repetir estas pruebas. Los builds modifican `target` y `dist`; no recompiles el JAR mientras se ejecuta manualmente desde `target`. El servicio usa la copia estable en `$r\current`.
+
+## Usar el sistema que ya está desplegado
+
+No hace falta VS Code, Maven, npm ni otro JAR manual. Consulta:
+
+```powershell
+Get-Service MySQL84, TransAduanasBackend
+Get-Process nginx -ErrorAction SilentlyContinue
+```
+
+MySQL y el backend deben estar `Running`. Si están detenidos, inícialos en PowerShell como administrador:
+
+```powershell
+Start-Service MySQL84
+Start-Service TransAduanasBackend
+```
+
+Si Nginx no tiene procesos, define su carpeta e inícialo:
+
+```powershell
+$nginx = "$env:USERPROFILE\Downloads\nginx-1.31.8\nginx-1.31.8"
+Start-Process "$nginx\nginx.exe" -WorkingDirectory $nginx -WindowStyle Hidden
+```
+
+La ruta de Nginx es un ejemplo del laboratorio: ajústala si tu instalación está en otro lugar. No inicies otra instancia si ya está activo. Para aplicar una ruta de proyecto nueva, usa la prueba 10.
+
+Comprueba la respuesta:
+
+```powershell
+(Invoke-RestMethod 'http://localhost:5180/api/v1/health' -ErrorAction Stop).data.status
+```
+
+Debe mostrar `UP`. Después abre [SGA](http://localhost:5180), [Portal B2B](http://localhost:5174) o [Landing](http://localhost:5173). `localhost` corresponde al dispositivo donde se abre el navegador. Estas direcciones no demuestran una instalación en otro equipo ni una publicación en Internet.
+
+Si MySQL o el backend se detienen, Nginx no podrá consultar el negocio. Si Nginx se detiene, las interfaces no aceptarán conexiones aunque el backend responda. Después de reiniciar o suspender la computadora, revisar los componentes de nuevo.
+
+## 1. Entorno y validación Maven
+
+**Terminal normal.** Comprueba herramientas y POM, sin iniciar la aplicación:
+
+```powershell
+Set-Location $backend
+java -version
+.\mvnw.cmd -v
+```
+
+```powershell
+.\mvnw.cmd validate
+```
+
+**Resultado y captura:** Java 21, versión de Maven y `BUILD SUCCESS`. Demuestra que Maven puede procesar el proyecto; no que la aplicación esté funcionando.
+
+## 2. Compilación limpia
+
+**Terminal normal, sin un JAR manual ejecutándose desde target.**
+
+```powershell
+Set-Location $backend
+.\mvnw.cmd clean compile
+```
+
+**Resultado y captura:** Maven elimina `target`, compila las fuentes y termina con `BUILD SUCCESS`. Demuestra que puede regenerar la compilación desde el código. La cantidad de archivos puede cambiar entre versiones.
+
+## 3. Funciones antes de desplegar
+
+```powershell
+Set-Location $backend
+.\mvnw.cmd test "-Dtest=BusinessFunctionalCasesTest"
+```
+
+**Resultado y captura:** `Tests run: 15, Failures: 0, Errors: 0, Skipped: 0` y `BUILD SUCCESS`. Comprueba las 15 funciones seleccionadas por el pipeline. H2 es una base temporal en memoria; no se instala a mano y no utiliza el MySQL original.
+
+Si aparece una clase compilada faltante, repetir con `clean test` y la misma selección. No atribuirlo a H2 sin leer el primer `Caused by`. Estas 15 comprobaciones no equivalen a todas las suites del repositorio.
+
+## 4. Paquete ejecutable JAR
+
+Después de aprobar la prueba 3 y sin cambiar fuentes:
+
+```powershell
+Set-Location $backend
+.\mvnw.cmd package "-DskipTests"
+```
+
+```powershell
+jar tf $jar | Select-String 'SgaApplication.class|application-staging.properties|BOOT-INF/lib/spring-boot-[0-9]'
+Get-FileHash $jar
+```
+
+**Resultado y captura:** `BUILD SUCCESS`, clase de inicio, configuración staging y biblioteca Spring Boot dentro del JAR. `skipTests` evita repetir la prueba anterior; no acredita una ejecución nueva de pruebas. Conservar el hash de este binario, no exigir el de una compilación histórica.
+
+## 5. Instalación Maven local
+
+```powershell
+Set-Location $backend
+.\mvnw.cmd install "-DskipTests"
+```
+
+```powershell
+$jarInstalado = "$env:USERPROFILE\.m2\repository\pe\sga\sga-backend\$version\sga-backend-$version.jar"
+Get-FileHash $jar, $jarInstalado | Format-List Path, Hash
+```
+
+**Resultado y captura:** `BUILD SUCCESS` y dos hashes iguales. Maven guardó el mismo contenido en su repositorio local. No inició la aplicación ni publicó en Nexus. Si usas un repositorio Maven local personalizado, ajusta `$jarInstalado`.
+
+## 6. Configuración del entorno de despliegue
+
+```powershell
+Get-Content "$backend\src\main\resources\application-staging.properties"
+```
+
+**Resultado y captura:** puerto predeterminado 8086, variables `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, `JWT_SECRET`, `CORS_ALLOWED_ORIGINS`, `STORAGE_DIR`, esquema en `validate` e inicializador desactivado.
+
+`${NOMBRE}` significa que el valor se toma del entorno. Por ejemplo, `STORAGE_DIR` aporta la carpeta de documentos. No mostrar valores privados. Esta prueba revisa lo declarado; la 7 comprueba el arranque con esa configuración.
+
+## 7. Arranque manual del backend
+
+**Administrador:** detener el servicio del laboratorio para liberar el puerto:
 
 ```powershell
 Stop-Service TransAduanasBackend
 Get-NetTCPConnection -LocalPort 8086 -State Listen -ErrorAction SilentlyContinue
 ```
 
-**Después, en la terminal normal del JAR:**
+Si aparece otra conexión, identifica el proceso antes de continuar. Para otro backend manual, usa Ctrl+C en su terminal; no cierres procesos Java desconocidos.
+
+**Terminal normal:** repite la preparación de variables de este manual y carga el XML privado sin mostrar sus valores:
 
 ```powershell
 $c = [xml](Get-Content $xml -Raw -ErrorAction Stop)
-foreach ($e in $c.service.env) { [Environment]::SetEnvironmentVariable($e.name, $e.value, "Process") }
+foreach ($e in $c.service.env) { [Environment]::SetEnvironmentVariable($e.name, $e.value, 'Process') }
 ```
-
-**Arrancar y mantener la terminal abierta:**
 
 ```powershell
-java -jar .\target\sga-backend-0.5.1.jar --spring.profiles.active=staging
+Set-Location $backend
+java -jar $jar --spring.profiles.active=staging --spring.config.import=
 ```
 
-**En otra terminal:**
+El perfil staging valida el esquema y desactiva el inicializador. Mantener esta terminal abierta para las pruebas 8 a 10. Desde otra terminal:
 
 ```powershell
-(Invoke-RestMethod http://localhost:8086/api/v1/health -ErrorAction Stop).data.status
+(Invoke-RestMethod 'http://localhost:8086/api/v1/health' -ErrorAction Stop).data.status
 ```
 
-**Qué mostrar y capturar:** Perfil staging, Tomcat en 8086, Started SgaApplication y respuesta UP.
+**Resultado y captura:** perfil staging, conexión y esquema sin errores, `Tomcat started`, `Started SgaApplication` y `UP`. Si el XML usa otro SERVER_PORT, ajústalo para este recorrido en esa terminal. Si falta `JWT_SECRET`, repetir la carga del XML en la terminal del JAR. La clave JWT no es la contraseña MySQL.
 
-**Qué explicar:** “Inicio la aplicación desde el paquete generado, sin ejecutar el proyecto desde el IDE. Compruebo que arranca y responde; aún no que todas sus funciones trabajen.”
+`UP` por sí solo no demuestra que las funciones de negocio estén disponibles ni identifica con certeza el binario; comprobar el JAR/hash y la prueba 8.
 
-**Si falla:** puerto ocupado → detener el backend manual anterior con Ctrl+C o el servicio indicado; no cerrar otros procesos Java. Falta JWT_SECRET → repetir la lectura del XML en la misma terminal del JAR. `Unable to access jarfile` → comprobar la carpeta y generar el JAR en la prueba 4. La clave JWT no es la contraseña MySQL. No publicar el XML privado.
+## 8. Consulta de los datos originales
 
-**Al terminar:** dejar el JAR abierto para las pruebas 8 a 10. Consultar health desde otra terminal. Detener el JAR con Ctrl+C antes de la prueba 11.
+Si las interfaces todavía no se han compilado y publicado, preparar primero los pasos 9 y 10. En [SGA](http://localhost:5180), iniciar sesión, entrar a Clientes y buscar Camposol.
 
-### Prueba 8 — Aplicación conectada a MySQL
-
-**Objetivo:** La consulta de Camposol S.A. en SGA coincidió con la base original; el registro SQL tiene ID 1.
-
-**Dónde:** Navegador con SGA en localhost:5180 y backend/MySQL/Nginx activos. En Clientes, buscar Camposol.
-
-**Entrar a MySQL desde PowerShell:**
+En otra terminal, entrar a MySQL con la contraseña solicitada de forma interactiva:
 
 ```powershell
 & 'C:\Program Files\MySQL\MySQL Server 8.4\bin\mysql.exe' -u root -p sgadb
 ```
 
-**Dentro de MySQL:**
+Dentro de MySQL, ejecutar:
 
 ```sql
 SELECT id_cliente, razon_social FROM cliente WHERE razon_social LIKE '%Camposol%';
 ```
 
-**Qué mostrar y capturar:** La búsqueda en SGA y la fila SQL con Camposol S.A.; comparar los campos visibles.
+**Resultado y captura:** el registro mostrado en SGA coincide con SQL. No forzar un ID histórico si los datos cambiaron. Escribir `exit` para salir de MySQL. Esto demuestra lectura de negocio desde el despliegue, no solo respuesta del endpoint health.
 
-**Qué explicar:** “Compruebo que la aplicación desplegada puede consultar los datos originales. No basta con que responda UP: aquí vemos un dato de negocio.”
+## 9. Construcción de las tres interfaces
 
-**Página:** [abrir SGA](http://localhost:5180), iniciar sesión, entrar a Clientes y buscar Camposol. Con sesión iniciada también se puede abrir [la ruta de clientes](http://localhost:5180/recepcion-comercial?tab=clientes).
-
-### Prueba 9 — Compilación de las tres interfaces
-
-**Objetivo:** SGA, el portal de clientes y la landing generaron sus archivos dist correctamente.
-
-**Dónde:** PowerShell normal, desde la raíz del proyecto. Dependencias instaladas; no recargar las páginas durante los builds.
+**Terminal normal, desde la raíz.** Definir las direcciones de staging:
 
 ```powershell
-$p = "$env:USERPROFILE\Music\TransAduanas"
 Set-Location $p
-```
-
-Definir las direcciones antes de compilar, en esta misma terminal:
-
-```powershell
 $env:VITE_API_URL = '/api/v1'
 $env:VITE_SGA_APP_URL = 'http://localhost:5180'
+```
+
+```powershell
 $env:VITE_PORTAL_CLIENTE_URL = 'http://localhost:5174'
 ```
 
-Si faltan dependencias, instalar una vez desde los lockfiles:
+Instalar desde los lockfiles y comprobar cada resultado antes de continuar:
 
 ```powershell
 npm.cmd --prefix .\app-sga ci
@@ -311,274 +220,200 @@ npm.cmd --prefix .\app-b2b ci
 npm.cmd --prefix .\app-landing ci
 ```
 
-**Ejecutar cada línea por separado:**
-
 ```powershell
 npm.cmd --prefix .\app-sga run build -- --mode staging
 npm.cmd --prefix .\app-b2b run build -- --mode staging
 npm.cmd --prefix .\app-landing run build -- --mode staging
 ```
 
-**Qué mostrar y capturar:** Nombre de cada interfaz, dist/index.html y built in ... sin errores. No mostrar todos los assets.
+**Resultado y captura:** cada build termina sin errores y genera `dist/index.html`. Capturar el nombre de la interfaz y `built in ...`; no hace falta mostrar todos los assets. No usar `npm run dev` para demostrar publicación del build. Los avisos de tamaño no equivalen a un fallo de compilación.
 
-**Qué explicar:** “Genero los archivos que el servidor web utilizará para publicar las tres interfaces. No estoy usando el servidor de desarrollo npm run dev.”
+## 10. Publicación con Nginx y recarga interna
 
-### Prueba 10 — Comunicación con Nginx
-
-**Objetivo:** El backend y ambos proxies respondieron UP. La ruta de clientes cargó después de recargar.
-
-**Dónde:** PowerShell normal y navegador. Backend manual y Nginx activos.
-
-**Consultar:**
+**Terminal normal.** Nginx debe apuntar a la carpeta real de esta copia, no al nombre de otra extracción. Con los tres dist disponibles:
 
 ```powershell
-foreach ($puerto in 8086, 5180, 5174) {
-    "$puerto : $((Invoke-RestMethod "http://localhost:$puerto/api/v1/health").data.status)"
+$nginx = "$env:USERPROFILE\Downloads\nginx-1.31.8\nginx-1.31.8"
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$p\docs\pruebas\despliegue\Preparar-Nginx.ps1" -Nginx $nginx -Proyecto $p
+```
+
+El script respalda `nginx.conf` y ejecuta `nginx -t`. Solo continuar si pasa. Si Nginx está detenido:
+
+```powershell
+Start-Process "$nginx\nginx.exe" -WorkingDirectory $nginx -WindowStyle Hidden
+```
+
+Si ya está activo, usar **en cambio** una recarga:
+
+```powershell
+Push-Location $nginx
+.\nginx.exe -s reload
+Pop-Location
+```
+
+No ejecutar ambas alternativas. Si la recarga devuelve `Access is denied`, usar una terminal como administrador con `$nginx` definido de nuevo; no declarar aplicado un cambio que no se recargó.
+
+```powershell
+foreach ($puerto in 8086,5180,5174) {
+    "$puerto : $((Invoke-RestMethod "http://localhost:$puerto/api/v1/health" -ErrorAction Stop).data.status)"
 }
 ```
 
-**En el navegador, recargar con Ctrl+R:**
+Abrir las tres páginas y [Clientes](http://localhost:5180/recepcion-comercial?tab=clientes), y recargar con Ctrl+R.
 
-http://localhost:5180/recepcion-comercial?tab=clientes
+**Resultado y captura:** `UP` en las tres consultas, páginas disponibles y ruta interna sin 404/500. Si API funciona pero las páginas devuelven 500, comprobar los `root` de `nginx.conf` y los `dist/index.html`: se observó ese error al cambiar el nombre de la carpeta sin actualizar Nginx.
 
-**Qué mostrar y capturar:** 8086, 5180 y 5174 en UP; la página interna recarga sin 404.
+La configuración activa está fuera del repositorio, en la instalación de Nginx. Fusionar un PR o extraer un ZIP no la actualiza automáticamente. El formato de acceso generado incluye servicio, interfaz, endpoint e identificador de solicitud para facilitar el diagnóstico.
 
-**Qué explicar:** “Compruebo que las interfaces publicadas se comunican con el backend mediante Nginx y que la navegación sigue funcionando al recargar.”
+## 11. Automatización local
 
-### Prueba 11 — Proceso automatizado local
+**Terminal normal.** Antes, detener el JAR manual con Ctrl+C; si el servicio está activo, detenerlo como administrador. El script rechaza comenzar con el puerto 8086 ocupado. No usar las interfaces durante su reconstrucción.
 
-**Objetivo:** Un script ejecutó las 15 pruebas, construyó backend e interfaces y guardó reportes, paquetes y hashes.
-
-**Dónde:** PowerShell normal, desde la raíz. Detener antes el backend manual con Ctrl+C. No usar las páginas mientras se reconstruyen.
+Comando completo, desde cualquier ubicación con `$p` preparado:
 
 ```powershell
-$p = "$env:USERPROFILE\Music\TransAduanas"
-Set-Location $p
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$p\docs\pruebas\despliegue\Preparar-Artefactos-Local.ps1" -Proyecto $p
 ```
 
-**Ejecución completa:**
+**Resultado y captura:** 15 pruebas sin fallos, JAR de la versión del POM, tres dist y `resultado.txt` con `CORRECTO`. Los resultados quedan fuera del checkout, en `Music\TransAduanas-evidencias\pipeline-local-*`. El script también admite un ZIP sin `.git`: registra esa condición y conserva hashes de fuentes, sin atribuir un commit de otra carpeta.
 
-```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$p\docs\pruebas\despliegue\Preparar-Artefactos-Local.ps1"
-```
-
-**Consulta corta del resultado conservado:**
+Consulta corta del resultado guardado, que **no vuelve a ejecutar** la prueba:
 
 ```powershell
 $base = "$env:USERPROFILE\Music\TransAduanas-evidencias"
-$e = Get-ChildItem $base -Directory -Filter "pipeline-local-*" | Sort-Object Name -Descending | Select-Object -First 1
+$e = Get-ChildItem $base -Directory -Filter 'pipeline-local-*' | Sort-Object Name -Descending | Select-Object -First 1
 ```
 
-Si existe una ejecución guardada, mostrar su resultado:
-
 ```powershell
-Get-Content (Join-Path $e.FullName "resultado.txt")
+Get-Content (Join-Path $e.FullName 'resultado.txt')
 Get-ChildItem $e.FullName -Name
 ```
 
-**Qué mostrar y capturar:** 15 pruebas correctas y cuatro construcciones; Automatizacion local completada. La consulta corta muestra CORRECTO y los archivos guardados.
+Si no hay una carpeta de ejecución, ejecutar primero el comando completo. «Falta validar el despliegue» significa que todavía faltan arranque, proxy y función de negocio. No es una ejecución de GitHub Actions. Si terminas aquí, recuperar el servicio del laboratorio con `Start-Service TransAduanasBackend` como administrador y verificar health.
 
-**Qué explicar:** “Compruebo que los pasos se pueden repetir automáticamente. La consulta corta solo muestra el registro anterior; no ejecuta otra vez la prueba. No usamos GitHub Actions.”
+## 12. Publicación en Nexus
 
-La consulta corta muestra la ejecución guardada más reciente. Si no hay carpetas `pipeline-local-*`, no hay un registro que consultar: ejecutar primero el proceso completo. La frase «Falta validar el despliegue» significa que aún deben comprobarse el arranque, proxy y funciones del sistema.
+Comprobar primero si la versión del POM ya existe en Nexus. No sobrescribir releases históricas. Si existe con otro contenido, preparar una versión nueva antes de empezar el recorrido y repetir los pasos necesarios; no cambiar solo el nombre del archivo.
 
-### Prueba 12 — Versión del proyecto en Nexus
-
-**Objetivo:** Se publicó 0.5.1 en maven-releases y el archivo descargado coincidió con el original.
-
-**Dónde:** Nexus debe estar Running y su página cargada. Entrar con transaduanas-deploy.
-
-**Si Nexus está detenido, como administrador:**
+Si Nexus está detenido, como administrador:
 
 ```powershell
 Start-Service SonatypeNexusRepository
 ```
 
-**Cuando Nexus haya terminado de iniciar:**
+Esperar a que [Nexus](http://127.0.0.1:8081) cargue. Para publicar por primera vez, en terminal normal con las rutas preparadas:
 
 ```powershell
-Start-Process http://127.0.0.1:8081
+$cred = Get-Credential -Message 'Cuenta de publicacion de Nexus local'
+$env:NEXUS_USERNAME = $cred.UserName
+$env:NEXUS_PASSWORD = $cred.GetNetworkCredential().Password
 ```
-
-**En pantalla:**
-
-Browse → maven-releases → pe → sga → sga-backend → 0.5.1
-Seleccionar sga-backend-0.5.1.jar y mostrar los detalles y el POM.
-
-**Qué mostrar y capturar:** Repositorio, versión 0.5.1, JAR y POM. Complementar con el registro original: BUILD SUCCESS y DescargaCoincide True.
-
-**Qué explicar:** “Aquí se ve el paquete que ya publicamos. Compruebo su disponibilidad, no una publicación nueva. Repetir 0.5.1 da 409 porque no se permite sobrescribirla.”
-
-### Prueba 13 — Despliegue automático del backend
-
-**Objetivo:** El script desplegó el JAR verificado de Nexus. El backend y el proxy respondieron UP y Camposol siguió disponible.
-
-**Dónde:** PowerShell como administrador, desde la raíz. Servicio instalado; backend manual detenido. Descargar el JAR de Nexus a Descargas. Antes de repetir, estado.json debe indicar actual 0.5.0.
-
-**Definir en esta misma terminal como administrador:**
 
 ```powershell
-$r = "$env:USERPROFILE\Music\TransAduanas-desplegado"
-$kit = "$env:USERPROFILE\Music\TransAduanas\docs\pruebas\despliegue\kit-11-15"
-$jar = "$env:USERPROFILE\Downloads\sga-backend-0.5.1.jar"
+try { & "$kit\Publicar-Nexus.ps1" -Proyecto $p }
+finally { Remove-Item Env:NEXUS_USERNAME, Env:NEXUS_PASSWORD -ErrorAction SilentlyContinue; $cred = $null }
 ```
 
-**Verificar el archivo y el estado actual:**
+**Resultado y captura:** Maven deploy `BUILD SUCCESS`, `DescargaCoincide=True`, JAR y POM visibles en Browse → maven-releases → pe → sga → sga-backend → versión. El script vuelve a probar y construir; conservar el hash del archivo publicado para los siguientes pasos.
 
-```powershell
-Get-FileHash $jar | Format-List
-Get-Content "$r\estado.json"
-```
+401/403 indica autenticación/permisos; 409 puede indicar una release ya existente. Descargar y comparar una versión publicada demuestra disponibilidad, no una publicación nueva. Sin credenciales, marcar pendiente. No publicar credenciales ni mostrar su valor en capturas.
 
-**Desplegar:**
+## 13. Despliegue del backend
 
-```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$kit\Gestionar-Despliegue.ps1" -Accion Desplegar -Jar $jar -Version 0.5.1
-```
-
-**Después, comprobar:**
-
-```powershell
-(Invoke-RestMethod http://localhost:5180/api/v1/health).data.status
-```
-
-**Qué mostrar y capturar:** Operacion completada: Desplegar, hash B y Health UP. Luego recargar SGA y buscar Camposol.
-
-**Qué explicar:** “El script coloca el paquete y arranca el servicio. Compruebo que la actualización funciona. Esta automatización despliega el backend, no los frontends.”
-
-**Página:** [abrir SGA](http://localhost:5180), iniciar sesión, entrar a Clientes y buscar Camposol. Con sesión iniciada también se puede abrir [la ruta de clientes](http://localhost:5180/recepcion-comercial?tab=clientes).
-
-#### Recuperar o preparar una repetición de la prueba 13
-
-No volver a desplegar el mismo archivo si ya está colocado. Consultar primero `estado.json`. Para volver a 0.5.0, debe indicar **Actual 0.5.1 y Anterior 0.5.0**. En esa misma terminal como administrador:
+**Administrador:** repetir la preparación de rutas en esta terminal. Detener un backend manual si sigue abierto. Leer el estado antes de cambiarlo:
 
 ```powershell
 Get-Content "$r\estado.json"
+Get-FileHash $jar
+```
+
+Para un JAR descargado de Nexus, ajustar `$jar` y comprobar su hash. Si el archivo pertenece a otra versión, ajustar `$version` a su identidad real, no a un POM diferente. Un despliegue desde un JAR local no acredita su procedencia Nexus.
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$kit\Gestionar-Despliegue.ps1" -Accion Desplegar -Jar $jar -Version $version
+```
+
+```powershell
+Get-Content "$r\estado.json"
+Get-FileHash "$r\current\app.jar", $jar
+(Invoke-RestMethod 'http://localhost:5180/api/v1/health').data.status
+```
+
+**Resultado y captura:** `Operacion completada: Desplegar`, `Health: UP`, Actual con el destino esperado, Anterior con el origen real y hashes coincidentes. Recargar SGA y buscar Camposol antes de aprobar.
+
+### Recuperar o repetir la prueba 13
+
+«Artefactos idénticos» significa que no hay cambio de contenido. Para preparar una repetición, leer `estado.json` y confirmar que Anterior sea exactamente la versión que se desea recuperar. Solo entonces:
+
+```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$kit\Gestionar-Despliegue.ps1" -Accion Revertir
+Get-Content "$r\estado.json"
 ```
 
-Debe mostrar `Operacion completada: Revertir` y `Health: UP`. Confirmar Actual 0.5.0 y después repetir el comando Desplegar si se desea demostrar otra vez la actualización a 0.5.1.
+Debe mostrar `Operacion completada: Revertir` y `Health: UP`. Comprobar el hash, el proxy y Camposol. Después se puede repetir Desplegar con el JAR de destino. No fijar que el origen sea siempre 0.5.0: consultar el estado real.
 
-Si un despliegue falla, el script intenta recuperar automáticamente el JAR previo. Si ya quedó Actual 0.5.0, no ejecutar otra reversión: intercambiaría las versiones de nuevo. Si informa que no confirmó la recuperación, revisar servicio y logs antes de continuar. No editar `estado.json` para simular un cambio.
+Si el despliegue falla, el gestor intenta recuperar automáticamente el JAR previo. Si ya lo recuperó, otra reversión podría volver a cambiar de versión. Revisar mensajes, estado y salud antes de pedirla. No editar `estado.json` para simular un cambio.
 
-### Prueba 14 — Control y diagnóstico del servicio
+## 14. Servicio Windows y registros de JVM
 
-**Objetivo:** Se detuvo y reinició el servicio; respondió UP y generó el registro GC de Java.
-
-**Dónde:** PowerShell como administrador. Son dos momentos: capturar Stopped y después Running. Esperar el arranque antes de consultar health.
-
-```powershell
-$r = "$env:USERPROFILE\Music\TransAduanas-desplegado"
-```
-
-**Detener:**
+**Administrador**, después de la prueba 13:
 
 ```powershell
 Stop-Service TransAduanasBackend
 Get-Service TransAduanasBackend
 ```
 
-**Iniciar:**
+Capturar `Stopped`. Después:
 
 ```powershell
 Start-Service TransAduanasBackend
 Get-Service TransAduanasBackend
 ```
 
-**Cuando la aplicación esté lista:**
+Esperar el arranque de la aplicación y comprobar:
 
 ```powershell
-(Invoke-RestMethod http://localhost:8086/api/v1/health).data.status
+(Invoke-RestMethod 'http://localhost:8086/api/v1/health').data.status
 Get-Content "$r\logs\gc.log" -Tail 8
 ```
 
-**Qué mostrar y capturar:** Stopped, Running, UP y líneas gc/heap. La muestra previa fue 176M→44M y pausa de 9,462 ms; las cifras pueden variar.
+**Resultado y captura:** `Stopped`, `Running`, `UP` y líneas GC reales. `Running` no garantiza que el arranque haya terminado. Si gc.log no existe, revisar los argumentos de WinSW; no simularlo. Los valores de memoria y pausas pueden variar: esto permite diagnóstico y no demuestra por sí mismo una mejora de rendimiento.
 
-**Qué explicar:** “Compruebo que puedo administrar el backend como servicio y consultar información de su memoria. No estoy demostrando una mejora de rendimiento.”
+## 15. Recuperación de la versión anterior
 
-### Prueba 15 — Regreso al backend anterior
-
-**Objetivo:** Se recuperó 0.5.0 con su hash original; el sistema respondió UP y volvió a consultar Camposol.
-
-**Dónde:** PowerShell como administrador, desde la raíz. Antes: Actual 0.5.1 y Anterior 0.5.0. Revisarlo porque Revertir intercambia las versiones.
-
-```powershell
-$r = "$env:USERPROFILE\Music\TransAduanas-desplegado"
-$kit = "$env:USERPROFILE\Music\TransAduanas\docs\pruebas\despliegue\kit-11-15"
-```
-
-**Revisar y recuperar:**
+**Administrador.** Confirmar qué contienen Actual y Anterior. Solo continuar si el destino anterior es el que se quiere recuperar:
 
 ```powershell
 Get-Content "$r\estado.json"
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$kit\Gestionar-Despliegue.ps1" -Accion Revertir
 ```
 
-**Comprobar el resultado:**
-
 ```powershell
 Get-Content "$r\estado.json"
-Get-FileHash "$r\current\app.jar" | Format-List
-(Invoke-RestMethod http://localhost:5180/api/v1/health).data.status
+Get-FileHash "$r\current\app.jar"
+(Invoke-RestMethod 'http://localhost:5180/api/v1/health').data.status
 ```
 
-**Qué mostrar y capturar:** Operacion completada: Revertir; Actual 0.5.0, hash A y UP. Recargar SGA y buscar Camposol.
+**Resultado y captura:** versión anterior con su hash conservado, `UP`, página disponible y consulta de Camposol. Recupera únicamente el JAR; no restaura MySQL ni frontends. Revertir intercambia Actual y Anterior: no repetirlo sin leer el estado.
 
-**Qué explicar:** “Compruebo que puedo retirar una actualización y volver al backend anterior. Recupero el JAR; no restauro la base de datos ni los frontends.”
+Si se necesita terminar con la versión de destino activa, volver a ejecutar el comando Desplegar de la prueba 13 y repetir las comprobaciones de negocio.
 
-**Página:** [abrir SGA](http://localhost:5180), iniciar sesión, entrar a Clientes y buscar Camposol. Con sesión iniciada también se puede abrir [la ruta de clientes](http://localhost:5180/recepcion-comercial?tab=clientes).
+## VS Code y proyectos Maven duplicados
 
-## Archivos necesarios que se conservan
+`.vscode/settings.json` excluye las carpetas de evidencias de monitoreo y mantenimiento de la importación Java. Las evidencias no se borran y pueden abrirse normalmente; se evita que sus POM de respaldo se importen como otro backend con el mismo groupId/artifactId.
 
-| Archivo | Función |
-| --- | --- |
-| `Preparar-Artefactos-Local.ps1` | Ejecutar las 15 pruebas y construir backend e interfaces, guardando evidencia fuera del repositorio. |
-| `Preparar-Nginx.ps1` | Generar y validar la configuración de Nginx para las carpetas actuales. |
-| `kit-11-15/Publicar-Nexus.ps1` | Publicar una release nueva y verificar la descarga. Requiere NEXUS_USERNAME y NEXUS_PASSWORD. |
-| `kit-11-15/Preparar-Servicio.ps1` | Preparar el XML privado de WinSW antes de instalar el servicio. No ejecutarlo sobre un servicio ya instalado. |
-| `kit-11-15/Gestionar-Despliegue.ps1` | Preparar el JAR inicial, desplegar y recuperar la versión anterior. |
-| `settings-nexus.xml.example` | Plantilla Maven que lee las credenciales desde variables de entorno. |
+Si el aviso ya estaba en caché, guardar el trabajo y ejecutar `Java: Clean Java Language Server Workspace`. Esta operación del editor no inicia ni detiene MySQL, el servicio o Nginx.
 
-No se incluyen contraseñas, XML privados, respaldos SQL ni binarios de herramientas. Los scripts no reemplazan la instalación de MySQL, Nexus, WinSW o Nginx.
+## Archivos y alcance
 
-## Workflow de GitHub Actions
+Se conservan el pipeline local, el generador Nginx, los scripts de preparar servicio/publicar/desplegar y `settings-nexus.xml.example`. Son necesarios para ejecutar las pruebas, no manuales duplicados. El XML real de WinSW, `nginx.conf` activo, datos, respaldos, herramientas, `node_modules`, `target` y `dist` no forman parte de este cambio.
 
-El archivo `.github/workflows/preparar-artefactos.yml` está incorporado y adaptado a las carpetas actuales. Se activa manualmente con `workflow_dispatch`; para que GitHub muestre esa opción, debe estar en la rama predeterminada. No se ejecuta automáticamente por push o pull request.
+El workflow `.github/workflows/preparar-artefactos.yml` se activa manualmente con `workflow_dispatch`; debe estar en la rama predeterminada para mostrar la opción de ejecución. Compila y conserva artefactos/reportes, pero no instala los servicios del laboratorio ni despliega en Nexus o WinSW. Las evidencias del pipeline local no acreditan una ejecución de GitHub Actions.
 
-Cuando se solicite, preparará Java 21 y Node 24, ejecutará las 15 pruebas, empaquetará el JAR, compilará las tres interfaces y conservará reportes y artefactos durante 14 días. Usa los archivos del commit remoto, no los cambios locales sin subir. Los frontends se construyen por separado y los reportes del backend se intentan conservar aunque falle Maven.
+Cada resultado debe comprobarse en la copia y versión que se estén usando. Este manual no convierte resultados históricos en aprobaciones de una nueva ejecución. Para demostrar traslado a otro equipo hay que configurar y probar ese destino aparte.
 
-Este workflow no instala MySQL o Nginx del laboratorio, no administra WinSW, no publica automáticamente en Nexus y no despliega la aplicación. Las pruebas usan H2 aislado; la comprobación de datos originales corresponde a MySQL en las pruebas del laboratorio. Conservar un JAR como artifact no equivale a ejecutar Maven deploy.
+## Validación de estas correcciones
 
-## Hashes de referencia y versiones
+El 26 de noviembre de 2026, sobre main `37da034`, se ejecutaron `clean verify -Dtest=BusinessFunctionalCasesTest` (15 pruebas sin fallos, errores u omisiones) y los tres builds staging desde sus lockfiles. Los cinco scripts y los 44 bloques PowerShell del manual pasaron el analizador. Nginx aceptó la configuración generada en una carpeta aislada.
 
-JAR histórico 0.5.0:
-
-```text
-D4E6D2DCB1DDAC49B1EF669782817866003D566310FFA42C7FC6FFECB7115258
-```
-
-JAR histórico 0.5.1 publicado en Nexus:
-
-```text
-C7B9081A5D098894DCCC6F62D283F0EBFA4F18A0622AD83A945C72C52FF58A29
-```
-
-La comparación de hashes verifica que se usa el mismo contenido. Una compilación del código actualizado puede generar otro hash: estos valores describen los binarios históricos. No sobrescribir la release 0.5.1 existente en Nexus; si se necesita publicar otro binario, preparar una versión nueva. Después de la prueba 15 queda el backend histórico 0.5.0; eso no cambia la versión del POM del código.
-
-## Comprobación de compatibilidad con main
-
-Validado el 19 de noviembre de 2026, después de integrar main en `0e43733`:
-
-| Comprobación | Resultado obtenido |
-| --- | --- |
-| Compilación y empaquetado del backend con BusinessFunctionalCasesTest | BUILD SUCCESS; 15 pruebas, cero fallos, errores u omisiones; JAR generado. |
-| ControllerFunctionalTest y AllControllersFunctionalTest | BUILD SUCCESS; 239 pruebas, cero fallos, errores u omisiones. |
-| npm ci y build staging en app-sga, app-b2b y app-landing | Las tres compilaciones finalizaron y generaron sus dist. |
-| Analizador de PowerShell | Cinco scripts sin errores de sintaxis. |
-| Generador de configuración y nginx -t | Configuración aceptada en una carpeta de herramientas aislada; no se inició el servidor. |
-
-Estas verificaciones se hicieron en una copia aislada del checkout integrado, sin modificar MySQL ni los servicios Windows del laboratorio. Se adaptaron las rutas y los tests de cotizaciones al constructor actual del controlador.
-
-No se ejecutó GitHub Actions ni se repitieron publicación en Nexus, despliegue y recuperación del servicio real durante esa revisión. Tampoco se ejecutaron todas las suites del proyecto ni una instalación en otro equipo. Los resultados anteriores no garantizan una ejecución nueva: comprobar los servicios, archivos y respuestas indicados en cada prueba.
-
-El XML privado de WinSW y la configuración activa de Nginx están fuera de Git: fusionar o descargar esta rama no los modifica automáticamente.
+No se ejecutó el pipeline completo ni GitHub Actions, ni se publicaron releases en Nexus o se detuvo/revirtió el servicio del laboratorio para esta revisión. Las compilaciones se hicieron en una copia separada. La versión del POM de ese main era 0.5.1; no se cambió a la versión de otra copia local.

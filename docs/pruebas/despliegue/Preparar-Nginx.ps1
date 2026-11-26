@@ -33,6 +33,7 @@ $servidores = foreach ($sitio in @(
             proxy_set_header X-Real-IP `$remote_addr;
             proxy_set_header X-Forwarded-For `$proxy_add_x_forwarded_for;
             proxy_set_header X-Forwarded-Proto `$scheme;
+            proxy_set_header X-Request-ID `$request_id;
         }
     }
 "@
@@ -45,7 +46,19 @@ events { worker_connections 1024; }
 http {
     include mime.types;
     default_type application/octet-stream;
-    access_log logs/access.log;
+    # Identificar el servicio atendido y la interfaz de origen en cada evento.
+    map `$server_port `$frontend_service {
+        5173 app-landing;
+        5180 app-sga;
+        5174 app-b2b;
+        default nginx;
+    }
+    map `$uri `$service_name {
+        ~^/api/ sga-backend;
+        default `$frontend_service;
+    }
+    log_format monitoreo '`$remote_addr - `$remote_user [`$time_local] "`$request" `$status `$body_bytes_sent "`$http_referer" "`$http_user_agent" service="`$service_name" frontend="`$frontend_service" endpoint="`$uri" request_id="`$request_id" upstream="`$upstream_addr"';
+    access_log logs/access.log monitoreo;
     sendfile on;
     client_max_body_size 100m;
 $($servidores -join "`n")

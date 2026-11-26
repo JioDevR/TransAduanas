@@ -81,8 +81,8 @@ class JwtTokenProviderTest {
     }
 
     @Test
-    @DisplayName("Límite: secret menor a 32 bytes aplica padding seguro sin lanzar error")
-    void generateToken_secretCorto_aplicaPaddingYValidaCorrectamente() {
+    @DisplayName("Límite: secret menor a 32 bytes impide iniciar y firmar tokens")
+    void generateToken_secretCorto_rechazado() {
         JwtTokenProvider shortSecretProvider = new JwtTokenProvider();
         ReflectionTestUtils.setField(shortSecretProvider, "jwtSecret", "clave_corta_123");
         ReflectionTestUtils.setField(shortSecretProvider, "jwtExpirationMs", 60000L);
@@ -94,10 +94,10 @@ class JwtTokenProviderTest {
                 .correoInstitucional("admin@transaduanas.pe")
                 .build();
 
-        String token = shortSecretProvider.generateToken(usuario);
-
-        assertTrue(shortSecretProvider.validateToken(token));
-        assertEquals("admin", shortSecretProvider.getUsernameFromToken(token));
+        assertThrows(io.jsonwebtoken.security.WeakKeyException.class,
+                shortSecretProvider::validateConfiguration);
+        assertThrows(io.jsonwebtoken.security.WeakKeyException.class,
+                () -> shortSecretProvider.generateToken(usuario));
     }
 
     @Test

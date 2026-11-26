@@ -19,15 +19,16 @@ public class JwtTokenProvider {
     @Value("${jwt.expiration-ms:86400000}")
     private long jwtExpirationMs;
 
+    @jakarta.annotation.PostConstruct
+    public void validateConfiguration() {
+        getSigningKey();
+    }
+
     private SecretKey getSigningKey() {
-        byte[] keyBytes = jwtSecret.getBytes(StandardCharsets.UTF_8);
-        if (keyBytes.length < 32) {
-            // Asegurar al menos 256 bits si el secret configurado es menor
-            byte[] padded = new byte[32];
-            System.arraycopy(keyBytes, 0, padded, 0, Math.min(keyBytes.length, 32));
-            return Keys.hmacShaKeyFor(padded);
+        if (jwtSecret == null || jwtSecret.isBlank()) {
+            throw new IllegalStateException("JWT_SECRET es obligatorio y debe contener al menos 32 bytes aleatorios");
         }
-        return Keys.hmacShaKeyFor(keyBytes);
+        return Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
     }
 
     public String generateToken(Usuario usuario) {

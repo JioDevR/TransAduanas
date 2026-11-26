@@ -119,6 +119,7 @@ class DataInitializerTest {
         when(expedienteRepository.save(any(Expediente.class))).thenAnswer(i -> i.getArgument(0));
         when(despachoTransporteRepository.save(any(DespachoTransporte.class))).thenAnswer(i -> i.getArgument(0));
 
+        org.springframework.test.util.ReflectionTestUtils.setField(dataInitializer, "bootstrapAdminPassword", pe.sga.security.TemporaryCredentials.generate());
         dataInitializer.run();
 
         ArgumentCaptor<Sede> sedeCaptor = ArgumentCaptor.forClass(Sede.class);
@@ -182,6 +183,7 @@ class DataInitializerTest {
         when(conductorRepository.count()).thenReturn(6L);
         when(despachoTransporteRepository.count()).thenReturn(4L);
 
+        org.springframework.test.util.ReflectionTestUtils.setField(dataInitializer, "bootstrapAdminPassword", pe.sga.security.TemporaryCredentials.generate());
         dataInitializer.run();
 
         verify(sedeRepository, never()).save(any());

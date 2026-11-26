@@ -251,6 +251,8 @@ public class SecurityConfigTest {
                         .header("Authorization", "Bearer " + token)
                         .contentType("application/json")
                         .content("{}"))
-                .andExpect(status().is5xxServerError());
+                .andExpect(status().isMethodNotAllowed())
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.header().string("Allow", "GET"))
+                .andExpect(jsonPath("$.success").value(false));
     }
 }

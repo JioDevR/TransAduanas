@@ -1,0 +1,2 @@
+# Script de inicializacion usado dentro del contenedor Linux
+db/init-seed.sh text eol=lf

@@ -53,15 +53,6 @@ vi.mock('@/features/admin/catalogos/services/catalogoService', () => ({
   }
 }))
 
-const mockGetUnidades = vi.fn()
-const mockGetConductores = vi.fn()
-vi.mock('@/features/transporte/services/transporteFlotaService', () => ({
-  transporteFlotaService: {
-    getUnidades: (...args) => mockGetUnidades(...args),
-    getConductores: (...args) => mockGetConductores(...args)
-  }
-}))
-
 import { useGerenciaDashboard } from '../useGerenciaDashboard'
 import { useNavigationStore } from '@/core/stores/navigationStore'
 
@@ -73,11 +64,9 @@ describe('useGerenciaDashboard', () => {
     mockGetPuertos.mockResolvedValue([{ idPuerto: 1, tipo: 'MARITIMO', estado: 'ACTIVO' }])
     mockGetTiposCarga.mockResolvedValue([{ idTipoCarga: 1, codigo: 'IMP-FCL', estado: 'ACTIVO' }])
     mockGetMercancias.mockResolvedValue([{ idMercancia: 1, estado: 'ACTIVO', requierePermiso: true }])
-    mockGetUnidades.mockResolvedValue([{ idUnidad: 1, estadoOperativo: 'DISPONIBLE', capacidadCargaKg: 20000 }])
-    mockGetConductores.mockResolvedValue([{ idConductor: 1, estadoOperativo: 'DISPONIBLE' }])
   })
 
-  it('carga en paralelo los 6 servicios incluyendo mercancías y calcula métricas', async () => {
+  it('carga en paralelo los 4 servicios maestros y calcula métricas', async () => {
     const { loadDashboardData, metrics, sedesList, failedSources } = useGerenciaDashboard()
     await loadDashboardData()
 
@@ -89,8 +78,6 @@ describe('useGerenciaDashboard', () => {
     expect(metrics.value.cargasCount).toBe(1)
     expect(metrics.value.mercanciasCount).toBe(1)
     expect(metrics.value.mercanciasVuceCount).toBe(1)
-    expect(metrics.value.unidadesCount).toBe(1)
-    expect(metrics.value.conductoresCount).toBe(1)
   })
 
   it('notifica error parcial cuando falla uno de los servicios sin perder los demás', async () => {
@@ -104,7 +91,7 @@ describe('useGerenciaDashboard', () => {
     expect(mockShowError).toHaveBeenCalled()
   })
 
-  it('navega a todas las sub-opciones reales y al puente transversal de flota', () => {
+  it('navega a todas las sub-opciones reales de gerencia general', () => {
     const nav = useNavigationStore()
     const { goToSubOption } = useGerenciaDashboard()
 
@@ -116,11 +103,6 @@ describe('useGerenciaDashboard', () => {
     goToSubOption('tipos-carga')
     expect(nav.gerenciaGeneralSubOption).toBe('tipos-carga')
     expect(mockPush).toHaveBeenCalledWith('/gerencia-general/tipos-carga')
-
-    goToSubOption('flota')
-    expect(nav.activeModule).toBe('transporte-flota')
-    expect(nav.transporteFlotaSubOption).toBe('unidades')
-    expect(mockPush).toHaveBeenCalledWith('/transporte-flota?tab=unidades')
   })
 
   it('exporta PDF para cualquiera de los 4 catálogos y notifica éxito o error', async () => {

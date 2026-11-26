@@ -1,113 +1,143 @@
 <template>
-  <BaseModal
+  <Dialog
     :visible="visible"
-    title="Confirmar Recepción Conforme en Destino Exterior"
-    :subtitle="`Expediente: ${expediente?.codigoExpediente || ''} — DAM: ${expediente?.numeroDam || 'S/N'}`"
-    icon="pi pi-check-circle"
-    max-width="600px"
-    :error-message="errorMessage"
-    :busy="loading"
-    @close="handleClose"
+    modal
+    :closable="!loading"
+    :dismissableMask="!loading"
+    :style="{ width: getDialogWidth('620px'), maxWidth: '95vw' }"
+    header="Confirmar Recepción de Carga en País de Destino"
+    @update:visible="(val) => { if (!val && !loading) handleClose() }"
   >
-    <form @submit.prevent="handleSubmit" class="form-body">
-      <!-- Info Banner Recepción Exterior -->
-      <div class="recepcion-info-banner">
-        <i class="pi pi-verified text-lg"></i>
-        <div class="banner-texts">
-          <strong>Certificación de Entrega a Consignatario Internacional</strong>
-          <p>
-            Al registrar la recepción conforme por parte del comprador/importador en el país de destino (con documento de entrega o BL endosado), el ciclo operativo queda cumplido y listo para el cierre formal del Supervisor Aduanero.
+    <form id="recepcion-destino-exterior-form" class="sga-dialog-body" @submit.prevent="handleSubmit">
+      <div v-if="expediente" class="sga-dialog-context">
+        <div class="sga-dialog-context-meta">
+          <span class="sga-code-cell font-mono">{{ expediente.codigoExpediente }}</span>
+          <span class="sga-dialog-context-sub">
+            {{ expediente.clienteRazonSocial || 'Exportador asignado' }}
+          </span>
+        </div>
+        <Tag
+          value="DESTINO EXTERIOR"
+          severity="success"
+          class="sga-mini-tag"
+          rounded
+        />
+      </div>
+
+      <div class="sga-banner is-success">
+        <i class="pi pi-check-square"></i>
+        <div>
+          <strong>Entrega Internacional Completada</strong>
+          <p class="recepcion-banner-desc">
+            Registre la conformidad del consignatario en destino exterior para cerrar la trazabilidad logística de exportación.
           </p>
         </div>
       </div>
 
-      <div class="recepcion-fields-grid">
-        <div class="field-item full-width">
-          <label for="recep-consignatario">Nombre de Consignatario o Agente Receptor en Destino *</label>
+      <div v-if="errorMessage" class="sga-banner is-danger" role="alert">
+        <i class="pi pi-exclamation-triangle"></i>
+        <span>{{ errorMessage }}</span>
+      </div>
+
+      <div class="sga-grid-2">
+        <div class="sga-form-field full-span">
+          <label for="recep-consignatario" class="sga-form-label">Consignatario / Receptor en Destino Exterior *</label>
           <InputText
             id="recep-consignatario"
             v-model.trim="form.consignatarioExterior"
+            placeholder="Nombre de la empresa compradora o agente en destino"
             required
-            placeholder="Ej. Global Logistics Corp. / Hans Müller GmbH"
+            size="small"
             fluid
           />
         </div>
 
-        <div class="field-item">
-          <label for="recep-doc">Documento de Entrega / BL Retirado *</label>
+        <div class="sga-form-field">
+          <label for="recep-doc" class="sga-form-label">Documento de Entrega / Recibo *</label>
           <InputText
             id="recep-doc"
             v-model.trim="form.documentoRecepcion"
+            placeholder="Ej. POD-EXT-9910 / BL Endosado"
             required
-            placeholder="Ej. BL-END-99824 / POD-RECEIPT"
+            size="small"
             fluid
           />
         </div>
 
-        <div class="field-item">
-          <label for="recep-fecha">Fecha y Hora de Recepción *</label>
-          <input
+        <div class="sga-form-field">
+          <label for="recep-fecha" class="sga-form-label">Fecha y Hora de Recepción *</label>
+          <InputText
             id="recep-fecha"
             v-model="form.fechaRecepcionDestino"
             type="datetime-local"
-            class="text-input"
             required
+            size="small"
+            fluid
           />
         </div>
 
-        <div class="field-item full-width">
-          <label for="recep-archivo">Documento de Conformidad en País de Destino (PDF / Imagen)</label>
+        <div class="sga-form-field full-span">
+          <label for="recep-archivo" class="sga-form-label">Documento / Acta de Conformidad en Destino (opcional)</label>
           <input
             id="recep-archivo"
             type="file"
             accept=".pdf,image/*"
-            class="text-input"
+            class="sga-file-input"
             @change="onConformidadSelected"
           />
-          <small v-if="archivoConformidad" class="sga-cell-sub">
-            Archivo listo para subir: {{ archivoConformidad.name }}
-          </small>
+          <span v-if="archivoConformidad" class="sga-field-hint is-selected">
+            Archivo adjunto: {{ archivoConformidad.name }}
+          </span>
+          <span v-else class="sga-field-hint">
+            Puede adjuntar el POD firmado o acta de recepción en formato PDF o imagen.
+          </span>
         </div>
 
-        <div class="field-item full-width">
-          <label for="recep-obs">Observaciones de Conformidad del Destinatario</label>
+        <div class="sga-form-field full-span">
+          <label for="recep-obs" class="sga-form-label">Observaciones de Entrega Final</label>
           <Textarea
             id="recep-obs"
             v-model.trim="form.observaciones"
             rows="2"
             autoResize
-            placeholder="Mercadería recibida en bodega de destino sin novedades ni faltantes, precinto cortado en presencia del importador..."
+            placeholder="Ej. Mercancía recepcionada intacta en puerto/almacén de destino..."
+            size="small"
             fluid
           />
         </div>
       </div>
-
-      <div class="modal-actions">
-        <Button
-          type="button"
-          label="Cancelar"
-          severity="secondary"
-          outlined
-          @click="handleClose"
-          :disabled="loading"
-        />
-        <Button
-          type="submit"
-          label="Registrar Conformidad de Recepción"
-          icon="pi pi-check"
-          :loading="loading"
-        />
-      </div>
     </form>
-  </BaseModal>
+
+    <template #footer>
+      <Button
+        type="button"
+        label="Cancelar"
+        severity="secondary"
+        outlined
+        size="small"
+        :disabled="loading"
+        @click="handleClose"
+      />
+      <Button
+        type="submit"
+        form="recepcion-destino-exterior-form"
+        label="Confirmar Recepción en Destino"
+        icon="pi pi-check"
+        size="small"
+        :loading="loading"
+      />
+    </template>
+  </Dialog>
 </template>
 
 <script setup>
 import { ref, watch } from 'vue'
 import Button from 'primevue/button'
+import Dialog from 'primevue/dialog'
 import InputText from 'primevue/inputtext'
+import Tag from 'primevue/tag'
 import Textarea from 'primevue/textarea'
-import BaseModal from '@/shared/components/BaseModal.vue'
+import { useResponsive } from '@/shared/composables/useResponsive'
 import { expedienteService } from '@/shared/services/expedienteService'
 import { documentoService } from '@/features/documentos/services/documentoService'
 import { getNowDateTimeInput, toLocalDateTimePayload } from '@/shared/utils/dateUtils'
@@ -118,6 +148,7 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['close', 'saved'])
+const { getDialogWidth } = useResponsive()
 
 const loading = ref(false)
 const errorMessage = ref('')
@@ -139,10 +170,11 @@ const getNowISOString = () => {
 }
 
 watch(
-  () => props.expediente,
-  (exp) => {
-    if (exp) {
+  () => [props.visible, props.expediente],
+  ([vis, exp]) => {
+    if (vis && exp) {
       errorMessage.value = ''
+      archivoConformidad.value = null
       form.value = {
         consignatarioExterior: exp.contactoExteriorNombre || 'Consignatario Internacional Registrado',
         documentoRecepcion: 'BL Endosado / Factura Internacional',
@@ -199,136 +231,29 @@ const handleSubmit = async () => {
 </script>
 
 <style scoped>
-.form-body {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.recepcion-info-banner {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  background: var(--color-success-bg);
-  border: 1px solid var(--color-success-border);
-  border-radius: 8px;
-  padding: 12px 14px;
-  color: var(--color-text-main);
-}
-
-.recepcion-info-banner i {
-  color: var(--color-success-text);
-  margin-top: 2px;
-}
-
-.banner-texts strong {
-  display: block;
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: var(--color-success-text);
-  margin-bottom: 3px;
-}
-
-.banner-texts p {
-  margin: 0;
+.recepcion-banner-desc {
+  margin: 0.2rem 0 0;
   font-size: 0.8rem;
-  line-height: 1.35;
-  color: var(--color-text-muted);
+  line-height: 1.4;
 }
 
-.recepcion-fields-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-}
-
-.field-item {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.field-item.full-width {
+.full-span {
   grid-column: 1 / -1;
 }
 
-.field-item label {
-  font-size: 0.75rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--color-text-muted);
-}
-
-.text-input,
-.textarea-input {
+.sga-file-input {
   width: 100%;
-  padding: 8px 12px;
-  background: var(--color-bg-surface);
-  border: 1px solid var(--color-border);
-  border-radius: 6px;
-  color: var(--color-text-main);
-  font-size: 0.85rem;
-  transition: border-color 0.15s ease;
-}
-
-.text-input:focus,
-.textarea-input:focus {
-  outline: none;
-  border-color: var(--color-primary);
-}
-
-.textarea-input {
-  resize: vertical;
-}
-
-.modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  margin-top: 10px;
-  padding-top: 14px;
-  border-top: 1px solid var(--color-border);
-}
-
-.btn-modal-cancel {
-  padding: 8px 16px;
+  padding: 0.45rem 0.65rem;
+  border: 1px dashed var(--color-border-strong, var(--color-border));
+  border-radius: var(--radius-md, 8px);
   background: var(--color-bg-subtle);
-  border: 1px solid var(--color-border);
-  border-radius: 6px;
   color: var(--color-text-main);
-  font-size: 0.85rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.sga-field-hint.is-selected {
+  color: var(--color-success-text);
   font-weight: 600;
-  cursor: pointer;
-  transition: background 0.15s ease;
-}
-
-.btn-modal-cancel:hover:not(:disabled) {
-  background: var(--color-bg-muted);
-}
-
-.btn-modal-save {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 18px;
-  background: var(--color-primary);
-  border: none;
-  border-radius: 6px;
-  color: var(--color-primary-text);
-  font-size: 0.85rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: opacity 0.15s ease;
-}
-
-.btn-modal-save:hover:not(:disabled) {
-  opacity: 0.92;
-}
-
-.btn-modal-save:disabled,
-.btn-modal-cancel:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
 }
 </style>

@@ -156,15 +156,6 @@ router.beforeEach(async (to, from, next) => {
     } else {
       navStore.resetModuleToDefaultView('agente-aduanero')
     }
-  } else if (toPath.startsWith('/transporte-flota')) {
-    if (navStore.activeModule !== 'transporte-flota') {
-      navStore.setActiveModule('transporte-flota')
-    }
-    if (to?.query?.tab) {
-      navStore.setTransporteFlotaSubOption(to.query.tab)
-    } else {
-      navStore.resetModuleToDefaultView('transporte-flota')
-    }
   } else if (toPath.startsWith('/finanzas')) {
     if (navStore.activeModule !== 'finanzas') {
       navStore.setActiveModule('finanzas')

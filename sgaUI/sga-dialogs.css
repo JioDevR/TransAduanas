@@ -1,0 +1,220 @@
+/* ==========================================================================
+   sgaUI — Estándar Unificado de Diálogos Nativos PrimeVue 4 (Warm Editorial Pro)
+   Aplicable en app-sga y app-b2b mediante <Dialog> + clases .sga-dialog-*
+   ========================================================================== */
+
+/* ---------- Shell nativo de PrimeVue Dialog ---------- */
+.p-dialog-mask {
+  background: rgba(35, 31, 28, 0.48) !important;
+  backdrop-filter: blur(6px) !important;
+}
+
+.p-dialog:not(.base-modal-dialog):not(.p-confirmdialog) {
+  border: 1px solid var(--color-border) !important;
+  border-radius: var(--sga-card-radius, 14px) !important;
+  background: var(--color-bg-surface) !important;
+  box-shadow: var(--shadow-elevated) !important;
+  font-family: var(--font-sans) !important;
+  overflow: hidden;
+}
+
+.p-dialog:not(.base-modal-dialog):not(.p-confirmdialog) .p-dialog-header {
+  background: var(--color-bg-subtle) !important;
+  border-bottom: 1px solid var(--color-border-subtle) !important;
+  padding: 1.15rem 1.5rem !important;
+  color: var(--color-text-main) !important;
+  gap: 0.75rem;
+}
+
+.p-dialog:not(.base-modal-dialog):not(.p-confirmdialog) .p-dialog-title {
+  font-size: var(--sga-text-lg, 1.075rem) !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.015em;
+  color: var(--color-text-main) !important;
+}
+
+.p-dialog:not(.base-modal-dialog):not(.p-confirmdialog) .p-dialog-close-button {
+  width: 2rem !important;
+  height: 2rem !important;
+  border-radius: var(--radius-pill, 9999px) !important;
+  color: var(--color-text-muted) !important;
+  transition: background-color var(--transition-fast), color var(--transition-fast) !important;
+}
+
+.p-dialog:not(.base-modal-dialog):not(.p-confirmdialog) .p-dialog-close-button:hover {
+  background: var(--color-bg-muted) !important;
+  color: var(--color-text-main) !important;
+}
+
+.p-dialog:not(.base-modal-dialog):not(.p-confirmdialog) .p-dialog-content {
+  padding: 1.35rem 1.5rem !important;
+  background: var(--color-bg-surface) !important;
+  color: var(--color-text-main) !important;
+  font-size: var(--sga-text-base, 0.875rem) !important;
+  line-height: 1.5 !important;
+}
+
+.p-dialog:not(.base-modal-dialog):not(.p-confirmdialog) .p-dialog-footer {
+  background: var(--color-bg-subtle) !important;
+  border-top: 1px solid var(--color-border-subtle) !important;
+  padding: 0.95rem 1.5rem !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: 0.65rem !important;
+}
+
+/* ---------- Ficha contextual interna del diálogo ---------- */
+.sga-dialog-context {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  padding: 0.7rem 0.95rem;
+  border-radius: var(--radius-md, 8px);
+  background: var(--color-bg-subtle);
+  border: 1px solid var(--color-border-subtle);
+}
+
+.sga-dialog-context-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.sga-dialog-context-sub {
+  font-size: var(--sga-text-xs, 0.75rem);
+  color: var(--color-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 260px;
+}
+
+/* ---------- Pista debajo de campos ---------- */
+.sga-field-hint {
+  font-size: var(--sga-text-xs, 0.75rem);
+  color: var(--color-text-subtle);
+  line-height: 1.35;
+}
+
+/* ---------- Tarjetas de selección única (RadioButton PrimeVue) ---------- */
+.sga-choice-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.sga-choice-card {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg, 12px);
+  background: var(--color-bg-surface);
+  cursor: pointer;
+  transition: border-color var(--transition-fast), background-color var(--transition-fast);
+  min-width: 0;
+}
+
+.sga-choice-card:hover {
+  border-color: var(--color-border-strong);
+  background: var(--color-bg-subtle);
+}
+
+.sga-choice-card.is-selected {
+  border-color: var(--color-primary);
+  background: var(--color-bg-subtle);
+}
+
+.sga-choice-card.is-selected.is-success {
+  border-color: var(--color-success-text);
+  background: var(--color-success-bg);
+}
+
+.sga-choice-card.is-selected.is-warn {
+  border-color: var(--color-warning-text);
+  background: var(--color-warning-bg);
+}
+
+.sga-choice-card.is-selected.is-danger {
+  border-color: var(--color-danger-text);
+  background: var(--color-danger-bg);
+}
+
+.sga-choice-card.is-selected.is-info {
+  border-color: var(--color-info-text);
+  background: var(--color-info-bg);
+}
+
+.sga-choice-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.sga-choice-dot.is-green {
+  background: #22c55e;
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.2);
+}
+
+.sga-choice-dot.is-orange {
+  background: #f97316;
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.2);
+}
+
+.sga-choice-dot.is-red {
+  background: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
+}
+
+.sga-choice-dot.is-primary {
+  background: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(212, 130, 82, 0.2);
+}
+
+.sga-choice-texts {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.sga-choice-texts strong {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--color-text-main);
+}
+
+.sga-choice-texts span {
+  font-size: var(--sga-text-xs, 0.75rem);
+  line-height: 1.35;
+  color: var(--color-text-muted);
+}
+
+.sga-choice-badge {
+  flex-shrink: 0;
+}
+
+@media (max-width: 640px) {
+  .p-dialog:not(.base-modal-dialog):not(.p-confirmdialog) .p-dialog-header,
+  .p-dialog:not(.base-modal-dialog):not(.p-confirmdialog) .p-dialog-content,
+  .p-dialog:not(.base-modal-dialog):not(.p-confirmdialog) .p-dialog-footer {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+
+  .p-dialog:not(.base-modal-dialog):not(.p-confirmdialog) .p-dialog-footer {
+    flex-wrap: wrap;
+  }
+
+  .sga-choice-badge {
+    display: none;
+  }
+}

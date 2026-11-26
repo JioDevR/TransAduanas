@@ -133,7 +133,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import Button from 'primevue/button'
 import InputText from 'primevue/inputtext'
 import InputNumber from 'primevue/inputnumber'
@@ -150,7 +150,7 @@ const permisoOptions = [
   { label: 'Sí (Carga Restringida VUCE)', value: true }
 ]
 
-const entidadOptions = [
+const entidadOptions = ref([
   { label: 'DIGEMID (Medicamentos y Cosméticos)', value: 'DIGEMID' },
   { label: 'DIGESA (Alimentos y Bebidas)', value: 'DIGESA' },
   { label: 'SENASA (Agro y Animal)', value: 'SENASA' },
@@ -158,7 +158,29 @@ const entidadOptions = [
   { label: 'SUCAMEC (Explosivos y Armas)', value: 'SUCAMEC' },
   { label: 'PRODUCE (Insumos Químicos)', value: 'PRODUCE' },
   { label: 'MTC (Equipos de Telecomunicación)', value: 'MTC' }
-]
+])
+
+const dbCategories = ref([])
+
+onMounted(async () => {
+  try {
+    const [catsRes, entsRes] = await Promise.allSettled([
+      catalogoService.getCategoriasMercancia(),
+      catalogoService.getEntidadesReguladoras()
+    ])
+    if (catsRes.status === 'fulfilled' && Array.isArray(catsRes.value) && catsRes.value.length > 0) {
+      dbCategories.value = catsRes.value.map((c) => c.nombre)
+    }
+    if (entsRes.status === 'fulfilled' && Array.isArray(entsRes.value) && entsRes.value.length > 0) {
+      entidadOptions.value = entsRes.value.map((e) => ({
+        label: e.nombre,
+        value: e.sigla
+      }))
+    }
+  } catch {
+    // Mantiene respaldo local si los catálogos no responden
+  }
+})
 
 const estadoOptions = [
   { label: 'ACTIVO (Habilitado)', value: 'ACTIVO' },
@@ -191,7 +213,7 @@ const isEditMode = computed(() => Boolean(props.mercanciaToEdit?.idMercancia))
 
 const categoryOptions = computed(() =>
   mergeNormalizedCategories(
-    DEFAULT_MERCANCIA_CATEGORIES,
+    dbCategories.value.length > 0 ? dbCategories.value : DEFAULT_MERCANCIA_CATEGORIES,
     props.existingCategories,
     form.value.categoria ? [form.value.categoria] : []
   )

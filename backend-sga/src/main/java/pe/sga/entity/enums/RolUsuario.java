@@ -9,7 +9,6 @@ public enum RolUsuario {
     AGENTE_COMERCIAL("Agente Comercial"),
     SUPERVISOR_ADUANERO("Supervisor Aduanero"),
     AGENTE_ADUANERO("Agente Aduanero"),
-    SUPERVISOR_TRANSPORTE("Supervisor de Transporte"),
     CONTADOR("Contador");
 
     private final String etiqueta;

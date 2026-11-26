@@ -37,7 +37,7 @@
           <span class="informe-val">
             <Tag
               v-if="expediente.servicioTransporte"
-              :value="expediente.codigoTrackingTransporte ? `Flota SGA · ${expediente.codigoTrackingTransporte}` : 'Flota SGA Contratada'"
+              :value="expediente.transporteSolicitado ? 'Transporte SGA · Solicitud Externa Registrada' : 'Transporte SGA Contratado'"
               icon="pi pi-truck"
               severity="info"
               rounded

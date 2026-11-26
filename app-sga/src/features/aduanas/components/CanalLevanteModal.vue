@@ -1,113 +1,147 @@
 <template>
-  <BaseModal
+  <Dialog
     :visible="visible"
-    :title="actionType === 'canal' ? 'Asignar Canal SUNAT y Declaración DAM' : 'Autorizar Levante Aduanero'"
-    :subtitle="`Expediente Aduanero: ${expediente?.codigoExpediente || ''} — DAM: ${expediente?.numeroDam || 'Pendiente'}`"
-    :icon="actionType === 'canal' ? 'pi pi-compass' : 'pi pi-check-circle'"
-    max-width="580px"
-    :error-message="errorMessage"
-    :busy="loading"
-    @close="handleClose"
+    modal
+    :closable="!loading"
+    :dismissableMask="!loading"
+    :style="{ width: getDialogWidth('560px'), maxWidth: '95vw' }"
+    :header="actionType === 'canal' ? 'Asignar Canal SUNAT y Declaración DAM' : 'Autorizar Levante Aduanero'"
+    @update:visible="(val) => { if (!val && !loading) handleClose() }"
   >
-    <form @submit.prevent="handleSubmit" class="form-body">
+    <form id="canal-levante-form" class="sga-dialog-body" @submit.prevent="handleSubmit">
+      <!-- Ficha contextual del expediente (sgaUI) -->
+      <div v-if="expediente" class="sga-dialog-context">
+        <div class="sga-dialog-context-meta">
+          <span class="sga-code-cell font-mono">{{ expediente.codigoExpediente }}</span>
+          <span v-if="expediente.clienteRazonSocial" class="sga-dialog-context-sub">
+            {{ expediente.clienteRazonSocial }}
+          </span>
+        </div>
+        <Tag
+          :value="expediente.numeroDam ? `DAM ${expediente.numeroDam}` : 'DAM Pendiente'"
+          :severity="expediente.numeroDam ? 'info' : 'secondary'"
+          class="font-mono sga-mini-tag"
+          rounded
+        />
+      </div>
+
+      <div v-if="errorMessage" class="sga-banner is-danger" role="alert">
+        <i class="pi pi-exclamation-triangle"></i>
+        <span>{{ errorMessage }}</span>
+      </div>
+
       <!-- Modal: ASIGNAR CANAL SUNAT & DAM -->
-      <div v-if="actionType === 'canal'" class="canal-form-grid">
-        <div class="field-item">
-          <label for="dam-num">Número de Declaración Aduanera (DAM) *</label>
+      <template v-if="actionType === 'canal'">
+        <div class="sga-form-field">
+          <label for="dam-num" class="sga-form-label">Número de Declaración Aduanera (DAM) *</label>
           <InputText
             id="dam-num"
-            v-model.trim="canalForm.numeroDam"
+            :modelValue="canalForm.numeroDam"
             placeholder="Ej. 118-2026-10-123456"
-            class="font-mono"
+            class="font-mono uppercase"
             required
             maxlength="30"
+            size="small"
             fluid
+            @update:modelValue="canalForm.numeroDam = ($event || '').toUpperCase().trimStart()"
           />
-          <span class="field-hint">Numeración oficial emitida por la Intendencia de Aduana</span>
+          <span class="sga-field-hint">Numeración oficial emitida por la Intendencia de Aduana</span>
         </div>
 
-        <div class="field-item">
-          <label class="field-label">Canal de Control SUNAT Asignado *</label>
-          <div class="canales-options">
-            <label :class="['canal-option-card verde', { selected: canalForm.canalSunat === 'VERDE' }]">
-              <input type="radio" v-model="canalForm.canalSunat" value="VERDE" />
-              <div class="canal-dot bg-green"></div>
-              <div class="canal-texts">
-                <strong>Canal VERDE</strong>
-                <span>Levante automático sin revisión documental ni física</span>
+        <div class="sga-form-field">
+          <span class="sga-form-label">Canal de Control SUNAT Asignado *</span>
+          <div class="sga-choice-list" role="radiogroup" aria-label="Canal de Control SUNAT">
+            <label
+              v-for="opt in CANAL_OPTIONS"
+              :key="opt.value"
+              :for="`canal-opt-${opt.value}`"
+              :class="[
+                'sga-choice-card',
+                opt.toneClass,
+                { 'is-selected': canalForm.canalSunat === opt.value }
+              ]"
+            >
+              <RadioButton
+                :inputId="`canal-opt-${opt.value}`"
+                v-model="canalForm.canalSunat"
+                name="canalSunat"
+                :value="opt.value"
+              />
+              <span :class="['sga-choice-dot', opt.dotClass]" aria-hidden="true"></span>
+              <div class="sga-choice-texts">
+                <strong>{{ opt.title }}</strong>
+                <span>{{ opt.description }}</span>
               </div>
-            </label>
-
-            <label :class="['canal-option-card naranja', { selected: canalForm.canalSunat === 'NARANJA' }]">
-              <input type="radio" v-model="canalForm.canalSunat" value="NARANJA" />
-              <div class="canal-dot bg-orange"></div>
-              <div class="canal-texts">
-                <strong>Canal NARANJA</strong>
-                <span>Revisión documentaria requerida por especialista SUNAT</span>
-              </div>
-            </label>
-
-            <label :class="['canal-option-card rojo', { selected: canalForm.canalSunat === 'ROJO' }]">
-              <input type="radio" v-model="canalForm.canalSunat" value="ROJO" />
-              <div class="canal-dot bg-red"></div>
-              <div class="canal-texts">
-                <strong>Canal ROJO</strong>
-                <span>Reconocimiento físico obligatorio en depósito temporal</span>
-              </div>
+              <Tag
+                v-if="canalForm.canalSunat === opt.value"
+                value="Seleccionado"
+                :severity="opt.severity"
+                class="sga-mini-tag sga-choice-badge"
+                rounded
+              />
             </label>
           </div>
         </div>
-      </div>
+      </template>
 
       <!-- Modal: AUTORIZAR LEVANTE -->
-      <div v-else class="levante-form-grid">
-        <div class="levante-info-banner">
+      <template v-else>
+        <div class="sga-banner is-success">
           <i class="pi pi-shield"></i>
           <div>
             <strong>Conformidad Aduanera y Legal</strong>
-            <p>Al sellar el levante, se autoriza el retiro de la mercancía del depósito temporal una vez verificado el pago de tributos aduaneros.</p>
+            <p class="levante-banner-desc">
+              Al sellar el levante, se autoriza el retiro de la mercancía del depósito temporal una vez verificado el pago de tributos aduaneros.
+            </p>
           </div>
         </div>
 
-        <div class="field-item full-width">
-          <label for="levante-detalle">Detalle de Inspección / Diligencia Aduanera</label>
+        <div class="sga-form-field">
+          <label for="levante-detalle" class="sga-form-label">Detalle de Inspección / Diligencia Aduanera</label>
           <Textarea
             id="levante-detalle"
             v-model.trim="levanteForm.detalleInspeccion"
             rows="3"
             autoResize
             placeholder="Diligencia conforme por especialista SUNAT. Precintos intactos y bultos verificados según manifiesto..."
+            size="small"
             fluid
           />
         </div>
-      </div>
-
-      <div class="modal-actions">
-        <Button
-          type="button"
-          label="Cancelar"
-          severity="secondary"
-          outlined
-          @click="handleClose"
-          :disabled="loading"
-        />
-        <Button
-          type="submit"
-          :label="actionType === 'canal' ? 'Registrar Canal SUNAT' : 'Autorizar Levante'"
-          icon="pi pi-check"
-          :loading="loading"
-        />
-      </div>
+      </template>
     </form>
-  </BaseModal>
+
+    <template #footer>
+      <Button
+        type="button"
+        label="Cancelar"
+        severity="secondary"
+        outlined
+        size="small"
+        :disabled="loading"
+        @click="handleClose"
+      />
+      <Button
+        type="submit"
+        form="canal-levante-form"
+        :label="actionType === 'canal' ? 'Registrar Canal SUNAT' : 'Autorizar Levante'"
+        icon="pi pi-check"
+        size="small"
+        :loading="loading"
+      />
+    </template>
+  </Dialog>
 </template>
 
 <script setup>
 import { ref, watch } from 'vue'
 import Button from 'primevue/button'
+import Dialog from 'primevue/dialog'
 import InputText from 'primevue/inputtext'
+import RadioButton from 'primevue/radiobutton'
+import Tag from 'primevue/tag'
 import Textarea from 'primevue/textarea'
-import BaseModal from '@/shared/components/BaseModal.vue'
+import { useResponsive } from '@/shared/composables/useResponsive'
 import { expedienteService } from '../services/expedienteService'
 
 const props = defineProps({
@@ -126,6 +160,34 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['close', 'saved'])
+const { getDialogWidth } = useResponsive()
+
+const CANAL_OPTIONS = [
+  {
+    value: 'VERDE',
+    title: 'Canal VERDE',
+    description: 'Levante automático sin revisión documental ni física',
+    toneClass: 'is-success',
+    dotClass: 'is-green',
+    severity: 'success'
+  },
+  {
+    value: 'NARANJA',
+    title: 'Canal NARANJA',
+    description: 'Revisión documentaria requerida por especialista SUNAT',
+    toneClass: 'is-warn',
+    dotClass: 'is-orange',
+    severity: 'warn'
+  },
+  {
+    value: 'ROJO',
+    title: 'Canal ROJO',
+    description: 'Reconocimiento físico obligatorio en depósito temporal',
+    toneClass: 'is-danger',
+    dotClass: 'is-red',
+    severity: 'danger'
+  }
+]
 
 const loading = ref(false)
 const errorMessage = ref('')
@@ -169,12 +231,16 @@ const handleSubmit = async () => {
   try {
     let result
     if (props.actionType === 'canal') {
-      if (!canalForm.value.numeroDam || !canalForm.value.canalSunat) {
+      const damTrim = (canalForm.value.numeroDam || '').trim()
+      if (!damTrim || !canalForm.value.canalSunat) {
         errorMessage.value = 'Debe ingresar el número de DAM y seleccionar el canal SUNAT.'
         loading.value = false
         return
       }
-      result = await expedienteService.asignarCanal(props.expediente.idExpediente, canalForm.value)
+      result = await expedienteService.asignarCanal(props.expediente.idExpediente, {
+        numeroDam: damTrim,
+        canalSunat: canalForm.value.canalSunat
+      })
     } else {
       result = await expedienteService.autorizarLevante(props.expediente.idExpediente, levanteForm.value)
     }
@@ -192,100 +258,13 @@ const handleSubmit = async () => {
 </script>
 
 <style scoped>
-.canales-options {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  margin-top: 0.5rem;
+.uppercase {
+  text-transform: uppercase;
 }
 
-.canal-option-card {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 0.875rem 1rem;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md, 8px);
-  cursor: pointer;
-  transition: all 0.2s ease;
-  background: var(--color-bg-surface);
-}
-
-.canal-option-card:hover {
-  border-color: var(--color-accent-kicker);
-}
-
-.canal-option-card.selected {
-  border-color: var(--color-accent-kicker);
-  background: var(--color-bg-subtle, rgba(194, 65, 12, 0.05));
-}
-
-.canal-dot {
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
-.bg-green { background: #22c55e; box-shadow: 0 0 8px rgba(34, 197, 94, 0.4); }
-.bg-orange { background: #f97316; box-shadow: 0 0 8px rgba(249, 115, 22, 0.4); }
-.bg-red { background: #ef4444; box-shadow: 0 0 8px rgba(239, 68, 68, 0.4); }
-
-.canal-texts {
-  display: flex;
-  flex-direction: column;
-}
-
-.canal-texts strong {
-  font-size: 0.875rem;
-  color: var(--color-text-main);
-}
-
-.canal-texts span {
-  font-size: 0.75rem;
-  color: var(--color-text-subtle);
-}
-
-.levante-info-banner {
-  display: flex;
-  gap: 1rem;
-  align-items: flex-start;
-  background: rgba(34, 197, 94, 0.08);
-  border: 1px solid rgba(34, 197, 94, 0.25);
-  border-radius: var(--radius-md, 8px);
-  padding: 1rem;
-  margin-bottom: 1.25rem;
-  color: var(--color-text-main);
-}
-
-.levante-info-banner i {
-  color: #22c55e;
-  font-size: 1.25rem;
-  margin-top: 0.2rem;
-}
-
-.levante-info-banner strong {
-  display: block;
-  font-size: 0.875rem;
-  margin-bottom: 0.25rem;
-}
-
-.levante-info-banner p {
-  margin: 0;
-  font-size: 0.8125rem;
-  color: var(--color-text-subtle);
-  line-height: 1.4;
-}
-
-.textarea-input {
-  width: 100%;
-  padding: 0.625rem 0.875rem;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md, 8px);
-  background: var(--color-bg-surface);
-  color: var(--color-text-main);
-  font-family: inherit;
-  font-size: 0.875rem;
-  resize: vertical;
+.levante-banner-desc {
+  margin: 0.2rem 0 0;
+  font-size: 0.8rem;
+  line-height: 1.45;
 }
 </style>

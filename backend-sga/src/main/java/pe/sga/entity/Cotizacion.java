@@ -57,11 +57,19 @@ public class Cotizacion {
     @Builder.Default
     private Boolean servicioTransporte = false;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_provincia_origen")
+    private CatalogoProvincia provinciaOrigenEntity;
+
     @Column(name = "origen_departamento", length = 60)
     private String origenDepartamento;
 
     @Column(name = "origen_provincia", length = 60)
     private String origenProvincia;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_provincia_destino")
+    private CatalogoProvincia provinciaDestinoEntity;
 
     @Column(name = "destino_departamento", length = 60)
     private String destinoDepartamento;

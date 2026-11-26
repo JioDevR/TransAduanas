@@ -159,7 +159,7 @@
 
           <div class="banks-grid">
             <div
-              v-for="banco in CUENTAS_BANCARIAS_USD"
+              v-for="banco in cuentasBancarias"
               :key="banco.id"
               role="button"
               tabindex="0"
@@ -193,7 +193,7 @@
               <Select
                 id="banco-origen"
                 v-model="form.bancoOrigen"
-                :options="BANCOS_ORIGEN_OPTIONS"
+                :options="bancosOrigenOptions"
                 optionLabel="label"
                 optionValue="value"
                 size="small"
@@ -229,7 +229,7 @@
               <Select
                 id="metodo-pago"
                 v-model="form.metodoPago"
-                :options="METODOS_PAGO_OPTIONS"
+                :options="metodosPagoOptions"
                 optionLabel="label"
                 optionValue="value"
                 size="small"
@@ -313,6 +313,7 @@ import Tag from 'primevue/tag'
 import Textarea from 'primevue/textarea'
 import PagoVoucherUploadField from '../components/PagoVoucherUploadField.vue'
 import { portalPagoService } from '../services/portalPagoService'
+import { catalogoPublicoService } from '@/shared/services/catalogoPublicoService'
 import { useNotification } from '@/shared/composables/useNotification'
 import { formatCurrency } from '@/shared/utils/formatters'
 import {
@@ -334,6 +335,9 @@ const obligaciones = ref([])
 const idReferenciaSeleccionada = ref(null)
 const presetSeleccionado = ref('50')
 const archivoVoucher = ref(null)
+const cuentasBancarias = ref(CUENTAS_BANCARIAS_USD)
+const bancosOrigenOptions = ref(BANCOS_ORIGEN_OPTIONS)
+const metodosPagoOptions = ref(METODOS_PAGO_OPTIONS)
 
 const fechaHoy = new Date().toISOString().substring(0, 10)
 
@@ -523,7 +527,49 @@ function volver() {
   router.push('/pagos')
 }
 
-onMounted(cargarObligaciones)
+async function cargarCatalogosBancarios() {
+  try {
+    const [cuentasRes, bancosRes, metodosRes] = await Promise.allSettled([
+      catalogoPublicoService.obtenerCuentasRecaudadoras('B2B', 'USD'),
+      catalogoPublicoService.obtenerBancos('ORIGEN'),
+      catalogoPublicoService.obtenerMetodosPago('B2B')
+    ])
+
+    if (cuentasRes.status === 'fulfilled' && cuentasRes.value.length > 0) {
+      cuentasBancarias.value = cuentasRes.value.map(c => ({
+        id: c.codigo || c.idCuenta,
+        banco: c.banco || c.nombre,
+        nombre: c.nombre,
+        numeroCuenta: c.numeroCuenta,
+        cci: c.cci
+      }))
+      if (!cuentasBancarias.value.some(c => c.nombre === form.value.bancoDestino)) {
+        form.value.bancoDestino = cuentasBancarias.value[0].nombre
+      }
+    }
+
+    if (bancosRes.status === 'fulfilled' && bancosRes.value.length > 0) {
+      bancosOrigenOptions.value = bancosRes.value.map(b => ({
+        label: b.nombre,
+        value: b.codigo
+      }))
+    }
+
+    if (metodosRes.status === 'fulfilled' && metodosRes.value.length > 0) {
+      metodosPagoOptions.value = metodosRes.value.map(m => ({
+        label: m.nombre,
+        value: m.codigo
+      }))
+    }
+  } catch {
+    // Mantiene opciones de respaldo si el API de catálogos no responde
+  }
+}
+
+onMounted(() => {
+  cargarCatalogosBancarios()
+  cargarObligaciones()
+})
 </script>
 
 <style scoped>

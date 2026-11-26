@@ -56,7 +56,7 @@ describe('dashboardMetrics', () => {
           estadoExpediente: 'LEVANTE_AUTORIZADO',
           canalSunat: 'VERDE',
           tieneTransporte: true,
-          estadoTransporte: 'EN_RUTA',
+          estadoTransporte: 'SOLICITADO',
           fechaApertura: '2026-11-18T10:00:00'
         },
         {

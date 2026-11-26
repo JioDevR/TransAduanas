@@ -57,6 +57,7 @@ export function useCotizacionForm(props, emit) {
   const puertos = ref([])
   const tiposCarga = ref([])
   const mercancias = ref([])
+  const ubigeoList = ref([])
 
   const localClientsList = ref([...(props.clientes || [])])
   watch(
@@ -106,21 +107,36 @@ export function useCotizacionForm(props, emit) {
   const isEditMode = computed(() => !!props.cotizacionToEdit && !!props.cotizacionToEdit.idCotizacion)
   const isUnassignedClaim = computed(() => isEditMode.value && !props.cotizacionToEdit?.idUsuarioComercial)
 
-  const departamentosList = computed(() => getDepartamentosPeru())
+  const getUbigeoProvs = (departamento, currentProv) => {
+    if (ubigeoList.value.length > 0 && departamento) {
+      const target = departamento.toString().trim().toUpperCase()
+      const found = ubigeoList.value.find((u) => u.departamento.toUpperCase() === target)
+      if (found) {
+        const list = [...found.provincias]
+        if (currentProv && !list.includes(currentProv)) list.unshift(currentProv)
+        return list
+      }
+    }
+    return getProvinciasPorDepartamento(departamento, currentProv)
+  }
+
+  const departamentosList = computed(() =>
+    ubigeoList.value.length > 0 ? ubigeoList.value.map((u) => u.departamento) : getDepartamentosPeru()
+  )
   const provinciasOrigenList = computed(() =>
-    getProvinciasPorDepartamento(form.value.origenDepartamento, form.value.origenProvincia)
+    getUbigeoProvs(form.value.origenDepartamento, form.value.origenProvincia)
   )
   const provinciasDestinoList = computed(() =>
-    getProvinciasPorDepartamento(form.value.destinoDepartamento, form.value.destinoProvincia)
+    getUbigeoProvs(form.value.destinoDepartamento, form.value.destinoProvincia)
   )
 
   const onOrigenDepartamentoChange = () => {
-    const provs = getProvinciasPorDepartamento(form.value.origenDepartamento)
+    const provs = getUbigeoProvs(form.value.origenDepartamento)
     form.value.origenProvincia = provs.length > 0 ? provs[0] : ''
   }
 
   const onDestinoDepartamentoChange = () => {
-    const provs = getProvinciasPorDepartamento(form.value.destinoDepartamento)
+    const provs = getUbigeoProvs(form.value.destinoDepartamento)
     form.value.destinoProvincia = provs.length > 0 ? provs[0] : ''
   }
 
@@ -174,11 +190,15 @@ export function useCotizacionForm(props, emit) {
   const loadCatalogos = async () => {
     loadingCatalogos.value = true
     try {
-      const [puertosRes, tiposCargaRes, mercanciasRes] = await Promise.allSettled([
+      const [puertosRes, tiposCargaRes, mercanciasRes, ubigeoRes] = await Promise.allSettled([
         catalogoService.getPuertos(true),
         catalogoService.getTiposCarga(true),
-        catalogoService.getMercancias(true)
+        catalogoService.getMercancias(true),
+        catalogoService.getUbigeo?.() || Promise.resolve([])
       ])
+      if (ubigeoRes.status === 'fulfilled' && Array.isArray(ubigeoRes.value) && ubigeoRes.value.length > 0) {
+        ubigeoList.value = ubigeoRes.value
+      }
       if (puertosRes.status === 'fulfilled') {
         puertos.value = mapPuertosCatalogo(puertosRes.value)
         if (props.cotizacionToEdit?.idCotizacion) {

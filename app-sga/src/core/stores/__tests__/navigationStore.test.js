@@ -64,9 +64,6 @@ describe('navigationStore', () => {
 
     store.setActiveModule('supervision')
     expect(store.activeModule).toBe('gestion-aduanera')
-
-    store.setActiveModule('transporte')
-    expect(store.activeModule).toBe('transporte-flota')
   })
 
   it('debe disparar la acción de finanzas e incrementar navTick', () => {
@@ -76,30 +73,6 @@ describe('navigationStore', () => {
     store.triggerFinanzasAction('registrar-anticipo')
     expect(store.finanzasActionTrigger).toBe('registrar-anticipo')
     expect(store.navTick).toBe(1)
-  })
-
-  it('gestiona las 4 sub-opciones canónicas de transporte-flota con valor por defecto dashboard', () => {
-    const store = useNavigationStore()
-    expect(store.transporteFlotaSubOption).toBe('dashboard')
-
-    store.setTransporteFlotaSubOption('despachos')
-    expect(store.transporteFlotaSubOption).toBe('despachos')
-
-    store.setTransporteFlotaSubOption('unidades')
-    expect(store.transporteFlotaSubOption).toBe('unidades')
-
-    store.setTransporteFlotaSubOption('conductores')
-    expect(store.transporteFlotaSubOption).toBe('conductores')
-
-    // Alias retrocompatibles redirigen a despachos
-    store.setTransporteFlotaSubOption('cabina')
-    expect(store.transporteFlotaSubOption).toBe('despachos')
-
-    store.setTransporteFlotaSubOption('camion')
-    expect(store.transporteFlotaSubOption).toBe('despachos')
-
-    store.setTransporteFlotaSubOption('viajes')
-    expect(store.transporteFlotaSubOption).toBe('despachos')
   })
 
   it('restaura cada módulo a su primera vista estándar con resetModuleToDefaultView', () => {
@@ -114,20 +87,26 @@ describe('navigationStore', () => {
     expect(store.gestionAduaneraSubOption).toBe(DEFAULT_MODULE_SUB_OPTION['gestion-aduanera'])
   })
 
-  it('gestiona las 5 sub-opciones de agente-aduanero y normaliza alias expedientes -> todos', () => {
+  it('gestiona las 3 sub-opciones de agente-aduanero (dashboard, expedientes, gestion) normalizando alias de fase', () => {
     const store = useNavigationStore()
     expect(store.agenteAduaneroSubOption).toBe('dashboard')
 
     store.setAgenteAduaneroSubOption('expedientes')
-    expect(store.agenteAduaneroSubOption).toBe('todos')
+    expect(store.agenteAduaneroSubOption).toBe('expedientes')
+
+    store.setAgenteAduaneroSubOption('gestion')
+    expect(store.agenteAduaneroSubOption).toBe('gestion')
+
+    store.setAgenteAduaneroSubOption('todos')
+    expect(store.agenteAduaneroSubOption).toBe('expedientes')
 
     store.setAgenteAduaneroSubOption('transito')
-    expect(store.agenteAduaneroSubOption).toBe('transito')
+    expect(store.agenteAduaneroSubOption).toBe('expedientes')
 
     store.setAgenteAduaneroSubOption('inspeccion')
-    expect(store.agenteAduaneroSubOption).toBe('inspeccion')
+    expect(store.agenteAduaneroSubOption).toBe('expedientes')
 
     store.setAgenteAduaneroSubOption('levante')
-    expect(store.agenteAduaneroSubOption).toBe('levante')
+    expect(store.agenteAduaneroSubOption).toBe('expedientes')
   })
 })

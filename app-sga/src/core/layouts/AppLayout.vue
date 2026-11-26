@@ -207,22 +207,10 @@ const MODULE_TITLES = {
     default: 'Agente Aduanero',
     sub: {
       dashboard: 'Dashboard Operativo del Agente Aduanero',
-      todos: 'Expedientes Aduaneros Asignados',
-      transito: 'Control de Tránsito Internacional y Arribo',
-      inspeccion: 'Aforo y Diligencias ante SUNAT',
-      levante: 'Levante Autorizado y Despacho Final'
+      expedientes: 'Expedientes Asignados (Consulta)',
+      gestion: 'Gestión Operativa de Expedientes'
     },
     getSub: () => navigationStore.agenteAduaneroSubOption
-  },
-  'transporte-flota': {
-    default: 'Transporte y Flota',
-    sub: {
-      dashboard: 'Dashboard Operativo de Transporte & Flota',
-      despachos: 'Monitoreo Global de Despachos',
-      unidades: 'Parque Automotor & Flota de Transporte',
-      conductores: 'Directorio de Conductores Acreditados MTC'
-    },
-    getSub: () => navigationStore.transporteFlotaSubOption
   },
   finanzas: {
     default: 'Finanzas',

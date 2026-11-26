@@ -22,10 +22,16 @@ public class CatalogoMercanciaServiceImpl implements ICatalogoMercanciaService {
     private final CatalogoMercanciaRepository mercanciaRepository;
 
     private IAuditoriaService auditoriaService;
+    private CatalogoResolucionService catalogoResolucionService;
 
     @Autowired(required = false)
     public void setAuditoriaService(IAuditoriaService auditoriaService) {
         this.auditoriaService = auditoriaService;
+    }
+
+    @Autowired(required = false)
+    public void setCatalogoResolucionService(CatalogoResolucionService catalogoResolucionService) {
+        this.catalogoResolucionService = catalogoResolucionService;
     }
 
     private void auditar(String accion, Integer idMercancia, String detalle) {
@@ -92,6 +98,9 @@ public class CatalogoMercanciaServiceImpl implements ICatalogoMercanciaService {
                 .estado(dto.getEstado() != null ? dto.getEstado().trim().toUpperCase() : "ACTIVO")
                 .build();
 
+        if (catalogoResolucionService != null) {
+            catalogoResolucionService.enriquecerMercancia(entity);
+        }
         CatalogoMercancia guardada = mercanciaRepository.save(entity);
         auditar("CREAR_MERCANCIA", guardada.getIdMercancia(),
                 "Mercancía creada: " + guardada.getCodigo() + " - " + guardada.getNombre());
@@ -116,6 +125,9 @@ public class CatalogoMercanciaServiceImpl implements ICatalogoMercanciaService {
         if (dto.getArancelBasePct() != null) entity.setArancelBasePct(dto.getArancelBasePct());
         if (dto.getEstado() != null) entity.setEstado(dto.getEstado().trim().toUpperCase());
 
+        if (catalogoResolucionService != null) {
+            catalogoResolucionService.enriquecerMercancia(entity);
+        }
         CatalogoMercancia guardada = mercanciaRepository.save(entity);
         auditar("ACTUALIZAR_MERCANCIA", guardada.getIdMercancia(),
                 "Mercancía actualizada: " + guardada.getCodigo() + " - " + guardada.getNombre());

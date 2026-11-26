@@ -1,51 +1,101 @@
 <template>
-  <BaseModal
+  <Dialog
     :visible="visible"
-    title="Canal NARANJA — Envío Simulado de Documentos a SUNAT"
-    :subtitle="`Expediente: ${expediente?.codigoExpediente || ''} — DAM: ${expediente?.numeroDam || 'S/N'}`"
-    icon="pi pi-send"
-    max-width="560px"
-    :error-message="errorMessage"
-    :busy="loading"
-    @close="handleClose"
+    modal
+    :closable="!loading"
+    :dismissableMask="!loading"
+    :style="{ width: getDialogWidth('560px'), maxWidth: '95vw' }"
+    header="Canal NARANJA — Transmisión de Documentos a SUNAT"
+    @update:visible="(val) => { if (!val && !loading) handleClose() }"
   >
-    <form class="form-body" @submit.prevent="handleSubmit">
-      <div class="field-item">
-        <label for="sunat-docs">Documentos Transmitidos a SUNAT (Teledespacho Simulado) *</label>
+    <form id="canal-naranja-form" class="sga-dialog-body" @submit.prevent="handleSubmit">
+      <div v-if="expediente" class="sga-dialog-context">
+        <div class="sga-dialog-context-meta">
+          <span class="sga-code-cell font-mono">{{ expediente.codigoExpediente }}</span>
+          <span v-if="expediente.clienteRazonSocial" class="sga-dialog-context-sub">
+            {{ expediente.clienteRazonSocial }}
+          </span>
+        </div>
+        <Tag
+          :value="expediente.numeroDam ? `DAM ${expediente.numeroDam}` : 'DAM S/N'"
+          severity="warn"
+          class="font-mono sga-mini-tag"
+          rounded
+        />
+      </div>
+
+      <div class="sga-banner is-warn">
+        <i class="pi pi-cloud-upload"></i>
+        <div>
+          <strong>Teledespacho Documentario SUNAT (Canal Naranja)</strong>
+          <p class="sunat-banner-desc">
+            Envíe el legajo digital sustentatorio al especialista SUNAT para habilitar el levante documentario.
+          </p>
+        </div>
+      </div>
+
+      <div v-if="errorMessage" class="sga-banner is-danger" role="alert">
+        <i class="pi pi-exclamation-triangle"></i>
+        <span>{{ errorMessage }}</span>
+      </div>
+
+      <div class="sga-form-field">
+        <label for="sunat-docs" class="sga-form-label">Documentos Transmitidos a SUNAT *</label>
         <InputText
           id="sunat-docs"
           v-model.trim="form.documentosIncluidos"
           required
           placeholder="Factura Comercial, Packing List, BL/AWB, Certificado de Origen"
+          size="small"
           fluid
         />
       </div>
 
-      <div class="field-item">
-        <label for="sunat-obs">Sustento / Observaciones para Especialista SUNAT</label>
+      <div class="sga-form-field">
+        <label for="sunat-obs" class="sga-form-label">Sustento / Observaciones para Especialista SUNAT</label>
         <Textarea
           id="sunat-obs"
           v-model.trim="form.observaciones"
           rows="3"
+          autoResize
           placeholder="Documentación sustentatoria completa conforme a subpartida arancelaria..."
+          size="small"
           fluid
         />
       </div>
-
-      <div class="modal-actions">
-        <Button type="button" label="Cancelar" severity="secondary" outlined @click="handleClose" :disabled="loading" />
-        <Button type="submit" label="Enviar Documentos a SUNAT" icon="pi pi-cloud-upload" severity="warn" :loading="loading" />
-      </div>
     </form>
-  </BaseModal>
+
+    <template #footer>
+      <Button
+        type="button"
+        label="Cancelar"
+        severity="secondary"
+        outlined
+        size="small"
+        :disabled="loading"
+        @click="handleClose"
+      />
+      <Button
+        type="submit"
+        form="canal-naranja-form"
+        label="Enviar Documentos a SUNAT"
+        icon="pi pi-cloud-upload"
+        severity="warn"
+        size="small"
+        :loading="loading"
+      />
+    </template>
+  </Dialog>
 </template>
 
 <script setup>
 import { ref, watch } from 'vue'
 import Button from 'primevue/button'
+import Dialog from 'primevue/dialog'
 import InputText from 'primevue/inputtext'
+import Tag from 'primevue/tag'
 import Textarea from 'primevue/textarea'
-import BaseModal from '@/shared/components/BaseModal.vue'
+import { useResponsive } from '@/shared/composables/useResponsive'
 import { expedienteService } from '@/shared/services/expedienteService'
 
 const props = defineProps({
@@ -54,6 +104,7 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['close', 'saved'])
+const { getDialogWidth } = useResponsive()
 
 const loading = ref(false)
 const errorMessage = ref('')
@@ -97,24 +148,9 @@ const handleSubmit = async () => {
 </script>
 
 <style scoped>
-.form-body {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-.field-item {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-}
-.field-item label {
+.sunat-banner-desc {
+  margin: 0.2rem 0 0;
   font-size: 0.8rem;
-  font-weight: 600;
-  color: var(--color-text-main);
-}
-.modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.65rem;
+  line-height: 1.4;
 }
 </style>

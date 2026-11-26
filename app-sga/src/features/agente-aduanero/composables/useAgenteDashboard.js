@@ -146,7 +146,7 @@ export function useAgenteDashboard({ expedientes, referenceDate = new Date() }) 
           tab: 'levante',
           severity: 'success',
           icon: 'pi pi-truck',
-          motivo: 'Levante otorgado · Solicitar envío flota',
+          motivo: 'Levante otorgado · Registrar transporte externo',
           rank: 2
         })
       } else if (acc.puedeRetiroDirecto) {
